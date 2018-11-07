@@ -16,10 +16,10 @@ Lbl     → (label name,          like "foo")
 - `Lbl` are names of labels used to identify record fields.
 
 
-## Modules
+## Declarations
 
 ```
-Module
+Decl
  ::=    'type'  Con TypeParams? (':' Type)? '=' Type    (type bindings)
   |     'term'  Var TermParams?  ':' Type   '=' Term    (term bindings)
 
@@ -30,7 +30,7 @@ Module
 
 ```
 
-- `type` declarations specify type synonyms. If there are no parameters or result kind given then the synonym is assumed to have kind 'Data'. If the synonym has any other kind it must be specified.
+- `type` declarations specify type synonyms. If there are no parameters or result kind given then the synonym is assumed to have kind `Data`. If the synonym has any other kind it must be specified.
 
 - `term` declarations specify term synonyms. The result type must be specified.
 
@@ -40,7 +40,7 @@ Module
 
 - `test .. eval ..`   evaluates a term and prints the result.
 
-- `test .. assert ..` evaluates a term and check that the result is `#true`
+- `test .. assert ..` evaluates a term and checks that the result is `#true`
 
 
 ## Types
@@ -48,7 +48,7 @@ Module
 ```
 Type
  ::=    Var                                     (type variable)
-  |     Con                                     (type constructor)
+  |     Con | Prm                               (type literal)
   |     Type Types                              (type application)
   |     'λ' TypeParams '⇒' Type                 (type abstraction)
   |     '∀' TypeParams '.' Type                 (forall type)
@@ -71,38 +71,38 @@ TypeRecord
 
 ```
 Term
- ::=    Terms                                   -- term sequence
+ ::=    Terms                                   (term sequence)
 
-  |     Con | Prm | Sym                         -- term literal
+  |     Con | Prm | Sym                         (term literal)
 
-  |     Var                                     -- term variable
-  |     'λ'   TermParams '→'  Term              -- term abstraction
-  |     Term  TermArgs                          -- term application
+  |     Var                                     (term variable)
+  |     'λ'   TermParams '→'  Term              (term abstraction)
+  |     Term  TermArgs                          (term application)
 
-  |     'let' TermBind   'in' Term              -- let expression
+  |     'let' TermBind   'in' Term              (let expression)
 
-  |     TermRecord                              -- record construction
-  |     Term '.' Lbl                            -- record projection
+  |     TermRecord                              (record construction)
+  |     Term '.' Lbl                            (record projection)
 
-  |     '[list|' Term,* ']'                     -- list construction
-  |     '[set|'  Term,* ']'                     -- set construction
-  |     '[map|'  (Term ':=' Term),* ']'         -- map construction
+  |     '[list|' Term,* ']'                     (list construction)
+  |     '[set|'  Term,* ']'                     (set construction)
+  |     '[map|'  (Term ':=' Term),* ']'         (map construction)
 
 Terms
- ::=    '{' Term;+ '}'                          -- term sequence
+ ::=    '{' Term;+ '}'                          (term sequence)
 
 TypeSigs
  ::=    '{' (Var ':' Type);* '}'
 
 TermParams
- ::=    '@' TypeSigs  | TypeSigs                -- type or term parameters.
+ ::=    '@' TypeSigs  | TypeSigs                (type or term parameters)
 
 TermArgs
- ::=    '@' Types     | Terms                   -- type or term arguments.
+ ::=    '@' Types     | Terms                   (type or term arguments)
 
 TermBind
- ::=    '{' Var;* '}' '=' Term                  -- let binding
+ ::=    '{' Var;* '}' '=' Term                  (let binding)
 
 TermRecord
- ::=    '[' (Lbl '=' Term),* ']'                -- record construction
+ ::=    '[' (Lbl '=' Term),* ']'                (record construction)
 ```
