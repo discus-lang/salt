@@ -9,40 +9,61 @@ Prm     → (primitive name,      like "#add")
 Lbl     → (label name,          like "foo")
 ```
 
+- `Var` are names of type and term variables.
+- `Con` are names of type and term constructors.
+- `Sym` are abstract symbol names.
+- `Prm` are names of type and term primitives that are baked into the system.
+- `Lbl` are names of labels used to identify record fields.
+
 
 ## Modules
 
 ```
 Module
- ::=    'type'  Con TypeParams ':' Type '=' Type
-  |     'term'  Var TermParams ':' Type '=' Term
+ ::=    'type'  Con TypeParams? (':' Type)? '=' Type    (type bindings)
+  |     'term'  Var TermParams?  ':' Type   '=' Term    (term bindings)
 
-  |     'test' (Var)? 'print' Term
-  |     'test' (Var)? 'assert' Term
-  |     'test' Term
+  |     'test' 'kind'   ('.' Var) Type                  (print the kind of a type)
+  |     'test' 'type'   ('.' Var) Term                  (print the type of a term)
+  |     'test' 'eval'   ('.' Var) Term                  (print the result of term evaluation)
+  |     'test' 'assert' ('.' Var) Term                  (assert that a term evaluates to true)
 
 ```
+
+- `type` declarations specify type synonyms. If there are no parameters or result kind given then the synonym is assumed to have kind 'Data'. If the synonym has any other kind it must be specified.
+
+- `term` declarations specify term synonyms. The result type must be specified.
+
+- `test .. kind ..`   kind checks a type and prints the inferred kind.
+
+- `test .. type ..`   type checks a term and prints the inferred type.
+
+- `test .. eval ..`   evaluates a term and prints the result.
+
+- `test .. assert ..` evaluates a term and check that the result is `#true`
+
 
 ## Types
 
 ```
 Type
- ::=    Var                                     -- type variable
-  |     Con                                     -- type constructor
-  |     Type Types                              -- type application
-  |     'λ' TypeParams '→' Type                 -- type abstraction
-  |     '∀' TypeParams '.' Type                 -- forall type
-  |     Types '→' Types                         -- function type
-  |     TypeRecord                              -- record type
+ ::=    Var                                     (type variable)
+  |     Con                                     (type constructor)
+  |     Type Types                              (type application)
+  |     'λ' TypeParams '⇒' Type                 (type abstraction)
+  |     '∀' TypeParams '.' Type                 (forall type)
+  |     Types '⇒' Type                          (arrow kind)
+  |     Types '→' Types                         (function type)
+  |     TypeRecord                              (record type)
 
 Types
- ::=    '{' Type;+ '}'                          -- type sequence
+ ::=    '{' Type;+ '}'                          (type sequence)
 
 TypeParams
- ::=    '{' (Var ':' Type);+ '}'                -- type parameters
+ ::=    '{' (Var ':' Type);+ '}'                (type parameters)
 
 TypeRecord
- ::=    '[' (Lbl ':' Type),* ']'                -- record type
+ ::=    '[' (Lbl ':' Type),* ']'                (record type)
 ```
 
 

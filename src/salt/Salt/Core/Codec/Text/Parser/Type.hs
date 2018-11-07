@@ -4,22 +4,28 @@ import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp
-import qualified Salt.Core.Prim     as Prim
 
 import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
-import qualified Data.Map.Strict        as Map
 
 
 pType :: Parser (Type Location)
 pType
  = P.choice
- [ do   -- TypeHead
-        -- TypeHead '->' Type
-        TGTypes tsHead <- pTypeHead
+ [ do   -- λ TypeParams ⇒ Type
+        pTok KFun
+        bks     <- pTypeParams
+        pTok KArrowRightFat
+        tBody   <- pType
+        return  $  TAbs bks tBody
+
+
+ , do   -- TypesHead
+        -- TypesHead '->' TypesResult
+        TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pTok KArrowRight
-                tsResult <- pTypeResults
+                tsResult <- pTypesResult
                 return $ TFun tsHead tsResult
 
          , do   case tsHead of
@@ -30,34 +36,64 @@ pType
  <?> "a type"
 
 
-pTypeHead :: Parser (TypeArgs Location)
-pTypeHead
+pTypesHead :: Parser (TypeArgs Location)
+pTypesHead
  = P.choice
- [ do   nCon    <- pCon
-        tsArgs  <- P.many pTypeArg
+ [ do   -- Prm TypeArg*
+        nPrm    <- pPrm
 
-        let mkPrim = Map.lookup nCon Prim.primTypeCtors
-        case (mkPrim, tsArgs) of
-         (Just _,   _) -> return $ TGTypes [TPrim nCon tsArgs]
-         (Nothing, []) -> return $ TGTypes [TCon nCon]
-         (Nothing, _)  -> return $ TGTypes [TApp (TCon nCon) tsArgs]
+        P.choice
+         [ do   -- Primitive constructor directly applied to an argument vector.
+                tsArgs  <- pBraced $ P.sepEndBy pType (pTok KSemi)
+                return  $  TGTypes [TApt (TPrm nPrm) tsArgs]
 
- , do   ts      <- pBraced $ P.sepEndBy1 pType (pTok KSemi)
+         , do   -- Primitive constructor applied to separate arguments.
+                tsArgs  <- P.many pTypeArg
+                case tsArgs of
+                 []     -> return $ TGTypes [TPrm nPrm]
+                 _      -> return $ TGTypes [TApt (TPrm nPrm) tsArgs]
+         ]
+
+ , do   --
+        ts      <- pBraced $ P.sepEndBy1 pType (pTok KSemi)
         return  $ TGTypes ts
+
+ , do   t       <- pTypeRecord
+        return  $ TGTypes [t]
+
+
+ , do   -- Type Type*
+        tFun    <- pTypeArg
+        tsArgs  <- P.many pTypeArg
+        case tsArgs of
+         []     -> return $ TGTypes [tFun]
+         _      -> return $ TGTypes [TApt tFun tsArgs]
  ]
  <?> "a head type"
 
 
-pTypeResults :: Parser [Type Location]
-pTypeResults
- = do   TGTypes tsHead <- pTypeHead
+pTypesResult :: Parser [Type Location]
+pTypesResult
+ = do   TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pTok KArrowRight
-                tsResult <- pTypeResults
+                tsResult <- pTypesResult
                 return [TFun tsHead tsResult]
 
          , do   return tsHead ]
  <?> "a result type"
+
+
+pTypeArgs :: Parser (TypeArgs Location)
+pTypeArgs
+ = P.choice
+ [ do   -- '{' Type;+ '}'
+        ts      <- pBraced $ P.sepEndBy pType (pTok KSemi)
+        return  $ TGTypes ts
+
+ , do   t       <- pTypeArg
+        return  $ TGTypes [t]
+ ]
 
 
 pTypeArg :: Parser (Type Location)
@@ -65,24 +101,41 @@ pTypeArg
  = P.choice
  [ do   pVar >>= return . TVar . Bound
 
+ , do   -- Prm
+        nPrm    <- pPrm
+        return $ TPrm nPrm
+
  , do   -- Con
         nCon    <- pCon
-        let mkPrim = Map.lookup nCon Prim.primTypeCtors
-        case mkPrim of
-         Nothing -> return $ TCon nCon
-         Just _  -> return $ TPrim nCon []
+        return $ TCon nCon
 
  , do   -- '[' (Lbl ':' Type)* ']'
         pTypeRecord
+
+ , do   -- '(' Term ')'
+        pTok KRBra
+        t       <- pType
+        pTok KRKet
+        return t
  ]
  <?> "an argument type"
+
+
+pTypeParams :: Parser (TypeParams Location)
+pTypeParams
+ = P.choice
+ [ do   -- '{' (Var ':' Type')* '}'
+        bts     <- pBraced $ flip P.sepEndBy1 (pTok KSemi)
+                $  do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
+        return  $ TPTypes bts
+ ]
 
 
 pTypeRecord :: Parser (Type Location)
 pTypeRecord
  = do   -- '[' (Lbl ':' Type)* ']'
         pTok KSBra
-        lts <- P.sepEndBy1
+        lts <- P.sepEndBy
                 (do l   <- pLbl
                     pTok KColon
                     t   <- pType

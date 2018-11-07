@@ -22,7 +22,8 @@ data Type a
 
 -- | Type Reference.
 data TypeRef
-        = TRCon   !Name                 -- ^ Type constructor.
+        = TRPrm !Name                   -- ^ Primitive type constructor.
+        | TRCon !Name                   -- ^ Used defined type constructor.
         deriving (Show, Eq, Ord)
 
 
@@ -41,11 +42,9 @@ data TypeArgs a
 -- | Type Key.
 data TypeKey
         = TKHole                        -- ^ A missing type that needs to be inferred.
-        | TKTypes                       -- ^ Type sequence former.
         | TKArr                         -- ^ Kind arrow.
         | TKApp                         -- ^ Type application.
         | TKFun                         -- ^ Function type former.
-        | TKPrim   !Name                -- ^ Primitive type application.
         | TKForall                      -- ^ Forall type former.
         | TKRecord ![Name]              -- ^ Record type former.
         deriving (Show, Eq, Ord)
@@ -53,32 +52,33 @@ data TypeKey
 
 -- Patterns ---------------------------------------------------------------------------------------
 -- Type refs.
-pattern TCon  n         = TRef (TRCon n)
+pattern TCon n          = TRef (TRCon n)
+pattern TPrm n          = TRef (TRPrm n)
 
 -- Type keywords.
 pattern THole           = TKey TKHole        []
 pattern TArr ks1 k2     = TKey TKArr         [TGTypes ks1,     TGTypes [k2]]
-pattern TApp tFun tsArg = TKey TKApp         [TGTypes [tFun],  TGTypes tsArg]
-pattern TRecord ns ts   = TKey (TKRecord ns) [TGTypes ts]
-pattern TFun  ts1 ts2   = TKey TKFun         [TGTypes ts1,     TGTypes ts2]
-pattern TPrim p ts      = TKey (TKPrim p)    [TGTypes ts]
+pattern TApp tFun mts2  = TKey TKApp         [TGTypes [tFun],  mts2]
+pattern TApt tFun ts2   = TKey TKApp         [TGTypes [tFun],  TGTypes ts2]
+pattern TFun ts1  ts2   = TKey TKFun         [TGTypes ts1,     TGTypes ts2]
 pattern TForall bts t   = TKey TKForall      [TGTypes [TAbs (TPTypes bts) t]]
-pattern (:-->) ks1 k2   = TArr    ks1 k2
-pattern (:->)  ts1 ts2  = TFun    ts1 ts2
-pattern (:*>)  tps t    = TForall tps t
+pattern TRecord ns ts   = TKey (TKRecord ns) [TGTypes ts]
+pattern (:=>) ks1 k2    = TArr    ks1 k2
+pattern (:->) ts1 ts2   = TFun    ts1 ts2
+pattern (:*>) tps t     = TForall tps t
 
 -- Primitive types.
-pattern TData           = TPrim "Data"   []
-pattern TUnit           = TPrim "Unit"   []
-pattern TBool           = TPrim "Bool"   []
-pattern TNat            = TPrim "Nat"    []
-pattern TInt            = TPrim "Int"    []
-pattern TText           = TPrim "Text"   []
-pattern TSymbol         = TPrim "Symbol" []
-pattern TMaybe t        = TPrim "Maybe"  [t]
-pattern TList t         = TPrim "List"   [t]
-pattern TSet t          = TPrim "Set"    [t]
-pattern TMap tk tv      = TPrim "Map"    [tk, tv]
+pattern TData           = TPrm "Data"
+pattern TUnit           = TPrm "Unit"
+pattern TBool           = TPrm "Bool"
+pattern TNat            = TPrm "Nat"
+pattern TInt            = TPrm "Int"
+pattern TText           = TPrm "Text"
+pattern TSymbol         = TPrm "Symbol"
+pattern TMaybe t        = TApt (TPrm "Maybe") [t]
+pattern TList t         = TApt (TPrm "List")  [t]
+pattern TSet t          = TApt (TPrm "Set")   [t]
+pattern TMap tk tv      = TApt (TPrm "Map")   [tk, tv]
 
 
 -- Instances --------------------------------------------------------------------------------------

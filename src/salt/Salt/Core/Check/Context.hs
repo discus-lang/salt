@@ -40,6 +40,29 @@ contextEmpty
 
 
 ---------------------------------------------------------------------------------------------------
+-- | Bind a single type variable into the context.
+contextBindType :: Name -> Type a -> Context a -> Context a
+contextBindType n t ctx
+ = ctx  { contextLocal = ElemTypes (Map.singleton n t) : contextLocal ctx }
+
+
+-- | Bind a single type variable into the context, if we have one.
+contextBindTypeMaybe :: Maybe Name -> Type a -> Context a -> Context a
+contextBindTypeMaybe Nothing _t ctx = ctx
+contextBindTypeMaybe (Just n) t ctx
+ = ctx  { contextLocal = ElemTypes (Map.singleton n t) : contextLocal ctx }
+
+
+-- | Bind the kinds of type parameters into the context.
+contextBindTypeParams :: TypeParams a -> Context a -> Context a
+contextBindTypeParams tps ctx
+ = case tps of
+        TPTypes bts
+         -> let nts = [ (n, t) | (BindName n, t) <- bts ]
+            in  ctx { contextLocal = ElemTypes (Map.fromList nts) : contextLocal ctx }
+
+
+---------------------------------------------------------------------------------------------------
 -- | Bind a single term variable into the context.
 contextBindTerm :: Name -> Type a -> Context a -> Context a
 contextBindTerm n t ctx
@@ -71,6 +94,22 @@ contextBindTermParams tps ctx
 contextResolveDataCtor :: Name -> Context a -> IO (Maybe (Type ()))
 contextResolveDataCtor nCtor _ctx
  = return $ Map.lookup nCtor Prim.primDataCtors
+
+
+-- | Lookup a bound type variable from the context.
+contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Type a))
+contextResolveTypeBound (Bound n) ctx
+ = go $ contextLocal ctx
+ where
+        go []   = return Nothing
+
+        go (ElemTerms _  : rest)
+         = go rest
+
+        go (ElemTypes mp : rest)
+         = case Map.lookup n mp of
+                Just k  -> return $ Just k
+                Nothing -> go rest
 
 
 -- | Lookup a bound term variable from the context.

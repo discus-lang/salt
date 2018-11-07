@@ -1,5 +1,6 @@
 
 module Salt.Core.Exp.Module where
+import Salt.Core.Exp.Type
 import Salt.Core.Exp.Term
 import Salt.Core.Exp.Name
 
@@ -19,11 +20,25 @@ data Decl a
 
 -- | Test declaration.
 data DeclTest a
-        = DeclTestPrint
+        -- Print the kind of a type.
+        = DeclTestKind
+        { declAnnot             :: a
+        , declTestName          :: Maybe Name
+        , declTestType          :: Type a }
+
+        -- Print the type of a term.
+        | DeclTestType
+        { declAnnot             :: a
+        , declTestName          :: Maybe Name
+        , declTestTerm          :: Term a }
+
+        -- Evaluate a term and print the result
+        | DeclTestEval
         { declAnnot             :: a
         , declTestName          :: Maybe Name
         , declTestBody          :: Term a }
 
+        -- Check that a term evaluates to true.
         | DeclTestAssert
         { declAnnot             :: a
         , declTestName          :: Maybe Name

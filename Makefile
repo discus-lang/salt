@@ -23,3 +23,5 @@ include make/target/clean.mk
 include make/target/war.mk
 
 
+# Override default config with local config.
+-include make/config-override.mk

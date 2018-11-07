@@ -9,17 +9,16 @@ import qualified Data.Map.Strict        as Map
 primTypeCtors :: Map Name (Type ())
 primTypeCtors
  = Map.fromList
-        [ ("Nat",       TData)
-        , ("Unit",      TData)
+        [ ("Unit",      TData)
         , ("Bool",      TData)
         , ("Nat",       TData)
         , ("Int",       TData)
         , ("Text",      TData)
         , ("Symbol",    TData)
-        , ("Maybe",     [TData] :--> TData)
-        , ("List",      [TData] :--> TData)
-        , ("Set",       [TData] :--> TData)
-        , ("Map",       [TData, TData] :--> TData) ]
+        , ("Maybe",     [TData] :=> TData)
+        , ("List",      [TData] :=> TData)
+        , ("Set",       [TData] :=> TData)
+        , ("Map",       [TData, TData] :=> TData) ]
 
 
 -- | Types of primitive data constructors.

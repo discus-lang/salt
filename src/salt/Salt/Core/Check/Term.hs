@@ -8,7 +8,7 @@ import Salt.Core.Check.Error
 import Salt.Core.Transform.MapAnnot
 import Salt.Core.Transform.Subst
 import Salt.Core.Exp
-import qualified Salt.Core.Prim.Ops as Prim
+import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 

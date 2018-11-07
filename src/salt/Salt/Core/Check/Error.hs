@@ -31,6 +31,11 @@ data Error a
         , errorWhere            :: [Where a]
         , errorName             :: Name }
 
+        | ErrorUnknownTypeBound
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorVar              :: Bound }
+
         | ErrorUnknownTermBound
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
@@ -43,12 +48,38 @@ data Error a
         , errorTypeExpected     :: Type a
         , errorTypeActual       :: Type a }
 
-        | ErrorAppTermTermCannot
+        -- type/type
+        | ErrorAppTypeTypeCannot
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorFunType          :: Type a }
 
+        | ErrorAppTypeTypeWrongArity
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorTypesExpected    :: [Type a]
+        , errorTypesActual      :: [Type a] }
+
+        | ErrorAppTypeTypeWrongArityNum
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorCtorParamTypes   :: [Type a]
+        , errorCtorArgNum       :: Int }
+
+        -- term/type
         | ErrorAppTermTypeCannot
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorFunType          :: Type a }
+
+        | ErrorAppTermTypeWrongArity
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorCtorParamBinds   :: [(Bind, Type a)]
+        , errorCtorArgTypes     :: [Type a] }
+
+        -- term/term
+        | ErrorAppTermTermCannot
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorFunType          :: Type a }
@@ -65,11 +96,6 @@ data Error a
         , errorCtorParamTypes   :: [Type a]
         , errorCtorArgNum       :: Int }
 
-        | ErrorAppTermTypeWrongArity
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorCtorParamBinds   :: [(Bind, Type a)]
-        , errorCtorArgTypes     :: [Type a] }
 
         -- Record problems ----------------------
         | ErrorRecordProjectIsNot

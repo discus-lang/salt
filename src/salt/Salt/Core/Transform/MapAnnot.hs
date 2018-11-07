@@ -33,8 +33,14 @@ instance MapAnnot Decl where
 instance MapAnnot DeclTest where
  mapAnnot f dd
   = case dd of
-        DeclTestPrint a mn m
-         -> DeclTestPrint (f a) mn (mapAnnot f m)
+        DeclTestKind a mn t
+         -> DeclTestKind (f a) mn (mapAnnot f t)
+
+        DeclTestType a mn m
+         -> DeclTestType (f a) mn (mapAnnot f m)
+
+        DeclTestEval a mn m
+         -> DeclTestEval (f a) mn (mapAnnot f m)
 
         DeclTestAssert a mn m
          -> DeclTestAssert (f a) mn (mapAnnot f m)

@@ -6,7 +6,7 @@ import Salt.Core.Exp
 -- | Tracks where we are a source program during type checking,
 --   to help error reporting.
 data Where a
-        = WhereTestPrint
+        = WhereTestEval
         { whereAnnot            :: a
         , whereTestName         :: Maybe Name }
 

@@ -23,6 +23,7 @@ scanner _fileName
            $ IW.munchPred Nothing (\_ix c -> elem c ['-', '>', ':', '='])
            $ \case
                 "->"            -> Just KArrowRight
+                "=>"            -> Just KArrowRightFat
                 ":="            -> Just KColonEquals
                 _               -> Nothing
 
@@ -41,6 +42,7 @@ scanner _fileName
         , fmap (stamp id) $ IW.accept '=' KEquals
 
         , fmap (stamp id) $ IW.accept '→' KArrowRight
+        , fmap (stamp id) $ IW.accept '⇒' KArrowRightFat
         , fmap (stamp id) $ IW.accept 'λ' KFun
 
         , fmap (stamp id)
@@ -48,11 +50,7 @@ scanner _fileName
            $ \case
                 "type"          -> Just KType
                 "term"          -> Just KTerm
-
                 "test"          -> Just KTest
-                "print"         -> Just KPrint
-                "assert"        -> Just KAssert
-                "scenario"      -> Just KScenario
 
                 "where"         -> Just KWhere
 
@@ -115,7 +113,7 @@ scanPrmName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
 scanPrmName
  = IW.munchPred Nothing match accept
  where   match 0 c       = c == '#'
-         match 1 c       = Char.isLower c
+         match 1 c       = Char.isAlpha c
          match _ c       = Char.isAlphaNum c || c == '\''
          accept []       = Nothing
          accept (_ : cs) = Just $ Text.pack cs

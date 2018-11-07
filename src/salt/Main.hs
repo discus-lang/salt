@@ -149,17 +149,56 @@ mainTests filePath
 runTest :: Module IW.Location -> DeclTest IW.Location -> IO ()
 runTest mm tt
  = case tt of
-        DeclTestPrint    _ n m    -> runTestPrint    mm n m
-        DeclTestAssert   _ n m    -> runTestAssert   mm n m
+        DeclTestKind    _ n t   -> runTestKind   mm n t
+        DeclTestType    _ n m   -> runTestType   mm n m
+        DeclTestEval    _ n m   -> runTestEval   mm n m
+        DeclTestAssert  _ n m   -> runTestAssert mm n m
 
 
-runTestPrint
+-- | Run a kind test.
+--   We kind-check a type and print the result kind.
+runTestKind
         :: Module IW.Location
-        -> Maybe Name -> Term IW.Location -> IO ()
-runTestPrint _mm mnTest mTest
+        -> Maybe Name -> Type IW.Location -> IO ()
+runTestKind _mm mnTest tTest
  = do
         let a   = IW.Location 0 0
+        putStr  $ "* "
+                ++ (case mnTest of
+                        Nothing -> ""
+                        Just (Name tx) -> T.unpack tx % ": ")
+        System.hFlush System.stdout
 
+        (_t, kResult) <- Check.checkType a [] Check.contextEmpty tTest
+        putStrLn $ P.renderIndent $ P.ppr () kResult
+
+
+-- | Run a type test.
+--   We type-check a term and print the result type.
+runTestType
+        :: Module IW.Location
+        -> Maybe Name -> Term IW.Location -> IO ()
+runTestType _mm mnTest mTest
+ = do
+        let a   = IW.Location 0 0
+        putStr  $ "* "
+                ++ (case mnTest of
+                        Nothing -> ""
+                        Just (Name tx) -> T.unpack tx % ": ")
+        System.hFlush System.stdout
+
+        (_m, tResult) <- Check.checkTerm1 a [] Check.contextEmpty mTest Check.Synth
+        putStrLn $ P.renderIndent $ P.ppr () tResult
+
+
+-- | Run a eval test.
+--   We evaluate the term and print the result value.
+runTestEval
+        :: Module IW.Location
+        -> Maybe Name -> Term IW.Location -> IO ()
+runTestEval _mm mnTest mTest
+ = do
+        let a   = IW.Location 0 0
         putStr  $ "* "
                 ++ (case mnTest of
                         Nothing -> ""
@@ -170,13 +209,14 @@ runTestPrint _mm mnTest mTest
         putStrLn $ P.renderIndent $ P.ppr () vResult
 
 
+-- | Run an assert test.
+--   We evaluate the term and check that the result value is #true.
 runTestAssert
         :: Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
 runTestAssert _mm mnTest mTest
  = do
         let a   = IW.Location 0 0
-
         putStr  $ "* "
                 ++ (case mnTest of
                         Nothing -> ""

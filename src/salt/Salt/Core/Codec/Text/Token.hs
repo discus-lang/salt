@@ -28,22 +28,19 @@ data Token
         | KComma  | KDot  | KBar | KAt
         | KEquals | KColonEquals
         | KArrowRight
+        | KArrowRightFat
+        | KLambda
 
         -- Keywords
-        | KType   | KTerm  | KNode   | KFact     | KRule
-        | KTest   | KPrint | KAssert | KScenario
-        | KAwait  | KWhere | KAnd    | KAs       | KTo
-        | KUnique | KAll   | KAny    | KFirst    | KLast
+        | KType   | KTerm  | KTest
+        | KWhere  | KAnd   | KAs     | KTo
         | KFun    | KLet   | KIn     | KDo
         | KIf     | KThen  | KElse
-        | KSay    | KBy    | KFor    | KUse  | KObs | KNum
-
 
         -- Names
         | KVar  Text            -- Plain variable name, "foo"
         | KCon  Text            -- Constructor name,    "Foo"
         | KSym  Text            -- Symbol name,         "'Foo"
-        | KPty  Text            -- Party name,          "%Foo"
         | KPrm  Text            -- Primitive name       "#foo"
 
         -- Literals

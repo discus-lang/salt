@@ -36,9 +36,7 @@ instance Pretty c (Type a) where
   = case tt of
         TAnn _ t -> ppr c t
         TRef r   -> ppr c r
-
-        TVar u
-         -> ppr c u
+        TVar u   -> ppr c u
 
         TAbs p t
          -> text "λ" %% ppr c p %% text "→" %% ppr c t
@@ -47,17 +45,13 @@ instance Pretty c (Type a) where
          -> text "∙"
 
         -- Keyed expressions
-        TKey TKTypes [TGTypes ts]
-         -> braced $ map (ppr c) ts
+        TKey TKArr   [TGTypes tsParam, TGTypes [tResult]]
+         -> braced (map (ppr c) tsParam)
+         %% text "⇒"
+         %% ppr c tResult
 
         TKey TKApp   [TGTypes [tFun], TGTypes tsArg]
          -> pprTFun c tFun %% braced (map (pprTArg c) tsArg)
-
-        TKey (TKPrim n) [TGTypes []]
-         -> ppr c n
-
-        TKey (TKPrim n) [TGTypes tsArg]
-         -> ppr c n %% (hsep $ map (pprTArg c) tsArg)
 
         TKey (TKRecord []) [TGTypes []]
          -> text "[record|]"
@@ -68,8 +62,8 @@ instance Pretty c (Type a) where
                       | n <- ns | t <- ts ]
 
         TKey TKForall [TGTypes [TAbs (TPTypes bts) tBody]]
-         -> text "∀"
-          % braced    [ ppr c b % text ":" %% ppr c t
+         ->  text "∀"
+          %  braced   [ ppr c b % text ":" %% ppr c t
                       | (b, t) <- bts ]
           %% text "→"
           %% ppr c tBody
@@ -93,16 +87,16 @@ pprTFun c tt
 
 pprTArg c tt
  = case tt of
-        TAnn _ t        -> ppr c t
-        TRef{}          -> ppr c tt
-        TPrim _ []      -> ppr c tt
-        _               -> parens $ ppr c tt
-
+        TAnn _ t -> ppr c t
+        TRef{}   -> ppr c tt
+        TPrm{}   -> ppr c tt
+        _        -> parens $ ppr c tt
 
 
 instance Pretty c TypeRef where
  ppr c tr
   = case tr of
+        TRPrm n -> text "#" % ppr c n
         TRCon n -> ppr c n
 
 
@@ -124,11 +118,9 @@ instance Pretty c TypeKey where
  ppr c tk
   = case tk of
         TKHole          -> text "##hole"
-        TKTypes         -> text "##types"
         TKArr           -> text "##arr"
         TKApp           -> text "##app"
         TKFun           -> text "##fun"
-        TKPrim n        -> text "##prim" %% ppr c n
         TKForall        -> text "##forall"
         TKRecord ns     -> text "##record" %% bracketed (map (ppr c) ns)
 
@@ -276,5 +268,4 @@ instance Pretty c (Env a) where
 instance Pretty c Name where
  ppr _c (Name n)
   = text n
-
 

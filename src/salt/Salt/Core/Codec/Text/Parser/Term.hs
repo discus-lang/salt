@@ -245,24 +245,7 @@ pTermParams
 pTermRecord :: Parser (Term Location)
 pTermRecord
  = P.choice
- [ do   -- '[' 'record' '|' (Lbl '=' Term)* ']'
-        P.try $ P.lookAhead $ do
-                pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "record")
-
-        pTok KSBra; pVar; pTok KBar
-        lms <- P.sepEndBy
-                ((do l   <- pLbl
-                     pTok KEquals
-                     m   <- pTerm
-                     return (l, m)) <?> "a record field")
-                (pTok KComma)
-        pTok KSKet
-        let (ls, ms) = unzip lms
-        return $ MRecord ls ms
-
-
- , do   -- '[' (Lbl '=' Term)* ']'
+ [ do   -- '[' (Lbl '=' Term)* ']'
         pTok KSBra
         lms <- P.sepEndBy1
                 ((do l   <- pLbl

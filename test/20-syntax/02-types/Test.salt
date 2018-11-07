@@ -1,0 +1,37 @@
+
+-- Check the primitive data constructors.
+test kind.unit          #Unit
+test kind.bool          #Bool
+test kind.nat           #Nat
+test kind.int           #Int
+test kind.text          #Text
+test kind.symbol        #Symbol
+test kind.maybe         #Maybe
+test kind.list          #List
+test kind.set           #Set
+test kind.map           #Map
+
+-- Check type application.
+test kind.app'maybe     #Maybe {#Nat}
+test kind.app'list      #List {#Nat}
+test kind.app'set       #Set {#Nat}
+test kind.map'nat       #Map {#Nat; #Text}
+
+-- Nested application.
+test kind.app'set'set   #Set {#Set {#Nat}}
+
+-- Using sugared syntax for primitive application.
+test kind.map'nat       #Map #Nat #Text
+
+-- Type function.
+test kind.op1           (λ{a: #Data; b: #Data} ⇒ a)
+-- test kind.op1'app       (λ{a: #Data; b: #Data} ⇒ a) {#Nat; #Bool}
+
+-- Function types.
+test kind.fun1          {#Nat; #Nat} → {#Nat}
+test kind.fun2          {#Nat} → {#Nat} → {#Bool}
+
+-- Record types.
+test kind.rec1          [one: #Symbol, two: #Nat]
+test kind.rec2          [one: #Symbol, two: [foo: #Nat]]
+test kind.rec'empty     []

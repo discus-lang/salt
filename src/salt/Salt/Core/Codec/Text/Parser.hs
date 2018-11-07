@@ -1,11 +1,13 @@
 
 module Salt.Core.Codec.Text.Parser where
+import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Term
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp
 
+import Control.Monad
 import Text.Parsec                              ((<?>))
 import qualified Text.Parsec                    as P
 
@@ -39,22 +41,37 @@ pDecl
         -- 'test' Name? 'assert' Term
         loc <- getLocation
         pTok KTest
-        P.choice
-         [ do   P.lookAhead $ do
-                        P.optionMaybe pVar
-                        P.choice [ pTok KPrint, pTok KAssert, pTok KScenario ]
 
-                mName   <- P.optionMaybe pVar
+        P.choice
+         [ do   nMode <- pVar
+                (guard $ elem nMode ["kind", "type", "eval", "assert"])
+                 <?> "test mode specifier"
+
+                mName <- P.optionMaybe $ do pTok KDot; pVar
 
                 P.choice
-                 [ do   pTok KPrint
+                 [ do   guard $ nMode == "kind"
+                        tType   <- pType
+                        return  $ DTest $ DeclTestKind
+                                { declAnnot     = loc
+                                , declTestName  = mName
+                                , declTestType  = tType }
+
+                 , do   guard $ nMode == "type"
+                        mTerm   <- pTerm
+                        return  $ DTest $ DeclTestType
+                                { declAnnot     = loc
+                                , declTestName  = mName
+                                , declTestTerm  = mTerm }
+
+                 , do   guard $ nMode == "eval"
                         mBody   <- pTerm
-                        return  $ DTest $ DeclTestPrint
+                        return  $ DTest $ DeclTestEval
                                 { declAnnot     = loc
                                 , declTestName  = mName
                                 , declTestBody  = mBody }
 
-                 , do   pTok KAssert
+                 , do   guard $ nMode == "assert"
                         mBody   <- pTerm
                         return  $ DTest $ DeclTestAssert
                                 { declAnnot     = loc
@@ -62,15 +79,8 @@ pDecl
                                 , declTestBody  = mBody }
 
                  ]
-
-          , do  mBody <- pTerm
-                return  $ DTest $ DeclTestPrint
-                        { declAnnot     = loc
-                        , declTestName  = Nothing
-                        , declTestBody  = mBody }
          ]
          <?> "a test declaration"
  ]
  <?> "a declaration"
-
 

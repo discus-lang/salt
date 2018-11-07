@@ -11,11 +11,11 @@ import Salt.Data.Pretty
 instance Show a => Pretty c (Where a) where
  ppr c wh = pprw c wh
 
-pprw _c (WhereTestPrint _a Nothing)
- = vcat [ text "In print test" ]
+pprw _c (WhereTestEval _a Nothing)
+ = vcat [ text "In eval test" ]
 
-pprw c  (WhereTestPrint _a (Just n))
- = vcat [ text "In print test" %% squotes (ppr c n) ]
+pprw c  (WhereTestEval _a (Just n))
+ = vcat [ text "In eval test" %% squotes (ppr c n) ]
 
 pprw _c (WhereTestAssert _a Nothing)
  = vcat [ text "In assert test" ]
@@ -63,6 +63,9 @@ ppre c (ErrorUnknownPrimitive _a _wh n)
 ppre c (ErrorUnknownDataCtor _a _wh n)
  = vcat [ text "Unknown data constructor" %% squotes (ppr c n) % text "."]
 
+ppre c (ErrorUnknownTypeBound _a _wh u)
+ = vcat [ text "Variable" %% squotes (ppr c u) %% text "is not in scope." ]
+
 ppre c (ErrorUnknownTermBound _a _wh u)
  = vcat [ text "Variable" %% squotes (ppr c u) %% text "is not in scope." ]
 
@@ -72,24 +75,31 @@ ppre c (ErrorTypeMismatch _a _wh tExpected tActual)
  = vcat [ text "Unexpected type:" %% ppr c tActual
         , text "      expecting:" %% ppr c tExpected ]
 
-ppre c (ErrorAppTermTermCannot _a _wh tFun)
- = vcat [ text "Cannot apply non-function "
-        , text "  of type:" %% ppr c tFun ]
+-- type/type
+ppre c (ErrorAppTypeTypeCannot _a _wh tFun)
+ = vcat [ text "Cannot apply type "
+        , text "  of kind:" %% ppr c tFun ]
 
+ppre c (ErrorAppTypeTypeWrongArity _a _wh ksExpected ksActual)
+ | length ksExpected > length ksActual
+ = vcat [ text "Not enough type arguments in application."
+        , text " parameter kinds:" %% braced (map (ppr c) ksExpected)
+        , text "  argument kinds:" %% braced (map (ppr c) ksActual) ]
+
+ | otherwise
+ = vcat [ text "Too many type arguments in application."
+        , text " parameter kinds:" %% braced (map (ppr c) ksExpected)
+        , text "  argument types:" %% braced (map (ppr c) ksActual) ]
+
+ppre c (ErrorAppTypeTypeWrongArityNum _a _wh tsParam nArg)
+ = let  reason = if nArg >= length tsParam then "Too many" else "Not enough"
+   in   vcat [ text reason %% text "arguments in type application."
+             , text " parameter types:" %% braced (map (ppr c) tsParam) ]
+
+-- term/type
 ppre c (ErrorAppTermTypeCannot _a _wh tFun)
  = vcat [ text "Cannot instantiate non-polymorphic value "
         , text "  of type:" %% ppr c tFun ]
-
-ppre c (ErrorAppTermTermWrongArity _a _wh tsParam tsArg)
- = let  reason = if length tsArg >= length tsParam then "Too many" else "Not enough"
-   in   vcat [ text reason %% text "arguments in function application."
-             , text " parameter types:" %% braced (map (ppr c) tsParam)
-             , text "  argument types:" %% braced (map (ppr c) tsArg) ]
-
-ppre c (ErrorAppTermTermWrongArityNum _a _wh tsParam nArg)
- = let  reason = if nArg >= length tsParam then "Too many" else "Not enough"
-   in   vcat [ text reason %% text "arguments in function application."
-             , text " parameter types:" %% braced (map (ppr c) tsParam) ]
 
 ppre c (ErrorAppTermTypeWrongArity _a _wh btsParam tsArg)
  | length btsParam > length tsArg
@@ -107,6 +117,22 @@ ppre c (ErrorAppTermTypeWrongArity _a _wh btsParam tsArg)
                           | (b, t) <- btsParam]
         , text "  argument types:"
                 %% braced (map (ppr c) tsArg) ]
+
+-- term/term
+ppre c (ErrorAppTermTermCannot _a _wh tFun)
+ = vcat [ text "Cannot apply non-function "
+        , text "  of type:" %% ppr c tFun ]
+
+ppre c (ErrorAppTermTermWrongArity _a _wh tsParam tsArg)
+ = let  reason = if length tsArg >= length tsParam then "Too many" else "Not enough"
+   in   vcat [ text reason %% text "arguments in function application."
+             , text " parameter types:" %% braced (map (ppr c) tsParam)
+             , text "  argument types:" %% braced (map (ppr c) tsArg) ]
+
+ppre c (ErrorAppTermTermWrongArityNum _a _wh tsParam nArg)
+ = let  reason = if nArg >= length tsParam then "Too many" else "Not enough"
+   in   vcat [ text reason %% text "arguments in function application."
+             , text " parameter types:" %% braced (map (ppr c) tsParam) ]
 
 
 -- Problems with records ----------------------------------

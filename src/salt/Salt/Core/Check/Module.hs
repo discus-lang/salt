@@ -39,12 +39,20 @@ checkHandleDecl a ctx decl
 -- | Check the given declaration.
 checkDecl :: Annot a => a -> Context a -> Decl a -> IO (Decl a)
 
+-- TODO: check kind of type.
+checkDecl _a _ctx (DTest (DeclTestKind a' n t))
+ = do   return  $ DTest $ DeclTestKind a' n t
 
-checkDecl _a ctx (DTest (DeclTestPrint a' n m))
+-- TODO: check type of term
+checkDecl _a _ctx (DTest (DeclTestType a' n m))
+ = do   return  $ DTest $ DeclTestType a' n m
+
+
+checkDecl _a ctx (DTest (DeclTestEval a' n m))
  = do   (m', _tResult)
-         <- checkTerm a' [WhereTestPrint a' n] ctx m Synth
+         <- checkTerm a' [WhereTestEval a' n] ctx m Synth
 
-        return  $ DTest $ DeclTestPrint a' n m'
+        return  $ DTest $ DeclTestEval a' n m'
 
 
 checkDecl _a ctx (DTest (DeclTestAssert a' n m))
