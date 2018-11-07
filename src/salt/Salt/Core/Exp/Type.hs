@@ -1,0 +1,87 @@
+
+module Salt.Core.Exp.Type where
+import Salt.Core.Exp.Name
+import qualified Data.Text      as T
+
+
+---------------------------------------------------------------------------------------------------
+-- | Kinds are represented the same way as types.
+type Kind a
+        = Type a
+
+
+-- | Annotated Type.
+data Type a
+        = TAnn !a !(Type a)              -- ^ Annotated type.
+        | TRef !TypeRef                  -- ^ Type reference.
+        | TVar !Bound                    -- ^ Type variable.
+        | TAbs !(TypeParams a) !(Type a) -- ^ Type abstraction.
+        | TKey !TypeKey ![TypeArgs a]    -- ^ Type keyword application.
+        deriving (Show, Eq, Ord)
+
+
+-- | Type Reference.
+data TypeRef
+        = TRCon   !Name                 -- ^ Type constructor.
+        deriving (Show, Eq, Ord)
+
+
+-- | Type Parameters.
+data TypeParams a
+        = TPTypes ![(Bind, Type a)]     -- ^ Type parameters.
+        deriving (Show, Eq, Ord)
+
+
+-- | Type Arguments.
+data TypeArgs a
+        = TGTypes ![Type a]             -- ^ Type arguments.
+        deriving (Show, Eq, Ord)
+
+
+-- | Type Key.
+data TypeKey
+        = TKHole                        -- ^ A missing type that needs to be inferred.
+        | TKTypes                       -- ^ Type sequence former.
+        | TKArr                         -- ^ Kind arrow.
+        | TKApp                         -- ^ Type application.
+        | TKFun                         -- ^ Function type former.
+        | TKPrim   !Name                -- ^ Primitive type application.
+        | TKForall                      -- ^ Forall type former.
+        | TKRecord ![Name]              -- ^ Record type former.
+        deriving (Show, Eq, Ord)
+
+
+-- Patterns ---------------------------------------------------------------------------------------
+-- Type refs.
+pattern TCon  n         = TRef (TRCon n)
+
+-- Type keywords.
+pattern THole           = TKey TKHole        []
+pattern TArr ks1 k2     = TKey TKArr         [TGTypes ks1,     TGTypes [k2]]
+pattern TApp tFun tsArg = TKey TKApp         [TGTypes [tFun],  TGTypes tsArg]
+pattern TRecord ns ts   = TKey (TKRecord ns) [TGTypes ts]
+pattern TFun  ts1 ts2   = TKey TKFun         [TGTypes ts1,     TGTypes ts2]
+pattern TPrim p ts      = TKey (TKPrim p)    [TGTypes ts]
+pattern TForall bts t   = TKey TKForall      [TGTypes [TAbs (TPTypes bts) t]]
+pattern (:-->) ks1 k2   = TArr    ks1 k2
+pattern (:->)  ts1 ts2  = TFun    ts1 ts2
+pattern (:*>)  tps t    = TForall tps t
+
+-- Primitive types.
+pattern TData           = TPrim "Data"   []
+pattern TUnit           = TPrim "Unit"   []
+pattern TBool           = TPrim "Bool"   []
+pattern TNat            = TPrim "Nat"    []
+pattern TInt            = TPrim "Int"    []
+pattern TText           = TPrim "Text"   []
+pattern TSymbol         = TPrim "Symbol" []
+pattern TMaybe t        = TPrim "Maybe"  [t]
+pattern TList t         = TPrim "List"   [t]
+pattern TSet t          = TPrim "Set"    [t]
+pattern TMap tk tv      = TPrim "Map"    [tk, tv]
+
+
+-- Instances --------------------------------------------------------------------------------------
+instance IsString (Type a) where
+ fromString name = TVar (Bound (Name $ T.pack name))
+

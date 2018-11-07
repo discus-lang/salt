@@ -1,0 +1,356 @@
+
+module Salt.Core.Check.Term where
+import Salt.Core.Check.Eq
+import Salt.Core.Check.Type
+import Salt.Core.Check.Context
+import Salt.Core.Check.Where
+import Salt.Core.Check.Error
+import Salt.Core.Transform.MapAnnot
+import Salt.Core.Transform.Subst
+import Salt.Core.Exp
+import qualified Salt.Core.Prim.Ops as Prim
+import qualified Data.Map.Strict        as Map
+import qualified Data.Set               as Set
+
+import Control.Exception
+import Control.Monad
+
+
+---------------------------------------------------------------------------------------------------
+-- | Check and elaborate a term producing, a new term and its type.
+--   Type errors are thrown as exceptions in the IO monad.
+checkTerm
+        :: Annot a => a -> [Where a] -> Context a
+        -> Term a -> Mode a -> IO (Term a, [Type a])
+
+-- Ann --------------------------------------------------
+checkTerm _a wh ctx (MAnn a' m) mode
+ = checkTerm a' wh ctx m mode
+
+-- Ref --------------------------------------------------
+checkTerm _a _wh _ctx m@(MRef ref) Synth
+ = case ref of
+        MRVal VUnit     -> return (m, [TUnit])
+        MRVal VSymbol{} -> return (m, [TSymbol])
+        MRVal VText{}   -> return (m, [TText])
+        MRVal VBool{}   -> return (m, [TBool])
+        MRVal VInt{}    -> return (m, [TInt])
+        MRVal VNat{}    -> return (m, [TNat])
+        MRVal _         -> error "check value not done yet"
+
+        MRTop{}         -> error "check mrtop not done yet"
+
+
+-- Var ----------------------------------------------------
+checkTerm a wh ctx m@(MVar u) Synth
+ = do   mt <- contextResolveTermBound u ctx
+        case mt of
+         Just t  -> return (m, [t])
+         Nothing -> throw $ ErrorUnknownTermBound a wh u
+
+
+-- Abs ----------------------------------------------------
+checkTerm a wh ctx (MAbs ps m) Synth
+ = do   ps'     <- checkTermParams a wh ctx ps
+        let ctx' = contextBindTermParams ps ctx
+        case ps' of
+         MPTerms bts
+          -> do (m', ts) <- checkTerm a wh ctx' m Synth
+                return  (MAbs ps' m', [TFun (map snd bts) ts])
+
+         MPTypes bts
+          -> do (m', t)  <- checkTerm1 a wh ctx' m Synth
+                return  (MAbs ps' m', [TForall bts t])
+
+
+-- MKTerms ------------------------------------------------
+checkTerm a wh ctx (MTerms msArg) mode
+ = do   (msArg', tsArg) <- checkTerms a wh ctx msArg mode
+        return (MTerms msArg', tsArg)
+
+
+-- MKApp --------------------------------------------------
+checkTerm a wh ctx (MApp mFun mgs) Synth
+ = case mgs of
+        MGTerms msArg
+         -> do  (mFun',  tFun)     <- checkTerm1 a wh ctx mFun Synth
+                (msArg', tsResult) <- checkTermAppTerms a wh ctx tFun msArg
+                return (MApp mFun' (MGTerms msArg'), tsResult)
+
+        MGTypes tsArg
+         -> do  (mFun',  tFun)     <- checkTerm1 a wh ctx mFun Synth
+                (tsArg', tResult)  <- checkTermAppTypes a wh ctx tFun tsArg
+                return (MApp mFun' (MGTypes tsArg'), [tResult])
+
+
+-- MKLet --------------------------------------------------
+checkTerm a wh ctx (MLet bts mBind mResult) Synth
+ = do   MPTerms bts'      <- checkTermParams a wh ctx (MPTerms bts)
+        (mBind', tsBind)  <- checkTerm a wh ctx mBind Synth
+
+        let checkLetAnnot tAnnot tBind
+             | THole    <- tAnnot
+             = return tBind
+
+             | otherwise
+             = case checkTypeEq a [] tAnnot a [] tBind of
+                 Nothing        -> return tBind
+                 Just ((_a1, tErr1), (_a2, tErr2))
+                  -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+
+        -- TODO: check num. of bindings
+        let (bs, tsParam) = unzip bts'
+        tsBind'   <- zipWithM checkLetAnnot tsParam tsBind
+        let bts'' =  zip bs tsBind'
+
+        let ctx' = contextBindTermParams (MPTerms bts'') ctx
+        (mResult', tsResult) <- checkTerm a wh ctx' mResult Synth
+        return  (MLet bts' mBind' mResult', tsResult)
+
+
+-- MKCon --------------------------------------------------
+checkTerm a wh ctx (MCon nCtor tsArg msArg) Synth
+ = let
+        goCheckData
+         =   contextResolveDataCtor nCtor ctx
+         >>= \case
+                Nothing -> goUnknown
+                Just tCtor
+                 -> do  let tCtor' = mapAnnot (const a) tCtor
+                        (tsArg', tInst)    <- checkTermAppTypes a wh ctx tCtor' tsArg
+                        (msArg', tsResult) <- checkTermAppTerms a wh ctx tInst  msArg
+                        return  (MCon nCtor tsArg' msArg', tsResult)
+
+        goUnknown
+         = throw $ ErrorUnknownDataCtor a wh nCtor
+
+   in   goCheckData
+
+
+-- MKPrim -------------------------------------------------
+checkTerm a wh ctx (MPrim nPrim tsInst msArg) Synth
+ = case Map.lookup nPrim Prim.primOps of
+        Nothing
+         -> throw $ ErrorUnknownPrimitive a wh nPrim
+
+        Just pp
+         -> do  let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
+                let wh'   = WhereAppPrim a nPrim tPrim : wh
+                (tsInst', tPrimInst)
+                 <- case tsInst of
+                        [] -> return (tsInst, tPrim)
+                        _  -> checkTermAppTypes a wh' ctx tPrim tsInst
+
+                (msArg',  tsResult)
+                 <- checkTermAppTerms a wh' ctx tPrimInst msArg
+
+                return  (MPrim nPrim tsInst' msArg', tsResult)
+
+
+-- MKRecord -----------------------------------------------
+-- TODO: check for repeated labels.
+checkTerm a wh ctx mm@(MRecord ns ms) mode
+ = case mode of
+        Check [TRecord ns' tsExpected]
+         | Set.fromList ns == Set.fromList ns'
+         , Set.size (Set.fromList ns)  == length ns
+         , Set.size (Set.fromList ns') == length ns'
+         -> do
+                let nts = Map.fromList $ zip ns' tsExpected
+                let nmts = [ let Just t = Map.lookup n nts in (n, m, t)
+                           | m  <- ms | n <- ns ]
+
+                (ms', ts')
+                  <- fmap unzip $ forM nmts $ \(n, m, t)
+                  -> do let wh' = WhereRecordField a n (Just t) : wh
+                        checkTerm1 a wh' ctx m (Check [t])
+
+                return (MRecord ns ms', [TRecord ns ts'])
+
+        Check _
+         -> checkTerm_default a wh ctx mm mode
+
+        Synth
+         -> do  (ms', ts') <- checkTerms a wh ctx ms Synth
+                return  (MRecord ns ms', [TRecord ns ts'])
+
+
+-- MKProject ----------------------------------------------
+checkTerm a wh ctx (MProject nLabel mRecord) Synth
+ = do   (mRecord', tsRecord) <- checkTerm a wh ctx mRecord Synth
+        case tsRecord of
+         [tRecord@(TRecord ns ts)]
+          -> case lookup nLabel $ zip ns ts of
+                Nothing     -> throw $ ErrorRecordProjectNoField a wh tRecord nLabel
+                Just tField -> return (MProject nLabel mRecord', [tField])
+
+         [tThing]
+            -> throw $ ErrorRecordProjectIsNot a wh tThing nLabel
+         ts -> throw $ ErrorTermsWrongArity a wh ts [TData]
+
+
+-- MKList -------------------------------------------------
+checkTerm a wh ctx (MList (m1 : ms)) Synth
+ = do   (m1',  t1)  <- checkTerm1 a wh ctx m1 Synth
+        (ms', _ts') <- checkTerms a wh ctx ms (Check $ replicate (length ms) t1)
+        return  (MList (m1' : ms'), [TList t1])
+
+checkTerm a wh ctx (MList ms) (Check [TList tElem])
+ = do   (ms', _ts') <- checkTerms a wh ctx ms (Check $ replicate (length ms) tElem)
+        return  (MList ms', [TList tElem])
+
+
+-- MKSet --------------------------------------------------
+checkTerm a wh ctx (MSet (m1 : ms)) Synth
+ = do   (m1',  t1)  <- checkTerm1 a wh ctx m1 Synth
+        (ms', _ts') <- checkTerms a wh ctx ms (Check $ replicate (length ms) t1)
+        return  (MSet (m1' : ms'), [TSet t1])
+
+checkTerm a wh ctx (MSet ms) (Check [TSet tElem])
+ = do   (ms', _ts') <- checkTerms a wh ctx ms (Check $ replicate (length ms) tElem)
+        return  (MSet ms', [TSet tElem])
+
+
+checkTerm a wh ctx m mode
+ = checkTerm_default a wh ctx m mode
+
+
+-----------------------------------------------------------
+checkTerm_default a wh ctx m (Check [tExpected])
+ = do   -- TODO: check singular
+        (m', [tActual]) <- checkTerm a wh ctx m Synth
+
+        case (tExpected, tActual) of
+         _ -> case checkTypeEq a [] tExpected a [] tActual of
+                Nothing        -> return (m', [tActual])
+                Just ((_a1, t1Err), (_a2, t2Err))
+                 -> throw $ ErrorTypeMismatch a wh t1Err t2Err
+
+
+-----------------------------------------------------------
+checkTerm_default _ _ _ mm mode
+ =  error $ unlines
+        [ "checkTerm: not finished"
+        , show mode
+        , show mm ]
+
+
+---------------------------------------------------------------------------------------------------
+-- | Like 'checkTerm' but expect a single result type.
+checkTerm1
+        :: Annot a => a -> [Where a]
+        -> Context a -> Term a -> Mode a -> IO (Term a, Type a)
+checkTerm1 a wh ctx m mode
+ = do   (m', ts') <- checkTerm a wh ctx m mode
+        case ts' of
+         [t]    -> return (m', t)
+         _      -> throw $ ErrorTermsWrongArity a wh ts' [TData]
+
+
+-- | Like 'checkTerm', but expect the given result result type,
+--   throwing an error if it's not.
+checkTermIs1
+        :: Annot a => a -> [Where a]
+        -> Context a -> Term a -> Type a -> IO (Term a)
+checkTermIs1 a wh ctx m tExpected
+ = do   (m', _t') <- checkTerm1 a wh ctx m (Check [tExpected])
+
+        -- TODO: type equality
+        return m'
+
+
+---------------------------------------------------------------------------------------------------
+-- | Check a list of individual terms.
+checkTerms
+        :: Annot a => a -> [Where a]
+        -> Context a -> [Term a] -> Mode a -> IO ([Term a], [Type a])
+
+checkTerms a wh ctx ms Synth
+ =      fmap unzip $ mapM     (\m -> checkTerm1 a wh ctx m Synth) ms
+
+checkTerms a wh ctx ms (Check ts)
+ | length ms == length ts
+ =      fmap unzip $ zipWithM (\m t -> checkTerm1 a wh ctx m (Check [t])) ms ts
+
+ | otherwise
+ = do   (_ms, ts') <- fmap unzip $ mapM (\m -> checkTerm1 a wh ctx m Synth) ms
+        throw $ ErrorTermsWrongArity a wh ts' (replicate (length ms) TData)
+
+
+---------------------------------------------------------------------------------------------------
+checkTermParams
+        :: Annot a => a -> [Where a]
+        -> Context a -> TermParams a -> IO (TermParams a)
+
+checkTermParams _a _wh _ctx tps
+ = case tps of
+        MPTerms bts -> return $ MPTerms bts   -- TODO: check types
+        MPTypes bts -> return $ MPTypes bts   -- TODO: check types
+
+
+---------------------------------------------------------------------------------------------------
+-- | Check the application of a term to some types.
+checkTermAppTypes
+        :: Annot a => a -> [Where a]
+        -> Context a -> Type a -> [Type a] -> IO ([Type a], Type a)
+
+checkTermAppTypes a wh ctx tFun tsArg
+ = case tFun of
+        TForall bksParam tResult
+          -> goCheckArgs bksParam tResult
+        _ -> throw $ ErrorAppTermTypeCannot a wh tFun
+
+ where  -- TODO: kind check parameter types.
+
+        goCheckArgs  bksParam tResult
+         = do   (tsArg', ksArg) <- checkTypes a wh ctx tsArg
+                if length bksParam /= length tsArg
+                 then throw $ ErrorAppTermTypeWrongArity a wh bksParam tsArg
+                 else goCheckParams bksParam tResult tsArg' ksArg
+
+        goCheckParams bksParam tResult tsArg' ksArg
+         = case checkTypeEqs a [] (map snd bksParam) a [] ksArg of
+                Just ((_aErr1', tErr1), (_aErr2', tErr2))
+                 -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+
+                Nothing -> goSubstArgs bksParam tResult tsArg'
+
+        goSubstArgs   bksParam tResult tsArg'
+         = do   let subst   = Map.fromList
+                                [ (n, t) | (BindName n, _k) <- bksParam
+                                         | t <- tsArg ]
+                let tSubst  = substTypeType [subst] tResult
+                return  (tsArg', tSubst)
+
+
+-- | Check the application of a term to some terms.
+checkTermAppTerms
+        :: Annot a => a -> [Where a]
+        -> Context a -> Type a -> [Term a] -> IO ([Term a], [Type a])
+
+checkTermAppTerms a wh ctx tFun msArg
+ = case tFun of
+        TFun tsParam tsResult
+          -> goCheckArgs tsParam tsResult
+        _ -> throw $ ErrorAppTermTermCannot a wh tFun
+
+ where  -- Check if we were given the correct number of arguments for
+        -- the application. Note that we cannot easily produce the argument
+        -- types directly in the error message, as they might be naturally
+        -- ambiguous and rely on the parameter type being pushed down to
+        -- disambigate.
+        goCheckArgs  tsParam tsResult
+         = do   if length tsParam /= length msArg
+                 then throw $ ErrorAppTermTermWrongArityNum a wh tsParam (length msArg)
+                 else do
+                        (msArg', tsArg) <- checkTerms a wh ctx msArg (Check tsParam)
+                        goCheckParams tsParam tsResult msArg' tsArg
+
+        goCheckParams tsParam tsResult msArg' tsArg
+         = case checkTypeEqs a [] tsParam a [] tsArg of
+                Just ((_aErr1', tErr1), (_aErr2', tErr2))
+                 -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+
+                Nothing
+                 -> return  (msArg', tsResult)
+
