@@ -1,0 +1,5 @@
+
+test #true
+test #bool'or #false #true
+test (λ{x: Bool} → x) #true
+
