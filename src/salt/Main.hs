@@ -137,7 +137,6 @@ mainTest filePath name
          _      -> mapM_ (runTest mm) tests
 
 
--- Tests ------------------------------------------------------------------------------------------
 mainTests :: FilePath -> IO ()
 mainTests filePath
  = do   mm      <- runParse filePath
@@ -147,7 +146,6 @@ mainTests filePath
         mapM_ (runTest mm) tests
 
 
--- ExecScenarios ----------------------------------------------------------------------------------
 runTest :: Module IW.Location -> DeclTest IW.Location -> IO ()
 runTest mm tt
  = case tt of
@@ -165,21 +163,29 @@ runTestPrint _mm mnTest mTest
         putStr  $ "* "
                 ++ (case mnTest of
                         Nothing -> ""
-                        Just (Name tx) -> T.unpack tx)
+                        Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        vResult
-         <- Eval.evalTerm a (Env []) mTest
-
-        let str = P.renderIndent $ P.ppr () vResult
-
-        putStrLn $ " " ++ str
-
+        vResult <- Eval.evalTerm a (Env []) mTest
+        putStrLn $ P.renderIndent $ P.ppr () vResult
 
 
 runTestAssert
         :: Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
-runTestAssert _mm _mn _n
- = return ()
+runTestAssert _mm mnTest mTest
+ = do
+        let a   = IW.Location 0 0
+
+        putStr  $ "* "
+                ++ (case mnTest of
+                        Nothing -> ""
+                        Just (Name tx) -> T.unpack tx % ": ")
+        System.hFlush System.stdout
+
+        vResult <- Eval.evalTerm a (Env []) mTest
+        case vResult of
+         [VTrue]        -> putStrLn "ok"
+         [VFalse]       -> putStrLn "failed"
+         _              -> putStrLn "invalid"
 

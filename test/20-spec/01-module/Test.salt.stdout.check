@@ -1,0 +1,6 @@
+* foo: [#true]
+* [#true]
+* foo: ok
+* ok
+* [#true]
+* [#false]

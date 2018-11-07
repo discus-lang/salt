@@ -1,0 +1,16 @@
+
+-- print test with a name.
+test foo print #true
+
+-- print test without a name.
+test print #true
+
+-- assert test with a name
+test foo assert #true
+
+-- assert test without a name
+test assert #true
+
+-- print test without a 'print' specifier
+test #true
+test #bool'and #true #false

@@ -110,16 +110,17 @@ pattern MTrue           = MBool  True
 pattern MFalse          = MBool  False
 pattern MInt i          = MRef  (MRVal (VInt i))
 pattern MNat i          = MRef  (MRVal (VNat i))
-
 pattern MSymbol n       = MRef  (MRVal (VSymbol n))
 pattern MText tx        = MRef  (MRVal (VText tx))
 
 pattern MJust t m       = MCon  (Name "Just")    [t] [m]
 pattern MNothing t      = MCon  (Name "Nothing") [t] []
 
+-- Values
+pattern VTrue           = VBool  True
+pattern VFalse          = VBool  False
 pattern VJust v         = VData (Name "Just")    [v]
 pattern VNothing        = VData (Name "Nothing") []
-
 pattern VCloTerm e bs m = VClosure (CloTerm e bs m)
 
 
