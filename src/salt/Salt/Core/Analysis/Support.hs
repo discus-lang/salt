@@ -1,6 +1,7 @@
 
 module Salt.Core.Analysis.Support where
 import Salt.Core.Exp
+import Data.Semigroup
 import Data.Set                 (Set)
 import qualified Data.Set       as Set
 
