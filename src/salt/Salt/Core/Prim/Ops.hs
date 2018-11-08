@@ -62,6 +62,11 @@ primOpsBool
         , tsig  = [TBool, TBool] :-> [TBool]
         , step  = \[VBool b1, VBool b2] -> [VBool $ b1 || b2]
         , docs  = "Boolean or." }
+
+  , PP { name  = "bool'eq"
+        , tsig  = [TBool, TBool] :-> [TBool]
+        , step  = \[VBool b1, VBool b2] -> [VBool $ b1 == b2]
+        , docs  = "Boolean or." }
    ]
 
 
