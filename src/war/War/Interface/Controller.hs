@@ -135,6 +135,7 @@ handleResult config gang chainsTotal result
         let status
              = case product' of
                  ProductStatus s _ -> s
+                 ProductDiff _ _ _ -> error "handleResult: ProductDiff case unimplemented"
 
         let prefix'     = configSuppressPrefix config
         let width'      = configFormatPathWidth config
