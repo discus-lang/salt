@@ -1,12 +1,12 @@
 -- Testing primitive operations
 
 -- Boolean primitives
-test assert #bool'not #false
-test assert #bool'not (#bool'not #true)
-test assert #bool'and #true #true
-test assert #bool'and (#bool'not #false) #true
-test assert #bool'or #false #true
-test assert #bool'or #true #false
-test assert #bool'eq #true #true
-test assert #bool'eq #false #false
+test assert.bool'not1 #bool'not #false
+test assert.bool'not2 #bool'not (#bool'not #true)
+test assert.bool'and1 #bool'and #true #true
+test assert.bool'and2 #bool'and (#bool'not #false) #true
+test assert.bool'or1  #bool'or #false #true
+test assert.bool'or2  #bool'or #true #false
+test assert.bool'eq1  #bool'eq #true #true
+test assert.bool'eq2  #bool'eq #false #false
 
