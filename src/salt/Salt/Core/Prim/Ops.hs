@@ -84,7 +84,7 @@ primOpsNat
 
    , PP { name  = "nat'mul"
         , tsig  = [TNat, TNat] :-> [TNat]
-        , step  = \[VNat n1, VNat n2] -> [VNat $ n1 + n2]
+        , step  = \[VNat n1, VNat n2] -> [VNat $ n1 * n2]
         , docs  = "Natural number multiplication." }
 
    , PP { name  = "nat'eq"
