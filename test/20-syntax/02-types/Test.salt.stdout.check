@@ -1,0 +1,22 @@
+* unit: #Data
+* bool: #Data
+* nat: #Data
+* int: #Data
+* text: #Data
+* symbol: #Data
+* maybe: {#Data} ⇒ #Data
+* list: {#Data} ⇒ #Data
+* set: {#Data} ⇒ #Data
+* map: {#Data; #Data} ⇒ #Data
+* app'maybe: #Data
+* app'list: #Data
+* app'set: #Data
+* map'nat: #Data
+* app'set'set: #Data
+* map'nat: #Data
+* op1: {#Data; #Data} ⇒ a
+* fun1: #Data
+* fun2: #Data
+* rec1: #Data
+* rec2: #Data
+* rec'empty: #Data
