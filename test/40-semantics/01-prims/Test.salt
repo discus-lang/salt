@@ -7,4 +7,6 @@ test assert #bool'and #true #true
 test assert #bool'and (#bool'not #false) #true
 test assert #bool'or #false #true
 test assert #bool'or #true #false
+test assert #bool'eq #true #true
+test assert #bool'eq #false #false
 
