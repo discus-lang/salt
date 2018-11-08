@@ -24,3 +24,6 @@ test assert.nat'gt1   #nat'gt 10 8
 test assert.nat'gt2   #bool'not (#nat'gt 4 4)
 test assert.nat'ge    #nat'ge 4 4
 
+-- Symbol primitives
+test assert.symbol'eq1 #symbol'eq 'foo 'foo
+test assert.symbol'eq2 #bool'not (#symbol'eq 'foo 'bar)

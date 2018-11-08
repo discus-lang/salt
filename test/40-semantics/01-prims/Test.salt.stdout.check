@@ -18,3 +18,5 @@
 * nat'gt1:   ok
 * nat'gt2:   ok
 * nat'ge:    ok
+* symbol'eq1: ok
+* symbol'eq2: ok
