@@ -1,0 +1,26 @@
+* unit: #Unit
+* bool'true: #Bool
+* bool'true2: #Bool
+* bool'false: #Bool
+* bool'false2: #Bool
+* nat1: #Nat
+* nat1234: #Nat
+* symbol: #Symbol
+* symbol2: #Symbol
+* abs: {#Bool} → {#Bool}
+* abs2: {#Bool; #Nat} → {#Bool}
+* abs3: {#Bool; #Nat} → {#Bool; #Nat}
+* abs4: {#Bool; #Nat} → {}
+* abs5: {} → {}
+* app'not: #Bool
+* app'and: #Bool
+* app'and2: #Bool
+* app'lam: #Bool
+* app'lam2: #Bool
+* app'lam2'list: #Bool
+* record'empty: []
+* record'one: [x: #Nat]
+* record'two: [x: #Nat, y: #Bool]
+* record'three: [x: #Nat, y: #Bool, z: #Unit]
+* field'one: #Nat
+* field'two: #Bool

@@ -1,5 +1,5 @@
 
--- Check the primitive data constructors.
+-- Check kinding of primitive data constructors.
 test kind.unit          #Unit
 test kind.bool          #Bool
 test kind.nat           #Nat

@@ -54,7 +54,7 @@ instance Pretty c (Type a) where
          -> pprTFun c tFun %% braced (map (pprTArg c) tsArg)
 
         TKey (TKRecord []) [TGTypes []]
-         -> text "[record|]"
+         -> text "[]"
 
         TKey (TKRecord ns) [TGTypes ts]
          | length ns == length ts

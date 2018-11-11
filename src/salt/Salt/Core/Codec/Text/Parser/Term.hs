@@ -22,11 +22,11 @@ pTerm_  :: Parser (Term Location)
 pTerm_
  = P.choice
  [ do   -- '{' Term;* '}'
-        ms      <- pBraced $ P.sepEndBy1 pTerm (pTok KSemi)
+        ms      <- pBraced $ P.sepEndBy pTerm (pTok KSemi)
         return  $ MTerms ms
 
 
- , do   -- 'fun' Var '->' Term
+ , do   -- 'λ' TermParams '->' Term
         pTok KFun
         mps     <- pTermParams
         pTok KArrowRight
@@ -91,6 +91,7 @@ pTerm_
 
         return  $ MCon nCon tsArgs msArgs
 
+
  , do   -- Prm TypeArg* TermArg*
         nPrm    <- pPrm
 
@@ -108,12 +109,14 @@ pTerm_
          (Just v,  _,  _)  -> return $ MApm (MApt (MVal v) tsArgs) msArgs
          (Nothing, _,  _)  -> return $ MPrim nPrm tsArgs msArgs
 
+
  , do   -- Term Term*
         mFun    <- pTermArgProj
         msArgs  <- P.many pTermArgs
         case msArgs of
-         []     -> return mFun
-         _      -> return $ foldl MApp mFun msArgs
+         []             -> return mFun
+         [MGTerms []]   -> return mFun
+         _              -> return $ foldl MApp mFun msArgs
 
  ]
  <?> "a term"
@@ -132,8 +135,8 @@ pTermArgs
         return  $ MGTypes ts
 
  , do   -- TermProj
-        m       <- pTermArgProj
-        return  $ MGTerms [m]
+        ms      <- P.many1 pTermArgProj
+        return  $ MGTerms ms
  ]
 
 
@@ -175,23 +178,6 @@ pTermArg
          Nothing -> P.unexpected "primitive value"
 
 
- , do   -- '[' (Lbl ':' Term)* ']'
-        -- Lookahead to distinguish record literals from the
-        -- other collection literals below.
-        P.try $ P.lookAhead $ do
-                pTok KSBra; pVar; pTok KEquals
-
-        pTermRecord
-
-
- , do   -- '[' record '|' (Lbl ':' Term)* ']'
-        P.try $ P.lookAhead $ do
-                pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "record")
-
-        pTermRecord
-
-
  , do   -- '[' set '|' Term,* ']'
         P.try $ P.lookAhead $ do
                 pTok KSBra; n <- pVar; pTok KBar
@@ -203,7 +189,7 @@ pTermArg
         return  $ MSet msElem
 
 
- , do   -- '[' map '|' Term,* ']'
+ , do   -- '[' 'map' '|' (Term ':=' Term),* ']'
         P.try $ P.lookAhead $ do
                 pTok KSBra; n <- pVar; pTok KBar
                 guard (n == Name "map")
@@ -216,11 +202,21 @@ pTermArg
         return  $ MMap mks mvs
 
 
- , do   -- '[' Term,* ']'
-        pTok KSBra
+ , do   -- '[' 'list' '|' Term,* ']'
+        P.try $ P.lookAhead $ do
+                pTok KSBra; n <- pVar; pTok KBar
+                guard (n == Name "list")
+
+        pTok KSBra; pVar; pTok KBar
         msElem  <- P.sepEndBy1 pTerm (pTok KComma)
         pTok KSKet
         return  $ MList msElem
+
+
+ , do   -- '[' (Lbl ':' Term)* ']'
+        -- Lookahead to distinguish record literals from the
+        -- other collection literals below.
+        pTermRecord
 
 
  , do   -- '(' Term ')'
@@ -236,7 +232,7 @@ pTermParams :: Parser (TermParams Location)
 pTermParams
  = P.choice
  [ do   -- '{' (Var ':' Type')* '}'
-        bts     <- pBraced $ flip P.sepEndBy1 (pTok KSemi)
+        bts     <- pBraced $ flip P.sepEndBy (pTok KSemi)
                 $  do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
         return  $ MPTerms bts
  ]
@@ -247,7 +243,7 @@ pTermRecord
  = P.choice
  [ do   -- '[' (Lbl '=' Term)* ']'
         pTok KSBra
-        lms <- P.sepEndBy1
+        lms <- P.sepEndBy
                 ((do l   <- pLbl
                      pTok KEquals
                      m   <- pTerm

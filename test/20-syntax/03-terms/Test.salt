@@ -1,0 +1,58 @@
+
+-- Check typing of primitive values.
+test type.unit          #unit
+
+test type.bool'true     #true
+test type.bool'true2    #bool'true
+test type.bool'false    #true
+test type.bool'false2   #bool'false
+
+test type.nat1          1
+test type.nat1234       1234
+
+-- TODO: ints
+-- test type.int           1i
+
+test type.symbol        'Foo
+test type.symbol2       'Bar1234
+
+
+-- Function abstractions
+test type.abs           λ{x: #Bool} → x
+test type.abs2          λ{x: #Bool; y: #Nat} → x
+test type.abs3          λ{x: #Bool; y: #Nat} → {x; y}
+test type.abs4          λ{x: #Bool; y: #Nat} → {}
+test type.abs5          λ{} → {}
+
+-- TODO: type parameters.
+
+-- Function application.
+test type.app'not       #bool'not #true
+test type.app'and       #bool'and #true #false
+test type.app'and2      #bool'and {#true; #false}
+
+test type.app'lam       (λ{x: #Bool} → x) #true
+test type.app'lam2      (λ{f: #Bool → #Bool; x: #Bool} → f x) {λ{x: #Bool} → x; #true}
+test type.app'lam2'list (λ{f: #Bool → #Bool; x: #Bool} → f x) (λ{x: #Bool} → x) #true
+
+-- TODO: type application.
+
+-- TODO: let bindings.
+
+-- Records
+test type.record'empty  []
+test type.record'one    [x = 5]
+test type.record'two    [x = 5, y = #true]
+test type.record'three  [x = 5, y = #true, z = #unit]
+
+
+-- Record Field Projections
+test type.field'one     [x = 5].x
+test type.field'two     [x = 5, y = #true].y
+-- test type.field'nest    [x = [x = 5, y = #unit], y = #true].x.y
+
+
+-- TODO: maybe
+-- TODO: list
+-- TODO: set
+-- TODO: map

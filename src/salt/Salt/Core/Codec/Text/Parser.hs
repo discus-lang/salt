@@ -43,9 +43,17 @@ pDecl
         pTok KTest
 
         P.choice
-         [ do   nMode <- pVar
-                (guard $ elem nMode ["kind", "type", "eval", "assert"])
-                 <?> "test mode specifier"
+         [ do
+                nMode   <- P.choice
+                        [ do    n <- pVar
+                                (guard $ elem n ["kind", "type", "eval", "assert"])
+                                return n
+
+                        , do    -- 'type' is both a test specifier and a keyword,
+                                -- so we need to match for it explicitly.
+                                pTok KType
+                                return "type" ]
+                        <?> "test mode specifier"
 
                 mName <- P.optionMaybe $ do pTok KDot; pVar
 

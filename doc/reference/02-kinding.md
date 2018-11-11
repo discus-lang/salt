@@ -28,19 +28,19 @@
 ```
 
 ```
-                    A:K ∈ Γ
-(k-var)         --------------
-                  Γ ⊢ A :: K
+                      A:K ∈ Γ
+(k-var)           -------------------
+                    Γ ⊢ tvar A :: K
 
 
-                  P has kind K
-(k-prm)         ----------------
-                  Γ ⊢ P :: K
+                    P has kind K
+(k-prm)           -------------------
+                    Γ ⊢ tprm P :: K
 
 
-                  C has kind K
-(k-con)         ----------------
-                  Γ ⊢ C :: K
+                    C has kind K
+(k-con)           -------------------
+                    Γ ⊢ tcon C :: K
 
 
                   Γ ⊢ T₁ :: Ks₂ ⇒ K₂    Γ ⊢ Ts₂ :* Ks₂
