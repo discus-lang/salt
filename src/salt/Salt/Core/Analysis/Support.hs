@@ -1,4 +1,7 @@
 
+-- For GHC 8.4 -> 8.6 transition with Data.Semigroup
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+
 module Salt.Core.Analysis.Support where
 import Salt.Core.Exp
 import Data.Semigroup

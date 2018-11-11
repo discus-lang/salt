@@ -129,14 +129,9 @@ controller config gang chainsTotal chanResult
 handleResult :: Config -> Gang -> Int -> Result -> IO Bool
 handleResult config gang chainsTotal result
  | Result chainIx jobIx jobId actionName product' <- result
- , ProductStatus{}          <- product'
+ , ProductStatus status _   <- product'
  , JobId  testName wayName  <- jobId
  = do
-        let status
-             = case product' of
-                 ProductStatus s _ -> s
-                 ProductDiff _ _ _ -> error "handleResult: ProductDiff case unimplemented"
-
         let prefix'     = configSuppressPrefix config
         let width'      = configFormatPathWidth config
         let testName'   = fromMaybe testName $ stripPrefix prefix' testName
