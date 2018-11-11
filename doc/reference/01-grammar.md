@@ -47,14 +47,18 @@ Decl
 
 ```
 Type
- ::=    Var                                     (type variable)
-  |     Con | Prm                               (type literal)
-  |     Type Types                              (type application)
-  |     'λ' TypeParams '⇒' Type                 (type abstraction)
-  |     '∀' TypeParams '.' Type                 (forall type)
-  |     Types '⇒' Type                          (arrow kind)
-  |     Types '→' Types                         (function type)
-  |     TypeRecord                              (record type)
+ ::=    tdat                                    (Data)
+  |     tarr Types Type                         (Types '⇒' Type)
+
+  |     tvar Var                                (Var)
+  |     tcon Con                                (Con)
+  |     tprm Prm                                (Prm)
+  |     tapp Type Types                         (Type Types)
+  |     tabs Var+ Type+ Type                    ('λ' TypeParams '⇒' Type)
+  |     tall Var+ Type+ Type                    ('∀' TypeParams '.' Type)
+  |     text Var+ Type+ Type                    ('∃' TypeParams '.' Type)
+  |     tfun Types Types                        (Types '→' Types)
+  |     trec Lbl* Type*                         ('[' (Lbl ':' Type)* ']')
 
 Types
  ::=    '{' Type;+ '}'                          (type sequence)

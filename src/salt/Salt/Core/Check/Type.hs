@@ -8,7 +8,6 @@ import Salt.Core.Transform.MapAnnot
 import Salt.Core.Exp
 import qualified Salt.Core.Prim.Data    as Prim
 
-
 import Control.Exception
 import qualified Data.Map               as Map
 
@@ -23,21 +22,8 @@ checkType :: Annot a => a -> [Where a]
 checkType _a wh ctx (TAnn a' t)
  = checkType a' wh ctx t
 
--- Prm --------------------------------------------------
--- TODO: proper error for unknown ctors.
-checkType a _wh _ctx t@(TRef (TRPrm n))
- = case Map.lookup n Prim.primTypeCtors of
-        Nothing -> error "unknown type ctor"
-        Just k  -> return (t, mapAnnot (const a) k)
 
-
--- Ref --------------------------------------------------
--- TODO: proper error for unknown synonyms.
-checkType _a _wh _ctx t@(TRef (TRCon _n))
- = error $ "type synonyms not done " ++ show t
-
-
--- Var --------------------------------------------------
+-- (k-var) ------------------------------------------------
 checkType a wh ctx t@(TVar u)
  = do   mt <- contextResolveTypeBound u ctx
         case mt of
@@ -45,7 +31,29 @@ checkType a wh ctx t@(TVar u)
          Nothing -> throw $ ErrorUnknownTypeBound a wh u
 
 
--- Abs --------------------------------------------------
+-- (k-prm) ------------------------------------------------
+-- TODO: proper error for unknown ctors.
+checkType a _wh _ctx t@(TRef (TRPrm n))
+ = case Map.lookup n Prim.primTypeCtors of
+        Nothing -> error "unknown type ctor"
+        Just k  -> return (t, mapAnnot (const a) k)
+
+
+-- (k-con) ------------------------------------------------
+-- TODO: proper error for unknown synonyms.
+checkType _a _wh _ctx t@(TRef (TRCon _n))
+ = error $ "type synonyms not done " ++ show t
+
+
+-- (k-app) ------------------------------------------------
+-- TODO: reduce type redexes.
+checkType a wh ctx (TApt tFun tsArg)
+ = do   (tFun',  kFun)    <- checkType a wh ctx tFun
+        (tsArg', kResult) <- checkTypeAppTypes a wh ctx kFun tsArg
+        return  (TApt tFun' tsArg', kResult)
+
+
+-- (k-abs) ------------------------------------------------
 checkType a wh ctx (TAbs ps tBody)
  = do   let ctx' = contextBindTypeParams ps ctx
         (tBody', kResult)  <- checkType a wh ctx' tBody
@@ -55,29 +63,21 @@ checkType a wh ctx (TAbs ps tBody)
                 , TArr ksParam kResult)
 
 
--- TKApp ------------------------------------------------
--- TODO: reduce type redexes.
-checkType a wh ctx (TApt tFun tsArg)
- = do   (tFun',  kFun)    <- checkType a wh ctx tFun
-        (tsArg', kResult) <- checkTypeAppTypes a wh ctx kFun tsArg
-        return  (TApt tFun' tsArg', kResult)
-
-
--- TKForall ---------------------------------------------
+-- (k-all) ------------------------------------------------
 checkType a wh ctx (TForall bksParam tBody)
  = do   let ctx' = contextBindTypeParams (TPTypes bksParam) ctx
         tBody'  <- checkTypeIs a wh ctx' tBody TData
         return  (TForall bksParam tBody', TData)
 
 
--- TKExists ---------------------------------------------
+-- (k-ext) ------------------------------------------------
 checkType a wh ctx (TExists bksParam tBody)
  = do   let ctx' = contextBindTypeParams (TPTypes bksParam) ctx
         tBody'  <- checkTypeIs a wh ctx' tBody TData
         return  (TExists bksParam tBody', TData)
 
 
--- TKFun ------------------------------------------------
+-- (k-fun) ------------------------------------------------
 checkType a wh ctx (TFun tsParam tsResult)
  = do
         tsParam'  <- checkTypesAre a wh ctx tsParam
@@ -89,7 +89,7 @@ checkType a wh ctx (TFun tsParam tsResult)
         return  (TFun tsParam' tsResult', TData)
 
 
--- TKRecord -----------------------------------------------
+-- (k-rec) ------------------------------------------------
 checkType a wh ctx (TRecord ns tsField)
  = do
         -- TODO: check for duplicate field names.
@@ -98,8 +98,12 @@ checkType a wh ctx (TRecord ns tsField)
 
         return  (TRecord ns tsField', TData)
 
-checkType _ _ _ t
- = error $ show t
+
+-----------------------------------------------------------
+-- The type expression is malformed,
+--   so we don't have any rule that could match it.
+checkType a _ _ t
+ = throw $ ErrorTypeMalformed a t
 
 
 ---------------------------------------------------------------------------------------------------
@@ -111,7 +115,7 @@ checkTypes a wh ctx ts
  = fmap unzip $ mapM (checkType a wh ctx) ts
 
 
--- | Check the kind of a type matches the expected ones.
+-- | Check the kind of a single type matches the expected one.
 checkTypeIs
         :: Annot a => a -> [Where a]
         -> Context a -> Type a -> Kind a -> IO (Type a)

@@ -43,6 +43,11 @@ pprw c  (WhereRecordField _a l (Just t))
 instance Show a => Pretty c (Error a) where
  ppr c err = ppre c err
 
+-- Malformed AST ------------------------------------------
+ppre _c (ErrorTypeMalformed _a t)
+ = vcat [ text "Malformed type AST"
+        , string (show t) ]
+
 -- Structural arity ---------------------------------------
 ppre c (ErrorTermsWrongArity _a _wh ts ks)
  = let  reason = if length ts >= length ks then "Too many" else "Not enough"

@@ -7,8 +7,13 @@ import Data.Typeable
 
 
 data Error a
+        -- Malformed AST ------------------------
+        = ErrorTypeMalformed
+        { errorAnnot            :: a
+        , errorType             :: Type a}
+
         -- Structural arity ---------------------
-        = ErrorTermsWrongArity
+        | ErrorTermsWrongArity
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorTypesActual      :: [Type a]
