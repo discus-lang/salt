@@ -44,6 +44,8 @@ scanner _fileName
         , fmap (stamp id) $ IW.accept '→' KArrowRight
         , fmap (stamp id) $ IW.accept '⇒' KArrowRightFat
         , fmap (stamp id) $ IW.accept 'λ' KFun
+        , fmap (stamp id) $ IW.accept '∀' KForall
+        , fmap (stamp id) $ IW.accept '∃' KExists
 
         , fmap (stamp id)
            $ IW.munchPred Nothing (\_ix c -> isVarChar c)
@@ -51,6 +53,9 @@ scanner _fileName
                 "type"          -> Just KType
                 "term"          -> Just KTerm
                 "test"          -> Just KTest
+
+                "forall"        -> Just KForall
+                "exists"        -> Just KExists
 
                 "where"         -> Just KWhere
 

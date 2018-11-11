@@ -9,19 +9,33 @@ import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
 
 
+-- | Parser for a type expression.
 pType :: Parser (Type Location)
 pType
  = P.choice
- [ do   -- λ TypeParams ⇒ Type
+ [ do   -- 'λ' TypeParams '⇒' Type
         pTok KFun
         bks     <- pTypeParams
         pTok KArrowRightFat
         tBody   <- pType
         return  $  TAbs bks tBody
 
+ , do   -- '∀' TypeParams '.' Type
+        pTok KForall
+        TPTypes bks <- pTypeParams
+        pTok KDot
+        tBody   <- pType
+        return  $  TForall bks tBody
 
- , do   -- TypesHead
-        -- TypesHead '->' TypesResult
+ , do   -- '∃' TypeParams '.' Type
+        pTok KExists
+        TPTypes bks <- pTypeParams
+        pTok KDot
+        tBody   <- pType
+        return  $  TExists bks tBody
+
+ , do   -- TypesHead '->' TypesResult
+        -- TypesHead
         TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pTok KArrowRight
@@ -36,42 +50,35 @@ pType
  <?> "a type"
 
 
+-- | Parser for a type that can be used in the head of a function type.
 pTypesHead :: Parser (TypeArgs Location)
 pTypesHead
  = P.choice
- [ do   -- Prm TypeArg*
-        nPrm    <- pPrm
-
-        P.choice
-         [ do   -- Primitive constructor directly applied to an argument vector.
-                tsArgs  <- pBraced $ P.sepEndBy pType (pTok KSemi)
-                return  $  TGTypes [TApt (TPrm nPrm) tsArgs]
-
-         , do   -- Primitive constructor applied to separate arguments.
-                tsArgs  <- P.many pTypeArg
-                case tsArgs of
-                 []     -> return $ TGTypes [TPrm nPrm]
-                 _      -> return $ TGTypes [TApt (TPrm nPrm) tsArgs]
-         ]
-
- , do   --
-        ts      <- pBraced $ P.sepEndBy1 pType (pTok KSemi)
+ [ do   -- '{' Type+ '}'
+        ts      <- pBraced $ P.sepEndBy pType (pTok KSemi)
         return  $ TGTypes ts
 
- , do   t       <- pTypeRecord
-        return  $ TGTypes [t]
+ , do   -- (Prm | TypeArg) TypeArg*
+        tFun    <- P.choice
+                [  do   pPrm >>= return . TPrm
+                ,  do   pTypeArg ]
 
+        P.choice
+         [ do   -- '{' Type;+ '}'
+                tsArgs  <- pBraced $ P.sepEndBy pType (pTok KSemi)
+                return  $  TGTypes [TApt tFun tsArgs]
 
- , do   -- Type Type*
-        tFun    <- pTypeArg
-        tsArgs  <- P.many pTypeArg
-        case tsArgs of
-         []     -> return $ TGTypes [tFun]
-         _      -> return $ TGTypes [TApt tFun tsArgs]
+         , do   -- TypeArg*
+                tsArgs  <- P.many pTypeArg
+                case tsArgs of
+                 []     -> return $ TGTypes [tFun]
+                 _      -> return $ TGTypes [TApt tFun tsArgs]
+         ]
  ]
  <?> "a head type"
 
 
+-- | Parser that can be used as the result in a function type.
 pTypesResult :: Parser [Type Location]
 pTypesResult
  = do   TGTypes tsHead <- pTypesHead
@@ -84,30 +91,18 @@ pTypesResult
  <?> "a result type"
 
 
-pTypeArgs :: Parser (TypeArgs Location)
-pTypeArgs
- = P.choice
- [ do   -- '{' Type;+ '}'
-        ts      <- pBraced $ P.sepEndBy pType (pTok KSemi)
-        return  $ TGTypes ts
-
- , do   t       <- pTypeArg
-        return  $ TGTypes [t]
- ]
-
-
+-- | Parser for a type that can be used as the argument in a type-type application.
 pTypeArg :: Parser (Type Location)
 pTypeArg
  = P.choice
- [ do   pVar >>= return . TVar . Bound
-
- , do   -- Prm
-        nPrm    <- pPrm
-        return $ TPrm nPrm
+ [ do   -- Var
+        pVar >>= return . TVar . Bound
 
  , do   -- Con
-        nCon    <- pCon
-        return $ TCon nCon
+        pCon >>= return . TCon
+
+ , do   -- Prm
+        pPrm >>= return . TPrm
 
  , do   -- '[' (Lbl ':' Type)* ']'
         pTypeRecord
@@ -121,16 +116,22 @@ pTypeArg
  <?> "an argument type"
 
 
+-- | Parser for some type parameters.
+--   There needs to be at least one parameter because types
+--   like  'λ{}.T' and '∀{}.T' aren't useful and we prefer not to worry
+--   about needing to define them to be equal to 'T'.
 pTypeParams :: Parser (TypeParams Location)
 pTypeParams
  = P.choice
- [ do   -- '{' (Var ':' Type')* '}'
+ [ do   -- '{' (Var ':' Type')+ '}'
         bts     <- pBraced $ flip P.sepEndBy1 (pTok KSemi)
                 $  do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
         return  $ TPTypes bts
  ]
+ <?> "type parameters"
 
 
+-- | Parser for a record type.
 pTypeRecord :: Parser (Type Location)
 pTypeRecord
  = do   -- '[' (Lbl ':' Type)* ']'
@@ -144,5 +145,4 @@ pTypeRecord
         pTok KSKet
         return $ TRecord (map fst lts) (map snd lts)
  <?> "a record type"
-
 

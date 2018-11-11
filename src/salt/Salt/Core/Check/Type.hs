@@ -23,8 +23,8 @@ checkType :: Annot a => a -> [Where a]
 checkType _a wh ctx (TAnn a' t)
  = checkType a' wh ctx t
 
-
 -- Prm --------------------------------------------------
+-- TODO: proper error for unknown ctors.
 checkType a _wh _ctx t@(TRef (TRPrm n))
  = case Map.lookup n Prim.primTypeCtors of
         Nothing -> error "unknown type ctor"
@@ -32,6 +32,7 @@ checkType a _wh _ctx t@(TRef (TRPrm n))
 
 
 -- Ref --------------------------------------------------
+-- TODO: proper error for unknown synonyms.
 checkType _a _wh _ctx t@(TRef (TRCon _n))
  = error $ "type synonyms not done " ++ show t
 
@@ -46,8 +47,8 @@ checkType a wh ctx t@(TVar u)
 
 -- Abs --------------------------------------------------
 checkType a wh ctx (TAbs ps tBody)
- = do   let ctx'    = contextBindTypeParams ps ctx
-        (kResult, tBody')  <- checkType a wh ctx' tBody
+ = do   let ctx' = contextBindTypeParams ps ctx
+        (tBody', kResult)  <- checkType a wh ctx' tBody
         let TPTypes bks = ps
         let ksParam     = map snd bks
         return  ( TAbs ps tBody'
@@ -55,10 +56,25 @@ checkType a wh ctx (TAbs ps tBody)
 
 
 -- TKApp ------------------------------------------------
+-- TODO: reduce type redexes.
 checkType a wh ctx (TApt tFun tsArg)
  = do   (tFun',  kFun)    <- checkType a wh ctx tFun
         (tsArg', kResult) <- checkTypeAppTypes a wh ctx kFun tsArg
         return  (TApt tFun' tsArg', kResult)
+
+
+-- TKForall ---------------------------------------------
+checkType a wh ctx (TForall bksParam tBody)
+ = do   let ctx' = contextBindTypeParams (TPTypes bksParam) ctx
+        tBody'  <- checkTypeIs a wh ctx' tBody TData
+        return  (TForall bksParam tBody', TData)
+
+
+-- TKExists ---------------------------------------------
+checkType a wh ctx (TExists bksParam tBody)
+ = do   let ctx' = contextBindTypeParams (TPTypes bksParam) ctx
+        tBody'  <- checkTypeIs a wh ctx' tBody TData
+        return  (TExists bksParam tBody', TData)
 
 
 -- TKFun ------------------------------------------------
@@ -72,23 +88,6 @@ checkType a wh ctx (TFun tsParam tsResult)
 
         return  (TFun tsParam' tsResult', TData)
 
-
--- TKPrim -----------------------------------------------
-{-
-checkType a wh ctx (TPrim nPrim tsArg)
- = do
-        -- The primitive type constructor must be known as a primitive.
-        kPrim
-         <- case Map.lookup nPrim Prim.primTypeCtors of
-                Nothing -> error "undefined prim type ctor"
-                Just k  -> return $ mapAnnot (const a) k
-
-        -- Check all the type arguments against their expected kinds.
-        (tsArg', kResult)
-         <- checkTypeAppTypes a wh ctx kPrim tsArg
-
-        return  (TPrim nPrim tsArg', kResult)
--}
 
 -- TKRecord -----------------------------------------------
 checkType a wh ctx (TRecord ns tsField)
@@ -150,7 +149,6 @@ checkTypeAppTypes a wh ctx kFun tsArg
           -> goCheckArgs ksParam kResult
         _ -> throw $ ErrorAppTypeTypeCannot a wh kFun
  where
-        -- Check it we were given the correct number of arguments for the application.
         goCheckArgs ksParam kResult
          = do   if length ksParam /= length tsArg
                  then throw $ ErrorAppTypeTypeWrongArityNum a wh ksParam (length tsArg)
@@ -163,6 +161,5 @@ checkTypeAppTypes a wh ctx kFun tsArg
                 Just ((_aErr1', kErr1), (_aErr2, kErr2))
                  -> throw $ ErrorTypeMismatch a wh kErr1 kErr2
 
-                Nothing
-                 -> return (tsArg', kResult)
+                Nothing -> return (tsArg', kResult)
 

@@ -24,12 +24,21 @@ test kind.app'set'set   #Set {#Set {#Nat}}
 test kind.map'nat       #Map #Nat #Text
 
 -- Type function.
-test kind.op1           (λ{a: #Data; b: #Data} ⇒ a)
--- test kind.op1'app       (λ{a: #Data; b: #Data} ⇒ a) {#Nat; #Bool}
+test kind.op1           λ{a: #Data; b: #Data} ⇒ a
+test kind.op1'high      λ{a: #Data → #Data} ⇒ a
+test kind.op1'app       (λ{a: #Data; b: #Data} ⇒ a) {#Nat; #Bool}
+
+-- Forall type.
+test kind.all1          ∀{a: #Data; b: #Data}. a → b
+
+-- Exists type.
+test kind.some1         ∃{a: #Data; b: #Data}. a → b
 
 -- Function types.
 test kind.fun1          {#Nat; #Nat} → {#Nat}
 test kind.fun2          {#Nat} → {#Nat} → {#Bool}
+test kind.fun3          #Map #Nat #Bool → #Nat
+test kind.fun4          #Nat → #Map #Nat #Bool
 
 -- Record types.
 test kind.rec1          [one: #Symbol, two: #Nat]

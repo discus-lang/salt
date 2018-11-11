@@ -65,8 +65,13 @@ instance Pretty c (Type a) where
          ->  text "∀"
           %  braced   [ ppr c b % text ":" %% ppr c t
                       | (b, t) <- bts ]
-          %% text "→"
-          %% ppr c tBody
+          %% text "." %% ppr c tBody
+
+        TKey TKExists [TGTypes [TAbs (TPTypes bts) tBody]]
+         ->  text "∃"
+          %  braced   [ ppr c b % text ":" %% ppr c t
+                      | (b, t) <- bts ]
+          %% text "." %% ppr c tBody
 
         TKey TKFun    [TGTypes tsParam, TGTypes tsResult]
          -> braced (map (ppr c) tsParam)
@@ -122,6 +127,7 @@ instance Pretty c TypeKey where
         TKApp           -> text "##app"
         TKFun           -> text "##fun"
         TKForall        -> text "##forall"
+        TKExists        -> text "##exists"
         TKRecord ns     -> text "##record" %% bracketed (map (ppr c) ns)
 
 
