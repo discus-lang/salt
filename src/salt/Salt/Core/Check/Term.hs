@@ -33,7 +33,7 @@ checkTerm _a wh ctx (MAnn a' m) mode
  = checkTerm a' wh ctx m mode
 
 -- Ref --------------------------------------------------
-checkTerm _a _wh _ctx m@(MRef ref) Synth
+checkTerm a wh _ctx m@(MRef ref) Synth
  = case ref of
         MRVal VUnit     -> return (m, [TUnit])
         MRVal VSymbol{} -> return (m, [TSymbol])
@@ -42,6 +42,14 @@ checkTerm _a _wh _ctx m@(MRef ref) Synth
         MRVal VInt{}    -> return (m, [TInt])
         MRVal VNat{}    -> return (m, [TNat])
         MRVal _         -> error "check value not done yet"
+
+        MRPrm nPrim
+         -> case Map.lookup nPrim Prim.primOps of
+                Just pp
+                 -> do  let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
+                        return (m, [tPrim])
+
+                Nothing -> throw $ ErrorUnknownPrimitive a wh nPrim
 
         MRTop{}         -> error "check mrtop not done yet"
 
@@ -135,26 +143,6 @@ checkTerm a wh ctx (MCon nCtor tsArg msArg) Synth
          = throw $ ErrorUnknownDataCtor a wh nCtor
 
    in   goCheckData
-
-
--- MKPrim -------------------------------------------------
-checkTerm a wh ctx (MPrim nPrim tsInst msArg) Synth
- = case Map.lookup nPrim Prim.primOps of
-        Nothing
-         -> throw $ ErrorUnknownPrimitive a wh nPrim
-
-        Just pp
-         -> do  let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
-                let wh'   = WhereAppPrim a nPrim tPrim : wh
-                (tsInst', tPrimInst)
-                 <- case tsInst of
-                        [] -> return (tsInst, tPrim)
-                        _  -> checkTermAppTypes a wh' ctx tPrim tsInst
-
-                (msArg',  tsResult)
-                 <- checkTermAppTerms a wh' ctx tPrimInst msArg
-
-                return  (MPrim nPrim tsInst' msArg', tsResult)
 
 
 -- MKRecord -----------------------------------------------

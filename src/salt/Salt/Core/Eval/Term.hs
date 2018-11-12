@@ -42,6 +42,21 @@ evalTerm _a env (MAbm bts mBody)
 evalTerm a env (MKey MKTerms [MGTerms ms])
  = evalTerms a env ms
 
+-- Prim-term application
+evalTerm a env (MKey MKApp [MGTerms [MPrm nPrim], MGTerms msArg])
+ = case Map.lookup nPrim Ops.primOps of
+        Just (Ops.PP _name _type step _docs)
+         -> do  vsArg   <- evalTerms a env msArg
+                let vsResult    =  step vsArg
+                return vsResult
+
+        Just (Ops.PO _name _type exec _docs)
+         -> do  vsArg    <- evalTerms a env msArg
+                vsResult <- exec vsArg
+                return vsResult
+
+        Nothing -> throw $ ErrorPrimUnknown a nPrim
+
 -- Term-term application.
 evalTerm a env (MKey MKApp [MGTerms [mFun], MGTerms msArg])
  = do   vsCloTerm <- evalTerm a env mFun
@@ -75,20 +90,6 @@ evalTerm a env (MKey (MKCon nCon) [MGTypes _, MGTerms msArg])
  = do   vsArg  <- evalTerms a env msArg
         return  [VData nCon vsArg]
 
--- Primitive operator.
-evalTerm a env (MKey (MKPrim nPrim) [MGTypes _, MGTerms msArg])
- = case Map.lookup nPrim Ops.primOps of
-        Just (Ops.PP _name _type step _docs)
-         -> do  vsArg   <- evalTerms a env msArg
-                let vsResult    =  step vsArg
-                return vsResult
-
-        Just (Ops.PO _name _type exec _docs)
-         -> do  vsArg    <- evalTerms a env msArg
-                vsResult <- exec vsArg
-                return vsResult
-
-        Nothing -> throw $ ErrorPrimUnknown a nPrim
 
 -- Record constructor application.
 evalTerm a env (MKey (MKRecord nsField) [MGTerms msArg])

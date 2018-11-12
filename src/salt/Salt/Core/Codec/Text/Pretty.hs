@@ -157,9 +157,6 @@ instance Pretty c (Term a) where
         MKey MKApp [MGTerms [mFun], MGTerms msArg]
          -> pprMFun c mFun %% squared (map (ppr c) msArg)
 
-        MKey (MKPrim n) [MGTypes [], mgts@(MGTerms _)]
-         -> text "#" % ppr c n %% ppr c mgts
-
         MKey (MKProject n) [MGTerms [m]]
          -> ppr c m % text "." % ppr c n
 
@@ -181,6 +178,8 @@ instance Pretty c (TermRef a) where
  ppr c mr
   = case mr of
         MRVal v -> ppr c v
+
+        MRPrm n -> text "#" % ppr c n
 
         MRTop ns n
          -> (hcat $ punctuate (text ".") (map (ppr c) ns))
@@ -214,7 +213,6 @@ instance Pretty c TermKey where
         MKApp           -> text "##app"
         MKLet           -> text "##let"
         MKCon n         -> text "##con"     %% ppr c n
-        MKPrim n        -> text "##prim"    %% ppr c n
         MKCase ns       -> text "##case"    %% (hsep $ map (ppr c) ns)
         MKRecord ns     -> text "##record"  %% (hsep $ map (ppr c) ns)
         MKProject n     -> text "##project" %% ppr c n

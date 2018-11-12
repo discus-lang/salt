@@ -81,50 +81,52 @@ pTerm_
  , do   -- Con TypeArg* TermArg*
         nCon    <- pCon
 
+        -- TODO: fix type app syntax.
         tsArgs  <- P.choice
                 [ do    P.many1 pTermArgType
                 , do    return [] ]
 
-        msArgs  <- pSquared $ P.sepEndBy pTerm (pTok KSemi)
---        msArgs  <- P.choice
---                [ do    pBraced $ P.sepEndBy1 pTerm (pTok KSemi)
---                , do    P.many pTermArgProj ]
+        msArgs  <- P.choice
+                [ do    pSquared $ P.sepEndBy pTerm (pTok KSemi)
+                , do    m <- pTermArg; return [m]
+                , do    return [] ]
 
         return  $ MCon nCon tsArgs msArgs
 
 
  , do   -- Prm TypeArg* TermArg*
         nPrm    <- pPrm
+        case takePrimValueOfName nPrm of
+         Just v -> return $ MVal v
+         Nothing
+          -> do mAppTs
+                 <- P.choice
+                 [  do  tsArgs  <- P.many1 pTermArgType
+                        return  $ MApt (MPrm nPrm) tsArgs
 
-        tsArgs  <- P.choice
-                [ do    P.many1 pTermArgType
-                , do    return [] ]
+                 ,  do  return  $ MPrm nPrm ]
 
-        msArgs  <- P.choice
-                [  do   pSquared $ P.sepEndBy pTerm (pTok KComma)
-                ,       return [] ]
+                P.choice
+                 [ do   msArg   <- pSquared $ P.sepEndBy pTerm (pTok KComma)
+                        return  $ MApm mAppTs msArg
 
---      msArgs  <- P.choice
---              [ do    pBraced $ P.sepEndBy1 pTerm (pTok KSemi)
---              , do    P.many pTermArgProj ]
+                 , do   mArg    <- pTermArgProj
+                        return  $ MApv mAppTs mArg
 
-        case (takePrimValueOfName nPrm, tsArgs, msArgs) of
-         (Just v,  [], []) -> return $ MVal v
-         (Just v,  [], _)  -> return $ MApm (MVal v) msArgs
-         (Just v,  _,  _)  -> return $ MApm (MApt (MVal v) tsArgs) msArgs
-         (Nothing, _,  _)  -> return $ MPrim nPrm tsArgs msArgs
+                 ,  do  return  $ mAppTs ]
 
 
  , do   -- TermArg [Term; ...]
         -- TermArg TermArg
+        -- TODO: fix type app syntax.
         mFun    <- pTermArgProj
 
         P.choice
          [ do   msArgs  <- pSquared $ P.sepEndBy pTerm (pTok KComma)
-                return $ MApp mFun (MGTerms msArgs)
+                return  $ MApm mFun msArgs
 
          , do   mArg    <- pTerm
-                return $ MApp mFun (MGTerm  mArg)
+                return  $ MApv mFun mArg
 
          , do   return mFun
          ]

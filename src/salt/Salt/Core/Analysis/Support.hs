@@ -108,6 +108,7 @@ instance HasSupport (Term a) where
 instance HasSupport (TermRef a) where
  supportOf mr
   = case mr of
+        MRPrm{}         -> mempty
         MRVal{}         -> mempty
         MRTop{}         -> mempty
 
