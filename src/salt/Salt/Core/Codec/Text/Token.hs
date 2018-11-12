@@ -21,9 +21,10 @@ data Token
         | KComment Text         -- comment text
 
         -- Punctuation
-        | KRBra   | KRKet        -- round bracket ()
-        | KCBra   | KCKet        -- curley brackets {}
-        | KSBra   | KSKet        -- square brackets []
+        | KRBra   | KRKet       -- round bracket ()
+        | KCBra   | KCKet       -- curley brackets {}
+        | KSBra   | KSKet       -- square brackets []
+        | KABra   | KAKet       -- angle  brackets <>
         | KColon  | KSemi
         | KComma  | KDot  | KBar | KAt
         | KEquals | KColonEquals

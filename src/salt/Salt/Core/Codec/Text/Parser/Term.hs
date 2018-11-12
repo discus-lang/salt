@@ -21,8 +21,8 @@ pTerm
 pTerm_  :: Parser (Term Location)
 pTerm_
  = P.choice
- [ do   -- '{' Term;* '}'
-        ms      <- pBraced $ P.sepEndBy pTerm (pTok KSemi)
+ [ do   -- '[' Term,* ']'
+        ms      <- pSquared $ P.sepEndBy pTerm (pTok KComma)
         return  $ MTerms ms
 
 
@@ -36,13 +36,13 @@ pTerm_
          MPTypes bts    -> return $ MAbt bts mBody
 
 
- , do   -- 'let' '{' Bind;+ '}' 'in' Term
+ , do   -- 'let' '[' Bind;+ ']' 'in' Term
         -- TODO: support none binders.
         -- TODO: support missing type sigs.
         pTok KLet
         bts     <- P.choice
-                [ do    pBraced
-                         $ flip P.sepEndBy1 (pTok KSemi)
+                [ do    pSquared
+                         $ flip P.sepEndBy1 (pTok KComma)
                          $  do  v  <- pVar
                                 P.choice
                                  [ do   pTok KColon; t <- pType; return (BindName v, t)
@@ -85,7 +85,7 @@ pTerm_
                 [ do    P.many1 pTermArgType
                 , do    return [] ]
 
-        msArgs  <- pBraced $ P.sepEndBy pTerm (pTok KSemi)
+        msArgs  <- pSquared $ P.sepEndBy pTerm (pTok KSemi)
 --        msArgs  <- P.choice
 --                [ do    pBraced $ P.sepEndBy1 pTerm (pTok KSemi)
 --                , do    P.many pTermArgProj ]
@@ -101,7 +101,7 @@ pTerm_
                 , do    return [] ]
 
         msArgs  <- P.choice
-                [  do   pBraced $ P.sepEndBy pTerm (pTok KSemi)
+                [  do   pSquared $ P.sepEndBy pTerm (pTok KComma)
                 ,       return [] ]
 
 --      msArgs  <- P.choice
@@ -115,12 +115,12 @@ pTerm_
          (Nothing, _,  _)  -> return $ MPrim nPrm tsArgs msArgs
 
 
- , do   -- TermArg {Term; ...}
+ , do   -- TermArg [Term; ...]
         -- TermArg TermArg
         mFun    <- pTermArgProj
 
         P.choice
-         [ do   msArgs  <- pBraced $ P.sepEndBy pTerm (pTok KSemi)
+         [ do   msArgs  <- pSquared $ P.sepEndBy pTerm (pTok KComma)
                 return $ MApp mFun (MGTerms msArgs)
 
          , do   mArg    <- pTerm
@@ -135,13 +135,13 @@ pTerm_
 pTermArgs :: Parser (TermArgs Location)
 pTermArgs
  = P.choice
- [ do   -- '{' Term;+ '}'
-        ms      <- pBraced $ P.sepEndBy pTerm (pTok KSemi)
+ [ do   -- '[' Term;+ ']'
+        ms      <- pSquared $ P.sepEndBy pTerm (pTok KSemi)
         return  $ MGTerms ms
 
- , do   -- '@' '{' Type;+ '}'
+ , do   -- '@' '[' Type;+ ']'
         pTok KAt
-        ts      <- pBraced $ P.sepEndBy pType (pTok KSemi)
+        ts      <- pSquared $ P.sepEndBy pType (pTok KSemi)
         return  $ MGTypes ts
 
  , do   -- TermProj
@@ -237,8 +237,8 @@ pTermArg
 pTermParams :: Parser (TermParams Location)
 pTermParams
  = P.choice
- [ do   -- '{' (Var ':' Type')* '}'
-        bts     <- pBraced $ flip P.sepEndBy (pTok KSemi)
+ [ do   -- '[' (Var ':' Type')* ']'
+        bts     <- pSquared $ flip P.sepEndBy (pTok KComma)
                 $  do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
         return  $ MPTerms bts
  ]
@@ -247,15 +247,15 @@ pTermParams
 pTermRecord :: Parser (Term Location)
 pTermRecord
  = P.choice
- [ do   -- '[' (Lbl '=' Term)* ']'
-        pTok KSBra
+ [ do   -- '⟨' (Lbl '=' Term)* '⟩'
+        pTok KABra
         lms <- P.sepEndBy
                 ((do l   <- pLbl
                      pTok KEquals
                      m   <- pTerm
                      return (l, m)) <?> "a record field")
                 (pTok KComma)
-        pTok KSKet
+        pTok KAKet
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
 
@@ -306,7 +306,7 @@ pValue
 
 pTermValueRecord :: Parser (Value Location)
 pTermValueRecord
- = do   -- '[' (Lbl '=' Value)* ']'
+ = do   -- '⟨' (Lbl '=' Value)* '⟩'
         pTok KSBra
         lvs <- P.sepEndBy1
                 (do l   <- pLbl
@@ -316,3 +316,4 @@ pTermValueRecord
                 (pTok KComma)
         pTok KSKet
         return $ VRecord lvs
+

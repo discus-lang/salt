@@ -7,11 +7,11 @@
 * nat1234: #Nat
 * symbol: #Symbol
 * symbol2: #Symbol
-* abs: {#Bool} → {#Bool}
-* abs2: {#Bool; #Nat} → {#Bool}
-* abs3: {#Bool; #Nat} → {#Bool; #Nat}
-* abs4: {#Bool; #Nat} → {}
-* abs5: {} → {}
+* abs: [#Bool] → [#Bool]
+* abs2: [#Bool, #Nat] → [#Bool]
+* abs3: [#Bool, #Nat] → [#Bool, #Nat]
+* abs4: [#Bool, #Nat] → []
+* abs5: [] → []
 * app'not: #Bool
 * app'and: #Bool
 * app'lam: #Bool
@@ -21,10 +21,10 @@
 * let'snd: #Nat
 * let'one: #Nat
 * let'some: #Nat
-* record'empty: []
-* record'one: [x: #Nat]
-* record'two: [x: #Nat, y: #Bool]
-* record'three: [x: #Nat, y: #Bool, z: #Unit]
+* record'empty: ⟨⟩
+* record'one: ⟨x: #Nat⟩
+* record'two: ⟨x: #Nat, y: #Bool⟩
+* record'three: ⟨x: #Nat, y: #Bool, z: #Unit⟩
 * field'one: #Nat
 * field'two: #Bool
 * field'nest: #Unit

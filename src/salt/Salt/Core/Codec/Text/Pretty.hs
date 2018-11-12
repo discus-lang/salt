@@ -29,6 +29,12 @@ bracketed ds
 bracketed' name ds
  = brackets  $ hcat (text name : text "|" : punctuate (text ", ") ds)
 
+angled ds
+ = text "⟨" % (hcat $ punctuate (text ", ") ds) % text "⟩"
+
+squared ds
+ = text "[" % (hcat $ punctuate (text ", ") ds) % text "]"
+
 
 -- Type -------------------------------------------------------------------------------------------
 instance Pretty c (Type a) where
@@ -46,40 +52,39 @@ instance Pretty c (Type a) where
 
         -- Keyed expressions
         TKey TKArr   [TGTypes tsParam, TGTypes [tResult]]
-         -> braced (map (ppr c) tsParam)
-         %% text "⇒"
-         %% ppr c tResult
+         -> squared (map (ppr c) tsParam)
+         %% text "⇒" %% ppr c tResult
 
         TKey TKApp   [TGTypes [tFun], TGTypes tsArg]
-         -> pprTFun c tFun %% braced (map (pprTArg c) tsArg)
+         -> pprTFun c tFun %% squared (map (pprTArg c) tsArg)
 
         TKey (TKRecord []) [TGTypes []]
-         -> text "[]"
+         -> text "⟨⟩"
 
         TKey (TKRecord ns) [TGTypes ts]
          | length ns == length ts
-         -> bracketed [ ppr c n % text ":" %% ppr c t
-                      | n <- ns | t <- ts ]
+         -> angled [ ppr c n % text ":" %% ppr c t
+                   | n <- ns | t <- ts ]
 
         TKey TKForall [TGTypes [TAbs (TPTypes bts) tBody]]
          ->  text "∀"
-          %  braced   [ ppr c b % text ":" %% ppr c t
+          %  squared  [ ppr c b % text ":" %% ppr c t
                       | (b, t) <- bts ]
           %% text "." %% ppr c tBody
 
         TKey TKExists [TGTypes [TAbs (TPTypes bts) tBody]]
          ->  text "∃"
-          %  braced   [ ppr c b % text ":" %% ppr c t
+          %  squared  [ ppr c b % text ":" %% ppr c t
                       | (b, t) <- bts ]
           %% text "." %% ppr c tBody
 
         TKey TKFun    [TGTypes tsParam, TGTypes tsResult]
-         -> braced (map (ppr c) tsParam)
-         %% text "→"
-         %% braced (map (ppr c) tsResult)
+         ->  squared (map (ppr c) tsParam)
+         %%  text "→"
+         %%  squared (map (ppr c) tsResult)
 
         TKey k ts
-         -> ppr c k %% (hsep $ map (ppr c) ts)
+         ->  ppr c k %% (hsep $ map (ppr c) ts)
 
 
 pprTFun c tt
@@ -108,14 +113,14 @@ instance Pretty c TypeRef where
 instance Pretty c (TypeArgs a) where
  ppr c tgs
   = case tgs of
-        TGTypes ts -> braced $ map (ppr c) ts
+        TGTypes ts -> squared $ map (ppr c) ts
 
 
 instance Pretty c (TypeParams a) where
  ppr c tps
   = case tps of
         TPTypes nts
-         -> braced [ ppr c n % text ":" %% ppr c t
+         -> squared [ ppr c n % text ":" %% ppr c t
                    | (n, t) <- nts ]
 
 
@@ -145,12 +150,12 @@ instance Pretty c (Term a) where
          -> text "λ" %% ppr c p %% text "→" %% ppr c m
 
         MLet bts mBind mBody
-         -> text "let" %% (braced [ppr c b % text ":" %% ppr c t | (b, t) <- bts])
+         -> text "let" %% (squared [ppr c b % text ":" %% ppr c t | (b, t) <- bts])
          %% text "="   %% ppr c mBind
          %% text "in"  %% ppr c mBody
 
         MKey MKApp [MGTerms [mFun], MGTerms msArg]
-         -> pprMFun c mFun %% braced (map (ppr c) msArg)
+         -> pprMFun c mFun %% squared (map (ppr c) msArg)
 
         MKey (MKPrim n) [MGTypes [], mgts@(MGTerms _)]
          -> text "#" % ppr c n %% ppr c mgts

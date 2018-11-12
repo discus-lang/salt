@@ -18,44 +18,47 @@ test type.symbol2       'Bar1234
 
 
 -- Function abstractions
-test type.abs           λ{x: #Bool} → x
-test type.abs2          λ{x: #Bool; y: #Nat} → x
-test type.abs3          λ{x: #Bool; y: #Nat} → {x; y}
-test type.abs4          λ{x: #Bool; y: #Nat} → {}
-test type.abs5          λ{} → {}
+test type.abs           λ[x: #Bool] → x
+test type.abs2          λ[x: #Bool, y: #Nat] → x
+test type.abs3          λ[x: #Bool, y: #Nat] → [x, y]
+test type.abs4          λ[x: #Bool, y: #Nat] → []
+test type.abs5          λ[] → []
 
 -- TODO: type parameters.
 
 -- Function application.
-test type.app'not       #bool'not {#true}
-test type.app'and       #bool'and {#true; #false}
+test type.app'not       #bool'not [#true]
+test type.app'and       #bool'and [#true, #false]
 
-test type.app'lam       (λ{x: #Bool} → x) {#true}
-test type.app'lam2      (λ{f: #Bool → #Bool; x: #Bool} → f {x}) {λ{x: #Bool} → x; #true}
-test type.app'vec       (λ{x: #Bool; y: #Bool} → y) ((λ{x: #Bool} → {x; x}) {#true})
+test type.app'lam       (λ[x: #Bool] → x) [#true]
 
+test type.app'lam2      (λ[f: #Bool → #Bool, x: #Bool] → f [x])
+                                [λ[x: #Bool] → [x], #true]
+
+test type.app'vec       (λ[x: #Bool, y: #Bool] → y)
+                                ((λ[x: #Bool] → [x, x]) [#true])
 
 -- TODO: type application.
 
 -- Let bindings.
-test type.let'fst       let {x; y} = (λ{x: #Bool} → {x; 5}) {#true} in x
-test type.let'snd       let {x; y} = (λ{x: #Bool} → {5; x}) {#true} in x
-test type.let'one       let x = 5 in #nat'add {x; x}
-test type.let'some      let a = 2 in let b = 3 in #nat'add {a; b}
+test type.let'fst       let [x, y] = (λ[x: #Bool] → [x, 5]) [#true] in x
+test type.let'snd       let [x, y] = (λ[x: #Bool] → [5, x]) [#true] in x
+test type.let'one       let x = 5 in #nat'add [x, x]
+test type.let'some      let a = 2 in let b = 3 in #nat'add [a, b]
 
 
 -- Records
-test type.record'empty  []
-test type.record'one    [x = 5]
-test type.record'two    [x = 5, y = #true]
-test type.record'three  [x = 5, y = #true, z = #unit]
+test type.record'empty  ⟨⟩
+test type.record'one    ⟨x = 5⟩
+test type.record'two    ⟨x = 5, y = #true⟩
+test type.record'three  ⟨x = 5, y = #true, z = #unit⟩
 
 
 -- Record Field Projections
-test type.field'one     [x = 5].x
-test type.field'two     [x = 5, y = #true].y
-test type.field'nest    [x = [x = 5, y = #unit], y = #true].x.y
-test type.field'paren   (([x = [x = 5, y = #unit], y = #true]).x).y
+test type.field'one     ⟨x = 5⟩.x
+test type.field'two     ⟨x = 5, y = #true⟩.y
+test type.field'nest    ⟨x = ⟨x = 5, y = #unit⟩, y = #true⟩.x.y
+test type.field'paren   ((⟨x = ⟨x = 5, y = #unit⟩, y = #true⟩).x).y
 
 -- TODO: maybe
 -- TODO: list

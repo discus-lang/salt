@@ -33,6 +33,8 @@ scanner _fileName
         , fmap (stamp id) $ IW.accept '}' KCKet
         , fmap (stamp id) $ IW.accept '[' KSBra
         , fmap (stamp id) $ IW.accept ']' KSKet
+        , fmap (stamp id) $ IW.accept '<' KABra
+        , fmap (stamp id) $ IW.accept '>' KAKet
         , fmap (stamp id) $ IW.accept ':' KColon
         , fmap (stamp id) $ IW.accept ';' KSemi
         , fmap (stamp id) $ IW.accept ',' KComma
@@ -41,6 +43,8 @@ scanner _fileName
         , fmap (stamp id) $ IW.accept '@' KAt
         , fmap (stamp id) $ IW.accept '=' KEquals
 
+        , fmap (stamp id) $ IW.accept '⟨' KABra
+        , fmap (stamp id) $ IW.accept '⟩' KAKet
         , fmap (stamp id) $ IW.accept '→' KArrowRight
         , fmap (stamp id) $ IW.accept '⇒' KArrowRightFat
         , fmap (stamp id) $ IW.accept 'λ' KFun

@@ -55,6 +55,16 @@ pBraced p
  = do   pTok KCBra; x <- p; pTok KCKet; return x
 
 
+pSquared :: Parser a -> Parser a
+pSquared p
+ = do   pTok KSBra; x <- p; pTok KSKet; return x
+
+
+pAngled :: Parser a -> Parser a
+pAngled p
+ = do   pTok KABra; x <- p; pTok KAKet; return x
+
+
 ---------------------------------------------------------------------------------------------------
 pVar :: Parser Name
 pVar    = pTokOf $ \case { KVar s -> Just (Name s); _ -> Nothing }

@@ -2,5 +2,5 @@
 -- Power-on tests ensure the most basic things work.
 -- At least the lights go on..
 test eval #true
-test eval #bool'or {#false; #true}
-test eval (λ{x: #Bool} → x) {#true}
+test eval #bool'or [#false, #true]
+test eval (λ[x: #Bool] → x) [#true]
