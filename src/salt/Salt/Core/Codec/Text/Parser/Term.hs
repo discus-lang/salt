@@ -36,9 +36,8 @@ pTerm_
          MPTypes bts    -> return $ MAbt bts mBody
 
 
- , do   -- 'let' '[' Bind;+ ']' 'in' Term
+ , do   -- 'let' '[' Var,* ']' '=' Term ';' Term
         -- TODO: support none binders.
-        -- TODO: support missing type sigs.
         pTok KLet
         bts     <- P.choice
                 [ do    pSquared
@@ -55,7 +54,7 @@ pTerm_
                 ]
         pTok KEquals
         mBind   <- pTerm
-        pTok KIn
+        pTok KSemi
         mBody   <- pTerm
         return  $ MLet bts mBind mBody
 
@@ -68,10 +67,9 @@ pTerm_
         pTok KDo
         binds   <- pBraced $ P.sepEndBy1 pTermStmt (pTok KSemi)
         case reverse binds of
-         (BindNone, mBody) : bmsRest
-           -> let (bsBind, msBind) = unzip $ reverse bmsRest
-                  btsBind  = zip bsBind $ repeat THole
-              in  return $ foldr (\(bt, m) m' -> MLet [bt] m m')
+         ([(BindNone, THole)], mBody) : bmsRest
+           -> let (btsBind, msBind) = unzip $ reverse bmsRest
+              in  return $ foldr (\(bts, m) m' -> MLet bts m m')
                                  mBody (zip btsBind msBind)
 
          []     -> P.unexpected "empty do block"
@@ -98,6 +96,8 @@ pTerm_
         nPrm    <- pPrm
         case takePrimValueOfName nPrm of
          Just v -> return $ MVal v
+
+         -- TODO: use pTermArgs parser.
          Nothing
           -> do mAppTs
                  <- P.choice
@@ -137,19 +137,20 @@ pTerm_
 pTermArgs :: Parser (TermArgs Location)
 pTermArgs
  = P.choice
- [ do   -- '[' Term;+ ']'
-        ms      <- pSquared $ P.sepEndBy pTerm (pTok KSemi)
-        return  $ MGTerms ms
-
- , do   -- '@' '[' Type;+ ']'
+ [ do   -- '@' '[' Type;+ ']'
         pTok KAt
         ts      <- pSquared $ P.sepEndBy pType (pTok KSemi)
         return  $ MGTypes ts
+
+ , do   -- '[' Term;+ ']'
+        ms      <- pSquared $ P.sepEndBy pTerm (pTok KSemi)
+        return  $ MGTerms ms
 
  , do   -- TermProj
         m       <- pTermArgProj
         return  $ MGTerm m
  ]
+ <?> "some term arguments"
 
 
 pTermArgType :: Parser (Type Location)
@@ -158,6 +159,7 @@ pTermArgType
         pTok KAt
         t       <- pTypeArg
         return t
+ <?> "a term argument"
 
 
 pTermArgProj :: Parser (Term Location)
@@ -286,12 +288,27 @@ pTermBind
  <?> "a term binder"
 
 
-pTermStmt :: Parser (Bind, Term Location)
+-- TODO: use the binding forms in the let parser as well.
+pTermStmt :: Parser ([(Bind, Type Location)], Term Location)
 pTermStmt
  = P.choice
- [ do   -- Var '=' Term
+ [ do   -- '[' (Var : Type),* ']' = Term
+        -- TODO: support none binders.
+        bts     <- pSquared
+                $ flip P.sepEndBy1 (pTok KComma)
+                $ do  v  <- pVar
+                      P.choice
+                        [ do   pTok KColon; t <- pType; return (BindName v, t)
+                        , do   return (BindName v, THole) ]
+        pTok KEquals
+        mBody   <- pTerm
+        return  (bts, mBody)
+
+
+ , do   -- Var '=' Term
         -- We need the lookahead here because plain terms
         -- in the next choice can also start with variable name.
+        -- TODO: allow type sigs.
         P.try $ P.lookAhead $ do
                 pVar
                 pTok KEquals
@@ -299,11 +316,11 @@ pTermStmt
         nVar    <- pVar
         pTok KEquals
         mBody   <- pTerm
-        return  (BindName nVar, mBody)
+        return  ([(BindName nVar, THole)], mBody)
 
  , do   -- Term
         mBody   <- pTerm
-        return  (BindNone, mBody)
+        return  ([(BindNone, THole)], mBody)
  ]
  <?> "a statement"
 

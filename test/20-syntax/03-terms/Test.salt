@@ -41,10 +41,15 @@ test type.app'vec       (λ[x: #Bool, y: #Bool] → y)
 -- TODO: type application.
 
 -- Let bindings.
-test type.let'fst       let [x, y] = (λ[x: #Bool] → [x, 5]) [#true] in x
-test type.let'snd       let [x, y] = (λ[x: #Bool] → [5, x]) [#true] in x
-test type.let'one       let x = 5 in #nat'add [x, x]
-test type.let'some      let a = 2 in let b = 3 in #nat'add [a, b]
+test type.let'fst       let [x, y] = (λ[x: #Bool] → [x, 5]) [#true]; x
+test type.let'snd       let [x, y] = (λ[x: #Bool] → [5, x]) [#true]; x
+test type.let'one       let x = 5; #nat'add [x, x]
+test type.let'some      let a = 2; let b = 3; #nat'add [a, b]
+
+
+-- Do blocks
+test type.do'fst        do { [x, y] = (λ[x: #Bool] → [x, 5]) [#true]; x }
+test type.do'some       do { a = 2; b = 3; #nat'add [a, b] }
 
 
 -- Records
@@ -59,6 +64,7 @@ test type.field'one     ⟨x = 5⟩.x
 test type.field'two     ⟨x = 5, y = #true⟩.y
 test type.field'nest    ⟨x = ⟨x = 5, y = #unit⟩, y = #true⟩.x.y
 test type.field'paren   ((⟨x = ⟨x = 5, y = #unit⟩, y = #true⟩).x).y
+
 
 -- TODO: maybe
 -- TODO: list

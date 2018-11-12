@@ -65,7 +65,6 @@ scanner _fileName
 
                 "fun"           -> Just KFun
                 "let"           -> Just KLet
-                "in"            -> Just KIn
                 "do"            -> Just KDo
 
                 "if"            -> Just KIf

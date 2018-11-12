@@ -36,7 +36,7 @@ data Token
         | KType   | KTerm  | KTest
         | KForall | KExists
         | KWhere  | KAnd   | KAs     | KTo
-        | KFun    | KLet   | KIn     | KDo
+        | KFun    | KLet   | KDo
         | KIf     | KThen  | KElse
 
         -- Names
