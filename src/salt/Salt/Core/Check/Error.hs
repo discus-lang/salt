@@ -46,6 +46,13 @@ data Error a
         , errorWhere            :: [Where a]
         , errorVar              :: Bound }
 
+        -- Let bindings --------------------------
+        | ErrorLetWrongArity
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorTypesActual      :: [Type a]
+        , errorBinds            :: [Bind] }
+
         -- Unexpected types ----------------------
         | ErrorTypeMismatch
         { errorAnnot            :: a

@@ -1,5 +1,5 @@
 
--- Check typing of primitive values.
+-- Primitive Values -----------------------------------------------------------
 test type.unit          #unit
 
 test type.bool'true     #true
@@ -17,7 +17,7 @@ test type.symbol        'Foo
 test type.symbol2       'Bar1234
 
 
--- Function abstractions
+-- Function abstractions ------------------------------------------------------
 test type.abs           λ[x: #Bool] → x
 test type.abs2          λ[x: #Bool, y: #Nat] → x
 test type.abs3          λ[x: #Bool, y: #Nat] → [x, y]
@@ -26,7 +26,7 @@ test type.abs5          λ[] → []
 
 -- TODO: type parameters.
 
--- Function application.
+-- Function application -------------------------------------------------------
 test type.app'not       #bool'not [#true]
 test type.app'and       #bool'and [#true, #false]
 
@@ -40,26 +40,40 @@ test type.app'vec       (λ[x: #Bool, y: #Bool] → y)
 
 -- TODO: type application.
 
--- Let bindings.
+-- Let bindings ---------------------------------------------------------------
 test type.let'fst       let [x, y] = (λ[x: #Bool] → [x, 5]) [#true]; x
 test type.let'snd       let [x, y] = (λ[x: #Bool] → [5, x]) [#true]; x
 test type.let'one       let x = 5; #nat'add [x, x]
 test type.let'some      let a = 2; let b = 3; #nat'add [a, b]
 
 
--- Do blocks
-test type.do'fst        do { [x, y] = (λ[x: #Bool] → [x, 5]) [#true]; x }
-test type.do'some       do { a = 2; b = 3; #nat'add [a, b] }
+-- Do blocks ------------------------------------------------------------------
+test type.do'fst
+ do {   [x, y] = (λ[x: #Bool] → [x, 5]) [#true];
+        x
+ }
+
+test type.do'some
+ do {   a = 2; b = 3;
+        #nat'add [a, b]
+ }
+
+test type.do'things
+ do {   a       = 2;
+        [b, c]  = [2, 3];
+        d       = #nat'add [a, b];
+        #nat'add [a, #nat'add [b, #nat'add [c, d]]];
+ }
 
 
--- Records
+-- Records --------------------------------------------------------------------
 test type.record'empty  ⟨⟩
 test type.record'one    ⟨x = 5⟩
 test type.record'two    ⟨x = 5, y = #true⟩
 test type.record'three  ⟨x = 5, y = #true, z = #unit⟩
 
 
--- Record Field Projections
+-- Field projections ----------------------------------------------------------
 test type.field'one     ⟨x = 5⟩.x
 test type.field'two     ⟨x = 5, y = #true⟩.y
 test type.field'nest    ⟨x = ⟨x = 5, y = #unit⟩, y = #true⟩.x.y

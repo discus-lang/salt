@@ -43,7 +43,7 @@ evalTerm a env (MKey MKTerms [MGTerms ms])
  = evalTerms a env ms
 
 -- Prim-term application
-evalTerm a env (MKey MKApp [MGTerms [MPrm nPrim], MGTerms msArg])
+evalTerm a env (MKey MKApp [MGTerm (MPrm nPrim), MGTerms msArg])
  = case Map.lookup nPrim Ops.primOps of
         Just (Ops.PP _name _type step _docs)
          -> do  vsArg   <- evalTerms a env msArg
@@ -58,7 +58,7 @@ evalTerm a env (MKey MKApp [MGTerms [MPrm nPrim], MGTerms msArg])
         Nothing -> throw $ ErrorPrimUnknown a nPrim
 
 -- Term-term application.
-evalTerm a env (MKey MKApp [MGTerms [mFun], MGTerms msArg])
+evalTerm a env (MKey MKApp [MGTerm mFun, MGTerms msArg])
  = do   vsCloTerm <- evalTerm a env mFun
         case vsCloTerm of
          [VClosure (CloTerm env' [MPTerms bts] mBody)]
@@ -89,7 +89,6 @@ evalTerm a env (MKey MKLet [MGTerms [mBind, MAbs (MPTerms bts) mBody]])
 evalTerm a env (MKey (MKCon nCon) [MGTypes _, MGTerms msArg])
  = do   vsArg  <- evalTerms a env msArg
         return  [VData nCon vsArg]
-
 
 -- Record constructor application.
 evalTerm a env (MKey (MKRecord nsField) [MGTerms msArg])

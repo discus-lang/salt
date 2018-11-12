@@ -94,10 +94,10 @@ pattern MAbm bts mBody  = MAbs  (MPTerms bts) mBody
 pattern MAbt bts mBody  = MAbs  (MPTypes bts) mBody
 
 pattern MTerms ms       = MKey   MKTerms        [MGTerms ms]
-pattern MApp mFun mgs   = MKey   MKApp          [MGTerms [mFun], mgs]
-pattern MApv mFun mArg  = MKey   MKApp          [MGTerms [mFun], MGTerm  mArg]
-pattern MApm mFun msArg = MKey   MKApp          [MGTerms [mFun], MGTerms msArg]
-pattern MApt mFun tsArg = MKey   MKApp          [MGTerms [mFun], MGTypes tsArg]
+pattern MApp mFun mgs   = MKey   MKApp          [MGTerm  mFun, mgs]
+pattern MApv mFun mArg  = MKey   MKApp          [MGTerm  mFun, MGTerm  mArg]
+pattern MApm mFun msArg = MKey   MKApp          [MGTerm  mFun, MGTerms msArg]
+pattern MApt mFun tsArg = MKey   MKApp          [MGTerm  mFun, MGTypes tsArg]
 pattern MLet bts mb m   = MKey   MKLet          [MGTerms [mb, MAbs (MPTerms bts) m]]
 pattern MCon  n ts ms   = MKey  (MKCon n)       [MGTypes ts, MGTerms ms]
 pattern MProject l m    = MKey  (MKProject l)   [MGTerms [m]]

@@ -23,6 +23,7 @@
 * let'some: #Nat
 * do'fst: #Bool
 * do'some: #Nat
+* do'things: #Nat
 * record'empty: ⟨⟩
 * record'one: ⟨x: #Nat⟩
 * record'two: ⟨x: #Nat, y: #Bool⟩

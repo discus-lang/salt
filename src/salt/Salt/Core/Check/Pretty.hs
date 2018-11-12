@@ -75,6 +75,12 @@ ppre c (ErrorUnknownTermBound _a _wh u)
  = vcat [ text "Variable" %% squotes (ppr c u) %% text "is not in scope." ]
 
 
+-- Let bindings -------------------------------------------
+ppre c (ErrorLetWrongArity _a _wh tsActual bsExpected)
+ = vcat [ text "Wrong aity in let binding "
+        , text "  binders:" %% braced (map (ppr c) bsExpected)
+        , text "   values:" %% braced (map (ppr c) tsActual) ]
+
 -- Unexpected types ---------------------------------------
 ppre c (ErrorTypeMismatch _a _wh tExpected tActual)
  = vcat [ text "Unexpected type:" %% ppr c tActual

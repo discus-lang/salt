@@ -118,6 +118,9 @@ checkTerm a wh ctx (MLet bts mBind mResult) Synth
 
         -- TODO: check num. of bindings
         let (bs, tsParam) = unzip bts'
+        when (not $ length tsParam == length tsBind)
+         $ throw $ ErrorLetWrongArity a wh tsBind bs
+
         tsBind'   <- zipWithM checkLetAnnot tsParam tsBind
         let bts'' =  zip bs tsBind'
 
