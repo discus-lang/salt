@@ -53,12 +53,12 @@ Type
   |     tvar Var                                (Var)
   |     tcon Con                                (Con)
   |     tprm Prm                                (Prm)
-  |     tapp Type Types                         (Type Types)
+  |     tapp Type Type*                         (Type Types)
   |     tabs Var+ Type+ Type                    ('λ' TypeParams '⇒' Type)
   |     tall Var+ Type+ Type                    ('∀' TypeParams '.' Type)
   |     text Var+ Type+ Type                    ('∃' TypeParams '.' Type)
-  |     tfun Types Types                        (Types '→' Types)
-  |     trec Lbl* Type*                         ('[' (Lbl ':' Type)* ']')
+  |     tfun Type* Type*                        (Types '→' Types)
+  |     trec Lbl*  Type*                        ('[' (Lbl ':' Type)* ']')
 
 Types
  ::=    '{' Type;+ '}'                          (type sequence)

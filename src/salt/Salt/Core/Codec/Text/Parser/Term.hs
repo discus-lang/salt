@@ -151,12 +151,8 @@ pTermArgType
 pTermArgProj :: Parser (Term Location)
 pTermArgProj
  = do   mTerm   <- pTermArg
-        P.choice
-         [ do   pTok KDot
-                l       <- pLbl
-                return  $ MProject l mTerm
-
-         , do   return mTerm ]
+        nsLabel <- P.many (do pTok KDot; pLbl)
+        return  $  foldl (flip MProject) mTerm nsLabel
  <?> "a term or record projection"
 
 
@@ -289,7 +285,6 @@ pTermStmt
  <?> "a statement"
 
 
----------------------------------------------------------------------------------------------------
 pValue :: Parser (Value Location)
 pValue
  = P.choice

@@ -37,7 +37,12 @@ test type.app'lam2'list (λ{f: #Bool → #Bool; x: #Bool} → f x) (λ{x: #Bool}
 
 -- TODO: type application.
 
--- TODO: let bindings.
+-- Let bindings.
+test type.let'fst       let {x; y} = (λ{x: #Bool} → {x; 5}) #true in x
+test type.let'snd       let {x; y} = (λ{x: #Bool} → {5; x}) #true in x
+test type.let'one       let x = 5 in #nat'add x x
+test type.let'some      let a = 2 in let b = 3 in #nat'add a b
+
 
 -- Records
 test type.record'empty  []
@@ -49,8 +54,8 @@ test type.record'three  [x = 5, y = #true, z = #unit]
 -- Record Field Projections
 test type.field'one     [x = 5].x
 test type.field'two     [x = 5, y = #true].y
--- test type.field'nest    [x = [x = 5, y = #unit], y = #true].x.y
-
+test type.field'nest    [x = [x = 5, y = #unit], y = #true].x.y
+test type.field'paren   (([x = [x = 5, y = #unit], y = #true]).x).y
 
 -- TODO: maybe
 -- TODO: list
