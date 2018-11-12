@@ -119,6 +119,7 @@ instance HasSupport TermKey where
 instance HasSupport (TermArgs a) where
  supportOf tg
   = case tg of
+        MGTerm  m       -> supportOf m
         MGTerms ms      -> mconcat $ map supportOf ms
         MGTypes ts      -> mconcat $ map supportOf ts
 

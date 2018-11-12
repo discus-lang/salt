@@ -32,6 +32,7 @@ test type.app'and       #bool'and {#true; #false}
 
 test type.app'lam       (λ{x: #Bool} → x) {#true}
 test type.app'lam2      (λ{f: #Bool → #Bool; x: #Bool} → f {x}) {λ{x: #Bool} → x; #true}
+test type.app'vec       (λ{x: #Bool; y: #Bool} → y) ((λ{x: #Bool} → {x; x}) {#true})
 
 
 -- TODO: type application.

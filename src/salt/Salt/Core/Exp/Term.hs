@@ -33,8 +33,9 @@ data TermParams a
 
 -- | Term Arguments.
 data TermArgs a
-        = MGTerms   ![Term a]                   -- ^ Term arguments for an application.
-        | MGTypes   ![Type a]                   -- ^ Type arguments for an application.
+        = MGTerm    !(Term a)                   -- ^ Argument producing a vector of terms.
+        | MGTerms   ![Term a]                   -- ^ Arguments of individual terms.
+        | MGTypes   ![Type a]                   -- ^ Arguments of individual types.
         deriving (Show, Eq, Ord)
 
 
@@ -164,4 +165,10 @@ takeVClosure :: Value a -> Maybe (Closure a)
 takeVClosure (VClosure c) = Just c
 takeVClosure _            = Nothing
 
+
+takeTFun :: Type a -> Maybe ([Type a], [Type a])
+takeTFun tt
+ = case tt of
+        TFun tsParam tsResult   -> Just (tsParam, tsResult)
+        _                       -> Nothing
 

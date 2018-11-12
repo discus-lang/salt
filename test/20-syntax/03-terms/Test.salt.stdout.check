@@ -16,6 +16,7 @@
 * app'and: #Bool
 * app'lam: #Bool
 * app'lam2: #Bool
+* app'vec: #Bool
 * let'fst: #Bool
 * let'snd: #Nat
 * let'one: #Nat

@@ -184,12 +184,9 @@ instance Pretty c (TermRef a) where
 instance Pretty c (TermArgs a) where
  ppr c ma
   = case ma of
-        MGTerms ms
-         -> braced $ map (ppr c) ms
-
-        MGTypes ts
-         -> text "@"
-         % (braced $ map (ppr c) ts)
+        MGTerm m   -> parens $ ppr c m
+        MGTerms ms -> braced $ map (ppr c) ms
+        MGTypes ts -> text "@" % (braced $ map (ppr c) ts)
 
 
 instance Pretty c (TermParams a) where

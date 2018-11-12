@@ -13,7 +13,7 @@ import qualified Text.Parsec                    as P
 
 
 -- | Parse a term, and wrap the result in an source location annotation.
-pTerm :: Parser (Term Location)
+pTerm  :: Parser (Term Location)
 pTerm
  = do   (Range l1 _, m)  <- pWithRange pTerm_
         return  $ MAnn l1 m
@@ -115,17 +115,19 @@ pTerm_
          (Nothing, _,  _)  -> return $ MPrim nPrm tsArgs msArgs
 
 
- , do   -- Term Term*
+ , do   -- TermArg {Term; ...}
+        -- TermArg TermArg
         mFun    <- pTermArgProj
 
-        msArgs  <- P.choice
-                [  do   pBraced $ P.sepEndBy pTerm (pTok KSemi)
-                ,  do   return [] ]
+        P.choice
+         [ do   msArgs  <- pBraced $ P.sepEndBy pTerm (pTok KSemi)
+                return $ MApp mFun (MGTerms msArgs)
 
-        case msArgs of
-         []             -> return mFun
-         _              -> return $ MApp mFun (MGTerms msArgs)
+         , do   mArg    <- pTerm
+                return $ MApp mFun (MGTerm  mArg)
 
+         , do   return mFun
+         ]
  ]
  <?> "a term"
 
@@ -143,8 +145,8 @@ pTermArgs
         return  $ MGTypes ts
 
  , do   -- TermProj
-        ms      <- P.many1 pTermArgProj
-        return  $ MGTerms ms
+        m       <- pTermArgProj
+        return  $ MGTerm m
  ]
 
 
@@ -293,6 +295,7 @@ pTermStmt
  <?> "a statement"
 
 
+---------------------------------------------------------------------------------------------------
 pValue :: Parser (Value Location)
 pValue
  = P.choice

@@ -97,6 +97,7 @@ instance MapAnnot TermParams where
 instance MapAnnot TermArgs where
  mapAnnot f gg
   = case gg of
+        MGTerm  m       -> MGTerm  (mapAnnot f m)
         MGTerms ms      -> MGTerms (map (mapAnnot f) ms)
         MGTypes ts      -> MGTypes (map (mapAnnot f) ts)
 

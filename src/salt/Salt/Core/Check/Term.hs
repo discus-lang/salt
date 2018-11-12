@@ -12,9 +12,14 @@ import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 
+import Salt.Core.Codec.Text             ()
+import qualified Salt.Data.Pretty               as P
+
 import Control.Exception
 import Control.Monad
+import Data.Maybe
 
+import Text.Show.Pretty
 
 ---------------------------------------------------------------------------------------------------
 -- | Check and elaborate a term producing, a new term and its type.
@@ -72,6 +77,11 @@ checkTerm a wh ctx (MTerms msArg) mode
 -- MKApp --------------------------------------------------
 checkTerm a wh ctx (MApp mFun mgs) Synth
  = case mgs of
+        MGTerm mArg
+         -> do  (mFun', tFun)      <- checkTerm1 a wh ctx mFun Synth
+                (mArg', tsResult)  <- checkTermAppTerm a wh ctx tFun mArg
+                return (MApp mFun' (MGTerm mArg'),   tsResult)
+
         MGTerms msArg
          -> do  (mFun',  tFun)     <- checkTerm1 a wh ctx mFun Synth
                 (msArg', tsResult) <- checkTermAppTerms a wh ctx tFun msArg
@@ -216,23 +226,25 @@ checkTerm a wh ctx m mode
 
 
 -----------------------------------------------------------
-checkTerm_default a wh ctx m (Check [tExpected])
- = do   -- TODO: check singular
-        (m', [tActual]) <- checkTerm a wh ctx m Synth
+checkTerm_default a wh ctx m (Check tsExpected)
+ = do   (m', tsActual) <- checkTerm a wh ctx m Synth
 
-        case (tExpected, tActual) of
-         _ -> case checkTypeEq a [] tExpected a [] tActual of
-                Nothing        -> return (m', [tActual])
-                Just ((_a1, t1Err), (_a2, t2Err))
-                 -> throw $ ErrorTypeMismatch a wh t1Err t2Err
+        when (length tsActual /= length tsExpected)
+         $ throw $ ErrorTermsWrongArity a wh tsActual tsExpected
+
+        case checkTypeEqs a [] tsExpected a [] tsActual of
+         Nothing -> return (m', tsActual)
+         Just ((_a1, t1Err), (_a2, t2Err))
+          -> throw $ ErrorTypeMismatch a wh t1Err t2Err
 
 
 -----------------------------------------------------------
 checkTerm_default _ _ _ mm mode
  =  error $ unlines
         [ "checkTerm: not finished"
-        , show mode
-        , show mm ]
+        , ppShow mode
+        , ppShow mm
+        , P.renderIndent $ P.ppr () mm ]
 
 
 ---------------------------------------------------------------------------------------------------
@@ -323,34 +335,48 @@ checkTermAppTypes a wh ctx tFun tsArg
                 return  (tsArg', tSubst)
 
 
--- | Check the application of a term to some terms.
+-- | Check the application of a functional term to an argument term.
+--   Reduction of the argument may produce a vector of values.
+checkTermAppTerm
+        :: Annot a => a -> [Where a]
+        -> Context a -> Type a -> Term a -> IO (Term a, [Type a])
+
+checkTermAppTerm a wh ctx tFun mArg
+ = do   let (tsParam, tsResult)
+                = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
+                $ takeTFun tFun
+
+        (mArg', tsArg)
+         <- checkTerm a wh ctx mArg (Check tsParam)
+
+        when (not $ length tsParam == length tsArg)
+         $ throw $ ErrorAppTermTermWrongArity a wh tsParam tsArg
+
+        case checkTypeEqs a [] tsParam a [] tsArg of
+         Just ((_aErr1', tErr1), (_aErr2', tErr2))
+           -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+         _ -> return (mArg', tsResult)
+
+
+-- | Check the application of a functional term to some argument terms.
+--   The arguments can only produce a single value each.
 checkTermAppTerms
         :: Annot a => a -> [Where a]
         -> Context a -> Type a -> [Term a] -> IO ([Term a], [Type a])
 
 checkTermAppTerms a wh ctx tFun msArg
- = case tFun of
-        TFun tsParam tsResult
-          -> goCheckArgs tsParam tsResult
-        _ -> throw $ ErrorAppTermTermCannot a wh tFun
+ = do   let (tsParam, tsResult)
+                = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
+                $ takeTFun tFun
 
- where  -- Check if we were given the correct number of arguments for
-        -- the application. Note that we cannot easily produce the argument
-        -- types directly in the error message, as they might be naturally
-        -- ambiguous and rely on the parameter type being pushed down to
-        -- disambigate.
-        goCheckArgs  tsParam tsResult
-         = do   if length tsParam /= length msArg
-                 then throw $ ErrorAppTermTermWrongArityNum a wh tsParam (length msArg)
-                 else do
-                        (msArg', tsArg) <- checkTerms a wh ctx msArg (Check tsParam)
-                        goCheckParams tsParam tsResult msArg' tsArg
+        when (not $ length msArg == length tsParam)
+         $ throw $ ErrorAppTermTermWrongArityNum a wh tsParam (length msArg)
 
-        goCheckParams tsParam tsResult msArg' tsArg
-         = case checkTypeEqs a [] tsParam a [] tsArg of
-                Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+        (msArg', tsArg)
+         <- checkTerms a wh ctx msArg (Check tsParam)
 
-                Nothing
-                 -> return  (msArg', tsResult)
+        case checkTypeEqs a [] tsParam a [] tsArg of
+         Just ((_aErr1', tErr1), (_aErr2', tErr2))
+           -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+         _ -> return  (msArg', tsResult)
 
