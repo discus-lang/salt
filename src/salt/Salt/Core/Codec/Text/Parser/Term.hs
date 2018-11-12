@@ -183,35 +183,22 @@ pTermArg
          Just v  -> return $ MVal v
          Nothing -> P.unexpected "primitive value"
 
+ , do   -- '(' Term ')'
+        pTok KRBra
+        t       <- pTerm
+        pTok KRKet
+        return t
 
- , do   -- '[' set '|' Term,* ']'
+ , do   -- '[r|' (Lbl '=' Term),* ']'
+        -- '⟨' (Lbl '=' Term)* '⟩'
+        -- Lookahead to distinguish record literals from the
+        -- other collection literals below.
+        pTermRecord
+
+ , do   -- '[l|' Term,* ']'
         P.try $ P.lookAhead $ do
                 pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "set")
-
-        pTok KSBra; pVar; pTok KBar
-        msElem  <- P.sepEndBy1 pTerm (pTok KComma)
-        pTok KSKet
-        return  $ MSet msElem
-
-
- , do   -- '[' 'map' '|' (Term ':=' Term),* ']'
-        P.try $ P.lookAhead $ do
-                pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "map")
-
-        pTok KSBra; pVar; pTok KBar
-        mmsElem <- flip P.sepEndBy1 (pTok KComma)
-                $  do m1 <- pTerm; pTok KColonEquals; m2 <- pTerm; return (m1, m2)
-        pTok KSKet
-        let (mks, mvs) = unzip mmsElem
-        return  $ MMap mks mvs
-
-
- , do   -- '[' 'list' '|' Term,* ']'
-        P.try $ P.lookAhead $ do
-                pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "list")
+                guard (n == Name "l")
 
         pTok KSBra; pVar; pTok KBar
         msElem  <- P.sepEndBy1 pTerm (pTok KComma)
@@ -219,17 +206,28 @@ pTermArg
         return  $ MList msElem
 
 
- , do   -- '[' (Lbl ':' Term)* ']'
-        -- Lookahead to distinguish record literals from the
-        -- other collection literals below.
-        pTermRecord
+ , do   -- '[s|' Term,* ']'
+        P.try $ P.lookAhead $ do
+                pTok KSBra; n <- pVar; pTok KBar
+                guard (n == Name "s")
+
+        pTok KSBra; pVar; pTok KBar
+        msElem  <- P.sepEndBy1 pTerm (pTok KComma)
+        pTok KSKet
+        return  $ MSet msElem
 
 
- , do   -- '(' Term ')'
-        pTok KRBra
-        t       <- pTerm
-        pTok KRKet
-        return t
+ , do   -- '[m|' (Term ':=' Term),* ']'
+        P.try $ P.lookAhead $ do
+                pTok KSBra; n <- pVar; pTok KBar
+                guard (n == Name "m")
+
+        pTok KSBra; pVar; pTok KBar
+        mmsElem <- flip P.sepEndBy1 (pTok KComma)
+                $  do m1 <- pTerm; pTok KColonEquals; m2 <- pTerm; return (m1, m2)
+        pTok KSKet
+        let (mks, mvs) = unzip mmsElem
+        return  $ MMap mks mvs
  ]
  <?> "a argument term"
 
@@ -247,18 +245,31 @@ pTermParams
 pTermRecord :: Parser (Term Location)
 pTermRecord
  = P.choice
- [ do   -- '⟨' (Lbl '=' Term)* '⟩'
+ [ do   -- '[r' (Lbl '=' Term)* '⟩'
+        P.try $ P.lookAhead $ do
+                pTok KSBra; n <- pVar; pTok KBar
+                guard (n == Name "s")
+
+        pTok KSBra; pVar; pTok KBar
+
+        lms <- P.sepEndBy
+                ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
+                 <?> "a record field")
+                (pTok KComma)
+        pTok KSKet
+        let (ls, ms) = unzip lms
+        return $ MRecord ls ms
+
+
+ , do   -- '⟨' (Lbl '=' Term)* '⟩'
         pTok KABra
         lms <- P.sepEndBy
-                ((do l   <- pLbl
-                     pTok KEquals
-                     m   <- pTerm
-                     return (l, m)) <?> "a record field")
+                ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
+                 <?> "a record field")
                 (pTok KComma)
         pTok KAKet
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
-
  ]
  <?> "a record term"
 
