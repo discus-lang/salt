@@ -14,10 +14,8 @@
 * abs5: {} → {}
 * app'not: #Bool
 * app'and: #Bool
-* app'and2: #Bool
 * app'lam: #Bool
 * app'lam2: #Bool
-* app'lam2'list: #Bool
 * let'fst: #Bool
 * let'snd: #Nat
 * let'one: #Nat

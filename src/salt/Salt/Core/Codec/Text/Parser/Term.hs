@@ -85,9 +85,10 @@ pTerm_
                 [ do    P.many1 pTermArgType
                 , do    return [] ]
 
-        msArgs  <- P.choice
-                [ do    pBraced $ P.sepEndBy1 pTerm (pTok KSemi)
-                , do    P.many pTermArgProj ]
+        msArgs  <- pBraced $ P.sepEndBy pTerm (pTok KSemi)
+--        msArgs  <- P.choice
+--                [ do    pBraced $ P.sepEndBy1 pTerm (pTok KSemi)
+--                , do    P.many pTermArgProj ]
 
         return  $ MCon nCon tsArgs msArgs
 
@@ -100,8 +101,12 @@ pTerm_
                 , do    return [] ]
 
         msArgs  <- P.choice
-                [ do    pBraced $ P.sepEndBy1 pTerm (pTok KSemi)
-                , do    P.many pTermArgProj ]
+                [  do   pBraced $ P.sepEndBy pTerm (pTok KSemi)
+                ,       return [] ]
+
+--      msArgs  <- P.choice
+--              [ do    pBraced $ P.sepEndBy1 pTerm (pTok KSemi)
+--              , do    P.many pTermArgProj ]
 
         case (takePrimValueOfName nPrm, tsArgs, msArgs) of
          (Just v,  [], []) -> return $ MVal v
@@ -112,11 +117,14 @@ pTerm_
 
  , do   -- Term Term*
         mFun    <- pTermArgProj
-        msArgs  <- P.many pTermArgs
+
+        msArgs  <- P.choice
+                [  do   pBraced $ P.sepEndBy pTerm (pTok KSemi)
+                ,  do   return [] ]
+
         case msArgs of
          []             -> return mFun
-         [MGTerms []]   -> return mFun
-         _              -> return $ foldl MApp mFun msArgs
+         _              -> return $ MApp mFun (MGTerms msArgs)
 
  ]
  <?> "a term"
