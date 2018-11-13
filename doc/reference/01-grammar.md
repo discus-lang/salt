@@ -47,27 +47,24 @@ Decl
 
 ```
 Type
- ::=    tdat                                    (Data)
-  |     tarr Types Type                         (Types '⇒' Type)
+ ::=  Data                                      (tdat)
+  |   Types '⇒' Type                            (tarr Type+ Type)
 
-  |     tvar Var                                (Var)
-  |     tcon Con                                (Con)
-  |     tprm Prm                                (Prm)
-  |     tapp Type Type*                         (Type Types)
-  |     tabs Var+ Type+ Type                    ('λ' TypeParams '⇒' Type)
-  |     tall Var+ Type+ Type                    ('∀' TypeParams '.' Type)
-  |     text Var+ Type+ Type                    ('∃' TypeParams '.' Type)
-  |     tfun Type* Type*                        (Types '→' Types)
-  |     trec Lbl*  Type*                        ('[' (Lbl ':' Type)* ']')
+  |   Var                                       (tvar Var)
+  |   Con                                       (tcon Con)
+  |   Prm                                       (tprm Prm)
+  |   Type Types                                (tapp Type Type*)
+  |   'λ' TypeParams '⇒' Type                   (tabs Var+ Type+ Type)
+  |   '∀' TypeParams '.' Type                   (tall Var+ Type+ Type)
+  |   '∃' TypeParams '.' Type                   (text Var+ Type+ Type)
+  |   Types '→' Types                           (tfun Type* Type*)
+  |   '⟨' (Lbl ':' Type)* '⟩'                   (trec Lbl*  Type*)
 
 Types
- ::=    '{' Type;+ '}'                          (type sequence)
+ ::=  '[' Type;+ ']'
 
 TypeParams
- ::=    '{' (Var ':' Type);+ '}'                (type parameters)
-
-TypeRecord
- ::=    '[' (Lbl ':' Type),* ']'                (record type)
+ ::=  '[' (Var ':' Type);+ ']'
 ```
 
 
@@ -75,38 +72,37 @@ TypeRecord
 
 ```
 Term
- ::=    Terms                                   (term sequence)
+ ::=  Con                                       (mcon Con)
+  |   Prm                                       (mprm Prm)
+  |   Sym                                       (msym Sym)
 
-  |     Con | Prm | Sym                         (term literal)
+  |   '[' Term,* ']'                            (mmmm Term+)
 
-  |     Var                                     (term variable)
-  |     'λ'   TermParams '→'  Term              (term abstraction)
-  |     Term  TermArgs                          (term application)
+  |   Var                                       (mvar Var)
+  |   'λ'   TermParams '→'  Term                (mabs TermParams)
+  |   Term  TermArgs                            (mapp Term TermArgs)
 
-  |     'let' TermBind   'in' Term              (let expression)
+  |   'let' TermBind   'in' Term                (mlet Var* Term Term)
 
-  |     TermRecord                              (record construction)
-  |     Term '.' Lbl                            (record projection)
+  |   '[' (Lbl '=' Term),* ']'                  (mrec Lbl* Term*)
+  |   Term '.' Lbl                              (mprj Term Lbl)
 
-  |     '[list|' Term,* ']'                     (list construction)
-  |     '[set|'  Term,* ']'                     (set construction)
-  |     '[map|'  (Term ':=' Term),* ']'         (map construction)
-
-Terms
- ::=    '{' Term;+ '}'                          (term sequence)
-
-TypeSigs
- ::=    '{' (Var ':' Type);* '}'
+  |   '[list' Type '|' Term,* ']'               (mlst Type Term*)
+  |   '[set'  Type '|' Term,* ']'               (mset Type Term*)
+  |   '[map'  Type Type '|' TermMapBind,* ']'   (mmap Type Type Term* Term*)
 
 TermParams
- ::=    '@' TypeSigs  | TypeSigs                (type or term parameters)
+ ::=    '@' '[' (Var ':' Type),* ']'            (mpst Var* Type*)
+  |         '[' (Var ':' Type),* ']'            (mpsm Var* Type*)
 
 TermArgs
- ::=    '@' Types     | Terms                   (type or term arguments)
+ ::=    '@' '[' Type,* ']'                      (mgst Type*)
+  |         '[' Term,* ']'                      (mgsm Term*)
+  |         Term                                (mgsv Term)
 
 TermBind
- ::=    '{' Var;* '}' '=' Term                  (let binding)
+ ::=    '{' Var;* '}' '=' Term
 
-TermRecord
- ::=    '[' (Lbl '=' Term),* ']'                (record construction)
+TermMapBind
+ ::=    Term ':=' Term
 ```
