@@ -15,7 +15,7 @@ primTypeCtors
         , ("Int",       TData)
         , ("Text",      TData)
         , ("Symbol",    TData)
-        , ("Maybe",     [TData] :=> TData)
+        , ("Option",    [TData] :=> TData)
         , ("List",      [TData] :=> TData)
         , ("Set",       [TData] :=> TData)
         , ("Map",       [TData, TData] :=> TData) ]
@@ -25,7 +25,7 @@ primTypeCtors
 primDataCtors :: Map Name (Type ())
 primDataCtors
  = Map.fromList
-        [ ("Nothing",   [("a", TData)] :*> ([] :-> [TMaybe "a"]))
-        , ("Just",      [("a", TData)] :*> (["a"] :-> [TMaybe "a"]))]
+        [ ("None",      [("a", TData)] :*> ([] :-> [TOption "a"]))
+        , ("Some",      [("a", TData)] :*> (["a"] :-> [TOption "a"]))]
 
 

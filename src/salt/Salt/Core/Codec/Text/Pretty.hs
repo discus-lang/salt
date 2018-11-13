@@ -238,19 +238,29 @@ instance Pretty c (Value a) where
         VInt  i         -> string $ show i
         VNat  i         -> string $ show i
 
-        VData n []      -> ppr c n
-        VData n vs      -> parens $ ppr c n %% braced (map (ppr c) vs)
+        VData n ts vs   -> parens $ ppr c n
+                                %% squared (map (ppr c) ts)
+                                %% squared (map (ppr c) vs)
 
-        VRecord nvs     -> bracketed [ ppr c n %% text "=" %% ppr c v | (n, v) <- nvs ]
+        VRecord nvs
+         -> bracketed [ ppr c n %% text "=" %% ppr c v | (n, v) <- nvs ]
 
-        VList vs        -> bracketed $ map (ppr c) vs
+        VList t vs
+         -> brackets
+         $  hcat ( text "list" : ppr c t : text "|"
+                 : punctuate (text ", ") (map (ppr c) vs))
 
-        VSet  vs        -> bracketed' "set"
-                                $ map (ppr c) $ Set.toList vs
+        VSet  t vs
+         -> brackets
+         $  hcat ( text "set"  : ppr c t : text "|"
+                 : punctuate (text ", ") (map (ppr c) $ Set.toList vs))
 
-        VMap  kvs       -> bracketed' "map"
-                                [ ppr c vk %% text ":=" %% ppr c vv
-                                | (vk, vv) <- Map.toList kvs]
+        VMap  tk tv kvs
+         -> brackets
+         $  hcat (text "map"   : ppr c tk : ppr c tv : text "|"
+                 : punctuate (text ", ")
+                        [ ppr c vk %% text ":=" %% ppr c vv
+                        | (vk, vv) <- Map.toList kvs ])
 
         VClosure clo    -> ppr c clo
 

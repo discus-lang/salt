@@ -108,13 +108,16 @@ pTermArgs
         ts      <- pSquared $ P.sepEndBy pType (pTok KComma)
         return  $ MGTypes ts
 
+ , do   -- TermProj
+        -- NOTE: This needs to come before the following case because
+        --       collection terms like [list #Nat| 1, 2, 3]
+        --       also start with open brackets.
+        m       <- pTermArgProj
+        return  $ MGTerm m
+
  , do   -- '[' Term;+ ']'
         ms      <- pSquared $ P.sepEndBy pTerm (pTok KComma)
         return  $ MGTerms ms
-
- , do   -- TermProj
-        m       <- pTermArgProj
-        return  $ MGTerm m
  ]
  <?> "some term arguments"
 
@@ -153,46 +156,41 @@ pTermArg
          Just v  -> return $ MVal v
          Nothing -> P.unexpected "primitive value"
 
- , do   -- '(' Term ')'
-        pTok KRBra
-        t       <- pTerm
-        pTok KRKet
-        return t
-
-
- , do   -- '[list|' Term,* ']'
+ , do   -- '[list Type |' Term,* ']'
         P.try $ P.lookAhead $ do
-                pTok KSBra; n <- pVar; pTok KBar
+                pTok KSBra; n <- pVar; pType; pTok KBar
                 guard (n == Name "list")
 
-        pTok KSBra; pVar; pTok KBar
+        pTok KSBra; pVar; t <- pType; pTok KBar
         msElem  <- P.sepEndBy pTerm (pTok KComma)
         pTok KSKet
-        return  $ MList msElem
+        return  $ MList t msElem
 
 
  , do   -- '[set|' Term,* ']'
         P.try $ P.lookAhead $ do
-                pTok KSBra; n <- pVar; pTok KBar
+                pTok KSBra; n <- pVar; pType; pTok KBar
                 guard (n == Name "set")
 
-        pTok KSBra; pVar; pTok KBar
-        msElem  <- P.sepEndBy1 pTerm (pTok KComma)
+        pTok KSBra; pVar; t <- pType; pTok KBar
+        msElem  <- P.sepEndBy pTerm (pTok KComma)
         pTok KSKet
-        return  $ MSet msElem
+        return  $ MSet t msElem
 
 
  , do   -- '[map|' (Term ':=' Term),* ']'
         P.try $ P.lookAhead $ do
-                pTok KSBra; n <- pVar; pTok KBar
+                pTok KSBra; n <- pVar; pTypeArg; pTypeArg; pTok KBar
                 guard (n == Name "map")
 
-        pTok KSBra; pVar; pTok KBar
-        mmsElem <- flip P.sepEndBy1 (pTok KComma)
+        pTok KSBra; pVar
+        tk <- pTypeArg; tv <- pTypeArg
+        pTok KBar
+        mmsElem <- flip P.sepEndBy (pTok KComma)
                 $  do m1 <- pTerm; pTok KColonEquals; m2 <- pTerm; return (m1, m2)
         pTok KSKet
         let (mks, mvs) = unzip mmsElem
-        return  $ MMap mks mvs
+        return  $ MMap tk tv mks mvs
 
 
  , do   -- '[record|' (Lbl '=' Term),* ']'
@@ -203,6 +201,13 @@ pTermArg
  , do   -- '[' Term,* ']'
         ms      <- pSquared $ P.sepEndBy pTerm (pTok KComma)
         return  $ MTerms ms
+
+
+ , do   -- '(' Term ')'
+        pTok KRBra
+        t       <- pTerm
+        pTok KRKet
+        return t
  ]
  <?> "a argument term"
 
@@ -223,6 +228,17 @@ pTermParams
  ]
 
 
+pTermBind :: Parser (Bind, Term Location)
+pTermBind
+ = do   -- Var '=' Term
+        nVar    <- pVar
+        pTok KEquals
+        mBody   <- pTerm
+        return  (BindName nVar, mBody)
+ <?> "a term binder"
+
+
+---------------------------------------------------------------------------------------------------
 pTermRecord :: Parser (Term Location)
 pTermRecord
  = P.choice
@@ -255,16 +271,7 @@ pTermRecord
  <?> "a record term"
 
 
-pTermBind :: Parser (Bind, Term Location)
-pTermBind
- = do   -- Var '=' Term
-        nVar    <- pVar
-        pTok KEquals
-        mBody   <- pTerm
-        return  (BindName nVar, mBody)
- <?> "a term binder"
-
-
+---------------------------------------------------------------------------------------------------
 -- TODO: use the binding forms in the let parser as well.
 pTermStmt :: Parser ([(Bind, Type Location)], Term Location)
 pTermStmt

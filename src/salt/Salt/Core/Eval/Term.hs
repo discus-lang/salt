@@ -47,12 +47,12 @@ evalTerm a env (MKey MKApp [MGTerm (MPrm nPrim), MGTerms msArg])
  = case Map.lookup nPrim Ops.primOps of
         Just (Ops.PP _name _type step _docs)
          -> do  vsArg   <- evalTerms a env msArg
-                let vsResult    =  step vsArg
+                let vsResult = step [] vsArg
                 return vsResult
 
         Just (Ops.PO _name _type exec _docs)
          -> do  vsArg    <- evalTerms a env msArg
-                vsResult <- exec vsArg
+                vsResult <- exec [] vsArg
                 return vsResult
 
         Nothing -> throw $ ErrorPrimUnknown a nPrim
@@ -86,9 +86,9 @@ evalTerm a env (MKey MKLet [MGTerms [mBind, MAbs (MPTerms bts) mBody]])
         else  throw $ ErrorAppTermTooMany   a vsBind
 
 -- Data constructor application.
-evalTerm a env (MKey (MKCon nCon) [MGTypes _, MGTerms msArg])
+evalTerm a env (MKey (MKCon nCon) [MGTypes ts, MGTerms msArg])
  = do   vsArg  <- evalTerms a env msArg
-        return  [VData nCon vsArg]
+        return  [VData nCon ts vsArg]
 
 -- Record constructor application.
 evalTerm a env (MKey (MKRecord nsField) [MGTerms msArg])
@@ -107,14 +107,14 @@ evalTerm a env (MKey (MKProject nField) [MGTerms [mRecord]])
          _ -> throw $ ErrorProjectTypeMismatch a vRec nField
 
 -- List construction.
-evalTerm a env (MKey MKList [MGTerms ms])
+evalTerm a env (MKey MKList [MGTypes [t], MGTerms ms])
  = do   vsArg <- evalTerms a env ms
-        return [VList vsArg]
+        return [VList t vsArg]
 
 -- Set construction.
-evalTerm a env (MKey MKSet [MGTerms ms])
+evalTerm a env (MKey MKSet  [MGTypes [t], MGTerms ms])
  = do   vsArg <- evalTerms a env ms
-        return [VSet $ Set.fromList $ map stripAnnot $ vsArg]
+        return [VSet t $ Set.fromList $ map stripAnnot $ vsArg]
 
 -- No match.
 evalTerm  a _ mm

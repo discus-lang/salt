@@ -70,13 +70,14 @@ data Value a
         -- Values that are only used at runtime.
         --  At runtime they are introduced by evaluating constructions,
         --  and do not appear as literals in the source program.
-        --  The annotation on map values is forced to () so that the order
-        --  of values in the map does not depend on the annotation.
-        | VData     !Name ![Value a]            -- ^ Constructed data.
+        --  The annotation on map and set elements is forced to () so that the order
+        --  of values in the collection does not depend on the annotation.
+        | VData     !Name ![Type a] ![Value a]  -- ^ Constructed data.
         | VRecord   ![(Name, Value a)]          -- ^ Record value.
-        | VList     ![Value a]                  -- ^ List value.
-        | VSet      !(Set (Value ()))           -- ^ Set value.
-        | VMap      !(Map (Value ()) (Value a)) -- ^ Map value.
+        | VList     !(Type a) ![Value a]        -- ^ List value.
+        | VSet      !(Type a) !(Set (Value ())) -- ^ Set value.
+        | VMap      !(Type a) !(Type a) !(Map (Value ()) (Value a))
+                                                -- ^ Map value.
         | VClosure  !(Closure a)                -- ^ Closure.
         deriving (Show, Eq, Ord)
 
@@ -103,9 +104,9 @@ pattern MApt mFun tsArg = MKey   MKApp          [MGTerm  mFun, MGTypes tsArg]
 pattern MLet bts mb m   = MKey   MKLet          [MGTerms [mb, MAbs (MPTerms bts) m]]
 pattern MProject l m    = MKey  (MKProject l)   [MGTerms [m]]
 pattern MRecord ns ms   = MKey  (MKRecord ns)   [MGTerms ms]
-pattern MList ms        = MKey   MKList         [MGTerms ms]
-pattern MSet  ms        = MKey   MKSet          [MGTerms ms]
-pattern MMap  msk msv   = MKey   MKMap          [MGTerms msk, MGTerms msv]
+pattern MList t ms      = MKey   MKList         [MGTypes [t], MGTerms ms]
+pattern MSet  t ms      = MKey   MKSet          [MGTypes [t], MGTerms ms]
+pattern MMap  tk tv msk msv = MKey   MKMap      [MGTypes [tk, tv], MGTerms msk, MGTerms msv]
 
 pattern MUnit           = MRef  (MRVal VUnit)
 pattern MBool b         = MRef  (MRVal (VBool b))
@@ -116,14 +117,14 @@ pattern MNat i          = MRef  (MRVal (VNat i))
 pattern MSymbol n       = MRef  (MRVal (VSymbol n))
 pattern MText tx        = MRef  (MRVal (VText tx))
 
-pattern MJust t m       = MApm (MApt (MCon (Name "Just")) [t]) [m]
-pattern MNothing t      = MApt (MCon (Name "Nothing")) [t]
+pattern MSome t m       = MApm (MApt (MPrm (Name "Some")) [t]) [m]
+pattern MNone t         = MApt (MPrm (Name "None")) [t]
 
 -- Values
 pattern VTrue           = VBool  True
 pattern VFalse          = VBool  False
-pattern VJust v         = VData (Name "Just")    [v]
-pattern VNothing        = VData (Name "Nothing") []
+pattern VSome t v       = VData (Name "Some") [t] [v]
+pattern VNone t         = VData (Name "None") [t] []
 pattern VCloTerm e bs m = VClosure (CloTerm e bs m)
 
 
@@ -166,9 +167,9 @@ isVTrue _               = False
 takeVMaybeClosure :: Value a -> Maybe (Maybe (Closure a))
 takeVMaybeClosure vv
  = case vv of
-        VJust (VClosure c) -> Just $ Just c
-        VNothing           -> Just $ Nothing
-        _                  -> Nothing
+        VSome _ (VClosure c) -> Just $ Just  c
+        VNone _         -> Just $ Nothing
+        _               -> Nothing
 
 
 -- | Take a closure from a value, if this is one.

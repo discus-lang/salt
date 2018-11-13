@@ -77,10 +77,10 @@ pattern TNat            = TPrm "Nat"
 pattern TInt            = TPrm "Int"
 pattern TText           = TPrm "Text"
 pattern TSymbol         = TPrm "Symbol"
-pattern TMaybe t        = TApt (TPrm "Maybe") [t]
-pattern TList t         = TApt (TPrm "List")  [t]
-pattern TSet t          = TApt (TPrm "Set")   [t]
-pattern TMap tk tv      = TApt (TPrm "Map")   [tk, tv]
+pattern TOption t       = TApt (TPrm "Option") [t]
+pattern TList t         = TApt (TPrm "List")   [t]
+pattern TSet t          = TApt (TPrm "Set")    [t]
+pattern TMap tk tv      = TApt (TPrm "Map")    [tk, tv]
 
 
 -- Instances --------------------------------------------------------------------------------------

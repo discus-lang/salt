@@ -9,6 +9,7 @@ import Salt.Core.Transform.MapAnnot
 import Salt.Core.Transform.Subst
 import Salt.Core.Exp
 import qualified Salt.Core.Prim.Ops     as Prim
+import qualified Salt.Core.Prim.Data    as Prim
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 
@@ -41,15 +42,20 @@ checkTerm a wh ctx m@(MRef ref) Synth
         MRVal VBool{}   -> return (m, [TBool])
         MRVal VInt{}    -> return (m, [TInt])
         MRVal VNat{}    -> return (m, [TNat])
+        MRVal (VNone t) -> return (m, [TOption t])
         MRVal _         -> error "check value not done yet"
 
         MRPrm nPrim
-         -> case Map.lookup nPrim Prim.primOps of
-                Nothing -> throw $ ErrorUnknownPrimitive a wh nPrim
-                Just pp
-                 -> do  let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
-                        return (m, [tPrim])
+         | Just pp <- Map.lookup nPrim Prim.primOps
+         -> do  let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
+                return (m, [tPrim])
 
+         | Just t  <- Map.lookup nPrim Prim.primDataCtors
+         -> do  let tPrim = mapAnnot (const a) t
+                return (m, [tPrim])
+
+         | otherwise
+         -> throw $ ErrorUnknownPrimitive a wh nPrim
 
         MRCon nCtor
          ->  contextResolveDataCtor nCtor ctx
@@ -180,25 +186,19 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
 
 
 -- MKList -------------------------------------------------
-checkTerm a wh ctx (MList (m1 : ms)) Synth
- = do   (m1',  t1)  <- checkTerm1 a wh ctx m1 Synth
-        (ms', _ts') <- checkTerms a wh ctx ms (Check $ replicate (length ms) t1)
-        return  (MList (m1' : ms'), [TList t1])
-
-checkTerm a wh ctx (MList ms) (Check [TList tElem])
- = do   (ms', _ts') <- checkTerms a wh ctx ms (Check $ replicate (length ms) tElem)
-        return  (MList ms', [TList tElem])
+-- TODO: check embedded type.
+checkTerm a wh ctx (MList t ms) Synth
+ = do   let ts  = replicate (length ms) t
+        (ms', _) <- checkTerms a wh ctx ms (Check ts)
+        return  (MList t ms', [TList t])
 
 
 -- MKSet --------------------------------------------------
-checkTerm a wh ctx (MSet (m1 : ms)) Synth
- = do   (m1',  t1)  <- checkTerm1 a wh ctx m1 Synth
-        (ms', _ts') <- checkTerms a wh ctx ms (Check $ replicate (length ms) t1)
-        return  (MSet (m1' : ms'), [TSet t1])
-
-checkTerm a wh ctx (MSet ms) (Check [TSet tElem])
- = do   (ms', _ts') <- checkTerms a wh ctx ms (Check $ replicate (length ms) tElem)
-        return  (MSet ms', [TSet tElem])
+-- TODO: check embedded type.
+checkTerm a wh ctx (MSet t ms) Synth
+ = do   let ts     =  replicate (length ms) t
+        (ms', _) <- checkTerms a wh ctx ms (Check ts)
+        return (MSet t ms', [TSet t])
 
 
 checkTerm a wh ctx m mode

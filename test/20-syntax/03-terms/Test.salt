@@ -97,13 +97,12 @@ test type.field'paren   ((⟨x = ⟨x = 5, y = #unit⟩, y = #true⟩).x).y
 
 
 -- Maybe -----------------------------------------------------------------------
--- test type.nothing       #Nothing
+test type.none          #None
 
--- TODO: allow constraining of list type.
--- test type.list'empty    [list|]
-test type.list'some     [list| 1, 2, 3]
+test type.list'empty    [list #Nat|]
+test type.list'some     [list #Nat| 1, 2, 3]
+test type.list'head     #list'head @[#Nat] [list #Nat| 1, 2, 3]
 
--- TODO: allow constrainint of set type.
--- test type.set'empty  [set|]
-test type.set'some      [set| 1, 2, 3]
+test type.set'empty     [set #Nat|]
+test type.set'some      [set #Nat| 1, 2, 3]
 
