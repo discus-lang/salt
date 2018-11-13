@@ -57,9 +57,9 @@ Type
   |   Types '→' Types                           (tfun Type* Type*)
   |   '∏' TypeFields                            (trec Lbl* Type*)
   |   '∑' TypeFields                            (tvnt Lbl* Type*)
-  |   'λ' TypeParams '⇒' Type                   (tabs Var+ Type+ Type)
   |   '∀' TypeParams '.' Type                   (tall Var+ Type+ Type)
   |   '∃' TypeParams '.' Type                   (text Var+ Type+ Type)
+  |   'λ' TypeParams '⇒' Type                   (tabs Var+ Type+ Type)
 
 Types
  ::=  '[' Type;+ ']'

@@ -33,24 +33,34 @@
                     Γ ⊢ tvar A :: K
 
 
-                    P has kind K
-(k-prm)           -------------------
-                    Γ ⊢ tprm P :: K
-
-
                     C has kind K
 (k-con)           -------------------
                     Γ ⊢ tcon C :: K
 
 
-                  Γ ⊢ T₁ :: Ks₂ ⇒ K₂    Γ ⊢ Ts₂ :* Ks₂
+                    P has kind K
+(k-prm)           -------------------
+                    Γ ⊢ tprm P :: K
+
+
+                  Γ ⊢ T₁ :: tarr Ks₂ K₂    Γ ⊢ Ts₂ :* Ks₂
 (k-app)         -----------------------------------------
                     Γ ⊢ tapp T₁ Ts₂ :: K₂
 
 
-                  Γ ⊢ Ts₁ :* Ks₁    Γ, As₁:Ks₁ ⊢ T₂ :: K₂
-(k-abs)         ---------------------------------------------
-                    Γ ⊢ tabs As₁ Ts₂ T₂ :: tarr Ks₁ K₂
+                  Γ ⊢ Ts₁ :< tdat   Γ ⊢ Ts₂ :< tdat
+(k-fun)         ---------------------------------------
+                    Γ ⊢ tfun Ts₁ Ts₂ :: tdat
+
+
+                    Γ ⊢ Ts :< tdat    Ns unique
+(k-rec)         ----------------------------------
+                    Γ ⊢ trec Ns Ts :: tdat
+
+
+                    Γ ⊢ Ts :< tdat    Ns unique
+(k-vnt)         ------------------------------------
+                    Γ ⊢ tvnt Ns Ts :: tdat
 
 
                   Γ ⊢ Ts₁ :* Ks₁    Γ, As₁:Ks₁ ⊢ T₂ :: tdat
@@ -63,13 +73,9 @@
                     Γ ⊢ text As₁ Ts₂ T₂ :: tdat
 
 
-                  Γ ⊢ Ts₁ :< tdat   Γ ⊢ Ts₂ :< tdat
-(k-fun)         ---------------------------------------
-                    Γ ⊢ tarr Ts₁ Ts₂ :: tdat
-
-
-                    Γ ⊢ Ts :< tdat    Ns unique
-(k-rec)         ----------------------------------
-                    Γ ⊢ trec Ns Ts :: tdat
+                  Γ ⊢ Ts₁ :* Ks₁    Γ, As₁:Ks₁ ⊢ T₂ :: K₂
+(k-abs)         ---------------------------------------------
+                    Γ ⊢ tabs As₁ Ts₂ T₂ :: tarr Ks₁ K₂
 
 ```
+
