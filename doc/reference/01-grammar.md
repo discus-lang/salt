@@ -3,10 +3,10 @@
 
 ```
 Var     → (variable name,       like "name")
+Lbl     → (label name,          like "foo")
 Con     → (constructor name,    like "Con")
 Sym     → (symbol name,         like "'Name")
 Prm     → (primitive name,      like "#add")
-Lbl     → (label name,          like "foo")
 ```
 
 - `Var` are names of type and term variables.
@@ -54,17 +54,21 @@ Type
   |   Con                                       (tcon Con)
   |   Prm                                       (tprm Prm)
   |   Type Types                                (tapp Type Type*)
+  |   Types '→' Types                           (tfun Type* Type*)
+  |   '∏' TypeFields                            (trec Lbl* Type*)
+  |   '∑' TypeFields                            (tvnt Lbl* Type*)
   |   'λ' TypeParams '⇒' Type                   (tabs Var+ Type+ Type)
   |   '∀' TypeParams '.' Type                   (tall Var+ Type+ Type)
   |   '∃' TypeParams '.' Type                   (text Var+ Type+ Type)
-  |   Types '→' Types                           (tfun Type* Type*)
-  |   '⟨' (Lbl ':' Type)* '⟩'                   (trec Lbl*  Type*)
 
 Types
  ::=  '[' Type;+ ']'
 
+TypeFields
+ ::=  '[' (Lbl ':' Type),* ']'
+
 TypeParams
- ::=  '[' (Var ':' Type);+ ']'
+ ::=  '[' (Var ':' Type),+ ']'
 ```
 
 
@@ -84,8 +88,11 @@ Term
 
   |   'let' TermBind   'in' Term                (mlet Var* Term Term)
 
-  |   '[' (Lbl '=' Term),* ']'                  (mrec Lbl* Term*)
+  |   '⟨' (Lbl '=' Term),* '⟩'                  (mrec Lbl* Term*)
   |   Term '.' Lbl                              (mprj Term Lbl)
+
+  |   '`' Lbl Term                              (mvnt Lbl  Term)
+  |   'case' Term 'of' '{' (Pat → Term);+ '}'   (mcse Term Pat* Term*)
 
   |   '[list' Type '|' Term,* ']'               (mlst Type Term*)
   |   '[set'  Type '|' Term,* ']'               (mset Type Term*)
@@ -106,3 +113,4 @@ TermBind
 TermMapBind
  ::=    Term ':=' Term
 ```
+

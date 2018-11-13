@@ -58,13 +58,22 @@ instance Pretty c (Type a) where
         TKey TKApp   [TGTypes [tFun], TGTypes tsArg]
          -> pprTFun c tFun %% squared (map (pprTArg c) tsArg)
 
-        TKey (TKRecord []) [TGTypes []]
-         -> text "⟨⟩"
+        TKey TKFun    [TGTypes tsParam, TGTypes tsResult]
+         ->  squared (map (ppr c) tsParam)
+         %%  text "→"
+         %%  squared (map (ppr c) tsResult)
 
         TKey (TKRecord ns) [TGTypes ts]
          | length ns == length ts
-         -> angled [ ppr c n % text ":" %% ppr c t
-                   | n <- ns | t <- ts ]
+         -> text "∏" % squared
+                [ ppr c n % text ":" %% ppr c t
+                | n <- ns | t <- ts ]
+
+        TKey (TKVariant ns) [TGTypes ts]
+         | length ns == length ts
+         -> text "∑" % squared
+                [ ppr c n % text ":" %% ppr c t
+                | n <- ns | t <- ts ]
 
         TKey TKForall [TGTypes [TAbs (TPTypes bts) tBody]]
          ->  text "∀"
@@ -77,11 +86,6 @@ instance Pretty c (Type a) where
           %  squared  [ ppr c b % text ":" %% ppr c t
                       | (b, t) <- bts ]
           %  text "." %% ppr c tBody
-
-        TKey TKFun    [TGTypes tsParam, TGTypes tsResult]
-         ->  squared (map (ppr c) tsParam)
-         %%  text "→"
-         %%  squared (map (ppr c) tsResult)
 
         TKey k ts
          ->  ppr c k %% (hsep $ map (ppr c) ts)
@@ -133,7 +137,8 @@ instance Pretty c TypeKey where
         TKFun           -> text "##fun"
         TKForall        -> text "##forall"
         TKExists        -> text "##exists"
-        TKRecord ns     -> text "##record" %% bracketed (map (ppr c) ns)
+        TKRecord ns     -> text "##record"  %% bracketed (map (ppr c) ns)
+        TKVariant ns    -> text "##variant" %% bracketed (map (ppr c) ns)
 
 
 -- Term -------------------------------------------------------------------------------------------

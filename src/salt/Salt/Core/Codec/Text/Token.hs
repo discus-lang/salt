@@ -31,6 +31,7 @@ data Token
         | KArrowRight
         | KArrowRightFat
         | KLambda
+        | KProd   | KSum
 
         -- Keywords
         | KType   | KTerm  | KTest

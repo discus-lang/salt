@@ -47,7 +47,8 @@ data TypeKey
         | TKFun                         -- ^ Function type former.
         | TKForall                      -- ^ Forall type former.
         | TKExists                      -- ^ Exists type former.
-        | TKRecord ![Name]              -- ^ Record type former.
+        | TKRecord  ![Name]             -- ^ Record type former.
+        | TKVariant ![Name]             -- ^ Variant type former.
         deriving (Show, Eq, Ord)
 
 
@@ -62,9 +63,10 @@ pattern TArr ks1 k2     = TKey TKArr         [TGTypes ks1,     TGTypes [k2]]
 pattern TApp tFun mts2  = TKey TKApp         [TGTypes [tFun],  mts2]
 pattern TApt tFun ts2   = TKey TKApp         [TGTypes [tFun],  TGTypes ts2]
 pattern TFun ts1  ts2   = TKey TKFun         [TGTypes ts1,     TGTypes ts2]
-pattern TForall bks t   = TKey TKForall      [TGTypes [TAbs (TPTypes bks) t]]
-pattern TExists bks t   = TKey TKExists      [TGTypes [TAbs (TPTypes bks) t]]
-pattern TRecord ns ts   = TKey (TKRecord ns) [TGTypes ts]
+pattern TForall  bks t  = TKey TKForall      [TGTypes [TAbs (TPTypes bks) t]]
+pattern TExists  bks t  = TKey TKExists      [TGTypes [TAbs (TPTypes bks) t]]
+pattern TRecord  ns  ts = TKey (TKRecord ns) [TGTypes ts]
+pattern TVariant ns  ts = TKey (TKVariant ns) [TGTypes ts]
 pattern (:=>) ks1 k2    = TArr    ks1 k2
 pattern (:->) ts1 ts2   = TFun    ts1 ts2
 pattern (:*>) tps t     = TForall tps t

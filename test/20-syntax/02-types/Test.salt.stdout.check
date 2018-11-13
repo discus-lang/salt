@@ -13,16 +13,18 @@
 * app'set: #Data
 * map'nat: #Data
 * app'set'set: #Data
-* map'nat: #Data
+* fun1: #Data
+* fun2: #Data
+* fun3: #Data
+* fun4: #Data
 * op1: [#Data, #Data] ⇒ #Data
 * op1'high: [[#Data] → [#Data]] ⇒ [#Data] → [#Data]
 * op1'app: #Data
 * all1: #Data
 * some1: #Data
-* fun1: #Data
-* fun2: #Data
-* fun3: #Data
-* fun4: #Data
 * rec1: #Data
 * rec2: #Data
 * rec'empty: #Data
+* vnt1: #Data
+* vnt2: #Data
+* vnt'none: #Data

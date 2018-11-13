@@ -54,8 +54,8 @@ pType
 pTypesHead :: Parser (TypeArgs Location)
 pTypesHead
  = P.choice
- [ do   -- '{' Type+ '}'
-        ts      <- pBraced $ P.sepEndBy pType (pTok KSemi)
+ [ do   -- '[' Type+ ']'
+        ts      <- pSquared $ P.sepEndBy pType (pTok KComma)
         return  $ TGTypes ts
 
  , do   -- (Prm | TypeArg) TypeArg*
@@ -64,8 +64,8 @@ pTypesHead
                 ,  do   pTypeArg ]
 
         P.choice
-         [ do   -- '{' Type;+ '}'
-                tsArgs  <- pBraced $ P.sepEndBy pType (pTok KSemi)
+         [ do   -- '[' Type;+ ']'
+                tsArgs  <- pSquared $ P.sepEndBy pType (pTok KComma)
                 return  $  TGTypes [TApt tFun tsArgs]
 
          , do   -- TypeArg*
@@ -104,8 +104,15 @@ pTypeArg
  , do   -- Prm
         pPrm >>= return . TPrm
 
- , do   -- '[' (Lbl ':' Type)* ']'
-        pTypeRecord
+ , do   -- '∏' '[' (Lbl ':' Type)* ']'
+        pTok KProd
+        lts     <- pTypeFields
+        return $ TRecord (map fst lts) (map snd lts)
+
+ , do   -- '∑' '[' (Lbl ':' Type)* ']'
+        pTok KSum
+        lts     <- pTypeFields
+        return $ TVariant (map fst lts) (map snd lts)
 
  , do   -- '(' Term ')'
         pTok KRBra
@@ -118,31 +125,27 @@ pTypeArg
 
 -- | Parser for some type parameters.
 --   There needs to be at least one parameter because types
---   like  'λ{}.T' and '∀{}.T' aren't useful and we prefer not to worry
+--   like  'λ[].T' and '∀[].T' aren't useful and we prefer not to worry
 --   about needing to define them to be equal to 'T'.
 pTypeParams :: Parser (TypeParams Location)
 pTypeParams
- = P.choice
- [ do   -- '{' (Var ':' Type')+ '}'
-        bts     <- pBraced $ flip P.sepEndBy1 (pTok KSemi)
-                $  do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
+ = do   bts     <- pTypeSigs
         return  $ TPTypes bts
- ]
  <?> "type parameters"
 
 
--- | Parser for a record type.
-pTypeRecord :: Parser (Type Location)
-pTypeRecord
- = do   -- '[' (Lbl ':' Type)* ']'
-        pTok KSBra
-        lts <- P.sepEndBy
-                (do l   <- pLbl
-                    pTok KColon
-                    t   <- pType
-                    return (l, t))
-                (pTok KComma)
-        pTok KSKet
-        return $ TRecord (map fst lts) (map snd lts)
- <?> "a record type"
+-- | Parser for some type signatures.
+pTypeSigs :: Parser [(Bind, Type Location)]
+pTypeSigs
+ = pSquared
+        $ flip P.sepEndBy (pTok KComma)
+        $ do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
+
+
+-- | Parser for some type fields.
+pTypeFields :: Parser [(Name, Type Location)]
+pTypeFields
+ = pSquared
+        $ flip P.sepEndBy (pTok KComma)
+        $ do n <- pLbl; pTok KColon; t <- pType; return (n, t)
 

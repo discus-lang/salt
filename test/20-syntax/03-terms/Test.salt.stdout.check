@@ -31,10 +31,10 @@
 * do'fst: #Bool
 * do'some: #Nat
 * do'things: #Nat
-* record'empty: ⟨⟩
-* record'one: ⟨x: #Nat⟩
-* record'two: ⟨x: #Nat, y: #Bool⟩
-* record'three: ⟨x: #Nat, y: #Bool, z: #Unit⟩
+* record'empty: ∏[]
+* record'one: ∏[x: #Nat]
+* record'two: ∏[x: #Nat, y: #Bool]
+* record'three: ∏[x: #Nat, y: #Bool, z: #Unit]
 * field'one: #Nat
 * field'two: #Bool
 * field'nest: #Unit

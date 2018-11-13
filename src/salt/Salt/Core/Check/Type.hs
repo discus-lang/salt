@@ -99,6 +99,16 @@ checkType a wh ctx (TRecord ns tsField)
         return  (TRecord ns tsField', TData)
 
 
+-- (k-vnt) ------------------------------------------------
+checkType a wh ctx (TVariant ns tsField)
+ = do
+        -- TODO: check for duplicate field names.
+        tsField' <- checkTypesAre a wh ctx tsField
+                  $ replicate (length tsField) TData
+
+        return  (TVariant ns tsField', TData)
+
+
 -----------------------------------------------------------
 -- The type expression is malformed,
 --   so we don't have any rule that could match it.

@@ -45,6 +45,8 @@ scanner _fileName
 
         , fmap (stamp id) $ IW.accept '⟨' KABra
         , fmap (stamp id) $ IW.accept '⟩' KAKet
+        , fmap (stamp id) $ IW.accept '∏' KProd
+        , fmap (stamp id) $ IW.accept '∑' KSum
         , fmap (stamp id) $ IW.accept '→' KArrowRight
         , fmap (stamp id) $ IW.accept '⇒' KArrowRightFat
         , fmap (stamp id) $ IW.accept 'λ' KFun

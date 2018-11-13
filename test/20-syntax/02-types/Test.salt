@@ -12,35 +12,38 @@ test kind.set           #Set
 test kind.map           #Map
 
 -- Check type application.
-test kind.app'option    #Option {#Nat}
-test kind.app'list      #List {#Nat}
-test kind.app'set       #Set {#Nat}
-test kind.map'nat       #Map {#Nat; #Text}
+test kind.app'option    #Option [#Nat]
+test kind.app'list      #List [#Nat]
+test kind.app'set       #Set [#Nat]
+test kind.map'nat       #Map [#Nat, #Text]
 
 -- Nested application.
-test kind.app'set'set   #Set {#Set {#Nat}}
-
--- Using sugared syntax for primitive application.
-test kind.map'nat       #Map #Nat #Text
-
--- Type function.
-test kind.op1           λ{a: #Data; b: #Data} ⇒ a
-test kind.op1'high      λ{a: #Data → #Data} ⇒ a
-test kind.op1'app       (λ{a: #Data; b: #Data} ⇒ a) {#Nat; #Bool}
-
--- Forall type.
-test kind.all1          ∀{a: #Data; b: #Data}. a → b
-
--- Exists type.
-test kind.some1         ∃{a: #Data; b: #Data}. a → b
+test kind.app'set'set   #Set [#Set [#Nat]]
 
 -- Function types.
-test kind.fun1          {#Nat; #Nat} → {#Nat}
-test kind.fun2          {#Nat} → {#Nat} → {#Bool}
-test kind.fun3          #Map #Nat #Bool → #Nat
-test kind.fun4          #Nat → #Map #Nat #Bool
+test kind.fun1          [#Nat, #Nat] → [#Nat]
+test kind.fun2          [#Nat] → [#Nat] → [#Bool]
+test kind.fun3          #Map [#Nat, #Bool] → #Nat
+test kind.fun4          #Nat → #Map [#Nat, #Bool]
+
+-- Type function.
+test kind.op1           λ[a: #Data, b: #Data] ⇒ a
+test kind.op1'high      λ[a: #Data → #Data] ⇒ a
+test kind.op1'app       (λ[a: #Data, b: #Data] ⇒ a) [#Nat, #Bool]
+
+-- Forall type.
+test kind.all1          ∀[a: #Data, b: #Data]. a → b
+
+-- Exists type.
+test kind.some1         ∃[a: #Data, b: #Data]. a → b
 
 -- Record types.
-test kind.rec1          [one: #Symbol, two: #Nat]
-test kind.rec2          [one: #Symbol, two: [foo: #Nat]]
-test kind.rec'empty     []
+test kind.rec1          ∏[one: #Symbol, two: #Nat]
+test kind.rec2          ∏[one: #Symbol, two: ∏[foo: #Nat]]
+test kind.rec'empty     ∏[]
+
+-- Variant types.
+test kind.vnt1          ∑[one: #Symbol, two: #Nat]
+test kind.vnt2          ∑[one: #Symbol, two: ∑[foo: #Nat]]
+test kind.vnt'none      ∑[]
+
