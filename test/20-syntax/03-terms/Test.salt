@@ -99,15 +99,21 @@ test type.field'paren   ((⟨x = ⟨x = 5, y = #unit⟩, y = #true⟩).x).y
 -- Maybe -----------------------------------------------------------------------
 test type.none          #None
 
+
+-- List ------------------------------------------------------------------------
 test type.list'empty    [list #Nat|]
 test type.list'some     [list #Nat| 1, 2, 3]
 test type.list'head     #list'head @[#Nat] [list #Nat| 1, 2, 3]
 test type.list'tail     #list'tail @[#Nat] [list #Nat| 1, 2, 3]
 
+
+-- Set ------------------------------------------------------------------------
 test type.set'empty     [set #Nat|]
 test type.set'some      [set #Nat| 1, 2, 3]
 test type.set'size      #set'size @[#Nat] [set #Nat| 1, 2, 3, 4, 5]
 
+
+-- Map ------------------------------------------------------------------------
 test type.map'empty     [map #Nat #Symbol|]
 test type.map'some      [map #Nat #Symbol| 3 := 'three, 5 := 'five]
 test type.map'size      #map'size   @[#Nat, #Symbol] [map #Nat #Symbol|]
