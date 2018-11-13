@@ -187,8 +187,10 @@ runTestType _mm mnTest mTest
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        (_m, tResult) <- Check.checkTerm1 a [] Check.contextEmpty mTest Check.Synth
-        putStrLn $ P.renderIndent $ P.ppr () tResult
+        (_m, tsResult) <- Check.checkTerm a [] Check.contextEmpty mTest Check.Synth
+        case tsResult of
+         [t]    -> putStrLn $ P.renderIndent $ P.ppr () t
+         _      -> putStrLn $ P.renderIndent $ P.ppr () tsResult
 
 
 -- | Run a eval test.

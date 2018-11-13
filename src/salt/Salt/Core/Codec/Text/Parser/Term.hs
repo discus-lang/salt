@@ -21,12 +21,7 @@ pTerm
 pTerm_  :: Parser (Term Location)
 pTerm_
  = P.choice
- [ do   -- '[' Term,* ']'
-        ms      <- pSquared $ P.sepEndBy pTerm (pTok KComma)
-        return  $ MTerms ms
-
-
- , do   -- 'λ' TermParams+ '->' Term
+ [ do   -- 'λ' TermParams+ '->' Term
         pTok KFun
         mps     <- P.many1 pTermParams
         pTok KArrowRight
@@ -164,11 +159,6 @@ pTermArg
         pTok KRKet
         return t
 
- , do   -- '[record|' (Lbl '=' Term),* ']'
-        -- '⟨' (Lbl '=' Term)* '⟩'
-        -- Lookahead to distinguish record literals from the
-        -- other collection literals below.
-        pTermRecord
 
  , do   -- '[list|' Term,* ']'
         P.try $ P.lookAhead $ do
@@ -176,7 +166,7 @@ pTermArg
                 guard (n == Name "list")
 
         pTok KSBra; pVar; pTok KBar
-        msElem  <- P.sepEndBy1 pTerm (pTok KComma)
+        msElem  <- P.sepEndBy pTerm (pTok KComma)
         pTok KSKet
         return  $ MList msElem
 
@@ -203,6 +193,16 @@ pTermArg
         pTok KSKet
         let (mks, mvs) = unzip mmsElem
         return  $ MMap mks mvs
+
+
+ , do   -- '[record|' (Lbl '=' Term),* ']'
+        -- '⟨' (Lbl '=' Term)* '⟩'
+        pTermRecord
+
+
+ , do   -- '[' Term,* ']'
+        ms      <- pSquared $ P.sepEndBy pTerm (pTok KComma)
+        return  $ MTerms ms
  ]
  <?> "a argument term"
 

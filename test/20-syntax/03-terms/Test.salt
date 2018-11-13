@@ -17,6 +17,11 @@ test type.symbol        'Foo
 test type.symbol2       'Bar1234
 
 
+-- Term vector ----------------------------------------------------------------
+test type.vec           [1, 2, 3]
+test type.void          []
+
+
 -- Term abstraction -----------------------------------------------------------
 test type.abs           λ[x: #Bool] → x
 test type.abs2          λ[x: #Bool, y: #Nat] → x
@@ -26,8 +31,9 @@ test type.abs5          λ[] → []
 
 
 -- Type abstraction -----------------------------------------------------------
-test type.appt'id       (λ@[a: Data] → λ[x: a] → x)
-test type.appt'id2      (λ@[a: Data] [x: a] → x)
+test type.abst'id       (λ@[a: #Data] → λ[x: a] → x)
+test type.abst'id2      (λ@[a: #Data] [x: a] → x)
+test type.abst'app      (λ@[a: #Data, b: #Data] [f: a → b, x: a] → f x)
 
 
 -- Term/Term application ------------------------------------------------------
@@ -41,6 +47,13 @@ test type.appm'lam2     (λ[f: #Bool → #Bool, x: #Bool] → f x)
 
 test type.appm'vec      (λ[x: #Bool, y: #Bool] → y)
                                 ((λ[x: #Bool] → [x, x]) [#true])
+
+
+-- Term/Type application ------------------------------------------------------
+test type.appt'double   (λ@[a: #Data] [x: a] → [x, x]) @[#Nat] [5]
+
+test type.appt'app      (λ@[a: #Data, b: #Data] [f: a → b, x: a] → f x)
+                                @[#Bool, #Bool] [#bool'not, #true]
 
 
 -- Let bindings ---------------------------------------------------------------
@@ -83,8 +96,14 @@ test type.field'nest    ⟨x = ⟨x = 5, y = #unit⟩, y = #true⟩.x.y
 test type.field'paren   ((⟨x = ⟨x = 5, y = #unit⟩, y = #true⟩).x).y
 
 
--- TODO: maybe
--- TODO: list
--- TODO: set
--- TODO: map
+-- Maybe -----------------------------------------------------------------------
+-- test type.nothing       #Nothing
+
+-- TODO: allow constraining of list type.
+-- test type.list'empty    [list|]
+test type.list'some     [list| 1, 2, 3]
+
+-- TODO: allow constrainint of set type.
+-- test type.set'empty  [set|]
+test type.set'some      [set| 1, 2, 3]
 

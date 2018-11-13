@@ -7,18 +7,23 @@
 * nat1234: #Nat
 * symbol: #Symbol
 * symbol2: #Symbol
+* vec: [#Nat,#Nat,#Nat]
+* void: []
 * abs: [#Bool] → [#Bool]
 * abs2: [#Bool, #Nat] → [#Bool]
 * abs3: [#Bool, #Nat] → [#Bool, #Nat]
 * abs4: [#Bool, #Nat] → []
 * abs5: [] → []
-* appt'id: ∀[a: Data]. [a] → [a]
-* appt'id2: ∀[a: Data]. [a] → [a]
+* abst'id: ∀[a: #Data]. [a] → [a]
+* abst'id2: ∀[a: #Data]. [a] → [a]
+* abst'app: ∀[a: #Data, b: #Data]. [[a] → [b], a] → [b]
 * appm'not: #Bool
 * appm'and: #Bool
 * appm'lam: #Bool
 * appm'lam2: #Bool
 * appm'vec: #Bool
+* appt'double: [#Nat,#Nat]
+* appt'app: #Bool
 * let'fst: #Bool
 * let'snd: #Nat
 * let'one: #Nat
@@ -34,3 +39,5 @@
 * field'two: #Bool
 * field'nest: #Unit
 * field'paren: #Unit
+* list'some: #List [#Nat]
+* set'some: #Set [#Nat]
