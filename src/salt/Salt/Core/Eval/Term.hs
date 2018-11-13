@@ -43,27 +43,31 @@ evalTerm a env (MKey MKTerms [MGTerms ms])
  = evalTerms a env ms
 
 -- Prim-term application
-evalTerm a env (MKey MKApp [MGTerm (MPrm nPrim), MGTerms msArg])
+evalTerm a env (MKey MKApp [MGTerm (MPrm nPrim), mgsArg])
+ | case mgsArg of
+        MGTerm{}  -> True
+        MGTerms{} -> True
+        _         -> False
  = case Map.lookup nPrim Ops.primOps of
         Just (Ops.PP _name _type step _docs)
-         -> do  vsArg   <- evalTerms a env msArg
+         -> do  vsArg   <- evalTermArgs a env mgsArg
                 let vsResult = step [] vsArg
                 return vsResult
 
         Just (Ops.PO _name _type exec _docs)
-         -> do  vsArg    <- evalTerms a env msArg
+         -> do  vsArg    <- evalTermArgs a env mgsArg
                 vsResult <- exec [] vsArg
                 return vsResult
 
         Nothing -> throw $ ErrorPrimUnknown a nPrim
 
 -- Term-term application.
-evalTerm a env (MKey MKApp [MGTerm mFun, MGTerms msArg])
+evalTerm a env (MKey MKApp [MGTerm mFun, mgsArg])
  = do   vsCloTerm <- evalTerm a env mFun
         case vsCloTerm of
          [VClosure (CloTerm env' [MPTerms bts] mBody)]
           -> do let bs    = map fst bts
-                vsArg <- evalTerms a env msArg
+                vsArg <- evalTermArgs a env mgsArg
                 let env'' = envExtends (zip bs vsArg) env'
                 vsRes <- evalTerm  a env'' mBody
                 return vsRes
@@ -142,4 +146,16 @@ evalTerms
         -> [Term a] -> IO [Value a]
 evalTerms a env ms
  = mapM (evalTerm1 a env) ms
+
+
+---------------------------------------------------------------------------------------------------
+evalTermArgs :: Annot a => a -> Env a -> TermArgs a -> IO [Value a]
+evalTermArgs a env mgs
+ = case mgs of
+        MGTerm  m   -> evalTerm a env m
+        MGTerms ms  -> mapM (evalTerm1 a env) ms
+        MGTypes _   -> error "cannot evaluate type arguments"
+
+
+
 

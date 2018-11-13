@@ -102,7 +102,9 @@ test type.none          #None
 test type.list'empty    [list #Nat|]
 test type.list'some     [list #Nat| 1, 2, 3]
 test type.list'head     #list'head @[#Nat] [list #Nat| 1, 2, 3]
+test type.list'tail     #list'tail @[#Nat] [list #Nat| 1, 2, 3]
 
 test type.set'empty     [set #Nat|]
 test type.set'some      [set #Nat| 1, 2, 3]
+test type.set'size      #set'size @[#Nat] [set #Nat| 1, 2, 3, 4, 5]
 

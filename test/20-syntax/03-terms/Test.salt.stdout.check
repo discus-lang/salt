@@ -39,5 +39,11 @@
 * field'two: #Bool
 * field'nest: #Unit
 * field'paren: #Unit
+* none: ∀[a: #Data]. [] → [#Option [(a)]]
+* list'empty: #List [#Nat]
 * list'some: #List [#Nat]
+* list'head: #Option [#Nat]
+* list'tail: #Option [(#List [#Nat])]
+* set'empty: #Set [#Nat]
 * set'some: #Set [#Nat]
+* set'size: #Nat

@@ -6,13 +6,13 @@ test kind.nat           #Nat
 test kind.int           #Int
 test kind.text          #Text
 test kind.symbol        #Symbol
-test kind.maybe         #Maybe
+test kind.option        #Option
 test kind.list          #List
 test kind.set           #Set
 test kind.map           #Map
 
 -- Check type application.
-test kind.app'maybe     #Maybe {#Nat}
+test kind.app'option    #Option {#Nat}
 test kind.app'list      #List {#Nat}
 test kind.app'set       #Set {#Nat}
 test kind.map'nat       #Map {#Nat; #Text}

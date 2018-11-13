@@ -4,11 +4,11 @@
 * int: #Data
 * text: #Data
 * symbol: #Data
-* maybe: [#Data] ⇒ #Data
+* option: [#Data] ⇒ #Data
 * list: [#Data] ⇒ #Data
 * set: [#Data] ⇒ #Data
 * map: [#Data, #Data] ⇒ #Data
-* app'maybe: #Data
+* app'option: #Data
 * app'list: #Data
 * app'set: #Data
 * map'nat: #Data
