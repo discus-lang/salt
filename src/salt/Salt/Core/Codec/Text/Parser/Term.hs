@@ -78,72 +78,45 @@ pTerm_
 
  , do   -- Con TypeArg* TermArg*
         nCon    <- pCon
-
-        -- TODO: fix type app syntax.
-        tsArgs  <- P.choice
-                [ do    P.many1 pTermArgType
-                , do    return [] ]
-
-        msArgs  <- P.choice
-                [ do    pSquared $ P.sepEndBy pTerm (pTok KSemi)
-                , do    m <- pTermArg; return [m]
-                , do    return [] ]
-
-        return  $ MCon nCon tsArgs msArgs
+        pTermAppArgs (MCon nCon)
 
 
- , do   -- Prm TypeArg* TermArg*
+ , do   -- Prm TermArgs*
         nPrm    <- pPrm
         case takePrimValueOfName nPrm of
-         Just v -> return $ MVal v
-
-         -- TODO: use pTermArgs parser.
-         Nothing
-          -> do mAppTs
-                 <- P.choice
-                 [  do  tsArgs  <- P.many1 pTermArgType
-                        return  $ MApt (MPrm nPrm) tsArgs
-
-                 ,  do  return  $ MPrm nPrm ]
-
-                P.choice
-                 [ do   msArg   <- pSquared $ P.sepEndBy pTerm (pTok KComma)
-                        return  $ MApm mAppTs msArg
-
-                 , do   mArg    <- pTermArgProj
-                        return  $ MApv mAppTs mArg
-
-                 ,  do  return  $ mAppTs ]
+         Just v  -> pTermAppArgs (MVal v)
+         Nothing -> pTermAppArgs (MPrm nPrm)
 
 
- , do   -- TermArg [Term; ...]
-        -- TermArg TermArg
-        -- TODO: fix type app syntax.
+ , do   -- TermArg TermArgs*
         mFun    <- pTermArgProj
-
-        P.choice
-         [ do   msArgs  <- pSquared $ P.sepEndBy pTerm (pTok KComma)
-                return  $ MApm mFun msArgs
-
-         , do   mArg    <- pTerm
-                return  $ MApv mFun mArg
-
-         , do   return mFun
-         ]
+        pTermAppArgs mFun
  ]
  <?> "a term"
 
 
+-- | Parse arguments to the given function,
+--   returning the constructed application.
+pTermAppArgs :: Term Location -> Parser (Term Location)
+pTermAppArgs mFun
+ = P.choice
+ [ do   gsArgs  <- P.many1 pTermArgs
+        return $ foldl MApp mFun gsArgs
+
+ , do   return mFun]
+
+
+-- | Parse some term arguments.
 pTermArgs :: Parser (TermArgs Location)
 pTermArgs
  = P.choice
  [ do   -- '@' '[' Type;+ ']'
         pTok KAt
-        ts      <- pSquared $ P.sepEndBy pType (pTok KSemi)
+        ts      <- pSquared $ P.sepEndBy pType (pTok KComma)
         return  $ MGTypes ts
 
  , do   -- '[' Term;+ ']'
-        ms      <- pSquared $ P.sepEndBy pTerm (pTok KSemi)
+        ms      <- pSquared $ P.sepEndBy pTerm (pTok KComma)
         return  $ MGTerms ms
 
  , do   -- TermProj
@@ -174,7 +147,7 @@ pTermArg :: Parser (Term Location)
 pTermArg
  = P.choice
  [ do   pVar >>= return . MVar . Bound
- , do   pCon >>= \n -> return $ MCon n [] []
+ , do   pCon >>= return . MCon
  , do   pSym >>= return . MSymbol
  , do   pNat >>= return . MNat
 
@@ -193,16 +166,16 @@ pTermArg
         pTok KRKet
         return t
 
- , do   -- '[r|' (Lbl '=' Term),* ']'
+ , do   -- '[record|' (Lbl '=' Term),* ']'
         -- '⟨' (Lbl '=' Term)* '⟩'
         -- Lookahead to distinguish record literals from the
         -- other collection literals below.
         pTermRecord
 
- , do   -- '[l|' Term,* ']'
+ , do   -- '[list|' Term,* ']'
         P.try $ P.lookAhead $ do
                 pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "l")
+                guard (n == Name "list")
 
         pTok KSBra; pVar; pTok KBar
         msElem  <- P.sepEndBy1 pTerm (pTok KComma)
@@ -210,10 +183,10 @@ pTermArg
         return  $ MList msElem
 
 
- , do   -- '[s|' Term,* ']'
+ , do   -- '[set|' Term,* ']'
         P.try $ P.lookAhead $ do
                 pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "s")
+                guard (n == Name "set")
 
         pTok KSBra; pVar; pTok KBar
         msElem  <- P.sepEndBy1 pTerm (pTok KComma)
@@ -221,10 +194,10 @@ pTermArg
         return  $ MSet msElem
 
 
- , do   -- '[m|' (Term ':=' Term),* ']'
+ , do   -- '[map|' (Term ':=' Term),* ']'
         P.try $ P.lookAhead $ do
                 pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "m")
+                guard (n == Name "map")
 
         pTok KSBra; pVar; pTok KBar
         mmsElem <- flip P.sepEndBy1 (pTok KComma)
@@ -249,10 +222,10 @@ pTermParams
 pTermRecord :: Parser (Term Location)
 pTermRecord
  = P.choice
- [ do   -- '[r' (Lbl '=' Term)* '⟩'
+ [ do   -- '[record' (Lbl '=' Term)* '⟩'
         P.try $ P.lookAhead $ do
                 pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "s")
+                guard (n == Name "record")
 
         pTok KSBra; pVar; pTok KBar
 

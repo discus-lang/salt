@@ -178,8 +178,8 @@ instance Pretty c (TermRef a) where
  ppr c mr
   = case mr of
         MRVal v -> ppr c v
-
         MRPrm n -> text "#" % ppr c n
+        MRCon n -> text "%" % ppr c n
 
         MRTop ns n
          -> (hcat $ punctuate (text ".") (map (ppr c) ns))

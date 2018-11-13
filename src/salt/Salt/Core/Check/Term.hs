@@ -33,7 +33,7 @@ checkTerm _a wh ctx (MAnn a' m) mode
  = checkTerm a' wh ctx m mode
 
 -- Ref --------------------------------------------------
-checkTerm a wh _ctx m@(MRef ref) Synth
+checkTerm a wh ctx m@(MRef ref) Synth
  = case ref of
         MRVal VUnit     -> return (m, [TUnit])
         MRVal VSymbol{} -> return (m, [TSymbol])
@@ -45,11 +45,19 @@ checkTerm a wh _ctx m@(MRef ref) Synth
 
         MRPrm nPrim
          -> case Map.lookup nPrim Prim.primOps of
+                Nothing -> throw $ ErrorUnknownPrimitive a wh nPrim
                 Just pp
                  -> do  let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
                         return (m, [tPrim])
 
-                Nothing -> throw $ ErrorUnknownPrimitive a wh nPrim
+
+        MRCon nCtor
+         ->  contextResolveDataCtor nCtor ctx
+         >>= \case
+                Nothing    -> throw $ ErrorUnknownDataCtor a wh nCtor
+                Just tCtor
+                 -> do  let tCtor' = mapAnnot (const a) tCtor
+                        return (m, [tCtor'])
 
         MRTop{}         -> error "check mrtop not done yet"
 
@@ -127,25 +135,6 @@ checkTerm a wh ctx (MLet bts mBind mResult) Synth
         let ctx' = contextBindTermParams (MPTerms bts'') ctx
         (mResult', tsResult) <- checkTerm a wh ctx' mResult Synth
         return  (MLet bts' mBind' mResult', tsResult)
-
-
--- MKCon --------------------------------------------------
-checkTerm a wh ctx (MCon nCtor tsArg msArg) Synth
- = let
-        goCheckData
-         =   contextResolveDataCtor nCtor ctx
-         >>= \case
-                Nothing -> goUnknown
-                Just tCtor
-                 -> do  let tCtor' = mapAnnot (const a) tCtor
-                        (tsArg', tInst)    <- checkTermAppTypes a wh ctx tCtor' tsArg
-                        (msArg', tsResult) <- checkTermAppTerms a wh ctx tInst  msArg
-                        return  (MCon nCtor tsArg' msArg', tsResult)
-
-        goUnknown
-         = throw $ ErrorUnknownDataCtor a wh nCtor
-
-   in   goCheckData
 
 
 -- MKRecord -----------------------------------------------

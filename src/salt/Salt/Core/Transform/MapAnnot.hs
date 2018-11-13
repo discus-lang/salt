@@ -85,6 +85,7 @@ instance MapAnnot TermRef where
   = case tr of
         MRVal v         -> MRVal (mapAnnot f v)
         MRPrm n         -> MRPrm n
+        MRCon n         -> MRCon n
         MRTop ns u      -> MRTop ns u
 
 

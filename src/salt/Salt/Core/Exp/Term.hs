@@ -21,6 +21,7 @@ data Term a
 data TermRef a
         = MRVal     !(Value a)                  -- ^ Value reference.
         | MRPrm     !Name                       -- ^ Primitive reference.
+        | MRCon     !Name                       -- ^ Data constructor reference.
         | MRTop     ![Name] !Bound              -- ^ Reference to a top-level binding in a module.
         deriving (Show, Eq, Ord)
 
@@ -89,6 +90,7 @@ data Closure a
 -- Patterns ---------------------------------------------------------------------------------------
 pattern MVal v          = MRef  (MRVal v)
 pattern MPrm n          = MRef  (MRPrm n)
+pattern MCon n          = MRef  (MRCon n)
 
 pattern MAbm bts mBody  = MAbs  (MPTerms bts) mBody
 pattern MAbt bts mBody  = MAbs  (MPTypes bts) mBody
@@ -99,7 +101,6 @@ pattern MApv mFun mArg  = MKey   MKApp          [MGTerm  mFun, MGTerm  mArg]
 pattern MApm mFun msArg = MKey   MKApp          [MGTerm  mFun, MGTerms msArg]
 pattern MApt mFun tsArg = MKey   MKApp          [MGTerm  mFun, MGTypes tsArg]
 pattern MLet bts mb m   = MKey   MKLet          [MGTerms [mb, MAbs (MPTerms bts) m]]
-pattern MCon  n ts ms   = MKey  (MKCon n)       [MGTypes ts, MGTerms ms]
 pattern MProject l m    = MKey  (MKProject l)   [MGTerms [m]]
 pattern MRecord ns ms   = MKey  (MKRecord ns)   [MGTerms ms]
 pattern MList ms        = MKey   MKList         [MGTerms ms]
@@ -115,8 +116,8 @@ pattern MNat i          = MRef  (MRVal (VNat i))
 pattern MSymbol n       = MRef  (MRVal (VSymbol n))
 pattern MText tx        = MRef  (MRVal (VText tx))
 
-pattern MJust t m       = MCon  (Name "Just")    [t] [m]
-pattern MNothing t      = MCon  (Name "Nothing") [t] []
+pattern MJust t m       = MApm (MApt (MCon (Name "Just")) [t]) [m]
+pattern MNothing t      = MApt (MCon (Name "Nothing")) [t]
 
 -- Values
 pattern VTrue           = VBool  True
