@@ -188,7 +188,7 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
 -- MKList -------------------------------------------------
 -- TODO: check embedded type.
 checkTerm a wh ctx (MList t ms) Synth
- = do   let ts  = replicate (length ms) t
+ = do   let ts = replicate (length ms) t
         (ms', _) <- checkTerms a wh ctx ms (Check ts)
         return  (MList t ms', [TList t])
 
@@ -196,10 +196,20 @@ checkTerm a wh ctx (MList t ms) Synth
 -- MKSet --------------------------------------------------
 -- TODO: check embedded type.
 checkTerm a wh ctx (MSet t ms) Synth
- = do   let ts     =  replicate (length ms) t
+ = do   let ts = replicate (length ms) t
         (ms', _) <- checkTerms a wh ctx ms (Check ts)
         return (MSet t ms', [TSet t])
 
+
+-- MKMap -------------------------------------------------
+-- TODO: check embedded types.
+-- TODO: check keys and values same length.
+checkTerm a wh ctx (MMap tk tv msk msv) Synth
+ = do   let tsk = replicate (length msk) tk
+        let tsv = replicate (length msv) tv
+        (msk', _) <- checkTerms a wh ctx msk (Check tsk)
+        (msv', _) <- checkTerms a wh ctx msv (Check tsv)
+        return (MMap tk tv msk' msv', [TMap tk tv])
 
 checkTerm a wh ctx m mode
  = checkTerm_default a wh ctx m mode

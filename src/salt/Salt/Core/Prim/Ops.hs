@@ -42,7 +42,7 @@ primOps
  = Map.fromList $ map (\p -> (name p, p)) $ concat
         [ primOpsBool,   primOpsNat
         , primOpsSymbol
-        , primOpsList,   primOpsSet
+        , primOpsList,   primOpsSet,  primOpsMap
         , primOpsDebug ]
 
 
@@ -203,6 +203,49 @@ primOpsSet
         , tsig  = [("a", TData)] :*> (["a", TSet "a"] :-> [TSet "a"])
         , step  = \[t] [v, VSet _ vs] -> [VSet t $ Set.delete (stripAnnot v) vs]
         , docs  = "Delete an element from a set." }
+   ]
+
+
+-- Map --------------------------------------------------------------------------------------------
+primOpsMap
+ = [ PP { name  = "map'empty"
+        , tsig  = [("k", TData), ("v", TData)]
+                        :*> ([] :-> [TMap "k" "v"])
+        , step  = \[tk, tv] [] -> [VMap tk tv $ Map.empty]
+        , docs  = "Construct an empty map." }
+
+   , PP { name  = "map'isEmpty"
+        , tsig  = [("k", TData), ("v", TData)]
+                        :*> ([TMap "k" "v"] :-> [TBool])
+        , step  = \[_] [VMap _ _ vks] -> [VBool $ Map.null vks]
+        , docs  = "Check if the given map is empty." }
+
+   , PP { name  = "map'size"
+        , tsig  = [("k", TData), ("v", TData)]
+                        :*> ([TMap "k" "v"] :-> [TNat])
+        , step  = \[_] [VMap _ _ vks] -> [VNat $ fromIntegral $ Map.size vks]
+        , docs  = "Produce the size of the given map." }
+
+   , PP { name  = "map'insert"
+        , tsig  = [("k", TData), ("v", TData)]
+                        :*> (["k", "v", TMap "k" "v"] :-> [TMap "k" "v"])
+        , step  = \[tk, tv] [vk, vv, VMap _ _ vks]
+                        -> [VMap tk tv $ Map.insert (stripAnnot vk) vv vks]
+        , docs  = "Insert an element into a map." }
+
+   , PP { name  = "map'insert"
+        , tsig  = [("k", TData), ("v", TData)]
+                        :*> (["k", "v", TMap "k" "v"] :-> [TMap "k" "v"])
+        , step  = \[tk, tv] [vk, vv, VMap _ _ vks]
+                        -> [VMap tk tv $ Map.insert (stripAnnot vk) vv vks]
+        , docs  = "Insert an element into a map." }
+
+   , PP { name  = "map'delete"
+        , tsig  = [("k", TData), ("v", TData)]
+                        :*> (["k", TMap "k" "v"] :-> [TMap "k" "v"])
+        , step  = \[tk, tv] [vk, VMap _ _ vks]
+                        -> [VMap tk tv $ Map.delete (stripAnnot vk) vks]
+        , docs  = "Delete an element from a map." }
    ]
 
 

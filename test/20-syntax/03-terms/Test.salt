@@ -108,3 +108,8 @@ test type.set'empty     [set #Nat|]
 test type.set'some      [set #Nat| 1, 2, 3]
 test type.set'size      #set'size @[#Nat] [set #Nat| 1, 2, 3, 4, 5]
 
+test type.map'empty     [map #Nat #Symbol|]
+test type.map'some      [map #Nat #Symbol| 3 := 'three, 5 := 'five]
+test type.map'size      #map'size   @[#Nat, #Symbol] [map #Nat #Symbol|]
+test type.map'insert    #map'insert @[#Nat, #Symbol] [4, 'Derp, [map #Nat #Symbol|]]
+

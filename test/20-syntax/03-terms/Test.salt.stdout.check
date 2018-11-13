@@ -47,3 +47,7 @@
 * set'empty: #Set [#Nat]
 * set'some: #Set [#Nat]
 * set'size: #Nat
+* map'empty: #Map [#Nat, #Symbol]
+* map'some: #Map [#Nat, #Symbol]
+* map'size: #Nat
+* map'insert: #Map [#Nat, #Symbol]
