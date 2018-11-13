@@ -70,13 +70,13 @@ instance Pretty c (Type a) where
          ->  text "∀"
           %  squared  [ ppr c b % text ":" %% ppr c t
                       | (b, t) <- bts ]
-          %% text "." %% ppr c tBody
+          %  text "." %% ppr c tBody
 
         TKey TKExists [TGTypes [TAbs (TPTypes bts) tBody]]
          ->  text "∃"
           %  squared  [ ppr c b % text ":" %% ppr c t
                       | (b, t) <- bts ]
-          %% text "." %% ppr c tBody
+          %  text "." %% ppr c tBody
 
         TKey TKFun    [TGTypes tsParam, TGTypes tsResult]
          ->  squared (map (ppr c) tsParam)

@@ -12,11 +12,13 @@
 * abs3: [#Bool, #Nat] → [#Bool, #Nat]
 * abs4: [#Bool, #Nat] → []
 * abs5: [] → []
-* app'not: #Bool
-* app'and: #Bool
-* app'lam: #Bool
-* app'lam2: #Bool
-* app'vec: #Bool
+* appt'id: ∀[a: Data]. [a] → [a]
+* appt'id2: ∀[a: Data]. [a] → [a]
+* appm'not: #Bool
+* appm'and: #Bool
+* appm'lam: #Bool
+* appm'lam2: #Bool
+* appm'vec: #Bool
 * let'fst: #Bool
 * let'snd: #Nat
 * let'one: #Nat

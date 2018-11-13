@@ -26,14 +26,12 @@ pTerm_
         return  $ MTerms ms
 
 
- , do   -- 'λ' TermParams '->' Term
+ , do   -- 'λ' TermParams+ '->' Term
         pTok KFun
-        mps     <- pTermParams
+        mps     <- P.many1 pTermParams
         pTok KArrowRight
         mBody   <- pTerm
-        case mps of
-         MPTerms bts    -> return $ MAbm bts mBody
-         MPTypes bts    -> return $ MAbt bts mBody
+        return  $ foldr MAbs mBody mps
 
 
  , do   -- 'let' '[' Var,* ']' '=' Term ';' Term
@@ -212,8 +210,14 @@ pTermArg
 pTermParams :: Parser (TermParams Location)
 pTermParams
  = P.choice
- [ do   -- '[' (Var ':' Type')* ']'
-        bts     <- pSquared $ flip P.sepEndBy (pTok KComma)
+ [ do   -- '@' '[' (Var ':' Type)+ ']'
+        pTok KAt
+        bts     <- pSquared $ flip P.sepEndBy1 (pTok KComma)
+                $  do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
+        return  $ MPTypes bts
+
+ , do   -- '[' (Var ':' Type)* ']'
+        bts     <- pSquared $ flip P.sepEndBy  (pTok KComma)
                 $  do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
         return  $ MPTerms bts
  ]

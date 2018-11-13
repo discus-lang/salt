@@ -17,28 +17,31 @@ test type.symbol        'Foo
 test type.symbol2       'Bar1234
 
 
--- Function abstractions ------------------------------------------------------
+-- Term abstraction -----------------------------------------------------------
 test type.abs           λ[x: #Bool] → x
 test type.abs2          λ[x: #Bool, y: #Nat] → x
 test type.abs3          λ[x: #Bool, y: #Nat] → [x, y]
 test type.abs4          λ[x: #Bool, y: #Nat] → []
 test type.abs5          λ[] → []
 
--- TODO: type parameters.
 
--- Function application -------------------------------------------------------
-test type.app'not       #bool'not [#true]
-test type.app'and       #bool'and [#true, #false]
+-- Type abstraction -----------------------------------------------------------
+test type.appt'id       (λ@[a: Data] → λ[x: a] → x)
+test type.appt'id2      (λ@[a: Data] [x: a] → x)
 
-test type.app'lam       (λ[x: #Bool] → x) [#true]
 
-test type.app'lam2      (λ[f: #Bool → #Bool, x: #Bool] → f x)
+-- Term/Term application ------------------------------------------------------
+test type.appm'not      #bool'not [#true]
+test type.appm'and      #bool'and [#true, #false]
+
+test type.appm'lam      (λ[x: #Bool] → x) [#true]
+
+test type.appm'lam2     (λ[f: #Bool → #Bool, x: #Bool] → f x)
                                 [λ[x: #Bool] → [x], #true]
 
-test type.app'vec       (λ[x: #Bool, y: #Bool] → y)
+test type.appm'vec      (λ[x: #Bool, y: #Bool] → y)
                                 ((λ[x: #Bool] → [x, x]) [#true])
 
--- TODO: type application.
 
 -- Let bindings ---------------------------------------------------------------
 test type.let'fst       let [x, y] = (λ[x: #Bool] → [x, 5]) [#true]; x
