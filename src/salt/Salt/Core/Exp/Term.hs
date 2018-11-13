@@ -126,31 +126,29 @@ pattern VNothing        = VData (Name "Nothing") []
 pattern VCloTerm e bs m = VClosure (CloTerm e bs m)
 
 
--- Projections ------------------------------------------------------------------------------------
-takeVMaybeClosure :: Value a -> Maybe (Maybe (Closure a))
-takeVMaybeClosure vv
- = case vv of
-        VJust (VClosure c) -> Just $ Just c
-        VNothing           -> Just $ Nothing
-        _                  -> Nothing
-
-
 ---------------------------------------------------------------------------------------------------
--- | Environment of evaluation.
+-- | Environments captured in closures.
 data Env a
         = Env [(Name, (Value a))]
         deriving (Show, Eq, Ord)
 
+-- | Construct an empty environment.
 envEmpty :: Env a
 envEmpty = Env []
 
+
+-- | Extend an environment with a new value.
 envExtend :: Bind -> Value a -> Env a -> Env a
 envExtend (BindName n) v (Env bs)  = Env ((n, v) : bs)
 envExtend BindNone _ env           = env
 
+
+-- | Extend an environment with some new values.
 envExtends :: [(Bind, Value a)] -> Env a -> Env a
 envExtends bvs1 (Env nvs2) = Env ([(n, v) | (BindName n, v) <- bvs1] ++ nvs2)
 
+
+-- | Lookup a named value from an environment.
 envLookup :: Name -> Env a -> Maybe (Value a)
 envLookup n (Env bs)       = lookup n bs
 
@@ -162,11 +160,24 @@ isVTrue (VBool True)    = True
 isVTrue _               = False
 
 
+---------------------------------------------------------------------------------------------------
+-- | Unpack a Just wrapped closure, if this is one.
+takeVMaybeClosure :: Value a -> Maybe (Maybe (Closure a))
+takeVMaybeClosure vv
+ = case vv of
+        VJust (VClosure c) -> Just $ Just c
+        VNothing           -> Just $ Nothing
+        _                  -> Nothing
+
+
+-- | Take a closure from a value, if this is one.
 takeVClosure :: Value a -> Maybe (Closure a)
 takeVClosure (VClosure c) = Just c
 takeVClosure _            = Nothing
 
 
+-- | Take the parameter and result types from a function type,
+--   if this is one.
 takeTFun :: Type a -> Maybe ([Type a], [Type a])
 takeTFun tt
  = case tt of
