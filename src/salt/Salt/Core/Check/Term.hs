@@ -29,46 +29,51 @@ checkTerm
         :: Annot a => a -> [Where a] -> Context a
         -> Term a -> Mode a -> IO (Term a, [Type a])
 
--- Ann --------------------------------------------------
+-- Ann ----------------------------------------------------
 checkTerm _a wh ctx (MAnn a' m) mode
  = checkTerm a' wh ctx m mode
 
--- Ref --------------------------------------------------
-checkTerm a wh ctx m@(MRef ref) Synth
- = case ref of
-        MRVal VUnit     -> return (m, [TUnit])
-        MRVal VSymbol{} -> return (m, [TSymbol])
-        MRVal VText{}   -> return (m, [TText])
-        MRVal VBool{}   -> return (m, [TBool])
-        MRVal VInt{}    -> return (m, [TInt])
-        MRVal VNat{}    -> return (m, [TNat])
-        MRVal (VNone t) -> return (m, [TOption t])
-        MRVal _         -> error "check value not done yet"
 
-        MRPrm nPrim
-         | Just pp <- Map.lookup nPrim Prim.primOps
-         -> do  let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
-                return (m, [tPrim])
-
-         | Just t  <- Map.lookup nPrim Prim.primDataCtors
-         -> do  let tPrim = mapAnnot (const a) t
-                return (m, [tPrim])
-
-         | otherwise
-         -> throw $ ErrorUnknownPrimitive a wh nPrim
-
-        MRCon nCtor
-         ->  contextResolveDataCtor nCtor ctx
-         >>= \case
-                Nothing    -> throw $ ErrorUnknownDataCtor a wh nCtor
-                Just tCtor
-                 -> do  let tCtor' = mapAnnot (const a) tCtor
-                        return (m, [tCtor'])
-
-        MRTop{}         -> error "check mrtop not done yet"
+-- (t-val) ------------------------------------------------
+checkTerm _a _wh _ctx m@(MRef (MRVal v)) Synth
+ = case v of
+        VUnit     -> return (m, [TUnit])
+        VSymbol{} -> return (m, [TSymbol])
+        VText{}   -> return (m, [TText])
+        VBool{}   -> return (m, [TBool])
+        VInt{}    -> return (m, [TInt])
+        VNat{}    -> return (m, [TNat])
+        (VNone t) -> return (m, [TOption t])
+        _         -> error "check value not done yet"
 
 
--- Var ----------------------------------------------------
+-- (t-prm) ------------------------------------------------
+checkTerm a wh _ctx m@(MRef (MRPrm nPrim)) Synth
+ | Just pp <- Map.lookup nPrim Prim.primOps
+ = do   let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
+        return (m, [tPrim])
+
+ | Just t  <- Map.lookup nPrim Prim.primDataCtors
+ = do   let tPrim = mapAnnot (const a) t
+        return (m, [tPrim])
+
+ | otherwise
+ = throw $ ErrorUnknownPrimitive a wh nPrim
+
+
+-- (t-con) ------------------------------------------------
+checkTerm a wh ctx m@(MRef (MRCon nCon)) Synth
+ =  contextResolveDataCtor nCon ctx
+ >>= \case
+        Nothing
+         -> throw $ ErrorUnknownDataCtor a wh nCon
+
+        Just tCtor
+         -> do  let tCtor' = mapAnnot (const a) tCtor
+                return (m, [tCtor'])
+
+
+-- (t-var) ------------------------------------------------
 checkTerm a wh ctx m@(MVar u) Synth
  = do   mt <- contextResolveTermBound u ctx
         case mt of
@@ -76,46 +81,44 @@ checkTerm a wh ctx m@(MVar u) Synth
          Nothing -> throw $ ErrorUnknownTermBound a wh u
 
 
--- Abs ----------------------------------------------------
-checkTerm a wh ctx (MAbs ps m) Synth
- = do   ps'     <- checkTermParams a wh ctx ps
-        let ctx' = contextBindTermParams ps ctx
-        case ps' of
-         MPTerms bts
-          -> do (m', ts) <- checkTerm a wh ctx' m Synth
-                return  (MAbs ps' m', [TFun (map snd bts) ts])
-
-         MPTypes bts
-          -> do (m', t)  <- checkTerm1 a wh ctx' m Synth
-                return  (MAbs ps' m', [TForall bts t])
+-- (t-abt) ------------------------------------------------
+checkTerm a wh ctx (MAbs ps@MPTypes{} m) Synth
+ = do   ps'@(MPTypes bts) <- checkTermParams a wh ctx ps
+        let ctx' =  contextBindTermParams ps ctx
+        (m', t)  <- checkTerm1 a wh ctx' m Synth
+        return  (MAbs ps' m', [TForall bts t])
 
 
--- MKTerms ------------------------------------------------
-checkTerm a wh ctx (MTerms msArg) mode
- = do   (msArg', tsArg) <- checkTerms a wh ctx msArg mode
-        return (MTerms msArg', tsArg)
+-- (t-abm) ------------------------------------------------
+checkTerm a wh ctx (MAbs ps@MPTerms{} m) Synth
+ = do   ps'@(MPTerms bts) <- checkTermParams a wh ctx ps
+        let ctx' =  contextBindTermParams ps ctx
+        (m', ts) <- checkTerm a wh ctx' m Synth
+        return  (MAbs ps' m', [TFun (map snd bts) ts])
 
 
--- MKApp --------------------------------------------------
-checkTerm a wh ctx (MApp mFun mgs) Synth
- = case mgs of
-        MGTerm mArg
-         -> do  (mFun', tFun)      <- checkTerm1 a wh ctx mFun Synth
-                (mArg', tsResult)  <- checkTermAppTerm a wh ctx tFun mArg
-                return (MApp mFun' (MGTerm mArg'),   tsResult)
-
-        MGTerms msArg
-         -> do  (mFun',  tFun)     <- checkTerm1 a wh ctx mFun Synth
-                (msArg', tsResult) <- checkTermAppTerms a wh ctx tFun msArg
-                return (MApp mFun' (MGTerms msArg'), tsResult)
-
-        MGTypes tsArg
-         -> do  (mFun',  tFun)     <- checkTerm1 a wh ctx mFun Synth
-                (tsArg', tResult)  <- checkTermAppTypes a wh ctx tFun tsArg
-                return (MApp mFun' (MGTypes tsArg'), [tResult])
+-- (t-apt) ------------------------------------------------
+checkTerm a wh ctx (MApp mFun (MGTypes tsArg)) Synth
+ = do   (mFun',  tFun)     <- checkTerm1 a wh ctx mFun Synth
+        (tsArg', tResult)  <- checkTermAppTypes a wh ctx tFun tsArg
+        return (MApp mFun' (MGTypes tsArg'), [tResult])
 
 
--- MKLet --------------------------------------------------
+-- (t-apm) ------------------------------------------------
+checkTerm a wh ctx (MApp mFun (MGTerms msArg)) Synth
+ = do   (mFun',  tFun)     <- checkTerm1 a wh ctx mFun Synth
+        (msArg', tsResult) <- checkTermAppTerms a wh ctx tFun msArg
+        return (MApp mFun' (MGTerms msArg'), tsResult)
+
+
+-- (t-apv) ------------------------------------------------
+checkTerm a wh ctx (MApp mFun (MGTerm mArg)) Synth
+ = do   (mFun', tFun)      <- checkTerm1 a wh ctx mFun Synth
+        (mArg', tsResult)  <- checkTermAppTerm a wh ctx tFun mArg
+        return (MApp mFun' (MGTerm mArg'),   tsResult)
+
+
+-- (t-let) ------------------------------------------------
 checkTerm a wh ctx (MLet bts mBind mResult) Synth
  = do   MPTerms bts'      <- checkTermParams a wh ctx (MPTerms bts)
         (mBind', tsBind)  <- checkTerm a wh ctx mBind Synth
@@ -143,7 +146,7 @@ checkTerm a wh ctx (MLet bts mBind mResult) Synth
         return  (MLet bts' mBind' mResult', tsResult)
 
 
--- MKRecord -----------------------------------------------
+-- (t-rec) ------------------------------------------------
 -- TODO: check for repeated labels.
 checkTerm a wh ctx mm@(MRecord ns ms) mode
  = case mode of
@@ -171,7 +174,7 @@ checkTerm a wh ctx mm@(MRecord ns ms) mode
                 return  (MRecord ns ms', [TRecord ns ts'])
 
 
--- MKProject ----------------------------------------------
+-- (t-prj) ------------------------------------------------
 checkTerm a wh ctx (MProject nLabel mRecord) Synth
  = do   (mRecord', tsRecord) <- checkTerm a wh ctx mRecord Synth
         case tsRecord of
@@ -185,7 +188,7 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
          ts -> throw $ ErrorTermsWrongArity a wh ts [TData]
 
 
--- MKList -------------------------------------------------
+-- (t-lst) ------------------------------------------------
 -- TODO: check embedded type.
 checkTerm a wh ctx (MList t ms) Synth
  = do   let ts = replicate (length ms) t
@@ -193,7 +196,7 @@ checkTerm a wh ctx (MList t ms) Synth
         return  (MList t ms', [TList t])
 
 
--- MKSet --------------------------------------------------
+-- (t-set) ------------------------------------------------
 -- TODO: check embedded type.
 checkTerm a wh ctx (MSet t ms) Synth
  = do   let ts = replicate (length ms) t
@@ -201,7 +204,7 @@ checkTerm a wh ctx (MSet t ms) Synth
         return (MSet t ms', [TSet t])
 
 
--- MKMap -------------------------------------------------
+-- (t-map) ------------------------------------------------
 -- TODO: check embedded types.
 -- TODO: check keys and values same length.
 checkTerm a wh ctx (MMap tk tv msk msv) Synth
@@ -210,6 +213,13 @@ checkTerm a wh ctx (MMap tk tv msk msv) Synth
         (msk', _) <- checkTerms a wh ctx msk (Check tsk)
         (msv', _) <- checkTerms a wh ctx msv (Check tsv)
         return (MMap tk tv msk' msv', [TMap tk tv])
+
+
+-- (t-mmm) ------------------------------------------------
+checkTerm a wh ctx (MTerms msArg) mode
+ = do   (msArg', tsArg) <- checkTerms a wh ctx msArg mode
+        return (MTerms msArg', tsArg)
+
 
 checkTerm a wh ctx m mode
  = checkTerm_default a wh ctx m mode
@@ -228,7 +238,6 @@ checkTerm_default a wh ctx m (Check tsExpected)
           -> throw $ ErrorTypeMismatch a wh t1Err t2Err
 
 
------------------------------------------------------------
 checkTerm_default _ _ _ mm mode
  =  error $ unlines
         [ "checkTerm: not finished"
@@ -237,7 +246,8 @@ checkTerm_default _ _ _ mm mode
         , P.renderIndent $ P.ppr () mm ]
 
 
----------------------------------------------------------------------------------------------------
+
+-- (t-one) ----------------------------------------------------------------------------------------
 -- | Like 'checkTerm' but expect a single result type.
 checkTerm1
         :: Annot a => a -> [Where a]
@@ -261,7 +271,11 @@ checkTermIs1 a wh ctx m tExpected
         return m'
 
 
----------------------------------------------------------------------------------------------------
+-- (t-many / t-gets) ------------------------------------------------------------------------------
+-- This function implements both the t-many and t-gets rules from the declarative
+-- version of the typing rules. In this algorithmic, bidirectional implementation
+-- the expected types are represented in the checker mode we get from the caller.
+
 -- | Check a list of individual terms.
 checkTerms
         :: Annot a => a -> [Where a]

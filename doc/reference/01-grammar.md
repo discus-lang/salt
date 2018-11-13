@@ -80,10 +80,8 @@ Term
   |   Prm                                       (mprm Prm)
   |   Sym                                       (msym Sym)
 
-  |   '[' Term,* ']'                            (mmmm Term+)
-
   |   Var                                       (mvar Var)
-  |   'λ'   TermParams '→'  Term                (mabs TermParams)
+  |   'λ'   TermParams '→'  Term                (mabs TermParams Term)
   |   Term  TermArgs                            (mapp Term TermArgs)
 
   |   'let' TermBind   'in' Term                (mlet Var* Term Term)
@@ -92,11 +90,17 @@ Term
   |   Term '.' Lbl                              (mprj Term Lbl)
 
   |   '`' Lbl Term                              (mvnt Lbl  Term)
-  |   'case' Term 'of' '{' (Pat → Term);+ '}'   (mcse Term Pat* Term*)
+
+  |   'case'  Term
+        'of'  '{' (Lbl → Term);+ '}'
+        ('else' Term)?                          (mcse Term Lbl* Term* Term?)
+
 
   |   '[list' Type '|' Term,* ']'               (mlst Type Term*)
   |   '[set'  Type '|' Term,* ']'               (mset Type Term*)
   |   '[map'  Type Type '|' TermMapBind,* ']'   (mmap Type Type Term* Term*)
+
+  |   '[' Term,* ']'                            (mmmm Term+)
 
 TermParams
  ::=    '@' '[' (Var ':' Type),* ']'            (mpst Var* Type*)
