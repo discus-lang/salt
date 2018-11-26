@@ -30,7 +30,8 @@ main
          Just (ModeCheck filePath)      -> mainCheck filePath
          Just (ModeTest  filePath)      -> mainTests filePath
          Just (ModeTest1 filePath name) -> mainTest  filePath name
-         _ -> error "no mode specified"
+         _ -> do  putStr usage
+                  System.exitFailure
 
 
 -- Lex --------------------------------------------------------------------------------------------
