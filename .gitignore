@@ -3,3 +3,5 @@
 bin/*
 make/config-override.mk
 war-*
+.cabal-sandbox/
+cabal.sandbox.config

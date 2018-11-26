@@ -89,8 +89,8 @@ GHC_WARNINGS := \
 # Number of jobs to use during make.
 THREAD          = 3
 
-# Use ghc in the current path by default.
-GHC             = ghc
+# Run ghc in the cabal environment so that if there is a cabal sandbox, it will be used.
+GHC             = cabal exec -- ghc
 GHC_FLAGS       = -Werror -O0 -j3
 
 # Override config with local config if it exists.
