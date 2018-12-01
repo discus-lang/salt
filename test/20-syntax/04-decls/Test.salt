@@ -5,9 +5,9 @@ term fac [x: #Nat]: #Nat
         then 1
         else #nat'mul [x, fac [#nat'sub [x, 1]]]
 
-test eval.fac05 fac [5]
-test eval.fac10 fac [10]
-test eval.fac15 fac [15]
+test eval fac05 = fac [5]
+test eval fac10 = fac [10]
+test eval fac15 = fac [15]
 
 
 -- Fibonacci
@@ -16,10 +16,10 @@ term fib [x: #Nat]: #Nat
    else if #nat'eq [x, 1] then 1
    else #nat'add [fib (#nat'sub [x, 1]), fib (#nat'sub [x, 2])]
 
-test eval.fib'1  fib 1
-test eval.fib'2  fib 2
-test eval.fib'3  fib 3
-test eval.fib'15 fib 15
+test eval fib'1  = fib 1
+test eval fib'2  = fib 2
+test eval fib'3  = fib 3
+test eval fib'15 = fib 15
 
 
 -- Ackermann's function.
@@ -28,7 +28,7 @@ term ack [m: #Nat, n: #Nat]: #Nat
    else if #nat'eq [n, 0] then ack [#nat'sub [m, 1], 1]
    else ack [#nat'sub [m, 1], ack [m, #nat'sub [n, 1]]]
 
-test eval.ack'3'4 ack [3, 4]
+test eval ack'3'4 = ack [3, 4]
 
 
 -- Greatest common divisor.
@@ -38,7 +38,7 @@ term gcd [x: #Nat, y: #Nat]: #Nat
    else if #nat'gt [x, y] then gcd [y, #nat'rem [x, y]]
    else gcd [x, #nat'rem [y, x]]
 
-test eval.gcd'100'28 gcd [100, 28]
+test eval gcd'100'28 = gcd [100, 28]
 
 
 -- Tak (after Ikuo Takeuchi)
@@ -49,5 +49,5 @@ term tak [x: #Nat, y: #Nat, z: #Nat]: #Nat
              , tak [#nat'sub [z, 1], x, y] ]
     else z
 
-test eval.tak'12'8'4 tak [12, 8, 4]
+test eval tak'12'8'4 = tak [12, 8, 4]
 

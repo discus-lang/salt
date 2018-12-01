@@ -1,151 +1,148 @@
 
 -- Primitive Values -----------------------------------------------------------
-test type.unit          #unit
+test type unit          = #unit
 
-test type.bool'true     #true
-test type.bool'true2    #bool'true
-test type.bool'false    #true
-test type.bool'false2   #bool'false
+test type bool'true     = #true
+test type bool'true2    = #bool'true
+test type bool'false    = #true
+test type bool'false2   = #bool'false
 
-test type.nat1          1
-test type.nat1234       1234
+test type nat1          = 1
+test type nat1234       = 1234
 
-test type.symbol        'Foo
-test type.symbol2       'Bar1234
+test type symbol        = 'Foo
+test type symbol2       = 'Bar1234
 
 
 -- Term vector ----------------------------------------------------------------
-test type.vec           [1, 2, 3]
-test type.none          []
+test type vec           = [1, 2, 3]
+test type none          = []
 
 
 -- Term abstraction -----------------------------------------------------------
-test type.abs1          λ[x: #Bool] → x
-test type.abs2          λ[x: #Bool, y: #Nat] → x
-test type.abs3          λ[x: #Bool, y: #Nat] → [x, y]
-test type.abs4          λ[x: #Bool, y: #Nat] → []
-test type.abs5          λ[] → []
+test type abs1          = λ[x: #Bool] → x
+test type abs2          = λ[x: #Bool, y: #Nat] → x
+test type abs3          = λ[x: #Bool, y: #Nat] → [x, y]
+test type abs4          = λ[x: #Bool, y: #Nat] → []
+test type abs5          = λ[] → []
 
-test type.abs1'sugar    fun [x: #Bool] -> x
-test type.abs2'sugar    fun [x: #Bool, y: #Nat] -> x
-test type.abs3'sugar    fun [x: #Bool, y: #Nat] -> [x, y]
-test type.abs4'sugar    fun [x: #Bool, y: #Nat] -> []
-test type.abs5'sugar    fun [] -> []
+test type abs1'sugar    = fun [x: #Bool] -> x
+test type abs2'sugar    = fun [x: #Bool, y: #Nat] -> x
+test type abs3'sugar    = fun [x: #Bool, y: #Nat] -> [x, y]
+test type abs4'sugar    = fun [x: #Bool, y: #Nat] -> []
+test type abs5'sugar    = fun [] -> []
 
 
 -- Type abstraction -----------------------------------------------------------
-test type.abt1          (λ@[a: #Data] → λ[x: a] → x)
-test type.abt2          (λ@[a: #Data] [x: a] → x)
-test type.abt3          (λ@[a: #Data, b: #Data] [f: a → b, x: a] → f x)
+test type abt1          = λ@[a: #Data] → λ[x: a] → x
+test type abt2          = λ@[a: #Data] [x: a] → x
+test type abt3          = λ@[a: #Data, b: #Data] [f: a → b, x: a] → f x
 
-test type.abt1'sugar    (fun @[a: #Data] -> λ[x: a] -> x)
-test type.abt2'sugar    (fun @[a: #Data] [x: a] -> x)
-test type.abt3'sugar    (fun @[a: #Data, b: #Data] [f: a -> b, x: a] -> f x)
+test type abt1'sugar    = fun @[a: #Data] -> λ[x: a] -> x
+test type abt2'sugar    = fun @[a: #Data] [x: a] -> x
+test type abt3'sugar    = fun @[a: #Data, b: #Data] [f: a -> b, x: a] -> f x
 
 
 -- Term/Term application ------------------------------------------------------
-test type.appm'not      #bool'not [#true]
-test type.appm'not'1    #bool'not #true
+test type appm'not      = #bool'not [#true]
+test type appm'not'1    = #bool'not #true
 
-test type.appm'and      #bool'and [#true, #false]
+test type appm'and      = #bool'and [#true, #false]
 
-test type.appm'lam1     (λ[x: #Bool] → x) [#true]
+test type appm'lam1     = (λ[x: #Bool] → x) [#true]
 
-test type.appm'lam2     (λ[f: #Bool → #Bool, x: #Bool] → f x)
+test type appm'lam2     = (λ[f: #Bool → #Bool, x: #Bool] → f x)
                                 [λ[x: #Bool] → [x], #true]
 
-test type.appm'vec      (λ[x: #Bool, y: #Bool] → y)
+test type appm'vec      = (λ[x: #Bool, y: #Bool] → y)
                                 ((λ[x: #Bool] → [x, x]) [#true])
 
-test type.appm'lam1's   (fun [x: #Bool] -> x) [#true]
+test type appm'lam1's   = (fun [x: #Bool] -> x) [#true]
 
-test type.appm'lam2's   (fun [f: #Bool -> #Bool, x: #Bool] -> f x)
+test type appm'lam2's   = (fun [f: #Bool -> #Bool, x: #Bool] -> f x)
                                 [λ[x: #Bool] -> x, #true]
 
 
 -- Term/Type application ------------------------------------------------------
-test type.appt'double   (λ@[a: #Data] [x: a] → [x, x]) @[#Nat] [5]
+test type appt'double   = (λ@[a: #Data] [x: a] → [x, x]) @[#Nat] [5]
 
-test type.appt'double'1 (λ@[a: #Data] [x: a] → [x, x]) @#Nat [5]
+test type appt'double'1 = (λ@[a: #Data] [x: a] → [x, x]) @#Nat [5]
 
-test type.appt'app      (λ@[a: #Data, b: #Data] [f: a → b, x: a] → f x)
+test type appt'app      = (λ@[a: #Data, b: #Data] [f: a → b, x: a] → f x)
                                 @[#Bool, #Bool] [#bool'not, #true]
 
 
 -- Let bindings ---------------------------------------------------------------
-test type.let'fst       let [x, y] = (λ[x: #Bool] → [x, 5]) [#true]; x
-test type.let'snd       let [x, y] = (λ[x: #Bool] → [5, x]) [#true]; x
+test type let'fst       = let [x, y] = (λ[x: #Bool] → [x, 5]) [#true]; x
+test type let'snd       = let [x, y] = (λ[x: #Bool] → [5, x]) [#true]; x
 
-test type.let'one       let x = 5; #nat'add [x, x]
+test type let'one       = let x = 5; #nat'add [x, x]
 
-test type.let'some      let a = 2; let b = 3; #nat'add [a, b]
+test type let'some      = let a = 2; let b = 3; #nat'add [a, b]
 
 
 -- Do blocks ------------------------------------------------------------------
-test type.do'fst
- do {   [x, y] = (λ[x: #Bool] → [x, 5]) [#true];
-        x
- }
+test type do'fst
+ = do { [x, y] = (λ[x: #Bool] → [x, 5]) [#true];
+        x }
 
-test type.do'some
- do {   a = 2; b = 3;
-        #nat'add [a, b]
- }
+test type do'some
+ = do { a = 2; b = 3;
+        #nat'add [a, b] }
 
-test type.do'things
- do {   a       = 2;
+test type do'things
+ = do { a       = 2;
         [b, c]  = [2, 3];
         d       = #nat'add [a, b];
-        #nat'add [a, #nat'add [b, #nat'add [c, d]]];
- }
+        #nat'add [a, #nat'add [b, #nat'add [c, d]]]; }
 
 
 -- Records --------------------------------------------------------------------
-test type.record0       ∏[]
-test type.record1       ∏[x = 5]
-test type.record2       ∏[x = 5, y = #true, z = #unit]
+test type record0       = ∏[]
+test type record1       = ∏[x = 5]
+test type record2       = ∏[x = 5, y = #true, z = #unit]
 
-test type.record0's     [record|]
-test type.record1's     [record| x = 5]
-test type.record2's     [record| x = 5, y = #true, z = #unit]
+test type record0's     = [record|]
+test type record1's     = [record| x = 5]
+test type record2's     = [record| x = 5, y = #true, z = #unit]
 
-test type.record'one    [x = 5]
-test type.record'two    [x = 5, y = #true]
-test type.record'three  [x = 5, y = #true, z = #unit]
+test type record'one    = [x = 5]
+test type record'two    = [x = 5, y = #true]
+test type record'three  = [x = 5, y = #true, z = #unit]
 
 
-test type.field'one     [x = 5].x
-test type.field'two     [x = 5, y = #true].y
-test type.field'nest    [x = [x = 5, y = #unit], y = #true].x.y
-test type.field'paren   (([x = [x = 5, y = #unit], y = #true]).x).y
+test type field'one     = [x = 5].x
+test type field'two     = [x = 5, y = #true].y
+test type field'nest    = [x = [x = 5, y = #unit], y = #true].x.y
+test type field'paren   = (([x = [x = 5, y = #unit], y = #true]).x).y
 
 
 -- Variants --------------------------------------------------------------------
-test type.variant0      `foo 5
-test type.variant1      `foo (`bar 5)
+test type variant0      = `foo 5
+test type variant1      = `foo (`bar 5)
 
 
 -- Option-----------------------------------------------------------------------
-test type.none          #None
-test type.some          #Some @#Nat 4
+test type none          = #None
+test type some          = #Some @#Nat 4
 
 
 -- List ------------------------------------------------------------------------
-test type.list'empty    [list #Nat|]
-test type.list'some     [list #Nat| 1, 2, 3]
-test type.list'head     #list'head @#Nat [list #Nat| 1, 2, 3]
-test type.list'tail     #list'tail @#Nat [list #Nat| 1, 2, 3]
+test type list'empty    = [list #Nat|]
+test type list'some     = [list #Nat| 1, 2, 3]
+test type list'head     = #list'head @#Nat [list #Nat| 1, 2, 3]
+test type list'tail     = #list'tail @#Nat [list #Nat| 1, 2, 3]
 
 
 -- Set ------------------------------------------------------------------------
-test type.set'empty     [set #Nat|]
-test type.set'some      [set #Nat| 1, 2, 3]
-test type.set'size      #set'size @#Nat [set #Nat| 1, 2, 3, 4, 5]
+test type set'empty     = [set #Nat|]
+test type set'some      = [set #Nat| 1, 2, 3]
+test type set'size      = #set'size @#Nat [set #Nat| 1, 2, 3, 4, 5]
 
 
 -- Map ------------------------------------------------------------------------
-test type.map'empty     [map #Nat #Symbol|]
-test type.map'some      [map #Nat #Symbol| 3 := 'three, 5 := 'five]
-test type.map'size      #map'size   @[#Nat, #Symbol] [map #Nat #Symbol|]
-test type.map'insert    #map'insert @[#Nat, #Symbol] [4, 'Derp, [map #Nat #Symbol|]]
+test type map'empty     = [map #Nat #Symbol|]
+test type map'some      = [map #Nat #Symbol| 3 := 'three, 5 := 'five]
+test type map'size      = #map'size   @[#Nat, #Symbol] [map #Nat #Symbol|]
+test type map'insert    = #map'insert @[#Nat, #Symbol] [4, 'Derp, [map #Nat #Symbol|]]
 

@@ -17,10 +17,10 @@ import qualified Text.Parsec                    as P
 pDecl :: Parser (Decl Location)
 pDecl
  = P.choice
- [ do   -- 'test' Name? 'kind'   ('.' Var)? Type
-        -- 'test' Name? 'type'   ('.' Var)? Term
-        -- 'test' Name? 'eval'   ('.' Var)? Term
-        -- 'test' Name? 'assert' ('.' Var)? Term
+ [ do   -- 'test' 'kind'   (Name '=')? Type
+        -- 'test' 'type'   (Name '=')? Term
+        -- 'test' 'eval'   (Name '=')? Term
+        -- 'test' 'assert' (Name '=')? Term
         loc <- getLocation
         pTok KTest
 
@@ -35,7 +35,9 @@ pDecl
                         return "type" ]
                 <?> "test mode specifier"
 
-        mName <- P.optionMaybe $ do pTok KDot; pVar
+        mName   <- P.choice
+                [  P.try $ do n <- pVar; pTok KEquals; return $ Just n
+                ,  return Nothing ]
 
         P.choice
          [ do   guard $ nMode == "kind"

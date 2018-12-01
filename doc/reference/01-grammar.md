@@ -23,10 +23,10 @@ Decl
  ::=    'type'  Con TypeParams?  ':' Type '=' Type      (type bindings)
   |     'term'  Var TermParams?  ':' Type '=' Term      (term bindings)
 
-  |     'test' 'kind'   ('.' Var) Type                  (print the kind of a type)
-  |     'test' 'type'   ('.' Var) Term                  (print the type of a term)
-  |     'test' 'eval'   ('.' Var) Term                  (print the result of term evaluation)
-  |     'test' 'assert' ('.' Var) Term                  (assert that a term evaluates to true)
+  |     'test' 'kind'   (Name '=')? Type                (print the kind of a type)
+  |     'test' 'type'   (Name '=')? Term                (print the type of a term)
+  |     'test' 'eval'   (Name '=')? Term                (print the result of term evaluation)
+  |     'test' 'assert' (Name '=')? Term                (assert that a term evaluates to true)
 
 ```
 
