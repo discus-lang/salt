@@ -5,6 +5,7 @@ import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp
 
+import Control.Monad
 import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
 
@@ -54,11 +55,7 @@ pType
 pTypesHead :: Parser (TypeArgs Location)
 pTypesHead
  = P.choice
- [ do   -- '[' Type+ ']'
-        ts      <- pSquared $ P.sepEndBy pType (pTok KComma)
-        return  $ TGTypes ts
-
- , do   -- (Prm | TypeArg) TypeArg*
+ [ do   -- (Prm | TypeArg) TypeArg*
         tFun    <- P.choice
                 [  do   pPrm >>= return . TPrm
                 ,  do   pTypeArg ]
@@ -74,6 +71,10 @@ pTypesHead
                  []     -> return $ TGTypes [tFun]
                  _      -> return $ TGTypes [TApt tFun tsArgs]
          ]
+
+        -- '[' Type+ ']'
+ , do   ts      <- pSquared $ P.sepEndBy pType (pTok KComma)
+        return  $ TGTypes ts
  ]
  <?> "a head type"
 
@@ -104,15 +105,51 @@ pTypeArg
  , do   -- Prm
         pPrm >>= return . TPrm
 
+        -- Record Types -------------------------
  , do   -- '∏' '[' (Lbl ':' Type)* ']'
         pTok KProd
-        lts     <- pTypeFields
+        lts     <- pSquared pTypeFields
         return $ TRecord (map fst lts) (map snd lts)
 
+ , do   -- '[' 'record' '|' (Lbl ':' Type)* ']'
+        -- lookahead as the '[' overlaps with type vector syntax from pTypesHead.
+        P.try $ P.lookAhead $ do
+                pTok KSBra; n <- pVar; guard (n == "record"); pTok KBar
+
+        pSquared $ do
+                pVar; pTok KBar
+                lts  <- pTypeFields
+                return $ TRecord (map fst lts) (map snd lts)
+
+ , do   -- '[' (Lbl ':' Type)+ ']'
+        -- lookahead as the '[' overlaps with type vector syntax from pTypesHead.
+        P.try $ P.lookAhead $ do
+                pTok KSBra; pVar; pTok KColon
+
+        pSquared $ do
+                lts  <- pTypeFields
+                return $ TRecord (map fst lts) (map snd lts)
+
+        -- Variant Types ------------------------
  , do   -- '∑' '[' (Lbl ':' Type)* ']'
         pTok KSum
-        lts     <- pTypeFields
+        lts     <- pSquared pTypeFields
         return $ TVariant (map fst lts) (map snd lts)
+
+ , do   -- '[' 'variant' '|' (Lbl ':' Type)* ']'
+        -- lookahead as the '[' overlaps with type vector syntax from pTypesHead.
+        P.try $ P.lookAhead $ do
+                pTok KSBra; n <- pVar; guard (n == "variant"); pTok KBar
+
+        pSquared $ do
+                pVar; pTok KBar
+                lts  <- pTypeFields
+                return $ TVariant (map fst lts) (map snd lts)
+
+ , do   -- '<' (Lbl ':' Type)+ '>'
+        pAngled $ do
+                lts  <- pTypeFields
+                return $ TVariant (map fst lts) (map snd lts)
 
  , do   -- '(' Term ')'
         pTok KRBra
@@ -145,7 +182,6 @@ pTypeSigs
 -- | Parser for some type fields.
 pTypeFields :: Parser [(Name, Type Location)]
 pTypeFields
- = pSquared
-        $ flip P.sepEndBy (pTok KComma)
-        $ do n <- pLbl; pTok KColon; t <- pType; return (n, t)
+ = flip P.sepEndBy (pTok KComma)
+ $ do n <- pLbl; pTok KColon; t <- pType; return (n, t)
 

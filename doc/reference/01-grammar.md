@@ -71,6 +71,21 @@ TypeParams
  ::=  '[' (Var ':' Type),+ ']'
 ```
 
+```
+Record Type Sugar
+ [record|]                      ≡ ∏[]
+ [record| L1 : T1 ... Ln : Tn]  ≡ ∏[L1 : T1 ... Ln : Tn]
+
+ [L1 : T1 ... Ln : Tn]          ≡ ∏[L1 : T1 ... Ln : Tn]
+
+Variant Type Sugar
+ [variant|]                     ≡ ∑[]
+ [variant| L1 : T1 .. Ln : Tn]  ≡ ∑[L1 : T1 ... Ln : Tn]
+
+ <L1 : T1 ... Ln : Tn>          ≡ ∑[L1 : T1 ... Ln : Tn]
+```
+
+
 
 ## Terms
 

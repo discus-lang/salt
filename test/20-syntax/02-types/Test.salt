@@ -38,12 +38,27 @@ test kind.all1          ∀[a: #Data, b: #Data]. a → b
 test kind.some1         ∃[a: #Data, b: #Data]. a → b
 
 -- Record types.
+test kind.rec0          ∏[]
 test kind.rec1          ∏[one: #Symbol, two: #Nat]
 test kind.rec2          ∏[one: #Symbol, two: ∏[foo: #Nat]]
-test kind.rec'empty     ∏[]
+
+test kind.rec0'sugar1   [record|]
+test kind.rec1'sugar1   [record|one: #Symbol, two: #Nat]
+test kind.rec2'sugar1   [record|one: #Symbol, two: [record|foo: #Nat]]
+
+test kind.rec1'sugar2   [one: #Symbol, two: #Nat]
+test kind.rec2'sugar2   [one: #Symbol, two: [foo: #Nat]]
+
 
 -- Variant types.
+test kind.vnt0          ∑[]
 test kind.vnt1          ∑[one: #Symbol, two: #Nat]
 test kind.vnt2          ∑[one: #Symbol, two: ∑[foo: #Nat]]
-test kind.vnt'none      ∑[]
+
+test kind.vnt0'sugar1   [variant|]
+test kind.vnt1'sugar1   [variant|one: #Symbol, two: #Nat]
+test kind.vnt2'sugar1   [variant|one: #Symbol, two: [variant|foo: #Nat]]
+
+test kind.vnt1'sugar2   <one: #Symbol, two: #Nat>
+test kind.vnt2'sugar2   <one: #Symbol, two: <foo: #Nat>>
 

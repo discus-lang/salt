@@ -90,7 +90,7 @@ GHC_WARNINGS := \
 THREAD          = 3
 
 # Run ghc in the cabal environment so that if there is a cabal sandbox, it will be used.
-GHC             = cabal exec -- ghc
+GHC             = cabal v1-exec -- ghc
 GHC_FLAGS       = -Werror -O0 -j3
 
 # Override config with local config if it exists.
