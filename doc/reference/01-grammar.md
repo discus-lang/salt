@@ -47,19 +47,19 @@ Decl
 
 ```
 Type
- ::=  Data                                      (tdat)
-  |   Types '⇒' Type                            (tarr Type+ Type)
+ ::=  tdat                                      (Data)
+  |   tarr Type+ Type                           (Types '⇒' Type)
 
-  |   Var                                       (tvar Var)
-  |   Con                                       (tcon Con)
-  |   Prm                                       (tprm Prm)
-  |   Type Types                                (tapp Type Type*)
-  |   Types '→' Types                           (tfun Type* Type*)
-  |   '∏' TypeFields                            (trec Lbl* Type*)
-  |   '∑' TypeFields                            (tvnt Lbl* Type*)
-  |   '∀' TypeParams '.' Type                   (tall Var+ Type+ Type)
-  |   '∃' TypeParams '.' Type                   (text Var+ Type+ Type)
-  |   'λ' TypeParams '⇒' Type                   (tabs Var+ Type+ Type)
+  |   tvar Var                                  (Var)
+  |   tcon Con                                  (Con)
+  |   tprm Prm                                  (#Prm)
+  |   tapp Type Type+                           (Type Types)
+  |   tabs Var+ Type+ Type                      ('λ' TypeParams '⇒' Type)
+  |   tall Var+ Type+ Type                      ('∀' TypeParams '.' Type)
+  |   text Var+ Type+ Type                      ('∃' TypeParams '.' Type)
+  |   trec Lbl* Type*                           ('∏' TypeFields)
+  |   tvnt Lbl* Type*                           ('∑' TypeFields)
+  |   tfun Type* Type*                          (Types '→' Types)
 
 Types
  ::=  '[' Type;+ ']'
@@ -71,20 +71,42 @@ TypeParams
  ::=  '[' (Var ':' Type),+ ']'
 ```
 
+- `tdat` is the kind of data values.
+
+- `tarr` is used to form arrow kinds for type constructors, such as `List : Data → Data`
+
+- `tvar`, `tcon`, `tprm` are type variables, type constructors ans primitive types. Type variables start with a lower-case letter, type constructors an upper-case letter and primitive types a '#' and upper-case letter.
+
+- `tapp` and `tabs` are type application and type abstraction. The application form applies a type operator to multiple type arguments at once.
+
+- `tall` and `text` are universal and existential quantification of type variables.
+
+- `trec` and `tvnc` are record and variant types. The lists of labels and types must have the same length, and are treated as set of pairs.
+
+- `tfun` the type of a function taking a vector of arguments and returning a vector of results.
+
+
+### Type Sugar
+
 ```
-Record Type Sugar
+ Types '=>' Type                ≡ Types '⇒' Type
+
+ 'fun' TypeParams '->' Type     ≡ 'λ' TypeParams '->' Type
+ 'forall' TypeParams '.' Type   ≡ '∀' TypeParams '.'  Type
+ 'exists' TypeParams '.' Type   ≡ '∃' TypeParams '.'  Type
+
  [record|]                      ≡ ∏[]
  [record| L1 : T1 ... Ln : Tn]  ≡ ∏[L1 : T1 ... Ln : Tn]
-
  [L1 : T1 ... Ln : Tn]          ≡ ∏[L1 : T1 ... Ln : Tn]
 
-Variant Type Sugar
  [variant|]                     ≡ ∑[]
  [variant| L1 : T1 .. Ln : Tn]  ≡ ∑[L1 : T1 ... Ln : Tn]
-
  <L1 : T1 ... Ln : Tn>          ≡ ∑[L1 : T1 ... Ln : Tn]
+
+ Types '->' Types               ≡ Types '→' Type
 ```
 
+All type expressions can be written without using unicode characters, using the sugar described above. Note that the record type `[L1 : T1 .. Ln : Tn]` must have at least one fields to disambiguate the syntax it from the empty type vector `[]`.
 
 
 ## Terms
