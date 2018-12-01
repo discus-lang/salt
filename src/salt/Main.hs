@@ -92,14 +92,15 @@ mainCheck :: FilePath -> IO ()
 mainCheck filePath
  = do   mm      <- runParse filePath
         runCheck filePath mm
+        return ()
 
-runCheck :: FilePath -> Module IW.Location -> IO ()
+runCheck :: FilePath -> Module IW.Location
+         -> IO (Check.Context IW.Location)
 runCheck filePath mm
  = do   let a = IW.Location 0 0
-        (_mm', errs)    <- Check.checkModule a mm
-
+        (ctx, _mm', errs) <- Check.checkModule a mm
         case errs of
-         [] -> return ()
+         [] -> return ctx
          _  -> do
                 mapM_ (printError filePath) errs
                 System.exitFailure
@@ -128,30 +129,31 @@ mainTest :: FilePath -> Text -> IO ()
 mainTest filePath name
  = do
         mm      <- runParse filePath
-        runCheck filePath mm
+        ctx     <- runCheck filePath mm
 
         let tests = [ d | DTest d <- moduleDecls mm
                         , declTestName d == Just (Name name) ]
 
         case tests of
          []     -> error $ "mainTest: no test named: " ++ show name
-         _      -> mapM_ (runTest mm) tests
+         _      -> mapM_ (runTest ctx mm) tests
 
 
 mainTests :: FilePath -> IO ()
 mainTests filePath
  = do   mm      <- runParse filePath
-        runCheck filePath mm
+        ctx     <- runCheck filePath mm
 
         let tests = [ d | DTest d <- moduleDecls mm ]
-        mapM_ (runTest mm) tests
+        mapM_ (runTest ctx mm) tests
 
 
-runTest :: Module IW.Location -> DeclTest IW.Location -> IO ()
-runTest mm tt
+runTest :: Check.Context IW.Location  -> Module IW.Location
+        -> DeclTest IW.Location -> IO ()
+runTest ctx mm tt
  = case tt of
-        DeclTestKind    _ n t   -> runTestKind   mm n t
-        DeclTestType    _ n m   -> runTestType   mm n m
+        DeclTestKind    _ n t   -> runTestKind   ctx mm n t
+        DeclTestType    _ n m   -> runTestType   ctx mm n m
         DeclTestEval    _ n m   -> runTestEval   mm n m
         DeclTestAssert  _ n m   -> runTestAssert mm n m
 
@@ -159,9 +161,9 @@ runTest mm tt
 -- | Run a kind test.
 --   We kind-check a type and print the result kind.
 runTestKind
-        :: Module IW.Location
+        :: Check.Context IW.Location -> Module IW.Location
         -> Maybe Name -> Type IW.Location -> IO ()
-runTestKind _mm mnTest tTest
+runTestKind ctx _mm mnTest tTest
  = do
         let a   = IW.Location 0 0
         putStr  $ "* "
@@ -170,16 +172,16 @@ runTestKind _mm mnTest tTest
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        (_t, kResult) <- Check.checkType a [] Check.contextEmpty tTest
+        (_t, kResult) <- Check.checkType a [] ctx tTest
         putStrLn $ P.renderIndent $ P.ppr () kResult
 
 
 -- | Run a type test.
 --   We type-check a term and print the result type.
 runTestType
-        :: Module IW.Location
+        :: Check.Context IW.Location -> Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
-runTestType _mm mnTest mTest
+runTestType ctx _mm mnTest mTest
  = do
         let a   = IW.Location 0 0
         putStr  $ "* "
@@ -188,7 +190,7 @@ runTestType _mm mnTest mTest
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        (_m, tsResult) <- Check.checkTerm a [] Check.contextEmpty mTest Check.Synth
+        (_m, tsResult) <- Check.checkTerm a [] ctx mTest Check.Synth
         case tsResult of
          [t]    -> putStrLn $ P.renderIndent $ P.ppr () t
          _      -> putStrLn $ P.renderIndent $ P.ppr () tsResult

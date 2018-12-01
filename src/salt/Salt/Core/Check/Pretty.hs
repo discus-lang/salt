@@ -11,6 +11,12 @@ import Salt.Data.Pretty
 instance Show a => Pretty c (Where a) where
  ppr c wh = pprw c wh
 
+pprw _c (WhereTestType _a Nothing)
+ = vcat [ text "In type test" ]
+
+pprw c  (WhereTestType _a (Just n))
+ = vcat [ text "In type test" %% squotes (ppr c n) ]
+
 pprw _c (WhereTestEval _a Nothing)
  = vcat [ text "In eval test" ]
 
@@ -23,11 +29,8 @@ pprw _c (WhereTestAssert _a Nothing)
 pprw c  (WhereTestAssert _a (Just n))
  = vcat [ text "In assert test" %% squotes (ppr c n) ]
 
-pprw _c (WhereTestScenario _a Nothing)
- = vcat [ text "In scenario test" ]
-
-pprw c  (WhereTestScenario _a (Just n))
- = vcat [ text "In scenario test" %% squotes (ppr c n) ]
+pprw c  (WhereTermDecl _a n)
+ = vcat [ text "In term declaration" %% squotes (ppr c n) ]
 
 pprw c  (WhereAppPrim _a n t)
  = vcat [ text "With #" % ppr c n %% text "of type" %% ppr c t ]
@@ -52,13 +55,13 @@ ppre _c (ErrorTypeMalformed _a t)
 ppre c (ErrorTermsWrongArity _a _wh ts ks)
  = let  reason = if length ts >= length ks then "Too many" else "Not enough"
    in   vcat [ text reason %% text "values"
-             , text "  of types:" %% braced (map (ppr c) ts)
-             , text "  expected:" %% braced (map (ppr c) ks) ]
+             , text "  of types:" %% squared (map (ppr c) ts)
+             , text "  expected:" %% squared (map (ppr c) ks) ]
 
 ppre c (ErrorTypesWrongArity _a _wh ts ks)
  = let  reason = if length ts >= length ks then "Too many" else "Not enough"
    in   vcat [ text reason %% text "types"
-             , text "  of kinds:" %% braced (map (ppr c) ts) ]
+             , text "  of kinds:" %% squared (map (ppr c) ts) ]
 
 
 -- Unknown vars and refs ----------------------------------
@@ -78,8 +81,8 @@ ppre c (ErrorUnknownTermBound _a _wh u)
 -- Let bindings -------------------------------------------
 ppre c (ErrorLetWrongArity _a _wh tsActual bsExpected)
  = vcat [ text "Wrong aity in let binding "
-        , text "  binders:" %% braced (map (ppr c) bsExpected)
-        , text "   values:" %% braced (map (ppr c) tsActual) ]
+        , text "  binders:" %% squared (map (ppr c) bsExpected)
+        , text "   values:" %% squared (map (ppr c) tsActual) ]
 
 -- Unexpected types ---------------------------------------
 ppre c (ErrorTypeMismatch _a _wh tExpected tActual)
@@ -94,18 +97,18 @@ ppre c (ErrorAppTypeTypeCannot _a _wh tFun)
 ppre c (ErrorAppTypeTypeWrongArity _a _wh ksExpected ksActual)
  | length ksExpected > length ksActual
  = vcat [ text "Not enough type arguments in application."
-        , text " parameter kinds:" %% braced (map (ppr c) ksExpected)
-        , text "  argument kinds:" %% braced (map (ppr c) ksActual) ]
+        , text " parameter kinds:" %% squared (map (ppr c) ksExpected)
+        , text "  argument kinds:" %% squared (map (ppr c) ksActual) ]
 
  | otherwise
  = vcat [ text "Too many type arguments in application."
-        , text " parameter kinds:" %% braced (map (ppr c) ksExpected)
-        , text "  argument types:" %% braced (map (ppr c) ksActual) ]
+        , text " parameter kinds:" %% squared (map (ppr c) ksExpected)
+        , text "  argument types:" %% squared (map (ppr c) ksActual) ]
 
 ppre c (ErrorAppTypeTypeWrongArityNum _a _wh tsParam nArg)
  = let  reason = if nArg >= length tsParam then "Too many" else "Not enough"
    in   vcat [ text reason %% text "arguments in type application."
-             , text " parameter types:" %% braced (map (ppr c) tsParam) ]
+             , text " parameter types:" %% squared (map (ppr c) tsParam) ]
 
 -- term/type
 ppre c (ErrorAppTermTypeCannot _a _wh tFun)
@@ -137,18 +140,18 @@ ppre c (ErrorAppTermTermCannot _a _wh tFun)
 ppre c (ErrorAppTermTermWrongArity _a _wh tsParam tsArg)
  = let  reason = if length tsArg >= length tsParam then "Too many" else "Not enough"
    in   vcat [ text reason %% text "arguments in function application."
-             , text " parameter types:" %% braced (map (ppr c) tsParam)
-             , text "  argument types:" %% braced (map (ppr c) tsArg) ]
+             , text " parameter types:" %% squared (map (ppr c) tsParam)
+             , text "  argument types:" %% squared (map (ppr c) tsArg) ]
 
 ppre c (ErrorAppTermTermWrongArityNum _a _wh tsParam nArg)
  = let  reason = if nArg >= length tsParam then "Too many" else "Not enough"
    in   vcat [ text reason %% text "arguments in function application."
-             , text " parameter types:" %% braced (map (ppr c) tsParam) ]
+             , text " parameter types:" %% squared (map (ppr c) tsParam) ]
 
 
 -- Problems with records ----------------------------------
 ppre c (ErrorRecordProjectIsNot _a _wh t n)
- = vcat [ text "Cannot project field" %% squotes (ppr c n) %% text "from non-record"
+ = vcat [ text "Cannot project field"       %% squotes (ppr c n) %% text "from non-record"
         , text "  of type:" %% ppr c t ]
 
 ppre c (ErrorRecordProjectNoField _a _wh t n)

@@ -68,6 +68,14 @@ pTerm_
          []     -> P.unexpected "empty do block"
          _      -> P.unexpected "do block without result value"
 
+ , do   -- 'if' Term 'then' Term 'else' Term
+        pTok KIf
+        mCond   <- pTerm
+        pTok KThen
+        mThen   <- pTerm
+        pTok KElse
+        mElse   <- pTerm
+        return  $ MIf mCond mThen mElse
 
  , do   -- '`' Lbl TermArg
         pTok KBacktick

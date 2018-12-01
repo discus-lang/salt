@@ -29,7 +29,7 @@ data Context a
           --   This is used for bindings within a single top-level declaration.
         , contextLocal          :: [Elem a]
         }
-
+        deriving Show
 
 -- | Construct an empty context.
 contextEmpty :: Context a
@@ -54,6 +54,7 @@ contextBindTypeMaybe (Just n) t ctx
 
 
 -- | Bind the kinds of type parameters into the context.
+--   TODO: prevent type variable shadowing.
 contextBindTypeParams :: TypeParams a -> Context a -> Context a
 contextBindTypeParams tps ctx
  = case tps of
@@ -115,15 +116,20 @@ contextResolveTypeBound (Bound n) ctx
 -- | Lookup a bound term variable from the context.
 contextResolveTermBound :: Bound -> Context a -> IO (Maybe (Type a))
 contextResolveTermBound (Bound n) ctx
- = go $ contextLocal ctx
+ = goGlobal
  where
-        go []   = return Nothing
+        goGlobal
+         = case Map.lookup n (contextModuleTerm ctx) of
+                Nothing -> goLocal (contextLocal ctx)
+                Just t  -> return $ Just t
 
-        go (ElemTerms mp : rest)
+        goLocal []   = return Nothing
+
+        goLocal (ElemTerms mp : rest)
          = case Map.lookup n mp of
                 Just t  -> return $ Just t
-                Nothing -> go rest
+                Nothing -> goLocal rest
 
-        go (ElemTypes _ : rest)
-         = go rest
+        goLocal (ElemTypes _ : rest)
+         = goLocal rest
 

@@ -78,7 +78,7 @@ checkTerm a wh ctx m@(MVar u) Synth
  = do   mt <- contextResolveTermBound u ctx
         case mt of
          Just t  -> return (m, [t])
-         Nothing -> throw $ ErrorUnknownTermBound a wh u
+         Nothing -> do error (show ctx); throw $ ErrorUnknownTermBound a wh u
 
 
 -- (t-abt) ------------------------------------------------
@@ -192,6 +192,16 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
 checkTerm a wh ctx (MVariant nLabel mValue) Synth
  = do   (mValue', tValue) <- checkTerm1 a wh ctx mValue Synth
         return  (MVariant nLabel mValue', [TVariant [nLabel] [tValue]])
+
+
+-- (t-if) -------------------------------------------------
+checkTerm a wh ctx (MIf mCond mThen mElse) Synth
+ = do   (mCond', _tCond)  <- checkTerm1 a wh ctx mCond (Check [TBool])
+        (mThen', tsThen)  <- checkTerm  a wh ctx mThen Synth
+        (mElse', _tsElse) <- checkTerm  a wh ctx mElse Synth
+
+        -- TODO: check tsThen and tsElse matches
+        return  (MIf mCond' mThen' mElse', tsThen)
 
 
 -- (t-lst) ------------------------------------------------

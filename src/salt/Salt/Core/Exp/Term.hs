@@ -51,6 +51,7 @@ data TermKey
         | MKRecord  ![Name]                     -- ^ Record former.
         | MKProject !Name                       -- ^ Record field projection.
         | MKVariant !Name                       -- ^ Variant former.
+        | MKIf                                  -- ^ If-then-else expression.
         | MKList                                -- ^ List constructor.
         | MKSet                                 -- ^ Set constructor.
         | MKMap                                 -- ^ Map constructor.
@@ -106,6 +107,7 @@ pattern MLet bts mb m   = MKey   MKLet          [MGTerms [mb, MAbs (MPTerms bts)
 pattern MProject l m    = MKey  (MKProject l)   [MGTerms [m]]
 pattern MRecord ns ms   = MKey  (MKRecord ns)   [MGTerms ms]
 pattern MVariant l m    = MKey  (MKVariant l)   [MGTerm   m]
+pattern MIf mc mt me    = MKey   MKIf           [MGTerms [mc, mt, me]]
 pattern MList t ms      = MKey   MKList         [MGTypes [t], MGTerms ms]
 pattern MSet  t ms      = MKey   MKSet          [MGTypes [t], MGTerms ms]
 pattern MMap  tk tv msk msv = MKey   MKMap      [MGTypes [tk, tv], MGTerms msk, MGTerms msv]

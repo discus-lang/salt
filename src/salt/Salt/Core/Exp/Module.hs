@@ -14,7 +14,8 @@ data Module a
 
 -- | Top-level declarations in a module.
 data Decl a
-        = DTest  (DeclTest  a)
+        = DTest (DeclTest a)
+        | DTerm (DeclTerm a)
         deriving Show
 
 
@@ -45,3 +46,13 @@ data DeclTest a
         , declTestBody          :: Term a }
         deriving Show
 
+
+-- | Term declaration
+data DeclTerm a
+        = DeclTerm
+        { declAnnot             :: a
+        , declName              :: Name
+        , declParams            :: [TermParams a]
+        , declTypesResult       :: [Type a]
+        , declBody              :: Term a }
+        deriving Show

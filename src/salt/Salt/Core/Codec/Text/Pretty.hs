@@ -194,21 +194,21 @@ instance Pretty c (TermArgs a) where
  ppr c ma
   = case ma of
         MGTerm m   -> parens $ ppr c m
-        MGTerms ms -> braced $ map (ppr c) ms
-        MGTypes ts -> text "@" % (braced $ map (ppr c) ts)
+        MGTerms ms -> squared $ map (ppr c) ms
+        MGTypes ts -> text "@" % (squared $ map (ppr c) ts)
 
 
 instance Pretty c (TermParams a) where
  ppr c mp
   = case mp of
         MPTerms nts
-         -> braced [ ppr c n % text ":" %% ppr c t
-                   | (n, t) <- nts]
+         -> squared [ ppr c n % text ":" %% ppr c t
+                    | (n, t) <- nts]
 
         MPTypes nts
          -> text "@"
-         %  braced [ ppr c n % text ":" %% ppr c t
-                   | (n, t) <- nts]
+         %  squared [ ppr c n % text ":" %% ppr c t
+                    | (n, t) <- nts]
 
 
 instance Pretty c TermKey where
@@ -222,6 +222,7 @@ instance Pretty c TermKey where
         MKRecord ns     -> text "##record"  %% braced (map (ppr c) ns)
         MKProject n     -> text "##project" %% ppr c n
         MKVariant n     -> text "##variant" %% ppr c n
+        MKIf            -> text "##if"
         MKList          -> text "##list"
         MKSet           -> text "##set"
         MKMap           -> text "##map"

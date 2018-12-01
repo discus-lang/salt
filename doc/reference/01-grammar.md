@@ -20,8 +20,8 @@ Prm     → (primitive name,      like "#add")
 
 ```
 Decl
- ::=    'type'  Con TypeParams? (':' Type)? '=' Type    (type bindings)
-  |     'term'  Var TermParams?  ':' Type   '=' Term    (term bindings)
+ ::=    'type'  Con TypeParams?  ':' Type '=' Type      (type bindings)
+  |     'term'  Var TermParams?  ':' Type '=' Term      (term bindings)
 
   |     'test' 'kind'   ('.' Var) Type                  (print the kind of a type)
   |     'test' 'type'   ('.' Var) Term                  (print the type of a term)
