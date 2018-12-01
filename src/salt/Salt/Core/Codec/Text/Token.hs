@@ -21,12 +21,12 @@ data Token
         | KComment Text         -- comment text
 
         -- Punctuation
-        | KRBra   | KRKet       -- round bracket ()
+        | KRBra   | KRKet       -- round bracket   ()
         | KCBra   | KCKet       -- curley brackets {}
         | KSBra   | KSKet       -- square brackets []
         | KABra   | KAKet       -- angle  brackets <>
         | KColon  | KSemi
-        | KComma  | KDot  | KBar | KAt
+        | KComma  | KDot  | KBar | KAt | KBacktick
         | KEquals | KColonEquals
         | KArrowRight
         | KArrowRightFat
@@ -36,7 +36,7 @@ data Token
         -- Keywords
         | KType   | KTerm  | KTest
         | KForall | KExists
-        | KWhere  | KAnd   | KAs     | KTo
+        | KWhere  | KAnd   | KAs
         | KFun    | KLet   | KDo
         | KIf     | KThen  | KElse
 

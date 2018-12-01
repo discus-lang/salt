@@ -42,16 +42,17 @@ scanner _fileName
         , fmap (stamp id) $ IW.accept '|' KBar
         , fmap (stamp id) $ IW.accept '@' KAt
         , fmap (stamp id) $ IW.accept '=' KEquals
+        , fmap (stamp id) $ IW.accept '`' KBacktick
 
         , fmap (stamp id) $ IW.accept '⟨' KABra
         , fmap (stamp id) $ IW.accept '⟩' KAKet
         , fmap (stamp id) $ IW.accept '∏' KProd
         , fmap (stamp id) $ IW.accept '∑' KSum
-        , fmap (stamp id) $ IW.accept '→' KArrowRight
-        , fmap (stamp id) $ IW.accept '⇒' KArrowRightFat
         , fmap (stamp id) $ IW.accept 'λ' KFun
         , fmap (stamp id) $ IW.accept '∀' KForall
         , fmap (stamp id) $ IW.accept '∃' KExists
+        , fmap (stamp id) $ IW.accept '→' KArrowRight
+        , fmap (stamp id) $ IW.accept '⇒' KArrowRightFat
 
         , fmap (stamp id)
            $ IW.munchPred Nothing (\_ix c -> isVarChar c)
@@ -97,8 +98,10 @@ scanVarName
          accept cs = Just $ Text.pack cs
 {-# INLINE scanVarName #-}
 
+
 isVarChar :: Char -> Bool
 isVarChar c = Char.isAlphaNum c || c == '\''
+
 
 scanConName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
 scanConName

@@ -8,21 +8,33 @@
 * symbol: #Symbol
 * symbol2: #Symbol
 * vec: [#Nat,#Nat,#Nat]
-* void: []
-* abs: [#Bool] → [#Bool]
+* none: []
+* abs1: [#Bool] → [#Bool]
 * abs2: [#Bool, #Nat] → [#Bool]
 * abs3: [#Bool, #Nat] → [#Bool, #Nat]
 * abs4: [#Bool, #Nat] → []
 * abs5: [] → []
-* abst'id: ∀[a: #Data]. [a] → [a]
-* abst'id2: ∀[a: #Data]. [a] → [a]
-* abst'app: ∀[a: #Data, b: #Data]. [[a] → [b], a] → [b]
+* abs1'sugar: [#Bool] → [#Bool]
+* abs2'sugar: [#Bool, #Nat] → [#Bool]
+* abs3'sugar: [#Bool, #Nat] → [#Bool, #Nat]
+* abs4'sugar: [#Bool, #Nat] → []
+* abs5'sugar: [] → []
+* abt1: ∀[a: #Data]. [a] → [a]
+* abt2: ∀[a: #Data]. [a] → [a]
+* abt3: ∀[a: #Data, b: #Data]. [[a] → [b], a] → [b]
+* abt1'sugar: ∀[a: #Data]. [a] → [a]
+* abt2'sugar: ∀[a: #Data]. [a] → [a]
+* abt3'sugar: ∀[a: #Data, b: #Data]. [[a] → [b], a] → [b]
 * appm'not: #Bool
+* appm'not'1: #Bool
 * appm'and: #Bool
-* appm'lam: #Bool
+* appm'lam1: #Bool
 * appm'lam2: #Bool
 * appm'vec: #Bool
+* appm'lam1's: #Bool
+* appm'lam2's: #Bool
 * appt'double: [#Nat,#Nat]
+* appt'double'1: [#Nat,#Nat]
 * appt'app: #Bool
 * let'fst: #Bool
 * let'snd: #Nat
@@ -31,7 +43,12 @@
 * do'fst: #Bool
 * do'some: #Nat
 * do'things: #Nat
-* record'empty: ∏[]
+* record0: ∏[]
+* record1: ∏[x: #Nat]
+* record2: ∏[x: #Nat, y: #Bool, z: #Unit]
+* record0's: ∏[]
+* record1's: ∏[x: #Nat]
+* record2's: ∏[x: #Nat, y: #Bool, z: #Unit]
 * record'one: ∏[x: #Nat]
 * record'two: ∏[x: #Nat, y: #Bool]
 * record'three: ∏[x: #Nat, y: #Bool, z: #Unit]
@@ -39,7 +56,10 @@
 * field'two: #Bool
 * field'nest: #Unit
 * field'paren: #Unit
+* variant0: ∑[foo: #Nat]
+* variant1: ∑[foo: ∑[bar: #Nat]]
 * none: ∀[a: #Data]. [] → [#Option [(a)]]
+* some: #Option [#Nat]
 * list'empty: #List [#Nat]
 * list'some: #List [#Nat]
 * list'head: #Option [#Nat]

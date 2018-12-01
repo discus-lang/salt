@@ -188,6 +188,12 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
          ts -> throw $ ErrorTermsWrongArity a wh ts [TData]
 
 
+-- (t-vnt) ------------------------------------------------
+checkTerm a wh ctx (MVariant nLabel mValue) Synth
+ = do   (mValue', tValue) <- checkTerm1 a wh ctx mValue Synth
+        return  (MVariant nLabel mValue', [TVariant [nLabel] [tValue]])
+
+
 -- (t-lst) ------------------------------------------------
 -- TODO: check embedded type.
 checkTerm a wh ctx (MList t ms) Synth

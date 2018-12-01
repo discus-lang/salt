@@ -69,6 +69,13 @@ pTerm_
          _      -> P.unexpected "do block without result value"
 
 
+ , do   -- '`' Lbl TermArg
+        pTok KBacktick
+        l       <- pLbl
+        m       <- pTermArg
+        return  $ MVariant l m
+
+
  , do   -- Con TypeArg* TermArg*
         nCon    <- pCon
         pTermAppArgs (MCon nCon)
@@ -79,7 +86,6 @@ pTerm_
         case takePrimValueOfName nPrm of
          Just v  -> pTermAppArgs (MVal v)
          Nothing -> pTermAppArgs (MPrm nPrm)
-
 
  , do   -- TermArg TermArgs*
         mFun    <- pTermArgProj
@@ -104,9 +110,15 @@ pTermArgs :: Parser (TermArgs Location)
 pTermArgs
  = P.choice
  [ do   -- '@' '[' Type;+ ']'
+        -- '@' TypeArg
         pTok KAt
-        ts      <- pSquared $ P.sepEndBy pType (pTok KComma)
-        return  $ MGTypes ts
+        P.choice
+         [ do   ts <- pSquared $ P.sepEndBy pType (pTok KComma)
+                return $ MGTypes ts
+
+         , do   t  <- pTypeArg
+                return $ MGTypes [t]
+         ]
 
  , do   -- TermProj
         -- NOTE: This needs to come before the following case because
@@ -239,32 +251,42 @@ pTermBind
 
 
 ---------------------------------------------------------------------------------------------------
+-- | Parser for a record.
 pTermRecord :: Parser (Term Location)
 pTermRecord
  = P.choice
- [ do   -- '[record' (Lbl '=' Term)* '⟩'
-        P.try $ P.lookAhead $ do
-                pTok KSBra; n <- pVar; pTok KBar
-                guard (n == Name "record")
-
-        pTok KSBra; pVar; pTok KBar
-
-        lms <- P.sepEndBy
-                ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
-                 <?> "a record field")
-                (pTok KComma)
-        pTok KSKet
+ [ do   -- '∏' '[' (Lbl '=' Term),* ']'
+        pTok KProd
+        lms     <- pSquared $ P.sepEndBy
+                        ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
+                         <?> "a record field")
+                        (pTok KComma)
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
 
+        -- '[record' (Lbl '=' Term),* ']'
+  , do  P.try $ P.lookAhead $ do
+                pTok KSBra; n <- pVar; pTok KBar
+                guard (n == Name "record")
 
- , do   -- '⟨' (Lbl '=' Term)* '⟩'
-        pTok KABra
-        lms <- P.sepEndBy
-                ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
-                 <?> "a record field")
-                (pTok KComma)
-        pTok KAKet
+        lms <- pSquared $ do
+                pVar; pTok KBar
+                P.sepEndBy
+                        ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
+                         <?> "a record field")
+                        (pTok KComma)
+        let (ls, ms) = unzip lms
+        return $ MRecord ls ms
+
+ , do   -- '[' (Lbl '=' Term)+ ']'
+        P.try $ P.lookAhead $ do
+                pTok KSBra; pVar; pTok KEquals
+
+        lms <- pSquared $ do
+                P.sepEndBy1
+                        ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
+                         <?> "a record field")
+                        (pTok KComma)
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
  ]
@@ -310,6 +332,7 @@ pTermStmt
 
 
 ---------------------------------------------------------------------------------------------------
+-- | Parser for a single value.
 pValue :: Parser (Value Location)
 pValue
  = P.choice
@@ -318,6 +341,7 @@ pValue
  , do   pTermValueRecord ]
 
 
+-- | Parser for record value.
 pTermValueRecord :: Parser (Value Location)
 pTermValueRecord
  = do   -- '⟨' (Lbl '=' Value)* '⟩'

@@ -50,6 +50,7 @@ data TermKey
         | MKCase    ![Name]                     -- ^ Case branching.
         | MKRecord  ![Name]                     -- ^ Record former.
         | MKProject !Name                       -- ^ Record field projection.
+        | MKVariant !Name                       -- ^ Variant former.
         | MKList                                -- ^ List constructor.
         | MKSet                                 -- ^ Set constructor.
         | MKMap                                 -- ^ Map constructor.
@@ -104,6 +105,7 @@ pattern MApt mFun tsArg = MKey   MKApp          [MGTerm  mFun, MGTypes tsArg]
 pattern MLet bts mb m   = MKey   MKLet          [MGTerms [mb, MAbs (MPTerms bts) m]]
 pattern MProject l m    = MKey  (MKProject l)   [MGTerms [m]]
 pattern MRecord ns ms   = MKey  (MKRecord ns)   [MGTerms ms]
+pattern MVariant l m    = MKey  (MKVariant l)   [MGTerm   m]
 pattern MList t ms      = MKey   MKList         [MGTypes [t], MGTerms ms]
 pattern MSet  t ms      = MKey   MKSet          [MGTypes [t], MGTerms ms]
 pattern MMap  tk tv msk msv = MKey   MKMap      [MGTypes [tk, tv], MGTerms msk, MGTerms msv]

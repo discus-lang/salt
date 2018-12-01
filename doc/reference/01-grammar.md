@@ -47,20 +47,19 @@ Decl
 
 ```
 Type
- ::=  tvar Var                                  (Var)
-  |   tcon Con                                  (Con)
-  |   tprm Prm                                  (#Prm)
-  |   tprm TypePrim
+ ::=  tvar Var                      (Var)
+  |   tcon Con                      (Con)
+  |   tprm Prm                      (#Prm)
 
-  |   tarr Type+ Type                           (Types '⇒' Type)
-  |   tfun Type* Type*                          (Types '→' Types)
+  |   tarr Type+ Type               (Types '⇒' Type)
+  |   tfun Type* Type*              (Types '→' Types)
 
-  |   tapp Type Type+                           (Type Types)
-  |   tabs Var+ Type+ Type                      ('λ' TypeParams '⇒' Type)
-  |   tall Var+ Type+ Type                      ('∀' TypeParams '.' Type)
-  |   text Var+ Type+ Type                      ('∃' TypeParams '.' Type)
-  |   trec Lbl* Type*                           ('∏' TypeFields)
-  |   tvnt Lbl* Type*                           ('∑' TypeFields)
+  |   tapp Type Type+               (Type Types)
+  |   tabs Var+ Type+ Type          ('λ' TypeParams '⇒' Type)
+  |   tall Var+ Type+ Type          ('∀' TypeParams '.' Type)
+  |   text Var+ Type+ Type          ('∃' TypeParams '.' Type)
+  |   trec Lbl* Type*               ('∏' TypeFields)
+  |   tvnt Lbl* Type*               ('∑' TypeFields)
 
   |   TypePrims
 
@@ -73,11 +72,10 @@ TypeFields
 TypeParams
  ::=  '[' (Var ':' Type),+ ']'
 
-TypePrim
- ::=  '#Data' | '#Region'
+Prm
+ :+=  '#Data' | '#Region'
   |   '#Unit' | '#Bool' | '#Nat' | '#Int' | '#Text' | '#Symbol'
   |   '#List' | '#Set'  | '#Map' | '#Option'
-
 ```
 
 - `tvar`, `tcon`, `tprm` are type variables, type constructors ans primitive types. Type variables start with a lower-case letter, type constructors an upper-case letter and primitive types a '#' and upper-case letter.
@@ -94,75 +92,95 @@ TypePrim
 
 - `tdat` and `trgn` are the kind of data types and region types, which are baked-in primitives.
 
-- `TypePrim` gives the list of baked-in primitive types which are needed to classify type and term level constructs that are described in the language definition. The implementation may also provide other machine level types, but they are listed separately. `#Data` and `#Region` are the kinds of data and region types. The others are standard type constructors.
+- `Prm` gives the list of baked-in primitive types which are needed to classify type and term level constructs that are described in the language definition. The implementation may also provide other machine level types, but they are listed separately. `#Data` and `#Region` are the kinds of data and region types. The others are standard type constructors.
 
 
 ### Type Sugar
 
 ```
- Types '=>' Type                ≡ Types '⇒' Type
+Types => Type                       ≡ Types ⇒ Type
 
- 'fun' TypeParams '->' Type     ≡ 'λ' TypeParams '->' Type
- 'forall' TypeParams '.' Type   ≡ '∀' TypeParams '.'  Type
- 'exists' TypeParams '.' Type   ≡ '∃' TypeParams '.'  Type
+fun     TypeParams -> Type          ≡ λ TypeParams -> Type
+forall  TypeParams .  Type          ≡ ∀ TypeParams .  Type
+exists  TypeParams .  Type          ≡ ∃ TypeParams .  Type
 
- [record|]                      ≡ ∏[]
- [record| L1 : T1 ... Ln : Tn]  ≡ ∏[L1 : T1 ... Ln : Tn]
- [L1 : T1 ... Ln : Tn]          ≡ ∏[L1 : T1 ... Ln : Tn]
+[record|]                           ≡ ∏[]
+[record| L1 : T1, ... Ln : Tn]      ≡ ∏[L1 : T1, ... Ln : Tn]
+[L1 : T1, ... Ln : Tn]              ≡ ∏[L1 : T1, ... Ln : Tn]
 
- [variant|]                     ≡ ∑[]
- [variant| L1 : T1 .. Ln : Tn]  ≡ ∑[L1 : T1 ... Ln : Tn]
- <L1 : T1 ... Ln : Tn>          ≡ ∑[L1 : T1 ... Ln : Tn]
+[variant|]                          ≡ ∑[]
+[variant| L1 : T1, .. Ln : Tn]      ≡ ∑[L1 : T1, ... Ln : Tn]
+<L1 : T1, ... Ln : Tn>              ≡ ∑[L1 : T1, ... Ln : Tn]
 
- Types '->' Types               ≡ Types '→' Type
+Types -> Types                      ≡ Types → Type
 ```
 
-All type expressions can be written without using unicode characters, using the sugar described above. The record type `[L1 : T1 .. Ln : Tn]` must have at least one fields to disambiguate the syntax it from the empty type vector `[]`.
+All type expressions can be written without using unicode characters, using the sugar described above. The record type `[L1 : T1 .. Ln : Tn]` must have at least one field to disambiguate the syntax it from the empty type vector `[]`.
 
 
 ## Terms
 
 ```
 Term
- ::=  Con                                       (mcon Con)
-  |   Prm                                       (mprm Prm)
-  |   Sym                                       (msym Sym)
+ ::=  mvar Var                      (Var)
+  |   mcon Con                      (Con)
+  |   msym Sym                      ('Sym)
+  |   mprm Prm                      (#Prm)
 
-  |   Var                                       (mvar Var)
-  |   'λ'   TermParams '→'  Term                (mabs TermParams Term)
-  |   Term  TermArgs                            (mapp Term TermArgs)
+  |   mmmm Term*                    ('[' Term,* ']')
 
-  |   'let' TermBind   'in' Term                (mlet Var* Term Term)
+  |   mapp Term TermArgs            (Term  TermArgs)
+  |   mabs TermParams Term          ('λ'   TermParams '→'  Term)
 
-  |   '⟨' (Lbl '=' Term),* '⟩'                  (mrec Lbl* Term*)
-  |   Term '.' Lbl                              (mprj Term Lbl)
+  |   mlet Var* Term Term           ('let' TermBind ';' Term)
 
-  |   '`' Lbl Term                              (mvnt Lbl  Term)
+  |   mrec Lbl* Term*               (∏ '[' (Lbl '=' Term),* ']')
+  |   mprj Term Lbl                 (Term '.' Lbl)
 
-  |   'case'  Term
-        'of'  '{' (Lbl → Term);+ '}'
-        ('else' Term)?                          (mcse Term Lbl* Term* Term?)
+  |   mvnt Lbl  Term                ('`' Lbl Term)
+  |   mcse Term Lbl* Term* Term?    ('case' Term 'of' '{' (Lbl → Term);+ '}' ('else' Term)?)
 
+  |   mlst Type Term*               ('[list' Type '|' Term,* ']')
+  |   mset Type Term*               ('[set'  Type '|' Term,* ']')
+  |   mmap Type Type Term* Term*    ('[map'  Type Type '|' TermMapBind,* ']')
 
-  |   '[list' Type '|' Term,* ']'               (mlst Type Term*)
-  |   '[set'  Type '|' Term,* ']'               (mset Type Term*)
-  |   '[map'  Type Type '|' TermMapBind,* ']'   (mmap Type Type Term* Term*)
-
-  |   '[' Term,* ']'                            (mmmm Term+)
 
 TermParams
- ::=    '@' '[' (Var ':' Type),* ']'            (mpst Var* Type*)
-  |         '[' (Var ':' Type),* ']'            (mpsm Var* Type*)
+ ::=  mpst Var* Type*               ('@' '[' (Var ':' Type),* ']')
+  |   mpsm Var* Type*               (    '[' (Var ':' Type),* ']')
 
 TermArgs
- ::=    '@' '[' Type,* ']'                      (mgst Type*)
-  |         '[' Term,* ']'                      (mgsm Term*)
-  |         Term                                (mgsv Term)
+ ::=  mgst Type*                    ('@' '[' Type,* ']')
+  |   mgsm Term*                    (    '[' Term,* ']')
+  |   mgsv Term                     (Term)
 
 TermBind
- ::=    '{' Var;* '}' '=' Term
+ ::=  mbnd Var* Term                ('[' Var;* ']' '=' Term)
 
 TermMapBind
- ::=    Term ':=' Term
+ ::=  mpbd Term Term                (Term ':=' Term)
 ```
+
+### Term Sugar
+
+```
+Term @Type                          ≡ Term @[Type]
+
+fun TermParams -> Term              ≡ λ TermParams → Term
+
+let Var = Term; Term                ≡ let [Var] = Term; Term
+do { Var = Term; ... Term }         ≡ let [Var] = Term; ...  Term
+
+[record|]                           ≡ ∏[]
+[record| L1 = M1, .., Ln = Mn]      ≡ ∏[L1 = T1, ... Ln = Tn]
+[L1 = T1, ... Ln = Tn]              ≡ ∏[L1 = T1, ... Ln = Tn]
+```
+
+All term expressions can be written without using unicode characters, using the sugar described above.
+
+The term/type application sytnax `Term @Type` desugars to `Term @[Type]`, because evaluation of the argument will always produce a single normal form type, rather than a vector of types. In contrast, the type/type application syntax `Term₁ Term₂` is valid without desugaring as application of a term to a single term is expressed directly in abstract syntax as `(mapp Term₁ (mgsv Term₂))`
+
+Let expression syntax that binds a single value is equivalent to binding a vector containing a single value. Do-expression syntax is desugared to let-expression syntax, where the do-block must end with a statement rather than a binding.
+
+The record term `[ L1 = M1, ... Ln = Mn ]` must have at least one field to disambiguate the syntax from the empty term vector `[]`.
 
