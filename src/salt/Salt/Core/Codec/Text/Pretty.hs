@@ -215,6 +215,7 @@ instance Pretty c TermKey where
  ppr c mk
   = case mk of
         MKTerms         -> text "##terms"
+        MKThe           -> text "##the"
         MKApp           -> text "##app"
         MKLet           -> text "##let"
         MKCon n         -> text "##con"     %% ppr c n
@@ -226,7 +227,6 @@ instance Pretty c TermKey where
         MKList          -> text "##list"
         MKSet           -> text "##set"
         MKMap           -> text "##map"
-        MKHasType       -> text "##hastype"
 
 
 -- Value ------------------------------------------------------------------------------------------

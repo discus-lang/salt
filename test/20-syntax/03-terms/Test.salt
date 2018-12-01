@@ -19,6 +19,14 @@ test type vec           = [1, 2, 3]
 test type none          = []
 
 
+-- Type Ascription ------------------------------------------------------------
+test type the'nat       = the #Nat. 3
+test type the'things    = the [#Nat, #Bool]. [3, #true]
+
+test type the'nat's     = 3 : #Nat
+test type the'things's  = [3, #true] : [#Nat, #Bool]
+
+
 -- Term abstraction -----------------------------------------------------------
 test type abs1          = λ[x: #Bool] → x
 test type abs2          = λ[x: #Bool, y: #Nat] → x
@@ -81,6 +89,16 @@ test type let'one       = let x = 5; #nat'add [x, x]
 test type let'some      = let a = 2; let b = 3; #nat'add [a, b]
 
 
+-- If expressions -------------------------------------------------------------
+test type if'then'else  = if #nat'eq [1, 2] then 3 else 4
+
+test type ifs'three
+ = if   { #nat'eq [1, 2] → 3
+        ; #nat'eq [2, 3] → 4
+        ; #nat'eq [3, 4] → 5
+        ; otherwise      → 6 }
+
+
 -- Do blocks ------------------------------------------------------------------
 test type do'fst
  = do { [x, y] = (λ[x: #Bool] → [x, 5]) [#true];
@@ -110,7 +128,6 @@ test type record'one    = [x = 5]
 test type record'two    = [x = 5, y = #true]
 test type record'three  = [x = 5, y = #true, z = #unit]
 
-
 test type field'one     = [x = 5].x
 test type field'two     = [x = 5, y = #true].y
 test type field'nest    = [x = [x = 5, y = #unit], y = #true].x.y
@@ -118,8 +135,16 @@ test type field'paren   = (([x = [x = 5, y = #unit], y = #true]).x).y
 
 
 -- Variants --------------------------------------------------------------------
+-- TODO: add (Lbl Term as Type) form to lift into result type.
 test type variant0      = `foo 5
 test type variant1      = `foo (`bar 5)
+
+-- TODO: finish type checking for case expressions.
+-- test type case0
+--  = λ[xx: <none: #Unit, some: #Nat>]
+--  → case xx of
+--         { none [u: #Unit] → 0
+--         ; some [n: #Nat]  → n }
 
 
 -- Option-----------------------------------------------------------------------

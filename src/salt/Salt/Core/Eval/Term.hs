@@ -19,7 +19,17 @@ evalTerm s _a env (MAnn a' m)
  = evalTerm s a' env m
 
 
--- References.
+-- Multi value return.
+evalTerm s a env (MKey MKTerms [MGTerms ms])
+ = evalTerms s a env ms
+
+
+-- Type ascription.
+evalTerm s a env (MKey MKThe [MGTypes [_], MGTerm m])
+ = evalTerm s a env m
+
+
+-- Values.
 evalTerm _s _ _  (MRef (MRVal v))
  = return [v]
 
@@ -48,11 +58,6 @@ evalTerm _s _a env (MAbm bts mBody)
         let env'        = Env [ (n, m) | (n, m) <- nmsEnv
                                        , Set.member n nsTermFree ]
         return [VClosure (CloTerm env' [MPTerms bts] mBody)]
-
-
--- Multi value return.
-evalTerm s a env (MKey MKTerms [MGTerms ms])
- = evalTerms s a env ms
 
 
 -- Prim-term application

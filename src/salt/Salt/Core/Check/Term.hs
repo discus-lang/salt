@@ -33,6 +33,17 @@ checkTerm
 checkTerm _a wh ctx (MAnn a' m) mode
  = checkTerm a' wh ctx m mode
 
+-- (t-mmm) ------------------------------------------------
+checkTerm a wh ctx (MTerms msArg) mode
+ = do   (msArg', tsArg) <- checkTerms a wh ctx msArg mode
+        return  (MTerms msArg', tsArg)
+
+
+-- (t-the) ------------------------------------------------
+checkTerm a wh ctx (MThe ts m) Synth
+ = do   (m', _) <- checkTerm a wh ctx m (Check ts)
+        return  (MThe ts m', ts)
+
 
 -- (t-val) ------------------------------------------------
 checkTerm _a _wh _ctx m@(MRef (MRVal v)) Synth
@@ -231,12 +242,6 @@ checkTerm a wh ctx (MMap tk tv msk msv) Synth
         (msk', _) <- checkTerms a wh ctx msk (Check tsk)
         (msv', _) <- checkTerms a wh ctx msv (Check tsv)
         return (MMap tk tv msk' msv', [TMap tk tv])
-
-
--- (t-mmm) ------------------------------------------------
-checkTerm a wh ctx (MTerms msArg) mode
- = do   (msArg', tsArg) <- checkTerms a wh ctx msArg mode
-        return (MTerms msArg', tsArg)
 
 
 checkTerm a wh ctx m mode

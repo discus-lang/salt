@@ -44,6 +44,7 @@ data TermArgs a
 -- | Term Keyword.
 data TermKey
         = MKTerms                               -- ^ Term sequence former.
+        | MKThe                                 -- ^ Type ascription.
         | MKApp                                 -- ^ Term application.
         | MKLet                                 -- ^ Let expression former.
         | MKCon     !Name                       -- ^ Data constructor.
@@ -55,7 +56,6 @@ data TermKey
         | MKList                                -- ^ List constructor.
         | MKSet                                 -- ^ Set constructor.
         | MKMap                                 -- ^ Map constructor.
-        | MKHasType                             -- ^ Type ascription.
         deriving (Show, Eq, Ord)
 
 
@@ -99,15 +99,24 @@ pattern MAbm bts mBody  = MAbs  (MPTerms bts) mBody
 pattern MAbt bts mBody  = MAbs  (MPTypes bts) mBody
 
 pattern MTerms ms       = MKey   MKTerms        [MGTerms ms]
+
+pattern MThe ts m       = MKey   MKThe          [MGTypes ts, MGTerm m]
+
 pattern MApp mFun mgs   = MKey   MKApp          [MGTerm  mFun, mgs]
 pattern MApv mFun mArg  = MKey   MKApp          [MGTerm  mFun, MGTerm  mArg]
 pattern MApm mFun msArg = MKey   MKApp          [MGTerm  mFun, MGTerms msArg]
 pattern MApt mFun tsArg = MKey   MKApp          [MGTerm  mFun, MGTypes tsArg]
+
 pattern MLet bts mb m   = MKey   MKLet          [MGTerms [mb, MAbs (MPTerms bts) m]]
-pattern MProject l m    = MKey  (MKProject l)   [MGTerms [m]]
-pattern MRecord ns ms   = MKey  (MKRecord ns)   [MGTerms ms]
-pattern MVariant l m    = MKey  (MKVariant l)   [MGTerm   m]
+
 pattern MIf mc mt me    = MKey   MKIf           [MGTerms mc,  MGTerms mt, MGTerm me]
+
+pattern MRecord ns ms   = MKey  (MKRecord ns)   [MGTerms ms]
+pattern MProject l m    = MKey  (MKProject l)   [MGTerms [m]]
+
+pattern MVariant l m    = MKey  (MKVariant l)   [MGTerm   m]
+pattern MCase m ls ms   = MKey  (MKCase ls)     [MGTerm  m,   MGTerms ms]
+
 pattern MList t ms      = MKey   MKList         [MGTypes [t], MGTerms ms]
 pattern MSet  t ms      = MKey   MKSet          [MGTypes [t], MGTerms ms]
 pattern MMap  tk tv msk msv = MKey   MKMap      [MGTypes [tk, tv], MGTerms msk, MGTerms msv]

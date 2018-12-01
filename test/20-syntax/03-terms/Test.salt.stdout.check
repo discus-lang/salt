@@ -9,6 +9,10 @@
 * symbol2: #Symbol
 * vec: [#Nat,#Nat,#Nat]
 * none: []
+* the'nat: #Nat
+* the'things: [#Nat,#Bool]
+* the'nat's: #Nat
+* the'things's: [#Nat,#Bool]
 * abs1: [#Bool] → [#Bool]
 * abs2: [#Bool, #Nat] → [#Bool]
 * abs3: [#Bool, #Nat] → [#Bool, #Nat]
@@ -40,6 +44,8 @@
 * let'snd: #Nat
 * let'one: #Nat
 * let'some: #Nat
+* if'then'else: #Nat
+* ifs'three: #Nat
 * do'fst: #Bool
 * do'some: #Nat
 * do'things: #Nat

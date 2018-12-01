@@ -63,6 +63,7 @@ scanner _fileName
 
                 "forall"        -> Just KForall
                 "exists"        -> Just KExists
+                "the"           -> Just KThe
 
                 "where"         -> Just KWhere
 
@@ -73,6 +74,9 @@ scanner _fileName
                 "if"            -> Just KIf
                 "then"          -> Just KThen
                 "else"          -> Just KElse
+
+                "case"          -> Just KCase
+                "of"            -> Just KOf
                 "otherwise"     -> Just KOtherwise
 
                 _               -> Nothing

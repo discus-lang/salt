@@ -90,15 +90,15 @@
                           Γ ⊢ mprj M₁ l₁ :+ T₁
 
 
+                                           T₂ ≡ tvnt Ls Ts
                    Γ ⊢ M₁ :: T₁            l:T₁ ∈ [ (l,T) | l ← Ls | T ← Ts ]
  (t-vnt)        ---------------------------------------------------------------
-                   Γ ⊢ mvnt l₁ M₁ :+ tvnt Ls Ts
+                   Γ ⊢ mvnt l₁ M₁ as T₂ :+ tvnt Ls Ts
 
 
-                   Ls₁ ⊆ Ls₂                  Γ ⊢ M :: T'
-                   Γ ⊢ M₁ :: tvnt Ls₂ Ts₂   { Γ | Ls₂:Ts₂ ⊢ Lᵢ → Mᵢ :: Tᵢ → T' }
+                   Γ ⊢ M₁ :: tvnt Ls₂ Ts₂   { Γ | Ls₂:Ts₂ ⊢ Lᵢ → Mᵢ :: Tᵢ → T }
  (t-cse)        -------------------------------------------------------------------
-                               Γ ⊢ mcse M₁ Ls₁ Msⁿ M :+ T'
+                               Γ ⊢ mcse M₁ Ls₁ Msⁿ :+ T
 
 
                       Γ ⊢ Ms :< T

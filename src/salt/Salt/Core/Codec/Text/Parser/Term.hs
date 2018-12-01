@@ -16,12 +16,25 @@ import qualified Text.Parsec                    as P
 pTerm  :: Parser (Term Location)
 pTerm
  = do   (Range l1 _, m)  <- pWithRange pTerm_
-        return  $ MAnn l1 m
+        P.choice
+         [ do   pTok KColon
+                TGTypes ts <- pTypesHead
+                return  $ MAnn l1 (MThe ts m)
+
+         , do   return  $ MAnn l1 m ]
 
 pTerm_  :: Parser (Term Location)
 pTerm_
  = P.choice
- [ do   -- 'λ' TermParams+ '->' Term
+ [ do   -- 'the' Type '.' Term
+        pTok KThe
+        TGTypes ts <- pTypesHead
+        pTok KDot
+        m       <- pTerm
+        return  $ MThe ts m
+
+
+ , do   -- 'λ' TermParams+ '->' Term
         pTok KFun
         mps     <- P.many1 pTermParams
         pTok KArrowRight
@@ -35,7 +48,7 @@ pTerm_
         bts     <- P.choice
                 [ do    pSquared
                          $ flip P.sepEndBy1 (pTok KComma)
-                         $  do  v  <- pVar
+                         $ do   v  <- pVar
                                 P.choice
                                  [ do   pTok KColon; t <- pType; return (BindName v, t)
                                  , do   return (BindName v, THole) ]
@@ -95,11 +108,31 @@ pTerm_
                 return  $ MIf [mCond] [mThen] mElse
          ]
 
+
  , do   -- '`' Lbl TermArg
         pTok KBacktick
         l       <- pLbl
         m       <- pTermArg
         return  $ MVariant l m
+
+
+ , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}'
+        pTok KCase
+        mScrut       <- pTerm
+        pTok KOf
+
+        (lsAlt, msAlt)
+         <- fmap unzip
+         $  pBraced $ flip P.sepEndBy
+                (pTok KSemi)
+                (do     l       <- pLbl
+                        (v, t)  <- pSquared
+                                $ do v <- pVar; pTok KColon; t <- pType; return (v, t)
+                        pTok KArrowRight
+                        m       <- pTerm
+                        return (l, MAbm [(BindName v, t)] m))
+
+        return  $ MCase mScrut lsAlt msAlt
 
 
  , do   -- Con TypeArg* TermArg*
@@ -112,6 +145,7 @@ pTerm_
         case takePrimValueOfName nPrm of
          Just v  -> pTermAppArgs (MVal v)
          Nothing -> pTermAppArgs (MPrm nPrm)
+
 
  , do   -- TermArg TermArgs*
         mFun    <- pTermArgProj
@@ -283,10 +317,10 @@ pTermRecord
  = P.choice
  [ do   -- '∏' '[' (Lbl '=' Term),* ']'
         pTok KProd
-        lms     <- pSquared $ P.sepEndBy
+        lms     <- pSquared
+                $  flip P.sepEndBy (pTok KComma)
                         ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
                          <?> "a record field")
-                        (pTok KComma)
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
 
@@ -297,10 +331,9 @@ pTermRecord
 
         lms <- pSquared $ do
                 pVar; pTok KBar
-                P.sepEndBy
+                flip P.sepEndBy (pTok KComma)
                         ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
                          <?> "a record field")
-                        (pTok KComma)
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
 
@@ -309,10 +342,9 @@ pTermRecord
                 pTok KSBra; pVar; pTok KEquals
 
         lms <- pSquared $ do
-                P.sepEndBy1
+                flip P.sepEndBy1 (pTok KComma)
                         ((do l   <- pLbl; pTok KEquals; m <- pTerm; return (l, m))
                          <?> "a record field")
-                        (pTok KComma)
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
  ]

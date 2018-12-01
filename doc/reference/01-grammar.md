@@ -86,7 +86,7 @@ Prm
 
 - `tall` and `text` are universal and existential quantification of type variables.
 
-- `trec` and `tvnc` are record and variant types. The lists of labels and types must have the same length, and are treated as set of pairs.
+- `trec` and `tvnc` are record and variant types. The lists of labels and types must have the same length, and are treated as a list of pairs. Variant and record types with the same (label, type) pairs, but in a different order, are different types.
 
 - `tfun` the type of a function taking a vector of arguments and returning a vector of results.
 
@@ -127,37 +127,39 @@ Term
   |   msym Sym                      ('Sym)
   |   mprm Prm                      (#Prm)
 
-  |   mmmm Term*                    ('[' Term,* ']')
+  |   mmmm Termⁿ                    ('[' Term,* ']')
+
+  |   mthe Typeⁿ Term               ('the' Types '.' Term)
 
   |   mapp Term TermArgs            (Term  TermArgs)
   |   mabs TermParams Term          ('λ'   TermParams '→'  Term)
 
-  |   mlet Var* Term Term           ('let' TermBind ';' Term)
+  |   mlet Varⁿ Term Term           ('let' TermBind ';' Term)
 
-  |   mrec Lbl* Term*               (∏ '[' (Lbl '=' Term),* ']')
+  |   mifs Termⁿ Termⁿ Termⁿ        ('if' '{' (Term '→' Term);* 'otherwise' '→' Term '}' )
+
+  |   mrec Lblⁿ Termⁿ               (∏ '[' (Lbl '=' Term),* ']')
   |   mprj Term Lbl                 (Term '.' Lbl)
 
   |   mvnt Lbl  Term                ('`' Lbl Term)
-  |   mcse Term Lbl* Term* Term?    ('case' Term 'of' '{' (Lbl → Term);+ '}' ('else' Term)?)
+  |   mcse Term Lblⁿ Typeⁿ Termⁿ    ('case' Term 'of' '{' (Lbl '[' Var ':' Type ']' → Term);+ '}')
 
-  |   mifs Term* Term* Term         ('if' '{' (Term '→' Term);* 'otherwise' '→' Term '}' )
-
-  |   mlst Type Term*               ('[list' Type '|' Term,* ']')
-  |   mset Type Term*               ('[set'  Type '|' Term,* ']')
-  |   mmap Type Type Term* Term*    ('[map'  Type Type '|' TermMapBind,* ']')
+  |   mlst Type Termⁿ               ('[list' Type '|' Term,* ']')
+  |   mset Type Termⁿ               ('[set'  Type '|' Term,* ']')
+  |   mmap Type Type Termⁿ Termⁿ    ('[map'  Type Type '|' TermMapBind,* ']')
 
 
 TermParams
- ::=  mpst Var* Type*               ('@' '[' (Var ':' Type),* ']')
-  |   mpsm Var* Type*               (    '[' (Var ':' Type),* ']')
+ ::=  mpst Varⁿ Typeⁿ               ('@' '[' (Var ':' Type),* ']')
+  |   mpsm Varⁿ Typeⁿ               (    '[' (Var ':' Type),* ']')
 
 TermArgs
- ::=  mgst Type*                    ('@' '[' Type,* ']')
-  |   mgsm Term*                    (    '[' Term,* ']')
+ ::=  mgst Typeⁿ                    ('@' '[' Type,* ']')
+  |   mgsm Termⁿ                    (    '[' Term,* ']')
   |   mgsv Term                     (Term)
 
 TermBind
- ::=  mbnd Var* Term                ('[' Var;* ']' '=' Term)
+ ::=  mbnd Varⁿ Term                ('[' Var;* ']' '=' Term)
 
 TermMapBind
  ::=  mpbd Term Term                (Term ':=' Term)
@@ -166,6 +168,8 @@ TermMapBind
 ### Term Sugar
 
 ```
+Term ':' Type                       ≡ the Type. Term
+
 Term @Type                          ≡ Term @[Type]
 
 fun TermParams -> Term              ≡ λ TermParams → Term
@@ -173,11 +177,11 @@ fun TermParams -> Term              ≡ λ TermParams → Term
 let Var = Term; Term                ≡ let [Var] = Term; Term
 do { Var = Term; ... Term }         ≡ let [Var] = Term; ...  Term
 
+if M1 then M2 else M3               ≡ if { M1 → M2; otherwise → M3 }
+
 [record|]                           ≡ ∏[]
 [record| L1 = M1, .., Ln = Mn]      ≡ ∏[L1 = T1, ... Ln = Tn]
 [L1 = T1, ... Ln = Tn]              ≡ ∏[L1 = T1, ... Ln = Tn]
-
-if M1 then M2 else M3               ≡ if { M1 → M2; otherwise → M3 }
 ```
 
 All term expressions can be written without using unicode characters, using the sugar described above.
