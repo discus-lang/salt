@@ -11,31 +11,39 @@ test kind.list          #List
 test kind.set           #Set
 test kind.map           #Map
 
--- Check type application.
+
+-- Type application.
 test kind.app'option    #Option [#Nat]
 test kind.app'list      #List [#Nat]
 test kind.app'set       #Set [#Nat]
 test kind.map'nat       #Map [#Nat, #Text]
 
+
 -- Nested application.
 test kind.app'set'set   #Set [#Set [#Nat]]
 
--- Function types.
-test kind.fun1          [#Nat, #Nat] → [#Nat]
-test kind.fun2          [#Nat] → [#Nat] → [#Bool]
-test kind.fun3          #Map [#Nat, #Bool] → #Nat
-test kind.fun4          #Nat → #Map [#Nat, #Bool]
 
 -- Type function.
 test kind.op1           λ[a: #Data, b: #Data] ⇒ a
-test kind.op1'high      λ[a: #Data → #Data] ⇒ a
-test kind.op1'app       (λ[a: #Data, b: #Data] ⇒ a) [#Nat, #Bool]
+test kind.op2           λ[a: #Data → #Data] ⇒ a
+test kind.op3           (λ[a: #Data, b: #Data] ⇒ a) [#Nat, #Bool]
+
+test kind.op1'sugar     fun [a: #Data, b: #Data] => a
+test kind.op2'sugar     fun [a: #Data -> #Data] => a
+test kind.op3'sugar     (fun [a: #Data, b: #Data] => a) [#Nat, #Bool]
+
 
 -- Forall type.
 test kind.all1          ∀[a: #Data, b: #Data]. a → b
 
+test kind.all1'sugar    forall [a: #Data, b: #Data]. a -> b
+
+
 -- Exists type.
 test kind.some1         ∃[a: #Data, b: #Data]. a → b
+
+test kind.some1'sugar   exists [a: #Data, b: #Data]. a → b
+
 
 -- Record types.
 test kind.rec0          ∏[]
@@ -61,4 +69,16 @@ test kind.vnt2'sugar1   [variant|one: #Symbol, two: [variant|foo: #Nat]]
 
 test kind.vnt1'sugar2   <one: #Symbol, two: #Nat>
 test kind.vnt2'sugar2   <one: #Symbol, two: <foo: #Nat>>
+
+
+-- Function types.
+test kind.fun1          [#Nat, #Nat] → [#Nat]
+test kind.fun2          [#Nat] → [#Nat] → [#Bool]
+test kind.fun3          #Map [#Nat, #Bool] → #Nat
+test kind.fun4          #Nat → #Map [#Nat, #Bool]
+
+test kind.fun1'sugar    [#Nat, #Nat] -> [#Nat]
+test kind.fun2'sugar    [#Nat] -> [#Nat] -> [#Bool]
+test kind.fun3'sugar    #Map [#Nat, #Bool] -> #Nat
+test kind.fun4'sugar    #Nat -> #Map [#Nat, #Bool]
 

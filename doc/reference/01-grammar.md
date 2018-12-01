@@ -47,19 +47,22 @@ Decl
 
 ```
 Type
- ::=  tdat                                      (Data)
-  |   tarr Type+ Type                           (Types '⇒' Type)
-
-  |   tvar Var                                  (Var)
+ ::=  tvar Var                                  (Var)
   |   tcon Con                                  (Con)
   |   tprm Prm                                  (#Prm)
+  |   tprm TypePrim
+
+  |   tarr Type+ Type                           (Types '⇒' Type)
+  |   tfun Type* Type*                          (Types '→' Types)
+
   |   tapp Type Type+                           (Type Types)
   |   tabs Var+ Type+ Type                      ('λ' TypeParams '⇒' Type)
   |   tall Var+ Type+ Type                      ('∀' TypeParams '.' Type)
   |   text Var+ Type+ Type                      ('∃' TypeParams '.' Type)
   |   trec Lbl* Type*                           ('∏' TypeFields)
   |   tvnt Lbl* Type*                           ('∑' TypeFields)
-  |   tfun Type* Type*                          (Types '→' Types)
+
+  |   TypePrims
 
 Types
  ::=  '[' Type;+ ']'
@@ -69,13 +72,17 @@ TypeFields
 
 TypeParams
  ::=  '[' (Var ':' Type),+ ']'
+
+TypePrim
+ ::=  '#Data' | '#Region'
+  |   '#Unit' | '#Bool' | '#Nat' | '#Int' | '#Text' | '#Symbol'
+  |   '#List' | '#Set'  | '#Map' | '#Option'
+
 ```
 
-- `tdat` is the kind of data values.
-
-- `tarr` is used to form arrow kinds for type constructors, such as `List : Data → Data`
-
 - `tvar`, `tcon`, `tprm` are type variables, type constructors ans primitive types. Type variables start with a lower-case letter, type constructors an upper-case letter and primitive types a '#' and upper-case letter.
+
+- `tarr` is the arrow kind, used to express kinds of type constructors such as `List : #Data → #Data`
 
 - `tapp` and `tabs` are type application and type abstraction. The application form applies a type operator to multiple type arguments at once.
 
@@ -84,6 +91,10 @@ TypeParams
 - `trec` and `tvnc` are record and variant types. The lists of labels and types must have the same length, and are treated as set of pairs.
 
 - `tfun` the type of a function taking a vector of arguments and returning a vector of results.
+
+- `tdat` and `trgn` are the kind of data types and region types, which are baked-in primitives.
+
+- `TypePrim` gives the list of baked-in primitive types which are needed to classify type and term level constructs that are described in the language definition. The implementation may also provide other machine level types, but they are listed separately. `#Data` and `#Region` are the kinds of data and region types. The others are standard type constructors.
 
 
 ### Type Sugar
@@ -106,7 +117,7 @@ TypeParams
  Types '->' Types               ≡ Types '→' Type
 ```
 
-All type expressions can be written without using unicode characters, using the sugar described above. Note that the record type `[L1 : T1 .. Ln : Tn]` must have at least one fields to disambiguate the syntax it from the empty type vector `[]`.
+All type expressions can be written without using unicode characters, using the sugar described above. The record type `[L1 : T1 .. Ln : Tn]` must have at least one fields to disambiguate the syntax it from the empty type vector `[]`.
 
 
 ## Terms

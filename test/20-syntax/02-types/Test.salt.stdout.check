@@ -13,15 +13,16 @@
 * app'set: #Data
 * map'nat: #Data
 * app'set'set: #Data
-* fun1: #Data
-* fun2: #Data
-* fun3: #Data
-* fun4: #Data
 * op1: [#Data, #Data] ⇒ #Data
-* op1'high: [[#Data] → [#Data]] ⇒ [#Data] → [#Data]
-* op1'app: #Data
+* op2: [[#Data] → [#Data]] ⇒ [#Data] → [#Data]
+* op3: #Data
+* op1'sugar: [#Data, #Data] ⇒ #Data
+* op2'sugar: [[#Data] → [#Data]] ⇒ [#Data] → [#Data]
+* op3'sugar: #Data
 * all1: #Data
+* all1'sugar: #Data
 * some1: #Data
+* some1'sugar: #Data
 * rec0: #Data
 * rec1: #Data
 * rec2: #Data
@@ -38,3 +39,11 @@
 * vnt2'sugar1: #Data
 * vnt1'sugar2: #Data
 * vnt2'sugar2: #Data
+* fun1: #Data
+* fun2: #Data
+* fun3: #Data
+* fun4: #Data
+* fun1'sugar: #Data
+* fun2'sugar: #Data
+* fun3'sugar: #Data
+* fun4'sugar: #Data
