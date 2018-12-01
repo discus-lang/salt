@@ -25,8 +25,8 @@ import Control.Exception
 -- | State of the entire machine.
 data State a
         = State
-        { stateConfig   :: !Config
-        , stateTests    :: ![DeclTest a] }
+        { stateConfig           :: !Config
+        , stateDeclTerms        :: !(Map Name (DeclTerm a)) }
         deriving Show
 
 

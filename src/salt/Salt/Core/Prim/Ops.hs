@@ -87,6 +87,16 @@ primOpsNat
         , step  = \[] [VNat n1, VNat n2] -> [VNat $ n1 * n2]
         , docs  = "Natural number multiplication." }
 
+   , PP { name  = "nat'div"
+        , tsig  = [TNat, TNat] :-> [TNat]
+        , step  = \[] [VNat n1, VNat n2] -> [VNat $ n1 `div` n2]
+        , docs  = "Natural number division." }
+
+   , PP { name  = "nat'rem"
+        , tsig  = [TNat, TNat] :-> [TNat]
+        , step  = \[] [VNat n1, VNat n2] -> [VNat $ n1 `rem` n2]
+        , docs  = "Natural number remainder." }
+
    , PP { name  = "nat'eq"
         , tsig  = [TNat, TNat] :-> [TBool]
         , step  = \[] [VNat n1, VNat n2] -> [VBool $ n1 == n2]

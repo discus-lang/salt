@@ -18,6 +18,7 @@ import qualified System.IO                      as System
 import qualified Text.Lexer.Inchworm.Char       as IW
 import qualified Text.Show.Pretty               as Show
 import qualified Data.Text                      as T
+import qualified Data.Map.Strict                as Map
 
 
 -- Main -------------------------------------------------------------------------------------------
@@ -201,7 +202,7 @@ runTestType ctx _mm mnTest mTest
 runTestEval
         :: Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
-runTestEval _mm mnTest mTest
+runTestEval mm mnTest mTest
  = do
         let a   = IW.Location 0 0
         putStr  $ "* "
@@ -210,7 +211,16 @@ runTestEval _mm mnTest mTest
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        vResult <- Eval.evalTerm a (Env []) mTest
+        let declTerms
+                = Map.fromList
+                [ (n, d) | DTerm d@(DeclTerm _ n _ _ _) <- moduleDecls mm ]
+
+        let state
+                = Eval.State
+                { Eval.stateConfig      = Eval.configDefault
+                , Eval.stateDeclTerms   = declTerms }
+
+        vResult <- Eval.evalTerm state a (Env []) mTest
         putStrLn $ P.renderIndent $ P.ppr () vResult
 
 
@@ -219,7 +229,7 @@ runTestEval _mm mnTest mTest
 runTestAssert
         :: Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
-runTestAssert _mm mnTest mTest
+runTestAssert mm mnTest mTest
  = do
         let a   = IW.Location 0 0
         putStr  $ "* "
@@ -228,7 +238,16 @@ runTestAssert _mm mnTest mTest
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        vResult <- Eval.evalTerm a (Env []) mTest
+        let declTerms
+                = Map.fromList
+                [ (n, d) | DTerm d@(DeclTerm _ n _ _ _) <- moduleDecls mm ]
+
+        let state
+                = Eval.State
+                { Eval.stateConfig      = Eval.configDefault
+                , Eval.stateDeclTerms   = declTerms }
+
+        vResult <- Eval.evalTerm state a (Env []) mTest
         case vResult of
          [VTrue]        -> putStrLn "ok"
          [VFalse]       -> putStrLn "failed"
