@@ -140,6 +140,8 @@ Term
   |   mvnt Lbl  Term                ('`' Lbl Term)
   |   mcse Term Lbl* Term* Term?    ('case' Term 'of' '{' (Lbl → Term);+ '}' ('else' Term)?)
 
+  |   mifs Term* Term* Term         ('if' '{' (Term '→' Term);* 'otherwise' '→' Term '}' )
+
   |   mlst Type Term*               ('[list' Type '|' Term,* ']')
   |   mset Type Term*               ('[set'  Type '|' Term,* ']')
   |   mmap Type Type Term* Term*    ('[map'  Type Type '|' TermMapBind,* ']')
@@ -174,6 +176,8 @@ do { Var = Term; ... Term }         ≡ let [Var] = Term; ...  Term
 [record|]                           ≡ ∏[]
 [record| L1 = M1, .., Ln = Mn]      ≡ ∏[L1 = T1, ... Ln = Tn]
 [L1 = T1, ... Ln = Tn]              ≡ ∏[L1 = T1, ... Ln = Tn]
+
+if M1 then M2 else M3               ≡ if { M1 → M2; otherwise → M3 }
 ```
 
 All term expressions can be written without using unicode characters, using the sugar described above.

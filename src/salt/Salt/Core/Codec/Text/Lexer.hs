@@ -73,6 +73,7 @@ scanner _fileName
                 "if"            -> Just KIf
                 "then"          -> Just KThen
                 "else"          -> Just KElse
+                "otherwise"     -> Just KOtherwise
 
                 _               -> Nothing
 

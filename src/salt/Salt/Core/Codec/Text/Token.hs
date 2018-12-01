@@ -36,9 +36,10 @@ data Token
         -- Keywords
         | KType   | KTerm  | KTest
         | KForall | KExists
-        | KWhere  | KAnd
-        | KFun    | KLet   | KDo
-        | KIf     | KThen  | KElse
+        | KWhere
+        | KFun
+        | KLet   | KDo
+        | KIf     | KThen  | KElse | KOtherwise
 
         -- Names
         | KVar  Text            -- Plain variable name, "foo"

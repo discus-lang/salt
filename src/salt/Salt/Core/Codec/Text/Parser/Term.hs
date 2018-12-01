@@ -68,14 +68,32 @@ pTerm_
          []     -> P.unexpected "empty do block"
          _      -> P.unexpected "do block without result value"
 
+
  , do   -- 'if' Term 'then' Term 'else' Term
+        -- 'if' '{' (Term '→' Term);* 'otherwise' '→' Term '}'
         pTok KIf
-        mCond   <- pTerm
-        pTok KThen
-        mThen   <- pTerm
-        pTok KElse
-        mElse   <- pTerm
-        return  $ MIf mCond mThen mElse
+        P.choice
+         [ do   pTok KCBra
+                (msCond, msThen)
+                 <- fmap unzip
+                 $  P.many (do  mCond <- pTerm
+                                pTok KArrowRight
+                                mThen <- pTerm
+                                pTok KSemi
+                                return (mCond, mThen))
+                pTok KOtherwise
+                pTok KArrowRight
+                mDefault <- pTerm
+                pTok KCKet
+                return $ MIf msCond msThen mDefault
+
+          , do  mCond   <- pTerm
+                pTok KThen
+                mThen   <- pTerm
+                pTok KElse
+                mElse   <- pTerm
+                return  $ MIf [mCond] [mThen] mElse
+         ]
 
  , do   -- '`' Lbl TermArg
         pTok KBacktick

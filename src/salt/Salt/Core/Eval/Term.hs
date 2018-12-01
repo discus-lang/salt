@@ -130,13 +130,22 @@ evalTerm s a env (MKey (MKProject nField) [MGTerms [mRecord]])
 
 
 -- If-then-else
--- TODO: throw real exception on type error.
-evalTerm s a env (MKey MKIf [MGTerms [mCond, mThen, mElse]])
- = do   vCond   <- evalTerm1 s a env mCond
-        case vCond of
-         VBool True     -> evalTerm s a env mThen
-         VBool False    -> evalTerm s a env mElse
-         _              -> error "if-then-else runtime type error"
+-- TODO: throw real exception on type errors.
+evalTerm s a env (MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
+ = let
+        loop [] []
+         = do   evalTerm s a env mElse
+
+        loop (mCond : msCond') (mThen : msThen')
+         = do   vCond   <- evalTerm1 s a env mCond
+                case vCond of
+                 VBool True   -> evalTerm s a env mThen
+                 VBool False  -> loop msCond' msThen'
+                 _            -> error "if-then-else runtime type error"
+
+        loop _ _ = error "if cond then length mismatch"
+
+   in   loop msCond msThen
 
 
 -- List construction.

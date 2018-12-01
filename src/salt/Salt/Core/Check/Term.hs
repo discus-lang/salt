@@ -195,13 +195,15 @@ checkTerm a wh ctx (MVariant nLabel mValue) Synth
 
 
 -- (t-if) -------------------------------------------------
-checkTerm a wh ctx (MIf mCond mThen mElse) Synth
- = do   (mCond', _tCond)  <- checkTerm1 a wh ctx mCond (Check [TBool])
-        (mThen', tsThen)  <- checkTerm  a wh ctx mThen Synth
-        (mElse', _tsElse) <- checkTerm  a wh ctx mElse Synth
+checkTerm a wh ctx (MIf msCond msThen mElse) Synth
+ = do   (msCond', _tssCond) <- checkTerms a wh ctx msCond
+                            $  Check $ replicate (length msCond) TBool
+        (msThen', _tssThen) <- checkTerms a wh ctx msThen Synth
+        (mElse',  tsElse)   <- checkTerm  a wh ctx mElse  Synth
 
         -- TODO: check tsThen and tsElse matches
-        return  (MIf mCond' mThen' mElse', tsThen)
+        -- TODO: check there are the same number of conds and then exps.
+        return  (MIf msCond' msThen' mElse', tsElse)
 
 
 -- (t-lst) ------------------------------------------------
