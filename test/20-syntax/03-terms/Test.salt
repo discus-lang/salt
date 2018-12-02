@@ -135,9 +135,8 @@ test type field'paren   = (([x = [x = 5, y = #unit], y = #true]).x).y
 
 
 -- Variants --------------------------------------------------------------------
--- TODO: add (Lbl Term as Type) form to lift into result type.
-test type variant0      = `foo 5
-test type variant1      = `foo (`bar 5)
+test type variant0      = `foo 5 as <foo: #Nat>
+test type variant1      = `foo 5 as <foo: #Nat, bar: #Nat>
 
 -- TODO: finish type checking for case expressions.
 -- test type case0

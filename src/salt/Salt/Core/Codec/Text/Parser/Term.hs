@@ -109,11 +109,13 @@ pTerm_
          ]
 
 
- , do   -- '`' Lbl TermArg
+ , do   -- '`' Lbl TermArg 'as' TypeArg
         pTok KBacktick
         l       <- pLbl
         m       <- pTermArg
-        return  $ MVariant l m
+        pTok KAs
+        t       <- pTypeArg
+        return  $ MVariant l m t
 
 
  , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}'

@@ -114,7 +114,7 @@ pattern MIf mc mt me    = MKey   MKIf           [MGTerms mc,  MGTerms mt, MGTerm
 pattern MRecord ns ms   = MKey  (MKRecord ns)   [MGTerms ms]
 pattern MProject l m    = MKey  (MKProject l)   [MGTerms [m]]
 
-pattern MVariant l m    = MKey  (MKVariant l)   [MGTerm   m]
+pattern MVariant l m t  = MKey  (MKVariant l)   [MGTerm  m,   MGTypes [t]]
 pattern MCase m ls ms   = MKey  (MKCase ls)     [MGTerm  m,   MGTerms ms]
 
 pattern MList t ms      = MKey   MKList         [MGTypes [t], MGTerms ms]

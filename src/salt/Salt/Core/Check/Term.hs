@@ -200,9 +200,12 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
 
 
 -- (t-vnt) ------------------------------------------------
-checkTerm a wh ctx (MVariant nLabel mValue) Synth
- = do   (mValue', tValue) <- checkTerm1 a wh ctx mValue Synth
-        return  (MVariant nLabel mValue', [TVariant [nLabel] [tValue]])
+checkTerm a wh ctx (MVariant nLabel mValue tResult) Synth
+ = do   (mValue', _tValue) <- checkTerm1 a wh ctx mValue Synth
+
+        -- TODO: check variant is contained in given type
+        -- TODO: check given type is a variant type.
+        return  (MVariant nLabel mValue' tResult, [tResult])
 
 
 -- (t-if) -------------------------------------------------

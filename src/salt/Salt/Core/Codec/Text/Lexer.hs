@@ -64,6 +64,7 @@ scanner _fileName
                 "forall"        -> Just KForall
                 "exists"        -> Just KExists
                 "the"           -> Just KThe
+                "as"            -> Just KAs
 
                 "where"         -> Just KWhere
 

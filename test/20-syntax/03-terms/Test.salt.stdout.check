@@ -63,7 +63,7 @@
 * field'nest: #Unit
 * field'paren: #Unit
 * variant0: ∑[foo: #Nat]
-* variant1: ∑[foo: ∑[bar: #Nat]]
+* variant1: ∑[foo: #Nat, bar: #Nat]
 * none: ∀[a: #Data]. [] → [#Option [(a)]]
 * some: #Option [#Nat]
 * list'empty: #List [#Nat]
