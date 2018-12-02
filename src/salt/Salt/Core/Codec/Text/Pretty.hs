@@ -252,6 +252,10 @@ instance Pretty c (Value a) where
         VRecord nvs
          -> bracketed [ ppr c n %% text "=" %% ppr c v | (n, v) <- nvs ]
 
+        VVariant n vs
+         -> parens $  text "`" % ppr c n
+                   %% squared (punctuate (text ", ") (map (ppr c) vs))
+
         VList t vs
          -> brackets
          $  hcat ( text "list" : ppr c t : text "|"
@@ -273,19 +277,26 @@ instance Pretty c (Value a) where
 
 
 instance Pretty c (Closure a) where
- ppr c (CloTerm (Env []) bs m)
+ ppr c (Closure (Env []) ps m)
   = bracketed' "clo"
-        [ text "λ" % (hsep $ map (ppr c) bs) %% text "→" %% ppr c m ]
+        [ text "λ" % ppr c ps %% text "→" %% ppr c m ]
 
- ppr c (CloTerm env bs m)
+ ppr c (Closure env ps m)
   = bracketed' "clo"
         [ ppr c env
-        , text "λ" % (hsep $ map (ppr c) bs) %% text "→" %% ppr c m ]
+        , text "λ" % ppr c ps %% text "→" %% ppr c m ]
 
 
 instance Pretty c (Env a) where
- ppr c (Env nvs)
-  = bracketed' "env"  [ ppr c n %% text "=" %% ppr c v | (n, v) <- nvs]
+ ppr c (Env ebs)
+  = bracketed' "env"  (punctuate (text ",") $ map (ppr c) ebs)
+
+
+instance Pretty c (EnvBind a) where
+ ppr c eb
+  = case eb of
+        EnvType  n t    -> text "@" % ppr c n % text ":" %% ppr c t
+        EnvValue n v    ->            ppr c n % text ":" %% ppr c v
 
 
 instance Pretty c Name where

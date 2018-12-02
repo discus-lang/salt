@@ -138,12 +138,11 @@ test type field'paren   = (([x = [x = 5, y = #unit], y = #true]).x).y
 test type variant0      = `foo 5 as <foo: #Nat>
 test type variant1      = `foo 5 as <foo: #Nat, bar: #Nat>
 
--- TODO: finish type checking for case expressions.
--- test type case0
---  = λ[xx: <none: #Unit, some: #Nat>]
---  → case xx of
---         { none [u: #Unit] → 0
---         ; some [n: #Nat]  → n }
+test type case0
+ = λ[xx: <none: #Unit, some: #Nat>]
+ → case xx of
+        { none [u: #Unit] → 0
+        ; some [n: #Nat]  → n }
 
 
 -- Option-----------------------------------------------------------------------

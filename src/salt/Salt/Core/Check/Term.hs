@@ -208,6 +208,17 @@ checkTerm a wh ctx (MVariant nLabel mValue tResult) Synth
         return  (MVariant nLabel mValue' tResult, [tResult])
 
 
+-- (t-case) -----------------------------------------------
+checkTerm a wh ctx (MCase mScrut ls msAlt) Synth
+ = do   (mScrut', _tScrut) <- checkTerm1 a wh ctx mScrut Synth
+        (msAlt',  tsAlt)  <- fmap unzip $ mapM (\m -> checkTerm1 a wh ctx m Synth) msAlt
+
+        -- TODO: check alts all have same result type.
+        -- TODO: check scrut matches alt head.
+        let (TFun _ tsResult : _) = tsAlt
+        return  (MCase mScrut' ls msAlt', tsResult)
+
+
 -- (t-if) -------------------------------------------------
 checkTerm a wh ctx (MIf msCond msThen mElse) Synth
  = do   (msCond', _tssCond) <- checkTerms a wh ctx msCond

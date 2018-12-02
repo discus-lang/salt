@@ -7,6 +7,7 @@ import Control.Exception
 import qualified Salt.Core.Prim.Ops     as Ops
 import qualified Data.Map               as Map
 import qualified Data.Set               as Set
+import qualified Text.Show.Pretty       as Text
 
 
 ---------------------------------------------------------------------------------------------------
@@ -37,61 +38,102 @@ evalTerm _s _ _  (MRef (MRVal v))
 -- Variables
 evalTerm s a env (MVar u@(Bound n))
  -- Bound in local environment.
- | Just v       <- envLookup n env
+ | Just v       <- envLookupValue n env
  = return [v]
 
  -- Bound in top-level environment.
  | Just (DeclTerm _a _n mps _tr mBody)
-                <- Map.lookup n (stateDeclTerms s)
- = return [VClosure $ CloTerm envEmpty mps mBody]
+   <- Map.lookup n (stateDeclTerms s)
+ = let
+        -- TODO: proper error.
+        makeClosure []
+         = error "no params for DeclTerm"
+
+        makeClosure (mp : [])
+         = VClosure $ Closure envEmpty mp mBody
+
+        makeClosure (mp1 : mps')
+         = VClosure $ Closure envEmpty mp1 (MVal (makeClosure mps'))
+
+   in   return [makeClosure mps]
 
  | otherwise
  = throw $ ErrorVarUnbound a u env
 
 
 -- Function abstraction.
---   We trim the closure environment at the point the closure is
---   produced so that the closure is easier to read in debug logs.
+--   For debugging we trim the closure environment at the point the
+--   closure is produced so that the closure is easier to read in logs.
+--   For a production interpreter we'd avoid the trimming.
 evalTerm _s _a env (MAbm bts mBody)
  = do   let nsTermFree  = freeTermVarsOf mBody
-        let Env nmsEnv  = env
-        let env'        = Env [ (n, m) | (n, m) <- nmsEnv
-                                       , Set.member n nsTermFree ]
-        return [VClosure (CloTerm env' [MPTerms bts] mBody)]
+        let Env ebs     = env
+
+        -- TODO: also trim type binds.
+        let keepEnvBind (EnvValue n _) = Set.member n nsTermFree
+            keepEnvBind (EnvType  _ _) = True
+
+        let env'        = Env (filter keepEnvBind ebs)
+        return [VClosure (Closure env' (MPTerms bts) mBody)]
 
 
 -- Prim-term application
+-- TODO: pass through type args as well.
+-- TODO: this won't work with the polymorphic ops we have
 evalTerm s a env (MKey MKApp [MGTerm (MPrm nPrim), mgsArg])
  | case mgsArg of
         MGTerm{}  -> True
         MGTerms{} -> True
         _         -> False
+
  = case Map.lookup nPrim Ops.primOps of
         Just (Ops.PP _name _type step _docs)
-         -> do  vsArg   <- evalTermArgs s a env mgsArg
-                let vsResult = step [] vsArg
+         -> do  nsArg   <- evalTermArgs s a env mgsArg
+                let vsResult = step [nsArg]
                 return vsResult
 
         Just (Ops.PO _name _type exec _docs)
-         -> do  vsArg    <- evalTermArgs s a env mgsArg
-                vsResult <- exec [] vsArg
+         -> do  nsArg    <- evalTermArgs s a env mgsArg
+                vsResult <- exec [nsArg]
                 return vsResult
 
         Nothing -> throw $ ErrorPrimUnknown a nPrim
 
 
--- Term-term application.
+-- Term-term, term/type application.
 evalTerm s a env (MKey MKApp [MGTerm mFun, mgsArg])
  = do   vsCloTerm <- evalTerm s a env mFun
         case vsCloTerm of
-         [VClosure (CloTerm env' [MPTerms bts] mBody)]
+         [VClosure (Closure env' (MPTerms bts) mBody)]
+          | MGTerm m    <- mgsArg
           -> do let bs    = map fst bts
-                vsArg <- evalTermArgs s a env mgsArg
-                let env'' = envExtends (zip bs vsArg) env'
-                vsRes <- evalTerm     s a env'' mBody
+                vsArg   <- evalTerm s a env m
+                let env'' = envExtendsValue (zip bs vsArg) env'
+                vsRes   <- evalTerm s a env'' mBody
                 return vsRes
+
+          | MGTerms ms  <- mgsArg
+          -> do let bs  = map fst bts
+                vsArg   <- mapM (evalTerm1 s a env) ms
+                let env'' = envExtendsValue (zip bs vsArg) env'
+                vsRes   <- evalTerm s a env'' mBody
+                return vsRes
+
+          | otherwise -> error "invalid application"
+
+         [VClosure (Closure env' (MPTypes bks) mBody)]
+          | MGTypes ts   <- mgsArg
+          -> do let bs  = map fst bks
+                -- TODO: drop subst into tsArg'
+                let tsArg' = ts
+                let env'' = envExtendsType (zip bs tsArg') env'
+                vsRes   <- evalTerm s a env'' mBody
+                return vsRes
+
+          | otherwise -> error "invalid application"
+
          [] -> throw $ ErrorAppTermNotEnough a []
-         _  -> throw $ ErrorAppTermTooMany   a vsCloTerm
+         _  -> error $ Text.ppShow (a, vsCloTerm) -- throw $ ErrorAppTermTooMany   a vsCloTerm
 
 
 -- Let-binding.
@@ -102,7 +144,7 @@ evalTerm s a env (MKey MKLet [MGTerms [mBind, MAbs (MPTerms bts) mBody]])
         if  nWanted == nHave
          then do
                 let bs = map fst bts
-                let env' =  envExtends (zip bs vsBind) env
+                let env' =  envExtendsValue (zip bs vsBind) env
                 vsResult <- evalTerm s a env' mBody
                 return vsResult
         else if nHave < nWanted
@@ -181,7 +223,9 @@ evalTerm1 s a env m
         case vs of
          [v]    -> return v
          []     -> throw $ ErrorAppTermNotEnough a []
-         vs'    -> throw $ ErrorAppTermTooMany   a vs'
+         vs'    -> error $ Text.ppShow (a, vs')
+
+--          throw $ ErrorAppTermTooMany   a vs'
 
 
 -- | Evaluate a list of terms, producing a single value for each.
@@ -197,10 +241,19 @@ evalTerms s a env ms
 evalTermArgs
         :: Annot a
         => State a -> a -> Env a
-        -> TermArgs a -> IO [Value a]
+        -> TermArgs a -> IO (TermNormals a)
+
 evalTermArgs s a env mgs
  = case mgs of
-        MGTerm  m   -> evalTerm s a env m
-        MGTerms ms  -> mapM (evalTerm1 s a env) ms
-        MGTypes _   -> error "cannot evaluate type arguments"
+        MGTerm  m
+         -> do  vs <- evalTerm s a env m
+                return $ NVs vs
+
+        MGTerms ms
+         -> do  vs <- mapM (evalTerm1 s a env) ms
+                return $ NVs vs
+
+        MGTypes ts
+         -> do  -- TODO: drop env as subst. into type.
+                return $ NTs ts
 

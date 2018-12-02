@@ -124,7 +124,8 @@ instance MapAnnot Value where
         VInt i          -> VInt i
         VNat n          -> VNat n
         VData n ts vs   -> VData n (map (mapAnnot f) ts) (map (mapAnnot f) vs)
-        VRecord nvs     -> VRecord [ (n, mapAnnot f v) | (n, v) <- nvs ]
+        VRecord  nvs    -> VRecord    [ (n, mapAnnot f v)        | (n, v) <- nvs ]
+        VVariant n vs   -> VVariant n (map (mapAnnot f) vs)
         VList t vs      -> VList (mapAnnot f t)  (map (mapAnnot f) vs)
         VSet  t vs      -> VSet  (mapAnnot f t)  vs
         VMap  tk tv kvs -> VMap  (mapAnnot f tk) (mapAnnot f tv) (Map.map (mapAnnot f) kvs)
@@ -132,11 +133,18 @@ instance MapAnnot Value where
 
 
 instance MapAnnot Closure where
- mapAnnot f (CloTerm env bs m)
-  = CloTerm (mapAnnot f env) (map (mapAnnot f) bs) (mapAnnot f m)
+ mapAnnot f (Closure env mps m)
+  = Closure (mapAnnot f env) (mapAnnot f mps) (mapAnnot f m)
 
 
 instance MapAnnot Env where
- mapAnnot f (Env nvs)
-  = Env [ (n, mapAnnot f v) | (n, v) <- nvs ]
+ mapAnnot f (Env bs)
+  = Env (map (mapAnnot f) bs)
+
+
+instance MapAnnot EnvBind where
+ mapAnnot f eb
+  = case eb of
+        EnvType  n t    -> EnvType  n (mapAnnot f t)
+        EnvValue n v    -> EnvValue n (mapAnnot f v)
 

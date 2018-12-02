@@ -76,6 +76,7 @@ data Value a
         --  of values in the collection does not depend on the annotation.
         | VData     !Name ![Type a] ![Value a]  -- ^ Constructed data.
         | VRecord   ![(Name, Value a)]          -- ^ Record value.
+        | VVariant  !Name ![Value a]            -- ^ Variant value.
         | VList     !(Type a) ![Value a]        -- ^ List value.
         | VSet      !(Type a) !(Set (Value ())) -- ^ Set value.
         | VMap      !(Type a) !(Type a) !(Map (Value ()) (Value a))
@@ -86,86 +87,134 @@ data Value a
 
 -- | Closure value.
 data Closure a
-        = CloTerm !(Env a) ![TermParams a] !(Term a)
+        = Closure !(Env a) !(TermParams a) !(Term a)
+        deriving (Show, Eq, Ord)
+
+
+-- | Normal form arguments for a function application.
+--   Argument can be closed types as well as values.
+data TermNormals a
+        = NTs ![Type a]
+        | NVs ![Value a]
         deriving (Show, Eq, Ord)
 
 
 -- Patterns ---------------------------------------------------------------------------------------
-pattern MVal v          = MRef  (MRVal v)
-pattern MPrm n          = MRef  (MRPrm n)
-pattern MCon n          = MRef  (MRCon n)
+pattern MVal v                  = MRef  (MRVal v)
+pattern MPrm n                  = MRef  (MRPrm n)
+pattern MCon n                  = MRef  (MRCon n)
 
-pattern MAbm bts mBody  = MAbs  (MPTerms bts) mBody
-pattern MAbt bts mBody  = MAbs  (MPTypes bts) mBody
+pattern MAbm btsParam mBody     = MAbs  (MPTerms btsParam) mBody
+pattern MAbt btsParam mBody     = MAbs  (MPTypes btsParam) mBody
 
-pattern MTerms ms       = MKey   MKTerms        [MGTerms ms]
+pattern MTerms ms               = MKey   MKTerms [MGTerms ms]
 
-pattern MThe ts m       = MKey   MKThe          [MGTypes ts, MGTerm m]
+pattern MThe ts m               = MKey   MKThe  [MGTypes ts, MGTerm m]
 
-pattern MApp mFun mgs   = MKey   MKApp          [MGTerm  mFun, mgs]
-pattern MApv mFun mArg  = MKey   MKApp          [MGTerm  mFun, MGTerm  mArg]
-pattern MApm mFun msArg = MKey   MKApp          [MGTerm  mFun, MGTerms msArg]
-pattern MApt mFun tsArg = MKey   MKApp          [MGTerm  mFun, MGTypes tsArg]
+pattern MApp mFun mgsArg        = MKey   MKApp  [MGTerm  mFun, mgsArg]
+pattern MApv mFun mArg          = MKey   MKApp  [MGTerm  mFun, MGTerm  mArg]
+pattern MApm mFun msArg         = MKey   MKApp  [MGTerm  mFun, MGTerms msArg]
+pattern MApt mFun tsArg         = MKey   MKApp  [MGTerm  mFun, MGTypes tsArg]
 
-pattern MLet bts mb m   = MKey   MKLet          [MGTerms [mb, MAbs (MPTerms bts) m]]
+pattern MLet btsBind mBind mBod = MKey   MKLet  [MGTerms [mBod, MAbs (MPTerms btsBind) mBind]]
 
-pattern MIf mc mt me    = MKey   MKIf           [MGTerms mc,  MGTerms mt, MGTerm me]
+pattern MIf  mCond mThen mElse  = MKey   MKIf   [MGTerms mCond,  MGTerms mThen, MGTerm mElse]
 
-pattern MRecord ns ms   = MKey  (MKRecord ns)   [MGTerms ms]
-pattern MProject l m    = MKey  (MKProject l)   [MGTerms [m]]
+pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]
+pattern MProject l  m           = MKey  (MKProject l) [MGTerms [m]]
 
-pattern MVariant l m t  = MKey  (MKVariant l)   [MGTerm  m,   MGTypes [t]]
-pattern MCase m ls ms   = MKey  (MKCase ls)     [MGTerm  m,   MGTerms ms]
+pattern MVariant l m tResult    = MKey  (MKVariant l) [MGTerm  m,      MGTypes [tResult]]
+pattern MCase mScrut ls msAlt   = MKey  (MKCase ls)   [MGTerm  mScrut, MGTerms msAlt]
 
-pattern MList t ms      = MKey   MKList         [MGTypes [t], MGTerms ms]
-pattern MSet  t ms      = MKey   MKSet          [MGTypes [t], MGTerms ms]
-pattern MMap  tk tv msk msv = MKey   MKMap      [MGTypes [tk, tv], MGTerms msk, MGTerms msv]
+pattern MList tElem msElem      = MKey   MKList [MGTypes [tElem],  MGTerms msElem]
+pattern MSet  tElem msElem      = MKey   MKSet  [MGTypes [tElem],  MGTerms msElem]
+pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey, MGTerms msVal]
 
-pattern MUnit           = MRef  (MRVal VUnit)
-pattern MBool b         = MRef  (MRVal (VBool b))
-pattern MTrue           = MBool  True
-pattern MFalse          = MBool  False
-pattern MInt i          = MRef  (MRVal (VInt i))
-pattern MNat i          = MRef  (MRVal (VNat i))
-pattern MSymbol n       = MRef  (MRVal (VSymbol n))
-pattern MText tx        = MRef  (MRVal (VText tx))
+pattern MUnit                   = MRef  (MRVal VUnit)
+pattern MBool b                 = MRef  (MRVal (VBool b))
+pattern MTrue                   = MBool  True
+pattern MFalse                  = MBool  False
+pattern MInt i                  = MRef  (MRVal (VInt i))
+pattern MNat i                  = MRef  (MRVal (VNat i))
+pattern MSymbol n               = MRef  (MRVal (VSymbol n))
+pattern MText tx                = MRef  (MRVal (VText tx))
 
-pattern MSome t m       = MApm (MApt (MPrm (Name "Some")) [t]) [m]
-pattern MNone t         = MApt (MPrm (Name "None")) [t]
+pattern MSome t m               = MApm (MApt (MPrm (Name "Some")) [t]) [m]
+pattern MNone t                 = MApt (MPrm (Name "None")) [t]
 
 -- Values
-pattern VTrue           = VBool  True
-pattern VFalse          = VBool  False
-pattern VSome t v       = VData (Name "Some") [t] [v]
-pattern VNone t         = VData (Name "None") [t] []
-pattern VCloTerm e bs m = VClosure (CloTerm e bs m)
+pattern VTrue                   = VBool  True
+pattern VFalse                  = VBool  False
+pattern VSome t v               = VData (Name "Some") [t] [v]
+pattern VNone t                 = VData (Name "None") [t] []
 
 
 ---------------------------------------------------------------------------------------------------
 -- | Environments captured in closures.
 data Env a
-        = Env [(Name, (Value a))]
+        = Env [EnvBind a]
         deriving (Show, Eq, Ord)
+
+data EnvBind a
+        = EnvType  Name (Type a)
+        | EnvValue Name (Value a)
+        deriving (Show, Eq, Ord)
+
 
 -- | Construct an empty environment.
 envEmpty :: Env a
 envEmpty = Env []
 
 
+-- | Extend an environment with a new type.
+envExtendType  :: Bind -> Type a -> Env a -> Env a
+envExtendType bb t env@(Env evs)
+ = case bb of
+        BindName n      -> Env (EnvType n t : evs)
+        BindNone        -> env
+
+
+-- | Extend an environment with some new types.
+envExtendsType :: [(Bind, Type a)] -> Env a -> Env a
+envExtendsType bts1 (Env bs2)
+        = Env $ [EnvType n t | (BindName n, t) <- bts1] ++ bs2
+
+
+-- | Lookup a named type from an environment.
+envLookupType :: Name -> Env a -> Maybe (Type a)
+envLookupType n (Env bs0)
+ = loop bs0
+ where  loop []                 = Nothing
+        loop (EnvValue{} : bs)  = loop bs
+        loop (EnvType n' t : bs)
+         | n == n'      = Just t
+         | otherwise    = loop bs
+
+
 -- | Extend an environment with a new value.
-envExtend :: Bind -> Value a -> Env a -> Env a
-envExtend (BindName n) v (Env bs)  = Env ((n, v) : bs)
-envExtend BindNone _ env           = env
+envExtendValue :: Bind -> Value a -> Env a -> Env a
+envExtendValue bb v env@(Env evs)
+ = case bb of
+        BindName n      -> Env (EnvValue n v : evs)
+        BindNone        -> env
 
 
 -- | Extend an environment with some new values.
-envExtends :: [(Bind, Value a)] -> Env a -> Env a
-envExtends bvs1 (Env nvs2) = Env ([(n, v) | (BindName n, v) <- bvs1] ++ nvs2)
+envExtendsValue :: [(Bind, Value a)] -> Env a -> Env a
+envExtendsValue bvs1 (Env bs2)
+        = Env $ [EnvValue n v | (BindName n, v) <- bvs1] ++ bs2
 
 
 -- | Lookup a named value from an environment.
-envLookup :: Name -> Env a -> Maybe (Value a)
-envLookup n (Env bs)       = lookup n bs
+envLookupValue :: Name -> Env a -> Maybe (Value a)
+envLookupValue n (Env bs0)
+ = loop bs0
+ where  loop []                 = Nothing
+        loop (EnvType{} : bs)   = loop bs
+        loop (EnvValue n' v : bs)
+         | n' == n      = Just v
+         | otherwise    = loop bs
+
 
 
 ---------------------------------------------------------------------------------------------------
