@@ -78,30 +78,23 @@ evalTerm _s _a env (MAbm bts mBody)
 
 
 -- Prim-term application
--- TODO: pass through type args as well.
--- TODO: this won't work with the polymorphic ops we have
-evalTerm s a env (MKey MKApp [MGTerm (MPrm nPrim), mgsArg])
- | case mgsArg of
-        MGTerm{}  -> True
-        MGTerms{} -> True
-        _         -> False
-
+evalTerm s a env (MAps (MPrm nPrim) mgssArg)
  = case Map.lookup nPrim Ops.primOps of
         Just (Ops.PP _name _type step _docs)
-         -> do  nsArg   <- evalTermArgs s a env mgsArg
-                let vsResult = step [nsArg]
+         -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
+                let vsResult = step nssArg
                 return vsResult
 
         Just (Ops.PO _name _type exec _docs)
-         -> do  nsArg    <- evalTermArgs s a env mgsArg
-                vsResult <- exec [nsArg]
+         -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
+                vsResult <- exec nssArg
                 return vsResult
 
         Nothing -> throw $ ErrorPrimUnknown a nPrim
 
 
 -- Term-term, term/type application.
-evalTerm s a env (MKey MKApp [MGTerm mFun, mgsArg])
+evalTerm s a env (MApp mFun mgsArg)
  = do   vsCloTerm <- evalTerm s a env mFun
         case vsCloTerm of
          [VClosure (Closure env' (MPTerms bts) mBody)]
@@ -137,7 +130,7 @@ evalTerm s a env (MKey MKApp [MGTerm mFun, mgsArg])
 
 
 -- Let-binding.
-evalTerm s a env (MKey MKLet [MGTerms [mBind, MAbs (MPTerms bts) mBody]])
+evalTerm s a env (MLet bts mBind mBody)
  = do   vsBind <- evalTerm s a env mBind
         let nWanted = length bts
         let nHave   = length vsBind
@@ -153,20 +146,21 @@ evalTerm s a env (MKey MKLet [MGTerms [mBind, MAbs (MPTerms bts) mBody]])
 
 
 -- Data constructor application.
+-- TODO: get a pattern synonym for this.
 evalTerm s a env (MKey (MKCon nCon) [MGTypes ts, MGTerms msArg])
  = do   vsArg  <- evalTerms s a env msArg
         return  [VData nCon ts vsArg]
 
 
 -- Record constructor application.
-evalTerm s a env (MKey (MKRecord nsField) [MGTerms msArg])
+evalTerm s a env (MRecord nsField msArg)
  | length nsField == length msArg
  = do   vsArg <- evalTerms s a env msArg
         return [VRecord $ zip nsField vsArg]
 
 
 -- Record field projection.
-evalTerm s a env (MKey (MKProject nField) [MGTerms [mRecord]])
+evalTerm s a env (MProject nField mRecord)
  = do   vRec  <- evalTerm1 s a env mRecord
         case vRec of
          VRecord nvs
