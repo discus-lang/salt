@@ -139,14 +139,14 @@ pTerm_
 
  , do   -- Con TypeArg* TermArg*
         nCon    <- pCon
-        pTermAppArgs (MCon nCon)
+        pTermAppArgsSat (MCon nCon)
 
 
  , do   -- Prm TermArgs*
         nPrm    <- pPrm
         case takePrimValueOfName nPrm of
-         Just v  -> pTermAppArgs (MVal v)
-         Nothing -> pTermAppArgs (MPrm nPrm)
+         Just v  -> pTermAppArgsSat (MVal v)
+         Nothing -> pTermAppArgsSat (MPrm nPrm)
 
 
  , do   -- TermArg TermArgs*
@@ -165,6 +165,17 @@ pTermAppArgs mFun
         return $ foldl MApp mFun gsArgs
 
  , do   return mFun]
+
+
+-- | Parse arguments to the given function
+--   returning a saturated primitive application.
+pTermAppArgsSat :: Term Location -> Parser (Term Location)
+pTermAppArgsSat mFun
+ = P.choice
+ [ do   gsArgs  <- P.many1 pTermArgs
+        return  $ MAps mFun gsArgs
+
+ , do   return mFun ]
 
 
 -- | Parse some term arguments.

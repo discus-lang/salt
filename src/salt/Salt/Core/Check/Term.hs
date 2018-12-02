@@ -108,25 +108,35 @@ checkTerm a wh ctx (MAbs ps@MPTerms{} m) Synth
         return  (MAbs ps' m', [TFun (map snd bts) ts])
 
 
--- (t-apt) ------------------------------------------------
-checkTerm a wh ctx (MApp mFun (MGTypes tsArg)) Synth
- = do   (mFun',  tFun)     <- checkTerm1 a wh ctx mFun Synth
-        (tsArg', tResult)  <- checkTermAppTypes a wh ctx tFun tsArg
-        return (MApp mFun' (MGTypes tsArg'), [tResult])
+-- (t-aps) ------------------------------------------------
+-- This handles (t-apt), (t-apm) and (t-apv) from the docs.
+-- TODO: redo typing rules to use spine form for argument lists.
+checkTerm a wh ctx (MAps mFun0 mgss0) Synth
+ = do
+        (mFun1, tFun1)     <- checkTerm1 a wh ctx mFun0 Synth
 
+        let -- (t-apt) -----
+            checkApp [tFun] (MGTypes tsArg : mgss) mgssAcc
+             = do (tsArg', tResult)  <- checkTermAppTypes a wh ctx tFun tsArg
+                  checkApp [tResult] mgss  (MGTypes tsArg' : mgssAcc)
 
--- (t-apm) ------------------------------------------------
-checkTerm a wh ctx (MApp mFun (MGTerms msArg)) Synth
- = do   (mFun',  tFun)     <- checkTerm1 a wh ctx mFun Synth
-        (msArg', tsResult) <- checkTermAppTerms a wh ctx tFun msArg
-        return (MApp mFun' (MGTerms msArg'), tsResult)
+            -- (t-apm) -----
+            checkApp [tFun] (MGTerms msArg : mgss) mgssAcc
+             = do (msArg', tsResult) <- checkTermAppTerms a wh ctx tFun msArg
+                  checkApp tsResult  mgss (MGTerms msArg' : mgssAcc)
 
+            -- (t-apv) -----
+            checkApp [tFun] (MGTerm  mArg  : mgss) mgssAcc
+             = do (mArg',  tsResult) <- checkTermAppTerm  a wh ctx tFun mArg
+                  checkApp tsResult  mgss (MGTerm  mArg'  : mgssAcc)
 
--- (t-apv) ------------------------------------------------
-checkTerm a wh ctx (MApp mFun (MGTerm mArg)) Synth
- = do   (mFun', tFun)      <- checkTerm1 a wh ctx mFun Synth
-        (mArg', tsResult)  <- checkTermAppTerm a wh ctx tFun mArg
-        return (MApp mFun' (MGTerm mArg'),   tsResult)
+            checkApp tsResult [] mgssAcc
+             = return (MAps mFun1 (reverse mgssAcc), tsResult)
+
+            checkApp _ _ _
+             = error "arity error"
+
+        checkApp [tFun1] mgss0 []
 
 
 -- (t-let) ------------------------------------------------

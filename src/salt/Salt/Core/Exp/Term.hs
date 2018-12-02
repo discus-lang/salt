@@ -111,6 +111,7 @@ pattern MTerms ms               = MKey   MKTerms [MGTerms ms]
 
 pattern MThe ts m               = MKey   MKThe  [MGTypes ts, MGTerm m]
 
+pattern MAps mFun mgssArg       = MKey   MKApp  (MGTerm  mFun : mgssArg)
 pattern MApp mFun mgsArg        = MKey   MKApp  [MGTerm  mFun, mgsArg]
 pattern MApv mFun mArg          = MKey   MKApp  [MGTerm  mFun, MGTerm  mArg]
 pattern MApm mFun msArg         = MKey   MKApp  [MGTerm  mFun, MGTerms msArg]
@@ -132,8 +133,8 @@ pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey
 
 pattern MUnit                   = MRef  (MRVal VUnit)
 pattern MBool b                 = MRef  (MRVal (VBool b))
-pattern MTrue                   = MBool  True
-pattern MFalse                  = MBool  False
+pattern MTrue                   = MRef  (MRVal (VBool True))
+pattern MFalse                  = MRef  (MRVal (VBool False))
 pattern MInt i                  = MRef  (MRVal (VInt i))
 pattern MNat i                  = MRef  (MRVal (VNat i))
 pattern MSymbol n               = MRef  (MRVal (VSymbol n))
