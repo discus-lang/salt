@@ -176,8 +176,27 @@ evalTerm s a env (MKey (MKProject nField) [MGTerms [mRecord]])
          _ -> throw $ ErrorProjectTypeMismatch a vRec nField
 
 
+-- Case matching.
+-- TODO: proper errors.
+evalTerm s a env (MCase mScrut lsAlt msAlt)
+ = do   vScrut  <- evalTerm1 s a env mScrut
+        case vScrut of
+         VVariant l vs
+          -> case lookup l $ zip lsAlt msAlt of
+                Nothing -> error "variant is not in alts"
+                Just mAlt
+                 -> do  vAlt <- evalTerm1 s a env mAlt
+                        case vAlt of
+                         VClosure (Closure env' (MPTerms bts) mBody)
+                          -> let bs     = map fst bts
+                                 env''  = envExtendsValue (zip bs vs) env'
+                             in  evalTerm s a env'' mBody
+                         _ -> error "alt is not a closure"
+         _ -> error "scrut is not a variant"
+
+
 -- If-then-else
--- TODO: throw real exception on type errors.
+-- TODO: proper errors.
 evalTerm s a env (MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
  = let
         loop [] []
