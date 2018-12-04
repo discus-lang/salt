@@ -78,9 +78,18 @@ pSym    = pTokOf $ \case { KSym s -> Just (Name s); _ -> Nothing }
 pPrm :: Parser Name
 pPrm    = pTokOf $ \case { KPrm s -> Just (Name s); _ -> Nothing }
 
+pPrmOf :: Text -> Parser ()
+pPrmOf t = pTokOf $ \case { KPrm s | s == t -> Just (); _ -> Nothing }
+
 pLbl :: Parser Name
 pLbl    = pTokOf $ \case { KVar s -> Just (Name s); _ -> Nothing }
 
 pNat :: Parser Integer
 pNat    = pTokOf $ \case { KNat i -> Just i; _ -> Nothing }
+
+pInt :: Parser Integer
+pInt    = pTokOf $ \case { KInt i -> Just i; _ -> Nothing }
+
+pText :: Parser Text
+pText   = pTokOf $ \case { KText t -> Just t; _ -> Nothing }
 

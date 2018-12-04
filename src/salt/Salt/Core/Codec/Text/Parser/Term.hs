@@ -407,8 +407,13 @@ pTermStmt
 pValue :: Parser (Value Location)
 pValue
  = P.choice
- [ do   pSym    >>= return . VSymbol
+ [ do   pPrmOf "unit"  >> return VUnit
+ , do   pPrmOf "true"  >> return VTrue
+ , do   pPrmOf "false" >> return VFalse
+ , do   pSym    >>= return . VSymbol
  , do   pNat    >>= return . VNat
+ , do   pInt    >>= return . VInt
+ , do   pText   >>= return . VText
  , do   pTermValueRecord ]
 
 

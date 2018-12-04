@@ -12,7 +12,7 @@ import qualified Data.Text as Text
 
 -- | Scanner for Salt.
 --   TODO: bake filename into tokens.
-scanner :: FilePath -> IW.Scanner IO IW.Location [Char] (At Token)
+scanner :: Monad m => FilePath -> IW.Scanner m IW.Location [Char] (At Token)
 scanner _fileName
  = IW.skip Char.isSpace
  $ IW.alts
