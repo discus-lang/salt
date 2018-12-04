@@ -1,5 +1,7 @@
 *.o
 *.hi
+*.dyn_o
+*.dyn_hi
 bin/*
 make/config-override.mk
 war-*
