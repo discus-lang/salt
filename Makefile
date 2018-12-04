@@ -15,12 +15,16 @@ include make/config.mk
 allWithConfig :
 	@make bin/salt
 	@make bin/war
+	@make bin/waves
 
 
 include make/target/bin-salt.mk
 include make/target/bin-war.mk
+include make/target/bin-waves.mk
 include make/target/clean.mk
+include make/target/test.mk
 include make/target/war.mk
+include make/target/waves.mk
 
 
 # Override default config with local config.

@@ -26,6 +26,9 @@ WAR_PACKAGES := \
         -package process \
         -package buildbox
 
+WAVES_PACKAGES := \
+	$(SALT_PACKAGES) \
+	-package hedgehog
 
 # -- Language -----------------------------------------------------------------
 #   We have these set globally to keep track of what we're using,
