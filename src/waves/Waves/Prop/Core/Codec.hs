@@ -21,7 +21,7 @@ import System.IO.Unsafe (unsafePerformIO)
 dataOfText :: MapAnnot.MapAnnot c => Parser.Base.Parser (c a) -> String -> Either (RoundtripError (c ())) (c ())
 dataOfText p text = do
   toks <- scanner text
-  parser (MapAnnot.stripAnnot <$> p) text toks
+  parser (MapAnnot.stripAnnot <$> p) toks
 
 textOfDataPlain :: Pretty.Pretty () a => a -> String
 textOfDataPlain a = Pretty.renderPlain $ Pretty.ppr () a
@@ -32,10 +32,16 @@ textOfDataIndent a = Pretty.renderIndent $ Pretty.ppr () a
 
 -- | The kinds of errors that can occur when we try to lex & parse the result of pretty-printing:
 data RoundtripError v
-  = ErrorNoParse String String
-  | ErrorLexLeftover String String
-  | ErrorParseLeftover String v String
+  = ErrorNoParse String
+  | ErrorLexLeftover TokensNoEq String
+  | ErrorParseLeftover v String
   deriving (Eq, Show)
+
+newtype TokensNoEq = Tokens [Token.At Token.Token]
+ deriving Show
+-- Eq instance for (Either (RoundTripError _) term) is required for round-tripping test on (term), but the (term) is the only important bit
+instance Eq TokensNoEq where
+ _ == _ = True
 
 scanner :: String -> Either (RoundtripError a) [Token.At Token.Token]
 scanner text =
@@ -44,11 +50,11 @@ scanner text =
      (toks,_,strRest) = unsafePerformIO $ IW.scanStringIO text (Lexer.scanner fp)
   in case strRest of
       [] -> return toks
-      _  -> Left $ ErrorLexLeftover text strRest
+      _  -> Left $ ErrorLexLeftover (Tokens toks) strRest
 
-parser :: Parser.Base.Parser a -> String -> [Token.At Token.Token] -> Either (RoundtripError a) a
-parser p text toks = case Parser.parse p "<test>" toks of
+parser :: Parser.Base.Parser a -> [Token.At Token.Token] -> Either (RoundtripError a) a
+parser p toks = case Parser.parse p "<test>" toks of
   Right (v, [])     -> return v
-  Right (v,tokRest) -> Left $ ErrorParseLeftover text v (show tokRest)
-  Left pe           -> Left $ ErrorNoParse text (show pe)
+  Right (v,tokRest) -> Left $ ErrorParseLeftover v (show tokRest)
+  Left pe           -> Left $ ErrorNoParse (show pe)
 

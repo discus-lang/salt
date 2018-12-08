@@ -10,21 +10,28 @@ import           Hedgehog
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
 
-name :: Gen Name
-name = Gen.choice
-  [ mk <$> Gen.element Corpus.colours <*> Gen.element Corpus.fruits
+import qualified Data.Text as Text
+
+nameVar :: Gen Name
+nameVar = Gen.choice
+  [ Name <$> Gen.element Corpus.colours
+  -- TODO: generate more interesting names
   -- , Name <$> Gen.text (Range.linear 0 100) Gen.unicodeAll
   ]
- where
-  mk x y = Name (x <> "_" <> y)
+
+namePrim :: Gen Name
+namePrim = Name <$> (Gen.element Corpus.fruits)
+
+nameCon :: Gen Name
+nameCon = Name <$> (Text.toUpper <$> Gen.element Corpus.fruits)
 
 bind :: Gen Bind
 bind = Gen.choice
-  [ BindName <$> name
+  [ BindName <$> nameVar
   , return BindNone ]
 
 bound :: Gen Bound
-bound = Bound <$> name
+bound = Bound <$> nameVar
 
 type_ :: Gen (Type ())
 type_ = Gen.recursive Gen.choice
@@ -32,32 +39,38 @@ type_ = Gen.recursive Gen.choice
   , TRef <$> typeRef
   ]
   [ TAbs <$> typeParams <*> type_
-  , TKey <$> typeKey <*> Gen.list (Range.linear 0 3) typeArgs
+  , uncurry TKey <$> typeKey
   ]
 
 typeRef :: Gen TypeRef
 typeRef = Gen.choice
-  [ TRPrm <$> name
-  , TRCon <$> name
+  [ TRPrm <$> namePrim
+  , TRCon <$> nameCon
   ]
 
 typeParams :: Gen (TypeParams ())
-typeParams = TPTypes <$> Gen.list (Range.linear 0 3) ((,) <$> bind <*> type_)
+typeParams = TPTypes <$> Gen.list (Range.linear 1 3) ((,) <$> bind <*> type_)
 
 typeArgs :: Gen (TypeArgs ())
-typeArgs = TGTypes <$> Gen.list (Range.linear 0 3) type_
+typeArgs = TGTypes <$> Gen.list (Range.linear 1 3) type_
 
-typeKey :: Gen TypeKey
+typeKey :: Gen (TypeKey, [TypeArgs ()])
 typeKey = Gen.choice
-  [ return TKHole
-  , return TKArr
-  , return TKApp
-  , return TKFun
-  , return TKForall
-  , return TKExists
-  , TKRecord <$> Gen.list (Range.linear 0 3) name
-  , TKVariant <$> Gen.list (Range.linear 0 3) name
+  [ argsN (return TKHole) []
+  , argsN (return TKArr) [r13, r11]
+  , argsN (return TKApp) [r11, r13]
+  , argsN (return TKFun) [r03, r03]
+  -- TODO: generate types for the following keys
+  -- , argsN (return TKForall) [r11]
+  -- , argsN (return TKExists) [r11]
+  -- , argsN (TKRecord <$> Gen.list (Range.linear 1 3) nameCon) [r03]
+  -- , argsN (TKVariant <$> Gen.list (Range.linear 1 3) nameCon) [r03]
   ]
+ where
+  argsN k ns = (,) <$> k <*> mapM (\r -> TGTypes <$> Gen.list r type_) ns
+  r11 = Range.linear 1 1
+  r13 = Range.linear 1 3
+  r03 = Range.linear 0 3
 
 
 -- Something bigger than a machine int
