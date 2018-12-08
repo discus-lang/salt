@@ -43,20 +43,19 @@ pTerm_
 
 
  , do   -- 'let' '[' Var,* ']' '=' Term ';' Term
-        -- TODO: support none binders.
         pTok KLet
         bts     <- P.choice
                 [ do    pSquared
                          $ flip P.sepEndBy1 (pTok KComma)
-                         $ do   v  <- pVar
+                         $ do   b  <- pBind
                                 P.choice
-                                 [ do   pTok KColon; t <- pType; return (BindName v, t)
-                                 , do   return (BindName v, THole) ]
+                                 [ do   pTok KColon; t <- pType; return (b, t)
+                                 , do   return (b, THole) ]
 
-                , do    v       <- pVar
+                , do    b       <- pBind
                         P.choice
-                         [ do   pTok KColon; t <- pType; return [(BindName v, t)]
-                         , do   return [(BindName v, THole)]]
+                         [ do   pTok KColon; t <- pType; return [(b, t)]
+                         , do   return [(b, THole)]]
                 ]
         pTok KEquals
         mBind   <- pTerm
@@ -128,11 +127,11 @@ pTerm_
          $  pBraced $ flip P.sepEndBy
                 (pTok KSemi)
                 (do     l       <- pLbl
-                        (v, t)  <- pSquared
-                                $ do v <- pVar; pTok KColon; t <- pType; return (v, t)
+                        (b, t)  <- pSquared
+                                $ do b <- pBind; pTok KColon; t <- pType; return (b, t)
                         pTok KArrowRight
                         m       <- pTerm
-                        return (l, MAbm [(BindName v, t)] m))
+                        return (l, MAbm [(b, t)] m))
 
         return  $ MCase mScrut lsAlt msAlt
 
@@ -303,12 +302,12 @@ pTermParams
  [ do   -- '@' '[' (Var ':' Type)+ ']'
         pTok KAt
         bts     <- pSquared $ flip P.sepEndBy1 (pTok KComma)
-                $  do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
+                $  do b <- pBind; pTok KColon; t <- pType; return (b, t)
         return  $ MPTypes bts
 
  , do   -- '[' (Var ':' Type)* ']'
         bts     <- pSquared $ flip P.sepEndBy  (pTok KComma)
-                $  do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
+                $  do b <- pBind; pTok KColon; t <- pType; return (b, t)
         return  $ MPTerms bts
  ]
 
@@ -316,10 +315,10 @@ pTermParams
 pTermBind :: Parser (Bind, Term Location)
 pTermBind
  = do   -- Var '=' Term
-        nVar    <- pVar
+        nBind   <- pBind
         pTok KEquals
         mBody   <- pTerm
-        return  (BindName nVar, mBody)
+        return  (nBind, mBody)
  <?> "a term binder"
 
 
@@ -370,13 +369,12 @@ pTermStmt :: Parser ([(Bind, Type Location)], Term Location)
 pTermStmt
  = P.choice
  [ do   -- '[' (Var : Type),* ']' = Term
-        -- TODO: support none binders.
         bts     <- pSquared
                 $ flip P.sepEndBy1 (pTok KComma)
-                $ do  v  <- pVar
+                $ do  b  <- pBind
                       P.choice
-                        [ do   pTok KColon; t <- pType; return (BindName v, t)
-                        , do   return (BindName v, THole) ]
+                        [ do   pTok KColon; t <- pType; return (b, t)
+                        , do   return (b, THole) ]
         pTok KEquals
         mBody   <- pTerm
         return  (bts, mBody)
@@ -387,13 +385,13 @@ pTermStmt
         -- in the next choice can also start with variable name.
         -- TODO: allow type sigs.
         P.try $ P.lookAhead $ do
-                pVar
+                pBind
                 pTok KEquals
 
-        nVar    <- pVar
+        nBind    <- pBind
         pTok KEquals
         mBody   <- pTerm
-        return  ([(BindName nVar, THole)], mBody)
+        return  ([(nBind, THole)], mBody)
 
  , do   -- Term
         mBody   <- pTerm

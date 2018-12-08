@@ -176,7 +176,7 @@ pTypeSigs :: Parser [(Bind, Type Location)]
 pTypeSigs
  = pSquared
         $ flip P.sepEndBy (pTok KComma)
-        $ do n <- pVar; pTok KColon; t <- pType; return (BindName n, t)
+        $ do b <- pBind; pTok KColon; t <- pType; return (b, t)
 
 
 -- | Parser for some type fields.

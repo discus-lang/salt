@@ -93,3 +93,11 @@ pInt    = pTokOf $ \case { KInt i -> Just i; _ -> Nothing }
 pText :: Parser Text
 pText   = pTokOf $ \case { KText t -> Just t; _ -> Nothing }
 
+pUnderscore :: Parser ()
+pUnderscore = pTokOf $ \case { KUnderscore -> Just (); _ -> Nothing }
+
+pBind :: Parser Bind
+pBind    = P.choice
+  [ BindName <$> pVar
+  , const BindNone <$> pUnderscore ]
+

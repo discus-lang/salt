@@ -45,7 +45,7 @@ instance Pretty c (Type a) where
         TVar u   -> ppr c u
 
         TAbs p t
-         -> text "λ" %% ppr c p %% text "→" %% ppr c t
+         -> text "λ" %% ppr c p %% text "⇒" %% ppr c t
 
         TKey TKHole []
          -> text "∙"
