@@ -95,7 +95,9 @@ pprTFun c tt
  = case tt of
         TAnn _ t -> ppr c t
         TRef{}   -> ppr c tt
-        TApp{}   -> ppr c tt
+        TVar{}   -> ppr c tt
+        -- Note: nested applications (TApp) are printed with parentheses to
+        -- remove ambiguity between (f [x, y]) and ((f [x]) [y])
         _        -> parens $ ppr c tt
 
 
@@ -104,6 +106,7 @@ pprTArg c tt
         TAnn _ t -> ppr c t
         TRef{}   -> ppr c tt
         TPrm{}   -> ppr c tt
+        TVar{}   -> ppr c tt
         _        -> parens $ ppr c tt
 
 

@@ -43,7 +43,8 @@ scanner _fileName
         , fmap (stamp id) $ IW.accept '@' KAt
         , fmap (stamp id) $ IW.accept '=' KEquals
         , fmap (stamp id) $ IW.accept '`' KBacktick
-        , fmap (stamp id) $ IW.accept '_' KUnderscore
+        , fmap (stamp id) $ IW.accept '_' KHole
+        , fmap (stamp id) $ IW.accept '∙' KHole
 
         , fmap (stamp id) $ IW.accept '⟨' KABra
         , fmap (stamp id) $ IW.accept '⟩' KAKet

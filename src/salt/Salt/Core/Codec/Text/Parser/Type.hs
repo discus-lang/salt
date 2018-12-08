@@ -35,13 +35,22 @@ pType
         tBody   <- pType
         return  $  TExists bks tBody
 
+ , do   -- '∙'
+        pTok KHole
+        return THole
+
  , do   -- TypesHead '->' TypesResult
+        -- TypesHead '=>' TypesResult
         -- TypesHead
         TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pTok KArrowRight
                 tsResult <- pTypesResult
                 return $ TFun tsHead tsResult
+
+         , do   pTok KArrowRightFat
+                tsResult <- pType
+                return $ TArr tsHead tsResult
 
          , do   case tsHead of
                  [t]    -> return t
