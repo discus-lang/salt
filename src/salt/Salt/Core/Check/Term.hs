@@ -228,7 +228,7 @@ checkTerm a wh ctx (MVariant nLabel mValues tResult) Synth
 -- (t-cse) ------------------------------------------------
 checkTerm a wh ctx (MCase mScrut ls msAlt) Synth
  = do   (mScrut', _tScrut) <- checkTerm1 a wh ctx mScrut Synth
-        (msAlt',  tsAlt)  <- fmap unzip $ mapM (\m -> checkTerm1 a wh ctx m Synth) msAlt
+        (msAlt',  tsAlt)   <- fmap unzip $ mapM (\m -> checkTerm1 a wh ctx m Synth) msAlt
 
         -- TODO: check alts all have same result type.
         -- TODO: check scrut matches alt head.

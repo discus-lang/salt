@@ -2,10 +2,35 @@
 -- Recursive functions over built-in lists.
 
 -- Length
--- TODO: generalize record and variant types to hold multiple values per field.
 term length @[a: #Data] [xx: #List a]: #Nat
  = case #list'case @a xx of
-        { nil  [u: #Unit] → 0
-        ; cons [x: [head: a, tail: #List a]] → #nat'add [1, length @a x.tail] }
+        { nil  [] → 0
+        ; cons [head: a, tail: #List a] → #nat'add [1, length @a tail] }
 
-test eval length5 = length @#Nat [list #Nat| 10, 11, 12, 13, 14]
+test eval length5
+ = length @#Nat [list #Nat| 10, 11, 12, 13, 14]
+
+
+-- Append
+term append @[a: #Data] [xx: #List a, yy: #List a]: #List a
+ = case #list'case @a xx of
+        { nil   [] → yy
+        ; cons  [x: a, xs: #List a]
+           → #list'cons @a [x, append @a [xs, yy]] }
+
+-- TODO: pretty printing of elem type in result is wrong.
+test eval append
+ = append @#Nat [[list #Nat| 10, 11, 12], [list #Nat| 13, 14, 15]]
+
+
+
+-- Reverse
+term reverse @[a: #Data] [xx: #List a]: #List a
+ = case #list'case @a xx of
+        { nil  [] → [list a|]
+        ; cons [x: a, xs: #List a]
+           → append @a [xs, #list'one @a x] }
+
+test eval reverse
+ = reverse @#Nat [list #Nat| 10, 12, 13, 14]
+

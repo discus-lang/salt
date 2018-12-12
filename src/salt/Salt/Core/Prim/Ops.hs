@@ -150,6 +150,11 @@ primOpsList
         , step  = \[NTs [t], NVs []] -> [VList t []]
         , docs  = "Construct an empty list (same as #list'empty)." }
 
+   , PP { name  = "list'one"
+        , tsig  = [("a", TData)] :*> (["a"] :-> [TList "a"])
+        , step  = \[NTs [t], NVs [v]] -> [VList t [v]]
+        , docs  = "Construct a singleton list." }
+
    , PP { name  = "list'cons"
         , tsig  = [("a", TData)] :*> (["a", TList "a"] :-> [TList "a"])
         , step  = \[NTs [t], NVs [v, VList _ vs]]
@@ -183,11 +188,12 @@ primOpsList
    , PP { name  = "list'case"
         , tsig  =   [("a", TData)] :*> ([TList "a"]
                 :-> [TVariant ["nil", "cons"]
-                              [TUnit, TRecord ["head", "tail"] ["a", TList "a"]]])
+                              [ TGTypes []
+                              , TGTypes ["a", TList "a"] ]])
         , step  = \[NTs [t], NVs [VList _ vv]]
                   -> case vv of
-                      []      -> [VVariant "nil"  [VUnit]]
-                      v : vs  -> [VVariant "cons" [VRecord [("head", v), ("tail", VList t vs)]]]
+                      []      -> [VVariant "nil"  []]
+                      v : vs  -> [VVariant "cons" [v, VList t vs]]
         , docs  = "Case analysis on a list." }
    ]
 
