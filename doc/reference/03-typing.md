@@ -80,9 +80,9 @@
                           Γ ⊢ mlet Xs₁ M₁ M₂ :+ Ts₂
 
 
-                          Γ ⊢ Ms :* Ts
- (t-rec)        ----------------------------------
-                   Γ ⊢ mrec Ls Ms :+ trec Ls Ts
+                        { Γ ⊢ Msᵢ :* Tsᵢ } ^ i ← [1 .. n]
+ (t-rec)        ----------------------------------------------
+                   Γ ⊢ mrec Ls Msⁿ :+ trec Ls Tsⁿ
 
 
                    Γ ⊢ M₁ :: trec Ls Ts    l:T₁ ∈ [ (l,T) | l ← Ls | T ← Ts ]

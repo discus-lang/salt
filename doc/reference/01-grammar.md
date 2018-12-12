@@ -58,8 +58,8 @@ Type
   |   tabs Var+ Type+ Type          ('λ' TypeParams '⇒' Type)
   |   tall Var+ Type+ Type          ('∀' TypeParams '.' Type)
   |   text Var+ Type+ Type          ('∃' TypeParams '.' Type)
-  |   trec Lbl* Type*               ('∏' TypeFields)
-  |   tvnt Lbl* Type*               ('∑' TypeFields)
+  |   trec Lbl* Types*              ('∏' TypeFields)
+  |   tvnt Lbl* Types*              ('∑' TypeFields)
 
   |   TypePrims
 
@@ -86,7 +86,7 @@ Prm
 
 - `tall` and `text` are universal and existential quantification of type variables.
 
-- `trec` and `tvnc` are record and variant types. The lists of labels and types must have the same length, and are treated as a list of pairs. Variant and record types with the same (label, type) pairs, but in a different order, are different types.
+- `trec` and `tvnc` are record and variant types. The lists of labels and field type vectors must have the same length, and are treated as a list of pairs. Variant and record types with the same (label, types) pairs, but in a different order, are different types.
 
 - `tfun` the type of a function taking a vector of arguments and returning a vector of results.
 

@@ -53,13 +53,13 @@
                     Γ ⊢ tfun Ts₁ Ts₂ :: tdat
 
 
-                    Γ ⊢ Ts :< tdat    Ns unique
-(k-rec)         ----------------------------------
-                    Γ ⊢ trec Ns Ts :: tdat
+                  { Γ ⊢ Tsᵢ :< tdat } ^ (i ← [1 .. n])    Ns unique
+(k-rec)         ------------------------------------------------------
+                    Γ ⊢ trec Ns Tsⁿ :: tdat
 
 
-                    Γ ⊢ Ts :< tdat    Ns unique
-(k-vnt)         ------------------------------------
+                  { Γ ⊢ Tsᵢ :< tdat } ^ (i ← [1 .. n])    Ns unique
+(k-vnt)         ------------------------------------------------------
                     Γ ⊢ tvnt Ns Ts :: tdat
 
 
