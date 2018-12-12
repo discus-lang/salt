@@ -51,7 +51,7 @@
 
 		<dict>	<key>name</key> <string>keyword.language.salt</string>
 			<key>match</key>
-			<string>\b(type|term|test|box|run|fun|forall|exists|the|let|in|if|then|else|otherwise|case|of|with|where|match)\b</string>
+			<string>\b(type|term|test|box|run|fun|forall|exists|the|let|in|if|then|else|otherwise|case|of|with|where|match|do)\b</string>
 		</dict>
 
                 <dict>  <key>name</key> <string>constant.numeric.language.salt</string>
