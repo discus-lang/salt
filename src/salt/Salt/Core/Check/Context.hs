@@ -1,7 +1,7 @@
 
 module Salt.Core.Check.Context where
 import Salt.Core.Exp
-import qualified Salt.Core.Prim.Data    as Prim
+import qualified Salt.Core.Prim.Ctor    as Prim
 
 import Data.Map.Strict                  (Map)
 import qualified Data.Map               as Map

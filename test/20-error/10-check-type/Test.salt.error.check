@@ -1,0 +1,117 @@
+test/20-error/10-check-type/Test.salt:1:1
+  Unknown type primitive '#derp'.
+
+  1:1    In kind test
+
+test/20-error/10-check-type/Test.salt:11:1
+  Type variable 'a' is not in scope.
+
+  11:1   In kind test
+
+test/20-error/10-check-type/Test.salt:16:1
+  Unknown kind constructor 'Derp'.
+
+  16:1   In kind test
+
+test/20-error/10-check-type/Test.salt:19:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  19:1   In kind test
+
+test/20-error/10-check-type/Test.salt:24:1
+  Unknown kind constructor 'Derp'.
+
+  24:1   In kind test
+
+test/20-error/10-check-type/Test.salt:27:1
+  Unknown type primitive '#Derp'.
+
+  27:1   In kind test
+
+test/20-error/10-check-type/Test.salt:30:1
+  Unexpected type: #Data
+        expecting: #Effect
+
+  30:1   In kind test
+
+test/20-error/10-check-type/Test.salt:35:1
+  Unknown kind constructor 'Derp'.
+
+  35:1   In kind test
+
+test/20-error/10-check-type/Test.salt:38:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  38:1   In kind test
+
+test/20-error/10-check-type/Test.salt:43:1
+  Unknown kind constructor 'Derp'.
+
+  43:1   In kind test
+
+test/20-error/10-check-type/Test.salt:46:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  46:1   In kind test
+
+test/20-error/10-check-type/Test.salt:51:1
+  Unknown type primitive '#Derp'.
+
+  51:1   In kind test
+
+test/20-error/10-check-type/Test.salt:54:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  54:1   In kind test
+
+test/20-error/10-check-type/Test.salt:57:1
+  Unknown type primitive '#Derp'.
+
+  57:1   In kind test
+
+test/20-error/10-check-type/Test.salt:60:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  60:1   In kind test
+
+test/20-error/10-check-type/Test.salt:65:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  65:1   In kind test
+
+test/20-error/10-check-type/Test.salt:68:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  68:1   In kind test
+
+test/20-error/10-check-type/Test.salt:71:1
+  Duplicate fields in record type
+    fields: {x}
+
+  71:1   In kind test
+
+test/20-error/10-check-type/Test.salt:76:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  76:1   In kind test
+
+test/20-error/10-check-type/Test.salt:79:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  79:1   In kind test
+
+test/20-error/10-check-type/Test.salt:82:1
+  Duplicate alternatives in variant type
+    alternatives: {x}
+
+  82:1   In kind test
+

@@ -11,6 +11,12 @@ import Salt.Data.Pretty
 instance Show a => Pretty c (Where a) where
  ppr c wh = pprw c wh
 
+pprw _c (WhereTestKind _a Nothing)
+ = vcat [ text "In kind test" ]
+
+pprw c  (WhereTestKind _a (Just n))
+ = vcat [ text "In kind test" %% squotes (ppr c n) ]
+
 pprw _c (WhereTestType _a Nothing)
  = vcat [ text "In type test" ]
 
@@ -53,9 +59,13 @@ instance Show a => Pretty c (Error a) where
  ppr c err = ppre c err
 
 -- Malformed AST ------------------------------------------
-ppre _c (ErrorTypeMalformed _a t)
- = vcat [ text "Malformed type AST"
-        , string (show t) ]
+ppre _c (ErrorTypeMalformed _a _wh _t)
+ = vcat [ text "Malformed type." ]
+--        , string (show t) ]
+
+ppre _c (ErrorKindMalformed _a _wh _k)
+ = vcat [ text "Malformed kind." ]
+--        , string (show k) ]
 
 -- Structural arity ---------------------------------------
 ppre c (ErrorTermsWrongArity _a _wh ts ks)
@@ -77,8 +87,17 @@ ppre c (ErrorUnknownPrimitive _a _wh n)
 ppre c (ErrorUnknownDataCtor _a _wh n)
  = vcat [ text "Unknown data constructor" %% squotes (ppr c n) % text "."]
 
+ppre c (ErrorUnknownTypeCtor _a _wh n)
+ = vcat [ text "Unknown type constructor" %% squotes (ppr c n) % text "."]
+
+ppre c (ErrorUnknownTypePrim _a _wh n)
+ = vcat [ text "Unknown type primitive"   %% squotes (text "#" % ppr c n) % text "."]
+
+ppre c (ErrorUnknownKindCtor _a _wh n)
+ = vcat [ text "Unknown kind constructor" %% squotes (ppr c n) % text "."]
+
 ppre c (ErrorUnknownTypeBound _a _wh u)
- = vcat [ text "Variable" %% squotes (ppr c u) %% text "is not in scope." ]
+ = vcat [ text "Type variable" %% squotes (ppr c u) %% text "is not in scope." ]
 
 ppre c (ErrorUnknownTermBound _a _wh u)
  = vcat [ text "Variable" %% squotes (ppr c u) %% text "is not in scope." ]
@@ -163,4 +182,14 @@ ppre c (ErrorRecordProjectIsNot _a _wh t n)
 ppre c (ErrorRecordProjectNoField _a _wh t n)
  = vcat [ text "Record does not have field" %% squotes (ppr c n)
         , text "  actual type:" %% ppr c t ]
+
+ppre c (ErrorRecordTypeDuplicateFields _a _wh ns)
+ = vcat [ text "Duplicate fields in record type"
+        , text "  fields:" %% braced (map (ppr c) ns) ]
+
+
+-- Problems with variants ---------------------------------
+ppre c (ErrorVariantTypeDuplicateAlts _a _wh ns)
+ = vcat [ text "Duplicate alternatives in variant type"
+        , text "  alternatives:" %% braced (map (ppr c) ns) ]
 

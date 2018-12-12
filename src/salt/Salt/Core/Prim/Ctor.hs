@@ -1,8 +1,16 @@
 
-module Salt.Core.Prim.Data where
+module Salt.Core.Prim.Ctor where
 import Salt.Core.Exp
 import Data.Map                         (Map)
 import qualified Data.Map.Strict        as Map
+
+-- | Sorts of primitive kind constructors.
+primKindCtors :: Map Name ()
+primKindCtors
+ = Map.fromList
+        [ ("Data",      ())
+        , ("Region",    ())
+        , ("Effect",    ()) ]
 
 
 -- | Kinds of primitive type constructors.

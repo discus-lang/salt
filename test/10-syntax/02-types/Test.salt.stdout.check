@@ -14,10 +14,10 @@
 * map'nat: #Data
 * app'set'set: #Data
 * op1: [#Data, #Data] ⇒ #Data
-* op2: [[#Data] → [#Data]] ⇒ [#Data] → [#Data]
+* op2: [[#Data] ⇒ #Data] ⇒ [#Data] ⇒ #Data
 * op3: #Data
 * op1'sugar: [#Data, #Data] ⇒ #Data
-* op2'sugar: [[#Data] → [#Data]] ⇒ [#Data] → [#Data]
+* op2'sugar: [[#Data] ⇒ #Data] ⇒ [#Data] ⇒ #Data
 * op3'sugar: #Data
 * all1: #Data
 * all1'sugar: #Data

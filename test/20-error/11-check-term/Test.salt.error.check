@@ -1,0 +1,112 @@
+test/20-error/11-check-term/Test.salt:4:11
+  Cannot apply non-function 
+    of type: #Nat
+
+  1:1    In type test
+
+test/20-error/11-check-term/Test.salt:5:11
+  Cannot apply non-function 
+    of type: #Nat
+
+  5:1    In type test
+
+test/20-error/11-check-term/Test.salt:8:11
+  Not enough values
+    of types: [#Bool]
+    expected: [#Bool, #Bool]
+
+  8:1    In type test
+
+test/20-error/11-check-term/Test.salt:9:11
+  Too many values
+    of types: [#Bool]
+    expected: [#Data]
+
+  9:1    In type test
+
+test/20-error/11-check-term/Test.salt:12:11
+  Too many values
+    of types: [#Bool, #Bool, #Bool]
+    expected: [#Data, #Data, #Data]
+
+  12:1   In type test
+
+test/20-error/11-check-term/Test.salt:13:22
+  Too many values
+    of types: [#Bool, #Bool, #Bool]
+    expected: [#Bool, #Bool]
+
+  13:1   In type test
+
+test/20-error/11-check-term/Test.salt:16:22
+  Unexpected type: #Nat
+        expecting: #Bool
+
+  16:1   In type test
+
+test/20-error/11-check-term/Test.salt:17:22
+  Unexpected type: #Nat
+        expecting: #Bool
+
+  17:1   In type test
+
+test/20-error/11-check-term/Test.salt:20:12
+  Cannot apply type 
+    of kind: #Data
+
+  20:1   In type test
+
+test/20-error/11-check-term/Test.salt:23:12
+  Unexpected type: #Effect
+        expecting: #Data
+
+  23:1   In type test
+
+test/20-error/11-check-term/Test.salt:26:12
+  Unknown type primitive '#Data'.
+
+  26:1   In type test
+
+test/20-error/11-check-term/Test.salt:31:11
+  Cannot instantiate non-polymorphic value 
+    of type: #Nat
+
+  31:1   In type test
+
+test/20-error/11-check-term/Test.salt:34:11
+  Not enough type arguments in application.
+   parameter kinds: [a : #Data, b : #Data]
+    argument types: [#Nat]
+
+  34:1   In type test
+
+test/20-error/11-check-term/Test.salt:37:11
+  Too many type arguments in application.
+   parameter kinds: [a : #Data]
+    argument types: [#Nat, #Nat]
+
+  37:1   In type test
+
+test/20-error/11-check-term/Test.salt:40:11
+  Unexpected type: #Effect
+        expecting: #Data
+
+  40:1   In type test
+
+test/20-error/11-check-term/Test.salt:43:12
+  Not enough values
+    of types: []
+    expected: [#Data]
+
+  43:1   In type test
+
+test/20-error/11-check-term/Test.salt:46:12
+  Unknown kind constructor 'Nat'.
+
+  46:1   In type test
+
+test/20-error/11-check-term/Test.salt:49:12
+  Malformed kind.
+
+  49:1   In type test
+

@@ -10,7 +10,13 @@ data Error a
         -- Malformed AST ------------------------
         = ErrorTypeMalformed
         { errorAnnot            :: a
-        , errorType             :: Type a}
+        , errorWhere            :: [Where a]
+        , errorType             :: Type a }
+
+        | ErrorKindMalformed
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorKind             :: Kind a }
 
         -- Structural arity ---------------------
         | ErrorTermsWrongArity
@@ -32,6 +38,21 @@ data Error a
         , errorName             :: Name }
 
         | ErrorUnknownDataCtor
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name }
+
+        | ErrorUnknownTypeCtor
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name }
+
+        | ErrorUnknownTypePrim
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name }
+
+        | ErrorUnknownKindCtor
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorName             :: Name }
@@ -121,6 +142,17 @@ data Error a
         , errorWhere            :: [Where a]
         , errorType             :: Type a
         , errorLabel            :: Name }
+
+        | ErrorRecordTypeDuplicateFields
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorFields           :: [Name] }
+
+        -- Variant problems ---------------------
+        | ErrorVariantTypeDuplicateAlts
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorFields           :: [Name] }
         deriving Show
 
 instance (Show a, Typeable a) => Exception (Error a)

@@ -2,6 +2,7 @@
 module Salt.Core.Check.Term where
 import Salt.Core.Check.Eq
 import Salt.Core.Check.Type
+import Salt.Core.Check.Kind
 import Salt.Core.Check.Context
 import Salt.Core.Check.Where
 import Salt.Core.Check.Error
@@ -9,7 +10,7 @@ import Salt.Core.Transform.MapAnnot
 import Salt.Core.Transform.Subst
 import Salt.Core.Exp
 import qualified Salt.Core.Prim.Ops     as Prim
-import qualified Salt.Core.Prim.Data    as Prim
+import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 
@@ -74,8 +75,8 @@ checkTerm _a _wh _ctx m@(MRef (MRVal v)) Synth
         VBool{}   -> return (m, [TBool],     [])
         VInt{}    -> return (m, [TInt],      [])
         VNat{}    -> return (m, [TNat],      [])
-        (VNone t) -> return (m, [TOption t], [])
-        _         -> error "check value not done yet"
+        VNone t   -> return (m, [TOption t], [])
+        _         -> error "check value not finished"
 
 
 -- (t-prm) ------------------------------------------------
@@ -362,21 +363,6 @@ checkTerm1 a wh ctx m mode
          _      -> throw $ ErrorTermsWrongArity a wh ts' [TData]
 
 
--- | Like 'checkTerm', but expect the given result result type,
---   throwing an error if it's not.
-checkTermIs1
-        :: Annot a => a -> [Where a]
-        -> Context a -> Term a -> Type a
-        -> IO (Term a, [Effect a])
-
-checkTermIs1 a wh ctx m tExpected
- = do   (m', _t', es')
-         <- checkTerm1 a wh ctx m (Check [tExpected])
-
-        -- TODO: type equality
-        return (m', es')
-
-
 -- (t-many / t-gets) ------------------------------------------------------------------------------
 -- This function implements both the t-many and t-gets rules from the declarative
 -- version of the typing rules. In this algorithmic, bidirectional implementation
@@ -406,15 +392,39 @@ checkTerms a wh ctx ms (Check ts)
 
 
 ---------------------------------------------------------------------------------------------------
+-- | Check some term function parameters.
 checkTermParams
         :: Annot a => a -> [Where a]
-        -> Context a -> TermParams a
-        -> IO (TermParams a)
+        -> Context a -> TermParams a -> IO (TermParams a)
 
-checkTermParams _a _wh _ctx tps
- = case tps of
-        MPTerms bts -> return $ MPTerms bts   -- TODO: check types
-        MPTypes bts -> return $ MPTypes bts   -- TODO: check types
+checkTermParams a wh ctx mps
+ = case mps of
+        MPTerms bts
+         -> do  let (bs, ts) = unzip bts
+                ts' <- checkTypesAre a wh ctx ts (replicate (length ts) TData)
+                return  $ MPTerms $ zip bs ts'
+
+        MPTypes bks
+         -> do  let (bs, ks) = unzip bks
+                ks' <- mapM (checkKind a wh ctx) ks
+                return  $ MPTypes $ zip bs ks'
+
+
+-- | Check a list of term function parameters,
+--   where type variables bound earlier in the list are in scope
+--   when checking types annotating term variables later in the list.
+checkTermParamss
+        :: Annot a => a -> [Where a]
+        -> Context a -> [TermParams a] -> IO [TermParams a]
+
+checkTermParamss _a _wh _ctx []
+ = return []
+
+checkTermParamss a wh ctx (tps : tpss)
+ = do   tps'  <- checkTermParams  a wh ctx  tps
+        let ctx'  = contextBindTermParams tps' ctx
+        tpss' <- checkTermParamss a wh ctx' tpss
+        return $ tps' : tpss'
 
 
 ---------------------------------------------------------------------------------------------------

@@ -1,0 +1,49 @@
+
+-- App Term/Term --------------------------------------------------------------
+-- Error: cannot apply non function.
+test type 5 5
+test type 5 [1, 2]
+
+-- Error: not enough arguments.
+test type #bool'and #true
+test type #bool'and [#true]
+
+-- Error: too many arguments.
+test type #bool'and [#true, #true, #true]
+test type #bool'and ((λ[] → [#true, #true, #true]) [])
+
+-- Error: wrong argument types.
+test type #bool'and [1, 2]
+test type #bool'and ((λ[] → [1, 2]) [])
+
+-- Error: parameter annotation is ill kinded.
+test type (λ[x: #Nat #Nat] → [])
+
+-- Error: parameter does not have data kind.
+test type (λ[x: #Console] → [])
+
+-- Error: parameter type in wrong universe.
+test type (λ[x: #Data] → [])
+
+
+-- App Term/Type --------------------------------------------------------------
+-- Error: cannot instantiate non-polymorphic value.
+test type 5 @#Nat
+
+-- Error: not enough arguments in type application.
+test type (λ@[a: #Data, b: #Data] → #unit) @[#Nat]
+
+-- Error: too many arguments in type application.
+test type (λ@[a: #Data] → #unit) @[#Nat, #Nat]
+
+-- Error: kind mismatch in application.
+test type (λ@[a: #Data] → #unit) @#Console
+
+-- Error: body must produce a value.
+test type (λ@[a: #Data] → [])
+
+-- Error: parameter annotation from the wrong universe.
+test type (λ@[a: #Nat] → #unit)
+
+-- Error: parameter annotation is ill-formed.
+test type (λ@[a: #Data #Data] → #unit)

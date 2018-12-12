@@ -2,6 +2,7 @@
 module Salt.Core.Check.Module where
 import Salt.Core.Check.Error
 import Salt.Core.Check.Where
+import Salt.Core.Check.Type
 import Salt.Core.Check.Term
 import Salt.Core.Check.Context
 import Salt.Core.Exp
@@ -72,9 +73,10 @@ checkHandleDecl a ctx decl
 checkDecl :: Annot a => a -> Context a -> Decl a -> IO (Decl a)
 
 -- (t-decl-kind) ------------------------------------------
--- TODO: check kind of type.
-checkDecl _a _ctx (DTest (DeclTestKind a' n t))
- = do   return  $ DTest $ DeclTestKind a' n t
+checkDecl _a ctx (DTest (DeclTestKind a' n t))
+ = do   let wh = [WhereTestKind a' n]
+        (t', _k) <- checkType a' wh ctx t
+        return  $ DTest $ DeclTestKind a' n t'
 
 
 -- (t-decl-type) ------------------------------------------
@@ -117,10 +119,10 @@ checkDecl _a ctx (DTest (DeclTestAssert a' n m))
 
 
 -- (t-decl-term) ------------------------------------------
-checkDecl _a ctx (DTerm (DeclTerm a n pss mtResult mBody))
+checkDecl _a ctx (DTerm (DeclTerm a n tpss mtResult mBody))
  = do   let wh   = [WhereTermDecl a n]
-        pss'     <- mapM (checkTermParams a wh ctx) pss
-        let ctx' =  foldl (flip contextBindTermParams) ctx pss'
+        tpss'    <- checkTermParamss a wh ctx tpss
+        let ctx' =  foldl (flip contextBindTermParams) ctx tpss'
 
         (mBody', _tsResult, _esResult)
          <- checkTerm a wh ctx' mBody Synth
@@ -129,5 +131,5 @@ checkDecl _a ctx (DTerm (DeclTerm a n pss mtResult mBody))
         -- TODO: check against result type.
         -- TODO: check result type.
         -- TODO: check effects are empty.
-        return  $ DTerm $ DeclTerm a n pss' mtResult mBody'
+        return  $ DTerm $ DeclTerm a n tpss' mtResult mBody'
 

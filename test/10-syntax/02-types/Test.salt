@@ -25,11 +25,11 @@ test kind app'set'set   = #Set [#Set [#Nat]]
 
 -- Type function.
 test kind op1           = λ[a: #Data, b: #Data] ⇒ a
-test kind op2           = λ[a: #Data → #Data] ⇒ a
+test kind op2           = λ[a: #Data ⇒ #Data] ⇒ a
 test kind op3           = (λ[a: #Data, b: #Data] ⇒ a) [#Nat, #Bool]
 
 test kind op1'sugar     = fun [a: #Data, b: #Data] => a
-test kind op2'sugar     = fun [a: #Data -> #Data] => a
+test kind op2'sugar     = fun [a: #Data => #Data] => a
 test kind op3'sugar     = (fun [a: #Data, b: #Data] => a) [#Nat, #Bool]
 
 
