@@ -42,20 +42,23 @@ evalTerm s a env (MVar u@(Bound n))
  = return [v]
 
  -- Bound in top-level environment.
- | Just (DeclTerm _a _n mps _tr mBody)
+ | Just (DeclTerm a' _n mps _tr mBody)
    <- Map.lookup n (stateDeclTerms s)
- = let
-        -- TODO: proper error.
-        makeClosure []
-         = error "no params for DeclTerm"
+ = case mps of
+        []      -> evalTerm s a' envEmpty mBody
+        _
+         -> let
+                -- TODO: proper error.
+                makeClosure []
+                 = error "no params for DeclTerm"
 
-        makeClosure (mp : [])
-         = VClosure $ Closure envEmpty mp mBody
+                makeClosure (mp : [])
+                 = VClosure $ Closure envEmpty mp mBody
 
-        makeClosure (mp1 : mps')
-         = VClosure $ Closure envEmpty mp1 (MVal (makeClosure mps'))
+                makeClosure (mp1 : mps')
+                 = VClosure $ Closure envEmpty mp1 (MVal (makeClosure mps'))
 
-   in   return [makeClosure mps]
+            in   return [makeClosure mps]
 
  | otherwise
  = throw $ ErrorVarUnbound a u env
@@ -85,7 +88,7 @@ evalTerm s a env (MAps (MPrm nPrim) mgssArg)
                 let vsResult = step nssArg
                 return vsResult
 
-        Just (Ops.PO _name _type exec _docs)
+        Just (Ops.PO _name _type _effs exec _docs)
          -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
                 vsResult <- exec nssArg
                 return vsResult
@@ -206,6 +209,20 @@ evalTerm s a env (MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
         loop _ _ = error "if cond then length mismatch"
 
    in   loop msCond msThen
+
+
+-- Box a computation.
+evalTerm _s _a env (MBox mBody)
+ = do   return  [VClosure (Closure env (MPTerms []) mBody)]
+
+-- Run a suspension
+evalTerm s a env (MRun mSusp)
+ = do   vSusp <- evalTerm1 s a env mSusp
+        case vSusp of
+                VClosure (Closure (Env []) (MPTerms []) mBody)
+                 -> evalTerm s a env mBody
+
+                _ -> error "term to run is not a suspension"
 
 
 -- List construction.

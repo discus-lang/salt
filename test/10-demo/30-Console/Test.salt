@@ -1,0 +1,8 @@
+
+term hello : #Unit ! #Console
+ = box  let []  = #console'print'nat 1;
+        let []  = #console'print'nat 2;
+        #unit
+
+test exec hello
+

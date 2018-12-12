@@ -20,8 +20,9 @@ scanner _fileName
         , fmap (stamp (KComment . Text.pack)) $ IW.scanHaskellCommentBlock
 
         , fmap (stamp id)
-           $ IW.munchPred Nothing (\_ix c -> elem c ['-', '>', ':', '='])
+           $ IW.munchPred Nothing (\_ix c -> elem c ['<', '-', '>', ':', '='])
            $ \case
+                "<-"            -> Just KArrowLeft
                 "->"            -> Just KArrowRight
                 "=>"            -> Just KArrowRightFat
                 ":="            -> Just KColonEquals
@@ -45,6 +46,7 @@ scanner _fileName
         , fmap (stamp id) $ IW.accept '`' KBacktick
         , fmap (stamp id) $ IW.accept '_' KHole
         , fmap (stamp id) $ IW.accept '∙' KHole
+        , fmap (stamp id) $ IW.accept '!' KBang
 
         , fmap (stamp id) $ IW.accept '⟨' KABra
         , fmap (stamp id) $ IW.accept '⟩' KAKet
@@ -53,6 +55,7 @@ scanner _fileName
         , fmap (stamp id) $ IW.accept 'λ' KFun
         , fmap (stamp id) $ IW.accept '∀' KForall
         , fmap (stamp id) $ IW.accept '∃' KExists
+        , fmap (stamp id) $ IW.accept '←' KArrowLeft
         , fmap (stamp id) $ IW.accept '→' KArrowRight
         , fmap (stamp id) $ IW.accept '⇒' KArrowRightFat
 
@@ -81,6 +84,9 @@ scanner _fileName
                 "case"          -> Just KCase
                 "of"            -> Just KOf
                 "otherwise"     -> Just KOtherwise
+
+                "box"           -> Just KBox
+                "run"           -> Just KRun
 
                 _               -> Nothing
 

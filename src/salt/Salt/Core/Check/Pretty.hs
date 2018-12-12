@@ -23,6 +23,12 @@ pprw _c (WhereTestEval _a Nothing)
 pprw c  (WhereTestEval _a (Just n))
  = vcat [ text "In eval test" %% squotes (ppr c n) ]
 
+pprw _c (WhereTestExec _a Nothing)
+ = vcat [ text "In exec test" ]
+
+pprw c  (WhereTestExec _a (Just n))
+ = vcat [ text "In exec test" %% squotes (ppr c n) ]
+
 pprw _c (WhereTestAssert _a Nothing)
  = vcat [ text "In assert test" ]
 

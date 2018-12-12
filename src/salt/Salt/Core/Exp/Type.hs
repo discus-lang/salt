@@ -52,6 +52,7 @@ data TypeKey
         | TKExists                      -- ^ Exists type former.
         | TKRecord  ![Name]             -- ^ Record type former.
         | TKVariant ![Name]             -- ^ Variant type former.
+        | TKSusp                        -- ^ Suspension type former.
         deriving (Show, Eq, Ord)
 
 
@@ -70,6 +71,7 @@ pattern TForall bks t   = TKey TKForall       [TGTypes [TAbs (TPTypes bks) t]]
 pattern TExists bks t   = TKey TKExists       [TGTypes [TAbs (TPTypes bks) t]]
 pattern TRecord  ns mgs = TKey (TKRecord  ns) mgs
 pattern TVariant ns mgs = TKey (TKVariant ns) mgs
+pattern TSusp   tsv tse = TKey TKSusp         [TGTypes tsv, TGTypes tse]
 pattern (:=>) ks1 k2    = TArr    ks1 k2
 pattern (:->) ts1 ts2   = TFun    ts1 ts2
 pattern (:*>) tps t     = TForall tps t

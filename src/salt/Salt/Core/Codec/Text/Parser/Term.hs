@@ -33,6 +33,15 @@ pTerm_
         m       <- pTerm
         return  $ MThe ts m
 
+ , do   -- 'box' Term
+        pTok KBox
+        m       <- pTerm
+        return  $ MBox m
+
+ , do   -- 'run' Term
+        pTok KRun
+        m       <- pTerm
+        return  $ MRun m
 
  , do   -- 'λ' TermParams+ '->' Term
         pTok KFun
@@ -41,12 +50,11 @@ pTerm_
         mBody   <- pTerm
         return  $ foldr MAbs mBody mps
 
-
  , do   -- 'let' '[' Var,* ']' '=' Term ';' Term
         pTok KLet
         bts     <- P.choice
                 [ do    pSquared
-                         $ flip P.sepEndBy1 (pTok KComma)
+                         $ flip P.sepEndBy (pTok KComma)
                          $ do   b  <- pBind
                                 P.choice
                                  [ do   pTok KColon; t <- pType; return (b, t)

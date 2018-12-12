@@ -71,11 +71,13 @@ checkHandleDecl a ctx decl
 -- | Check the given declaration.
 checkDecl :: Annot a => a -> Context a -> Decl a -> IO (Decl a)
 
+-- (t-decl-kind) ------------------------------------------
 -- TODO: check kind of type.
 checkDecl _a _ctx (DTest (DeclTestKind a' n t))
  = do   return  $ DTest $ DeclTestKind a' n t
 
 
+-- (t-decl-type) ------------------------------------------
 checkDecl _a ctx (DTest (DeclTestType a' n m))
  = do   let wh  = [WhereTestType a' n]
         (m', _tResult, _esResult)
@@ -83,6 +85,7 @@ checkDecl _a ctx (DTest (DeclTestType a' n m))
         return  $ DTest $ DeclTestType a' n m'
 
 
+-- (t-decl-eval) ------------------------------------------
 checkDecl _a ctx (DTest (DeclTestEval a' n m))
  = do   let wh  = [WhereTestEval a' n]
         (m', _tResult, _esResult)
@@ -92,6 +95,18 @@ checkDecl _a ctx (DTest (DeclTestEval a' n m))
         return  $ DTest $ DeclTestEval a' n m'
 
 
+-- (t-decl-exec) ------------------------------------------
+checkDecl _a ctx (DTest (DeclTestExec a' n m))
+ = do   let wh  = [WhereTestExec a' n]
+        (m', _tResult, _esResult)
+         <- checkTerm a' wh ctx m Synth
+
+        -- TODO: check effects are empty.
+        -- TODO: check expr returns a suspension
+        return  $ DTest $ DeclTestExec a' n m'
+
+
+-- (t-decl-assert) ----------------------------------------
 checkDecl _a ctx (DTest (DeclTestAssert a' n m))
  = do   let wh  = [WhereTestAssert a' n]
         (m', _tResult, _esResult)
@@ -101,6 +116,7 @@ checkDecl _a ctx (DTest (DeclTestAssert a' n m))
         return  $ DTest $ DeclTestAssert a' n m'
 
 
+-- (t-decl-term) ------------------------------------------
 checkDecl _a ctx (DTerm (DeclTerm a n pss mtResult mBody))
  = do   let wh   = [WhereTermDecl a n]
         pss'     <- mapM (checkTermParams a wh ctx) pss

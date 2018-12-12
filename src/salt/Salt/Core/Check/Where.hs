@@ -14,6 +14,10 @@ data Where a
         { whereAnnot            :: a
         , whereTestName         :: Maybe Name }
 
+        | WhereTestExec
+        { whereAnnot            :: a
+        , whereTestName         :: Maybe Name }
+
         | WhereTestAssert
         { whereAnnot            :: a
         , whereTestName         :: Maybe Name }

@@ -20,13 +20,14 @@ pDecl
  [ do   -- 'test' 'kind'   (Name '=')? Type
         -- 'test' 'type'   (Name '=')? Term
         -- 'test' 'eval'   (Name '=')? Term
+        -- 'test' 'exec'   (Name '=')? Term
         -- 'test' 'assert' (Name '=')? Term
         loc <- getLocation
         pTok KTest
 
         nMode   <- P.choice
                 [ do    n <- pVar
-                        (guard $ elem n ["kind", "type", "eval", "assert"])
+                        (guard $ elem n ["kind", "type", "eval", "exec", "assert"])
                         return n
 
                 , do    -- 'type' is both a test specifier and a keyword,
@@ -57,6 +58,13 @@ pDecl
          , do   guard $ nMode == "eval"
                 mBody   <- pTerm
                 return  $ DTest $ DeclTestEval
+                        { declAnnot     = loc
+                        , declTestName  = mName
+                        , declTestBody  = mBody }
+
+         , do   guard $ nMode == "exec"
+                mBody   <- pTerm
+                return  $ DTest $ DeclTestExec
                         { declAnnot     = loc
                         , declTestName  = mName
                         , declTestBody  = mBody }

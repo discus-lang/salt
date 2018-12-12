@@ -148,6 +148,7 @@ instance Pretty c TypeKey where
         TKExists        -> text "##exists"
         TKRecord ns     -> text "##record"  %% bracketed (map (ppr c) ns)
         TKVariant ns    -> text "##variant" %% bracketed (map (ppr c) ns)
+        TKSusp          -> text "##susp"
 
 
 -- Term -------------------------------------------------------------------------------------------
@@ -236,6 +237,8 @@ instance Pretty c TermKey where
         MKList          -> text "##list"
         MKSet           -> text "##set"
         MKMap           -> text "##map"
+        MKBox           -> text "##box"
+        MKRun           -> text "##run"
 
 
 -- Value ------------------------------------------------------------------------------------------

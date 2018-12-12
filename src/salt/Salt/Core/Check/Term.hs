@@ -47,6 +47,21 @@ checkTerm a wh ctx (MThe ts m) Synth
  = do   (m', _, es) <- checkTerm a wh ctx m (Check ts)
         return  (MThe ts m', ts, es)
 
+-- (t-box) ------------------------------------------------
+checkTerm a wh ctx (MBox m) Synth
+ = do   (m', ts, es) <- checkTerm a wh ctx m Synth
+        -- TODO: crush effects before boxing them.
+        return  (MBox m', [TSusp es ts], [])
+
+-- (t-run) ------------------------------------------------
+checkTerm a wh ctx (MRun m) Synth
+ = do   (m', ts, es) <- checkTerm a wh ctx m Synth
+
+        -- TODO: look through any annots.
+        case ts of
+         [TSusp es' ts'] -> return (MRun m', ts', es ++ es')
+         _               -> error $ "not a suspension" ++ show ts
+
 
 -- (t-val) ------------------------------------------------
 checkTerm _a _wh _ctx m@(MRef (MRVal v)) Synth

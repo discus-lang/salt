@@ -29,10 +29,12 @@ data Token
         | KComma  | KDot  | KBar | KAt | KBacktick
         | KHole
         | KEquals | KColonEquals
+        | KArrowLeft
         | KArrowRight
         | KArrowRightFat
         | KLambda
         | KProd   | KSum
+        | KBang
 
         -- Keywords
         | KType   | KTerm  | KTest
@@ -43,6 +45,7 @@ data Token
         | KLet    | KDo
         | KIf     | KThen  | KElse
         | KCase   | KOf | KOtherwise
+        | KBox    | KRun
 
         -- Names
         | KVar  Text            -- Plain variable name, "foo"

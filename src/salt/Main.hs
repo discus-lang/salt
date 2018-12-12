@@ -156,9 +156,11 @@ runTest ctx mm tt
         DeclTestKind    _ n t   -> runTestKind   ctx mm n t
         DeclTestType    _ n m   -> runTestType   ctx mm n m
         DeclTestEval    _ n m   -> runTestEval   mm n m
+        DeclTestExec    _ n m   -> runTestExec   mm n m
         DeclTestAssert  _ n m   -> runTestAssert mm n m
 
 
+-- TestKind ---------------------------------------------------------------------------------------
 -- | Run a kind test.
 --   We kind-check a type and print the result kind.
 runTestKind
@@ -177,6 +179,7 @@ runTestKind ctx _mm mnTest tTest
         putStrLn $ P.renderIndent $ P.ppr () kResult
 
 
+-- TestType ---------------------------------------------------------------------------------------
 -- | Run a type test.
 --   We type-check a term and print the result type.
 runTestType
@@ -198,6 +201,7 @@ runTestType ctx _mm mnTest mTest
          _      -> putStrLn $ P.renderIndent $ P.ppr () tsResult
 
 
+-- TestEval ---------------------------------------------------------------------------------------
 -- | Run a eval test.
 --   We evaluate the term and print the result value.
 runTestEval
@@ -225,6 +229,42 @@ runTestEval mm mnTest mTest
         putStrLn $ P.renderIndent $ P.ppr () vResult
 
 
+-- TestExec ---------------------------------------------------------------------------------------
+-- | Run a exec test.
+--   We evaluate the term to a suspension then run it.
+runTestExec
+        :: Module IW.Location
+        -> Maybe Name -> Term IW.Location -> IO ()
+runTestExec mm mnTest mTest
+ = do
+        let a   = IW.Location 0 0
+        putStr  $ "* "
+                ++ (case mnTest of
+                        Nothing -> ""
+                        Just (Name tx) -> T.unpack tx % ": ")
+        System.hFlush System.stdout
+
+        let declTerms
+                = Map.fromList
+                [ (n, d) | DTerm d@(DeclTerm _ n _ _ _) <- moduleDecls mm ]
+
+        let state
+                = Eval.State
+                { Eval.stateConfig      = Eval.configDefault
+                , Eval.stateDeclTerms   = declTerms }
+
+        vsSusp <- Eval.evalTerm state a (Env []) mTest
+
+        case vsSusp of
+                [VClosure (Closure (Env []) (MPTerms []) mBody)]
+                 -> do  vsResult <- Eval.evalTerm state a (Env []) mBody
+                        putStrLn $ P.renderIndent $ P.ppr () vsResult
+
+                _ -> error $ "runTestEval: term did not produce a suspension"
+                           ++ show vsSusp
+
+
+-- TestAssert -------------------------------------------------------------------------------------
 -- | Run an assert test.
 --   We evaluate the term and check that the result value is #true.
 runTestAssert

@@ -41,6 +41,7 @@ pType
 
  , do   -- TypesHead '->' TypesResult
         -- TypesHead '=>' TypesResult
+        -- TypesHead '!'  Type
         -- TypesHead
         TGTypes tsHead <- pTypesHead
         P.choice
@@ -51,6 +52,10 @@ pType
          , do   pTok KArrowRightFat
                 tsResult <- pType
                 return $ TArr tsHead tsResult
+
+         , do   pTok KBang
+                tResult <- pType
+                return $ TSusp tsHead [tResult]
 
          , do   case tsHead of
                  [t]    -> return t
@@ -96,6 +101,10 @@ pTypesResult
          [ do   pTok KArrowRight
                 tsResult <- pTypesResult
                 return [TFun tsHead tsResult]
+
+         , do   pTok KBang
+                tResult <- pType
+                return [TSusp tsHead [tResult]]
 
          , do   return tsHead ]
  <?> "a result type"

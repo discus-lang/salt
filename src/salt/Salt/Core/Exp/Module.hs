@@ -39,6 +39,12 @@ data DeclTest a
         , declTestName          :: Maybe Name
         , declTestBody          :: Term a }
 
+        -- Execute an effectful term.
+        | DeclTestExec
+        { declAnnot             :: a
+        , declTestName          :: Maybe Name
+        , declTestBody          :: Term a }
+
         -- Check that a term evaluates to true.
         | DeclTestAssert
         { declAnnot             :: a

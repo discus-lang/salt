@@ -22,10 +22,10 @@ data Prim
         , docs  :: Text }
 
         -- Define an operator that performs an action in the local process.
-        -- These are only used for debugging.
         | PO
         { name  :: Name
         , tsig  :: Type ()
+        , teff  :: [Type ()]
         , exec  :: forall a. Show a => [TermNormals a] -> IO [Value a]
         , docs  :: Text }
 
@@ -43,7 +43,8 @@ primOps
         [ primOpsBool,   primOpsNat
         , primOpsSymbol
         , primOpsList,   primOpsSet,  primOpsMap
-        , primOpsDebug ]
+        , primOpsDebug
+        , primOpsConsole ]
 
 
 -- Bool -------------------------------------------------------------------------------------------
@@ -290,10 +291,20 @@ primOpsMap
    ]
 
 
+-- Console ----------------------------------------------------------------------------------------
+primOpsConsole
+ = [ PO { name  = "console'print'nat"
+        , tsig  = [TNat] :-> []
+        , teff  = [TCon "Console"]
+        , exec  = \[NVs [VNat n]] -> do putStr (show n); return []
+        , docs  = "Print a natural number to the console." } ]
+
+
 -- Debug ------------------------------------------------------------------------------------------
 primOpsDebug
  = [ PO { name  = "debug'print'raw"
         , tsig  = [("a", TData)] :*> (["a"] :-> [TUnit])
+        , teff  = []
         , exec  = \[NTs [_ta], NVs [v]] -> do putStrLn $ "TRACE " ++ show v; return [VUnit]
         , docs  = "DEBUG: Print the internal representaiton of a value to the local console." }
    ]
