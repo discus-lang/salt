@@ -35,83 +35,101 @@ test/20-error/10-check-type/Test.salt:30:1
 
   30:1   In kind test
 
-test/20-error/10-check-type/Test.salt:35:1
+test/20-error/10-check-type/Test.salt:33:1
+  Not enough arguments in type application.
+   parameter types: [#Data, #Data]
+
+  33:1   In kind test
+
+test/20-error/10-check-type/Test.salt:36:1
+  Too many arguments in type application.
+   parameter types: [#Data, #Data]
+
+  36:1   In kind test
+
+test/20-error/10-check-type/Test.salt:39:1
+  Too many arguments in type application.
+   parameter types: [#Data, #Data]
+
+  39:1   In kind test
+
+test/20-error/10-check-type/Test.salt:44:1
   Unknown kind constructor 'Derp'.
 
-  35:1   In kind test
+  44:1   In kind test
 
-test/20-error/10-check-type/Test.salt:38:1
+test/20-error/10-check-type/Test.salt:47:1
   Unexpected type: #Effect
         expecting: #Data
 
-  38:1   In kind test
+  47:1   In kind test
 
-test/20-error/10-check-type/Test.salt:43:1
+test/20-error/10-check-type/Test.salt:52:1
   Unknown kind constructor 'Derp'.
 
-  43:1   In kind test
+  52:1   In kind test
 
-test/20-error/10-check-type/Test.salt:46:1
+test/20-error/10-check-type/Test.salt:55:1
   Unexpected type: #Effect
         expecting: #Data
 
-  46:1   In kind test
-
-test/20-error/10-check-type/Test.salt:51:1
-  Unknown type primitive '#Derp'.
-
-  51:1   In kind test
-
-test/20-error/10-check-type/Test.salt:54:1
-  Unexpected type: #Effect
-        expecting: #Data
-
-  54:1   In kind test
-
-test/20-error/10-check-type/Test.salt:57:1
-  Unknown type primitive '#Derp'.
-
-  57:1   In kind test
+  55:1   In kind test
 
 test/20-error/10-check-type/Test.salt:60:1
-  Unexpected type: #Effect
-        expecting: #Data
+  Unknown type primitive '#Derp'.
 
   60:1   In kind test
 
-test/20-error/10-check-type/Test.salt:65:1
+test/20-error/10-check-type/Test.salt:63:1
   Unexpected type: #Effect
         expecting: #Data
 
-  65:1   In kind test
+  63:1   In kind test
 
-test/20-error/10-check-type/Test.salt:68:1
+test/20-error/10-check-type/Test.salt:66:1
+  Unknown type primitive '#Derp'.
+
+  66:1   In kind test
+
+test/20-error/10-check-type/Test.salt:69:1
   Unexpected type: #Effect
         expecting: #Data
 
-  68:1   In kind test
+  69:1   In kind test
 
-test/20-error/10-check-type/Test.salt:71:1
+test/20-error/10-check-type/Test.salt:74:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  74:1   In kind test
+
+test/20-error/10-check-type/Test.salt:77:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  77:1   In kind test
+
+test/20-error/10-check-type/Test.salt:80:1
   Duplicate fields in record type
     fields: {x}
 
-  71:1   In kind test
+  80:1   In kind test
 
-test/20-error/10-check-type/Test.salt:76:1
+test/20-error/10-check-type/Test.salt:85:1
   Unexpected type: #Effect
         expecting: #Data
 
-  76:1   In kind test
+  85:1   In kind test
 
-test/20-error/10-check-type/Test.salt:79:1
+test/20-error/10-check-type/Test.salt:88:1
   Unexpected type: #Effect
         expecting: #Data
 
-  79:1   In kind test
+  88:1   In kind test
 
-test/20-error/10-check-type/Test.salt:82:1
+test/20-error/10-check-type/Test.salt:91:1
   Duplicate alternatives in variant type
     alternatives: {x}
 
-  82:1   In kind test
+  91:1   In kind test
 

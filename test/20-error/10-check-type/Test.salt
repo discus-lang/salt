@@ -29,6 +29,15 @@ test kind (λ[a: #Data] ⇒ a) #Derp
 -- Error: kind of argument does not match parameter.
 test kind (λ[a: #Effect] ⇒ a) #Nat
 
+-- Error: not enough arguments in application.
+test kind (λ[a: #Data, b: #Data] ⇒ #Map [a, b]) [#Nat]
+
+-- Error: too many enough arguments in application.
+test kind (λ[a: #Data, b: #Data] ⇒ #Map [a, b]) [#Nat, #Nat, #Bool]
+
+-- Error: too many enough arguments in application.
+test kind (λ[a: #Data, b: #Data] ⇒ #Map [a, b, b]) [#Nat, #Nat]
+
 
 -- (k-all) --------------------------------------------------------------------
 -- Error: parameter kind is ill-formed.
