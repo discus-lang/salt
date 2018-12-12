@@ -258,7 +258,9 @@ runTestExec mm mnTest mTest
         case vsSusp of
                 [VClosure (Closure (Env []) (MPTerms []) mBody)]
                  -> do  vsResult <- Eval.evalTerm state a (Env []) mBody
-                        putStrLn $ P.renderIndent $ P.ppr () vsResult
+                        case vsResult of
+                         [] -> putStr "\n"
+                         _  -> putStrLn $ P.renderIndent $ P.ppr () vsResult
 
                 _ -> error $ "runTestEval: term did not produce a suspension"
                            ++ show vsSusp
