@@ -22,42 +22,46 @@ scanner _fileName
         , fmap (stamp id)
            $ IW.munchPred Nothing (\_ix c -> elem c ['<', '-', '>', ':', '='])
            $ \case
-                "<-"            -> Just KArrowLeft
-                "->"            -> Just KArrowRight
-                "=>"            -> Just KArrowRightFat
-                ":="            -> Just KColonEquals
-                _               -> Nothing
+                "<-"    -> Just KArrowLeft
+                "->"    -> Just KArrowRight
+                "=>"    -> Just KArrowRightFat
+                ":="    -> Just KColonEquals
+                _       -> Nothing
 
-        , fmap (stamp id) $ IW.accept '(' KRBra
-        , fmap (stamp id) $ IW.accept ')' KRKet
-        , fmap (stamp id) $ IW.accept '{' KCBra
-        , fmap (stamp id) $ IW.accept '}' KCKet
-        , fmap (stamp id) $ IW.accept '[' KSBra
-        , fmap (stamp id) $ IW.accept ']' KSKet
-        , fmap (stamp id) $ IW.accept '<' KABra
-        , fmap (stamp id) $ IW.accept '>' KAKet
-        , fmap (stamp id) $ IW.accept ':' KColon
-        , fmap (stamp id) $ IW.accept ';' KSemi
-        , fmap (stamp id) $ IW.accept ',' KComma
-        , fmap (stamp id) $ IW.accept '.' KDot
-        , fmap (stamp id) $ IW.accept '|' KBar
-        , fmap (stamp id) $ IW.accept '@' KAt
-        , fmap (stamp id) $ IW.accept '=' KEquals
-        , fmap (stamp id) $ IW.accept '`' KBacktick
-        , fmap (stamp id) $ IW.accept '_' KHole
-        , fmap (stamp id) $ IW.accept '∙' KHole
-        , fmap (stamp id) $ IW.accept '!' KBang
+        , fmap (stamp id)
+           $ IW.from $ \case
+                '('     -> Just KRBra
+                ')'     -> Just KRKet
+                '{'     -> Just KCBra
+                '}'     -> Just KCKet
+                '['     -> Just KSBra
+                ']'     -> Just KSKet
+                '<'     -> Just KABra
+                '>'     -> Just KAKet
+                ':'     -> Just KColon
+                ';'     -> Just KSemi
+                ','     -> Just KComma
+                '.'     -> Just KDot
+                '|'     -> Just KBar
+                '@'     -> Just KAt
+                '='     -> Just KEquals
+                '`'     -> Just KBacktick
+                '_'     -> Just KHole
+                '!'     -> Just KBang
 
-        , fmap (stamp id) $ IW.accept '⟨' KABra
-        , fmap (stamp id) $ IW.accept '⟩' KAKet
-        , fmap (stamp id) $ IW.accept '∏' KProd
-        , fmap (stamp id) $ IW.accept '∑' KSum
-        , fmap (stamp id) $ IW.accept 'λ' KFun
-        , fmap (stamp id) $ IW.accept '∀' KForall
-        , fmap (stamp id) $ IW.accept '∃' KExists
-        , fmap (stamp id) $ IW.accept '←' KArrowLeft
-        , fmap (stamp id) $ IW.accept '→' KArrowRight
-        , fmap (stamp id) $ IW.accept '⇒' KArrowRightFat
+                '∙'     -> Just KHole
+                '⟨'     -> Just KABra
+                '⟩'     -> Just KAKet
+                '∏'     -> Just KProd
+                '∑'     -> Just KSum
+                'λ'     -> Just KFun
+                '∀'     -> Just KForall
+                '∃'     -> Just KExists
+                '←'     -> Just KArrowLeft
+                '→'     -> Just KArrowRight
+                '⇒'     -> Just KArrowRightFat
+
+                _       -> Nothing
 
         , fmap (stamp id)
            $ IW.munchPred Nothing (\_ix c -> isVarChar c)
