@@ -63,17 +63,23 @@ instance Pretty c (Type a) where
          %%  text "→"
          %%  squared (map (ppr c) tsResult)
 
-        TKey (TKRecord ns) [TGTypes ts]
-         | length ns == length ts
+        TKey (TKRecord ns) tgs
+         | length ns == length tgs
          -> text "∏" % squared
-                [ ppr c n % text ":" %% ppr c t
-                | n <- ns | t <- ts ]
+                [ ppr c n % text ":"
+                        %% (case tg of
+                                TGTypes [t]     -> ppr c t
+                                _               -> ppr c tg)
+                | n <- ns | tg <- tgs ]
 
-        TKey (TKVariant ns) [TGTypes ts]
-         | length ns == length ts
+        TKey (TKVariant ns) tgs
+         | length ns == length tgs
          -> text "∑" % squared
-                [ ppr c n % text ":" %% ppr c t
-                | n <- ns | t <- ts ]
+                [ ppr c n % text ":"
+                        %% (case tg of
+                                TGTypes [t]     -> ppr c t
+                                _               -> ppr c tg)
+                | n <- ns | tg <- tgs ]
 
         TKey TKForall [TGTypes [TAbs (TPTypes bts) tBody]]
          ->  text "∀"

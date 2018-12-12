@@ -127,11 +127,11 @@ pTerm_
          $  pBraced $ flip P.sepEndBy
                 (pTok KSemi)
                 (do     l       <- pLbl
-                        (b, t)  <- pSquared
-                                $ do b <- pBind; pTok KColon; t <- pType; return (b, t)
+                        bts     <- pSquared $ flip P.sepEndBy (pTok KComma)
+                                $  do   b <- pBind; pTok KColon; t <- pType; return (b, t)
                         pTok KArrowRight
                         m       <- pTerm
-                        return (l, MAbm [(b, t)] m))
+                        return (l, MAbm bts m))
 
         return  $ MCase mScrut lsAlt msAlt
 

@@ -90,23 +90,31 @@ checkType a wh ctx (TFun tsParam tsResult)
 
 
 -- (k-rec) ------------------------------------------------
-checkType a wh ctx (TRecord ns tsField)
+checkType a wh ctx (TRecord ns tgsField)
  = do
         -- TODO: check for duplicate field names.
-        tsField' <- checkTypesAre a wh ctx tsField
-                  $ replicate (length tsField) TData
+        tgsField'
+         <- fmap (map TGTypes)
+         $  mapM (\(TGTypes ts) -> checkTypesAre a wh ctx ts
+                                        (replicate (length ts) TData))
+                 tgsField
 
-        return  (TRecord ns tsField', TData)
+        return  (TRecord ns tgsField', TData)
 
 
 -- (k-vnt) ------------------------------------------------
-checkType a wh ctx (TVariant ns tsField)
+checkType a wh ctx (TVariant ns tgsField)
  = do
         -- TODO: check for duplicate field names.
-        tsField' <- checkTypesAre a wh ctx tsField
-                  $ replicate (length tsField) TData
 
-        return  (TVariant ns tsField', TData)
+        tgsField'
+         <- fmap (map TGTypes)
+         $  mapM (\(TGTypes ts) -> checkTypesAre a wh ctx ts
+                                        (replicate (length ts) TData))
+                 tgsField
+
+
+        return  (TVariant ns tgsField', TData)
 
 
 -----------------------------------------------------------

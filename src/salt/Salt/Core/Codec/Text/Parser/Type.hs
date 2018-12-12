@@ -88,7 +88,7 @@ pTypesHead
  <?> "a head type"
 
 
--- | Parser that can be used as the result in a function type.
+-- | Parser for a type that can be used as the result in a function type.
 pTypesResult :: Parser [Type Location]
 pTypesResult
  = do   TGTypes tsHead <- pTypesHead
@@ -189,8 +189,18 @@ pTypeSigs
 
 
 -- | Parser for some type fields.
-pTypeFields :: Parser [(Name, Type Location)]
+pTypeFields :: Parser [(Name, TypeArgs Location)]
 pTypeFields
  = flip P.sepEndBy (pTok KComma)
- $ do n <- pLbl; pTok KColon; t <- pType; return (n, t)
+ $ do   n       <- pLbl
+        pTok KColon
+        ts      <- P.choice
+                [ P.try $ do
+                        t  <- pType
+                        return $ TGTypes [t]
+
+                , do    ts <- pSquared $ P.sepEndBy pType (pTok KComma)
+                        return $ TGTypes ts
+                ]
+        return (n, ts)
 

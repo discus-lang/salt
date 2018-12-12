@@ -29,9 +29,10 @@ checkTerm
         :: Annot a => a -> [Where a] -> Context a
         -> Term a -> Mode a -> IO (Term a, [Type a])
 
--- Ann ----------------------------------------------------
+-- (t-ann) ------------------------------------------------
 checkTerm _a wh ctx (MAnn a' m) mode
  = checkTerm a' wh ctx m mode
+
 
 -- (t-mmm) ------------------------------------------------
 checkTerm a wh ctx (MTerms msArg) mode
@@ -171,38 +172,44 @@ checkTerm a wh ctx (MLet bts mBind mResult) Synth
 -- TODO: check for repeated labels.
 checkTerm a wh ctx mm@(MRecord ns ms) mode
  = case mode of
-        Check [TRecord ns' tsExpected]
+        Check [TRecord ns' tgsExpected]
          | Set.fromList ns == Set.fromList ns'
          , Set.size (Set.fromList ns)  == length ns
          , Set.size (Set.fromList ns') == length ns'
          -> do
-                let nts = Map.fromList $ zip ns' tsExpected
-                let nmts = [ let Just t = Map.lookup n nts in (n, m, t)
-                           | m  <- ms | n <- ns ]
+                let nts   = Map.fromList $ zip ns' tgsExpected
+                let nmtgs = [ let Just tg = Map.lookup n nts in (n, m, tg)
+                            | m  <- ms | n <- ns ]
 
-                (ms', ts')
-                  <- fmap unzip $ forM nmts $ \(n, m, t)
-                  -> do let wh' = WhereRecordField a n (Just t) : wh
-                        checkTerm1 a wh' ctx m (Check [t])
+                (ms', tss')
+                  <- fmap unzip $ forM nmtgs $ \(n, m, (TGTypes ts))
+                  -> do let wh' = WhereRecordField a n (Just ts) : wh
+                        checkTerm a wh' ctx m (Check ts)
 
-                return (MRecord ns ms', [TRecord ns ts'])
+                return (MRecord ns ms', [TRecord ns $ map TGTypes tss'])
 
         Check _
          -> checkTerm_default a wh ctx mm mode
 
         Synth
-         -> do  (ms', ts') <- checkTerms a wh ctx ms Synth
-                return  (MRecord ns ms', [TRecord ns ts'])
+         -> do  (ms', tss')
+                 <- fmap unzip
+                  $ mapM (\m -> checkTerm a wh ctx m Synth) ms
+                return  ( MRecord ns ms'
+                        , [TRecord ns (map TGTypes tss')])
 
 
 -- (t-prj) ------------------------------------------------
 checkTerm a wh ctx (MProject nLabel mRecord) Synth
  = do   (mRecord', tsRecord) <- checkTerm a wh ctx mRecord Synth
         case tsRecord of
-         [tRecord@(TRecord ns ts)]
-          -> case lookup nLabel $ zip ns ts of
-                Nothing     -> throw $ ErrorRecordProjectNoField a wh tRecord nLabel
-                Just tField -> return (MProject nLabel mRecord', [tField])
+         [tRecord@(TRecord ns tgs)]
+          -> case lookup nLabel $ zip ns tgs of
+                Nothing
+                 -> throw $ ErrorRecordProjectNoField a wh tRecord nLabel
+
+                Just (TGTypes tsField)
+                 -> return (MProject nLabel mRecord', tsField)
 
          [tThing]
             -> throw $ ErrorRecordProjectIsNot a wh tThing nLabel
@@ -210,15 +217,15 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
 
 
 -- (t-vnt) ------------------------------------------------
-checkTerm a wh ctx (MVariant nLabel mValue tResult) Synth
- = do   (mValue', _tValue) <- checkTerm1 a wh ctx mValue Synth
+checkTerm a wh ctx (MVariant nLabel mValues tResult) Synth
+ = do   (mValues', _tsValues) <- checkTerm a wh ctx mValues Synth
 
         -- TODO: check variant is contained in given type
         -- TODO: check given type is a variant type.
-        return  (MVariant nLabel mValue' tResult, [tResult])
+        return  (MVariant nLabel mValues' tResult, [tResult])
 
 
--- (t-case) -----------------------------------------------
+-- (t-cse) ------------------------------------------------
 checkTerm a wh ctx (MCase mScrut ls msAlt) Synth
  = do   (mScrut', _tScrut) <- checkTerm1 a wh ctx mScrut Synth
         (msAlt',  tsAlt)  <- fmap unzip $ mapM (\m -> checkTerm1 a wh ctx m Synth) msAlt
@@ -229,7 +236,7 @@ checkTerm a wh ctx (MCase mScrut ls msAlt) Synth
         return  (MCase mScrut' ls msAlt', tsResult)
 
 
--- (t-if) -------------------------------------------------
+-- (t-ifs) ------------------------------------------------
 checkTerm a wh ctx (MIf msCond msThen mElse) Synth
  = do   (msCond', _tssCond) <- checkTerms a wh ctx msCond
                             $  Check $ replicate (length msCond) TBool

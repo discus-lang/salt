@@ -137,12 +137,20 @@ test type field'paren   = (([x = [x = 5, y = #unit], y = #true]).x).y
 -- Variants --------------------------------------------------------------------
 test type variant0      = `foo 5 as <foo: #Nat>
 test type variant1      = `foo 5 as <foo: #Nat, bar: #Nat>
+test type variant2      = `foo [1, 2] as <foo: [#Nat, #Nat]>
 
 test type case0
  = λ[xx: <none: #Unit, some: #Nat>]
  → case xx of
         { none [u: #Unit] → 0
         ; some [n: #Nat]  → n }
+
+test type case1
+ = λ[xx: <none: [], one: #Nat, two: [#Nat, #Nat]>]
+ → case xx of
+        { none []                 → 0
+        ; one  [x: #Nat]          → x
+        ; two  [x: #Nat, y: #Nat] → #nat'add [x, y] }
 
 
 -- Option-----------------------------------------------------------------------

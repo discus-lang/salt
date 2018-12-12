@@ -30,6 +30,6 @@ data Where a
         | WhereRecordField
         { whereAnnot            :: a
         , whereLabel            :: Name
-        , whereTypeExpected     :: Maybe (Type a) }
+        , whereTypeExpected     :: Maybe [Type a] }
         deriving Show
 

@@ -58,15 +58,15 @@ pattern TCon n          = TRef (TRCon n)
 pattern TPrm n          = TRef (TRPrm n)
 
 -- Type keywords.
-pattern THole           = TKey TKHole        []
-pattern TArr ks1 k2     = TKey TKArr         [TGTypes ks1,     TGTypes [k2]]
-pattern TApp tFun mts2  = TKey TKApp         [TGTypes [tFun],  mts2]
-pattern TApt tFun ts2   = TKey TKApp         [TGTypes [tFun],  TGTypes ts2]
-pattern TFun ts1  ts2   = TKey TKFun         [TGTypes ts1,     TGTypes ts2]
-pattern TForall  bks t  = TKey TKForall      [TGTypes [TAbs (TPTypes bks) t]]
-pattern TExists  bks t  = TKey TKExists      [TGTypes [TAbs (TPTypes bks) t]]
-pattern TRecord  ns  ts = TKey (TKRecord ns) [TGTypes ts]
-pattern TVariant ns  ts = TKey (TKVariant ns) [TGTypes ts]
+pattern THole           = TKey TKHole         []
+pattern TArr    ks1 k2  = TKey TKArr          [TGTypes ks1,  TGTypes [k2]]
+pattern TApp    tF  gs2 = TKey TKApp          [TGTypes [tF], gs2]
+pattern TApt    tF  ts2 = TKey TKApp          [TGTypes [tF], TGTypes ts2]
+pattern TFun    ts1 ts2 = TKey TKFun          [TGTypes ts1,  TGTypes ts2]
+pattern TForall bks t   = TKey TKForall       [TGTypes [TAbs (TPTypes bks) t]]
+pattern TExists bks t   = TKey TKExists       [TGTypes [TAbs (TPTypes bks) t]]
+pattern TRecord  ns mgs = TKey (TKRecord  ns) mgs
+pattern TVariant ns mgs = TKey (TKVariant ns) mgs
 pattern (:=>) ks1 k2    = TArr    ks1 k2
 pattern (:->) ts1 ts2   = TFun    ts1 ts2
 pattern (:*>) tps t     = TForall tps t
