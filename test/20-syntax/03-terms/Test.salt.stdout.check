@@ -58,10 +58,12 @@
 * record'one: ∏[x: #Nat]
 * record'two: ∏[x: #Nat, y: #Bool]
 * record'three: ∏[x: #Nat, y: #Bool, z: #Unit]
+* record'multi: ∏[xs: [#Nat, #Nat, #Nat], ys: [#Unit, #Nat, #Bool, #Bool]]
 * field'one: #Nat
 * field'two: #Bool
 * field'nest: #Unit
 * field'paren: #Unit
+* field'multi: [#Unit,#Nat,#Bool,#Bool]
 * variant0: ∑[foo: #Nat]
 * variant1: ∑[foo: #Nat, bar: #Nat]
 * variant2: ∑[foo: [#Nat, #Nat]]

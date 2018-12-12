@@ -127,11 +127,13 @@ test type record2's     = [record| x = 5, y = #true, z = #unit]
 test type record'one    = [x = 5]
 test type record'two    = [x = 5, y = #true]
 test type record'three  = [x = 5, y = #true, z = #unit]
+test type record'multi  = [xs = [1, 2, 3], ys = [#unit, 1, #true, #false]]
 
 test type field'one     = [x = 5].x
 test type field'two     = [x = 5, y = #true].y
 test type field'nest    = [x = [x = 5, y = #unit], y = #true].x.y
 test type field'paren   = (([x = [x = 5, y = #unit], y = #true]).x).y
+test type field'multi   = [xs = [1, 2, 3], ys = [#unit, 1, #true, #false]].ys
 
 
 -- Variants --------------------------------------------------------------------
