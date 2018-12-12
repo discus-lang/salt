@@ -125,18 +125,18 @@ ppre c (ErrorAppTermTypeWrongArity _a _wh btsParam tsArg)
  | length btsParam > length tsArg
  = vcat [ text "Not enough type arguments in application."
         , text " parameter kinds:"
-                %% braced [ (ppr c b %% text ":" %% ppr c t)
-                          | (b, t) <- btsParam]
+                %% squared [ (ppr c b %% text ":" %% ppr c t)
+                           | (b, t) <- btsParam]
         , text "  argument types:"
-                %% braced (map (ppr c) tsArg) ]
+                %% squared (map (ppr c) tsArg) ]
 
  | otherwise
  = vcat [ text "Too many type arguments in application."
         , text " parameter kinds:"
-                %% braced [ (ppr c b %% text ":" %% ppr c t)
-                          | (b, t) <- btsParam]
+                %% squared [ (ppr c b %% text ":" %% ppr c t)
+                           | (b, t) <- btsParam]
         , text "  argument types:"
-                %% braced (map (ppr c) tsArg) ]
+                %% squared (map (ppr c) tsArg) ]
 
 -- term/term
 ppre c (ErrorAppTermTermCannot _a _wh tFun)

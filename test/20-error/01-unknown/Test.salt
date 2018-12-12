@@ -1,0 +1,10 @@
+
+-- Error: variable not in scope.
+test type derp
+
+-- Error: unknown data constructor.
+test type Foo
+
+-- Error: unknown primitive.
+test type #derp
+

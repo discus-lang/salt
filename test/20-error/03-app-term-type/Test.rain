@@ -1,0 +1,12 @@
+
+-- Error: cannot instantiate non-polymorphic value.
+test type 5 @#Nat
+
+-- Error: not enough arguments in type application.
+test type (λ@[a: #Data, b: #Data] → #unit) @[#Nat]
+
+-- Error: too many arguments in type application.
+test type (λ@[a: #Data] → #unit) @[#Nat, #Nat]
+
+-- Error: kind mismatch in application.
+test type (λ@[a: #Data] → #unit) @#Console

@@ -78,6 +78,8 @@ pattern (:*>) tps t     = TForall tps t
 
 -- Primitive types.
 pattern TData           = TPrm "Data"
+pattern TRegion         = TPrm "Region"
+pattern TEffect         = TPrm "Effect"
 pattern TUnit           = TPrm "Unit"
 pattern TBool           = TPrm "Bool"
 pattern TNat            = TPrm "Nat"
@@ -88,6 +90,8 @@ pattern TOption t       = TApt (TPrm "Option") [t]
 pattern TList t         = TApt (TPrm "List")   [t]
 pattern TSet t          = TApt (TPrm "Set")    [t]
 pattern TMap tk tv      = TApt (TPrm "Map")    [tk, tv]
+pattern TConsole        = TPrm "Console"
+pattern TSleep          = TPrm "Sleep"
 
 
 -- Instances --------------------------------------------------------------------------------------

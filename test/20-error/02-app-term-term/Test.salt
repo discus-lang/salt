@@ -1,0 +1,18 @@
+
+-- Error: cannot apply non function.
+test type 5 5
+test type 5 [1, 2]
+
+-- Error: not enough arguments.
+test type #bool'and #true
+test type #bool'and [#true]
+
+-- Error: too many arguments.
+test type #bool'and [#true, #true, #true]
+test type #bool'and ((λ[] → [#true, #true, #true]) [])
+
+-- Error: wrong argument types.
+test type #bool'and [1, 2]
+test type #bool'and ((λ[] → [1, 2]) [])
+
+

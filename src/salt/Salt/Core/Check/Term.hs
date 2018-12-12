@@ -47,11 +47,13 @@ checkTerm a wh ctx (MThe ts m) Synth
  = do   (m', _, es) <- checkTerm a wh ctx m (Check ts)
         return  (MThe ts m', ts, es)
 
+
 -- (t-box) ------------------------------------------------
 checkTerm a wh ctx (MBox m) Synth
  = do   (m', ts, es) <- checkTerm a wh ctx m Synth
         -- TODO: crush effects before boxing them.
         return  (MBox m', [TSusp es ts], [])
+
 
 -- (t-run) ------------------------------------------------
 checkTerm a wh ctx (MRun m) Synth
@@ -107,7 +109,7 @@ checkTerm a wh ctx m@(MVar u) Synth
  = do   mt <- contextResolveTermBound u ctx
         case mt of
          Just t  -> return (m, [t], [])
-         Nothing -> do error (show ctx); throw $ ErrorUnknownTermBound a wh u
+         Nothing -> throw $ ErrorUnknownTermBound a wh u
 
 
 -- (t-abt) ------------------------------------------------
@@ -423,32 +425,36 @@ checkTermAppTypes
         -> IO ([Type a], Type a)
 
 checkTermAppTypes a wh ctx tFun tsArg
- = case tFun of
-        TForall bksParam tResult
-          -> goCheckArgs bksParam tResult
-        _ -> throw $ ErrorAppTermTypeCannot a wh tFun
+ = do
+        -- The funtion needs to have a forall type.
+        (bksParam, tResult)
+         <- case tFun of
+                TForall bksParam tResult
+                  -> return (bksParam, tResult)
+                _ -> throw $ ErrorAppTermTypeCannot a wh tFun
 
- where  -- TODO: kind check parameter types.
+        -- Check the kinds of the arguments.
+        (tsArg', ksArg) <- checkTypes a wh ctx tsArg
 
-        goCheckArgs  bksParam tResult
-         = do   (tsArg', ksArg) <- checkTypes a wh ctx tsArg
-                if length bksParam /= length tsArg
-                 then throw $ ErrorAppTermTypeWrongArity a wh bksParam tsArg
-                 else goCheckParams bksParam tResult tsArg' ksArg
+        -- The number of arguments must match the number of parameters.
+        when (not $ length bksParam == length tsArg)
+         $ throw $ ErrorAppTermTypeWrongArity a wh bksParam tsArg
 
-        goCheckParams bksParam tResult tsArg' ksArg
-         = case checkTypeEqs a [] (map snd bksParam) a [] ksArg of
+        -- Check the parameter and argument kinds match.
+        (case checkTypeEqs a [] (map snd bksParam) a [] ksArg of
                 Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+                  -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+                _ -> return ())
 
-                Nothing -> goSubstArgs bksParam tResult tsArg'
+        -- Substitute arguments into the result type to instantiate
+        -- the type scheme.
+        let subst   = Map.fromList
+                        [ (n, t) | (BindName n, _k) <- bksParam
+                                 | t <- tsArg ]
+        let tSubst  = substTypeType [subst] tResult
 
-        goSubstArgs   bksParam tResult tsArg'
-         = do   let subst   = Map.fromList
-                                [ (n, t) | (BindName n, _k) <- bksParam
-                                         | t <- tsArg ]
-                let tSubst  = substTypeType [subst] tResult
-                return  (tsArg', tSubst)
+        -- Return the checked argument types and the instantiated scheme.
+        return  (tsArg', tSubst)
 
 
 -- | Check the application of a functional term to an argument term.
@@ -459,16 +465,21 @@ checkTermAppTerm
         -> IO (Term a, [Type a], [Effect a])
 
 checkTermAppTerm a wh ctx tFun mArg
- = do   let (tsParam, tsResult)
+ = do
+        -- The function needs to have a functional type.
+        let (tsParam, tsResult)
                 = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
                 $ takeTFun tFun
 
+        -- Check the types of the argument.
         (mArg', tsArg, esArg)
          <- checkTerm a wh ctx mArg (Check tsParam)
 
+        -- The number of arguments must match the number of parameters.
         when (not $ length tsParam == length tsArg)
          $ throw $ ErrorAppTermTermWrongArity a wh tsParam tsArg
 
+        -- Check the parameter and argument tpyes match.
         case checkTypeEqs a [] tsParam a [] tsArg of
          Just ((_aErr1', tErr1), (_aErr2', tErr2))
            -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
@@ -483,16 +494,21 @@ checkTermAppTerms
         -> IO ([Term a], [Type a], [Effect a])
 
 checkTermAppTerms a wh ctx tFun msArg
- = do   let (tsParam, tsResult)
+ = do
+        -- The function needs to have a functional type.
+        let (tsParam, tsResult)
                 = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
                 $ takeTFun tFun
 
+        -- The number of arguments must match the number of parameters.
         when (not $ length msArg == length tsParam)
          $ throw $ ErrorAppTermTermWrongArityNum a wh tsParam (length msArg)
 
+        -- Check the types of the arguments.
         (msArg', tsArg, esArgs)
          <- checkTerms a wh ctx msArg (Check tsParam)
 
+        -- Check the parameter and argument types match.
         case checkTypeEqs a [] tsParam a [] tsArg of
          Just ((_aErr1', tErr1), (_aErr2', tErr2))
            -> throw $ ErrorTypeMismatch a wh tErr1 tErr2

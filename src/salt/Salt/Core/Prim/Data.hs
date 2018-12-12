@@ -18,7 +18,9 @@ primTypeCtors
         , ("Option",    [TData] :=> TData)
         , ("List",      [TData] :=> TData)
         , ("Set",       [TData] :=> TData)
-        , ("Map",       [TData, TData] :=> TData) ]
+        , ("Map",       [TData, TData] :=> TData)
+        , ("Console",   TEffect)
+        , ("Sleep",     TEffect) ]
 
 
 -- | Types of primitive data constructors.

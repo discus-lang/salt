@@ -1,0 +1,15 @@
+test/20-error/01-unknown/Test.salt:3:11
+  Variable 'derp' is not in scope.
+
+  1:1    In type test
+
+test/20-error/01-unknown/Test.salt:6:11
+  Unknown data constructor 'Foo'.
+
+  6:1    In type test
+
+test/20-error/01-unknown/Test.salt:9:11
+  Unknown primitive '#derp'.
+
+  9:1    In type test
+
