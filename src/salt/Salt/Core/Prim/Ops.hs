@@ -4,6 +4,7 @@ import Salt.Core.Transform.MapAnnot
 import Salt.Core.Exp
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
+import qualified Data.Text.IO           as Text
 import Data.Map                         (Map)
 
 
@@ -293,11 +294,18 @@ primOpsMap
 
 -- Console ----------------------------------------------------------------------------------------
 primOpsConsole
- = [ PO { name  = "console'print'nat"
-        , tsig  = [TNat] :-> []
+ = [ PO { name  = "console'print"
+        , tsig  = [TText] :-> []
         , teff  = [TCon "Console"]
-        , exec  = \[NVs [VNat n]] -> do putStr (show n); return []
-        , docs  = "Print a natural number to the console." } ]
+        , exec  = \[NVs [VText tx]] -> do Text.putStr tx; return []
+        , docs  = "Print a text string to the console." }
+
+   , PO { name  = "console'println"
+        , tsig  = [TText] :-> []
+        , teff  = [TCon "Console"]
+        , exec  = \[NVs [VText tx]] -> do Text.putStrLn tx; return []
+        , docs  = "Print a text string to the console, with a newline on the end." }
+   ]
 
 
 -- Debug ------------------------------------------------------------------------------------------

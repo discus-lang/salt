@@ -1,8 +1,14 @@
 
-term hello : [] ! #Console
- = box  let []  = #console'print'nat 1;
-        let []  = #console'print'nat 2;
-        []
+-- Effectful term using let-expressions.
+term hello : []! #Console
+ = box  let []  = #console'print   "hello ";
+        #console'println "world"
 
 test exec hello
+
+
+-- Sugared version of above.
+term hello2 : []! #Console
+ = do { #console'print   "hello ";
+        #console'println "world" }
 

@@ -6,8 +6,8 @@ where
 import Salt.Core.Codec.Text.Token
 import Data.Text                        (Text)
 import qualified Text.Lexer.Inchworm.Char as IW
-import qualified Data.Char as Char
-import qualified Data.Text as Text
+import qualified Data.Char                as Char
+import qualified Data.Text                as Text
 
 
 -- | Scanner for Salt.

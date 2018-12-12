@@ -238,11 +238,11 @@ runTestExec
 runTestExec mm mnTest mTest
  = do
         let a   = IW.Location 0 0
-        putStr  $ "* "
-                ++ (case mnTest of
-                        Nothing -> ""
-                        Just (Name tx) -> T.unpack tx % ": ")
-        System.hFlush System.stdout
+        (case mnTest of
+                Nothing -> return ()
+                Just (Name tx) -> do
+                        putStr $ T.unpack tx % ": "
+                        System.hFlush System.stdout)
 
         let declTerms
                 = Map.fromList
@@ -259,7 +259,7 @@ runTestExec mm mnTest mTest
                 [VClosure (Closure (Env []) (MPTerms []) mBody)]
                  -> do  vsResult <- Eval.evalTerm state a (Env []) mBody
                         case vsResult of
-                         [] -> putStr "\n"
+                         [] -> return ()
                          _  -> putStrLn $ P.renderIndent $ P.ppr () vsResult
 
                 _ -> error $ "runTestEval: term did not produce a suspension"

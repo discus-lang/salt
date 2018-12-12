@@ -76,14 +76,13 @@ pTerm_
         --   This is sugar for let expressions that does not require
         --   all bindings to have a name, as we execute some for their
         --   actions only.
-        --  TOOD: support type sigs on binders.
         pTok KDo
         binds   <- pBraced $ P.sepEndBy1 pTermStmt (pTok KSemi)
         case reverse binds of
-         ([(BindNone, THole)], mBody) : bmsRest
-           -> let (btsBind, msBind) = unzip $ reverse bmsRest
-              in  return $ foldr (\(bts, m) m' -> MLet bts m m')
-                                 mBody (zip btsBind msBind)
+         ([], mBody) : bmsRest
+           -> let (bsBind, msBind) = unzip $ reverse bmsRest
+              in  return $ foldr (\(bs, m) m' -> MLet (zip bs $ repeat THole) m m')
+                                 mBody (zip bsBind msBind)
 
          []     -> P.unexpected "empty do block"
          _      -> P.unexpected "do block without result value"
@@ -234,10 +233,11 @@ pTermArgProj
 pTermArg :: Parser (Term Location)
 pTermArg
  = P.choice
- [ do   pVar >>= return . MVar . Bound
- , do   pCon >>= return . MCon
- , do   pSym >>= return . MSymbol
- , do   pNat >>= return . MNat
+ [ do   pVar    >>= return . MVar . Bound
+ , do   pCon    >>= return . MCon
+ , do   pSym    >>= return . MSymbol
+ , do   pNat    >>= return . MNat
+ , do   pText   >>= return . MText
 
         -- #name
         -- This matches primitive values.
@@ -373,37 +373,29 @@ pTermRecord
 
 ---------------------------------------------------------------------------------------------------
 -- TODO: use the binding forms in the let parser as well.
-pTermStmt :: Parser ([(Bind, Type Location)], Term Location)
+pTermStmt :: Parser ([Bind], Term Location)
 pTermStmt
  = P.choice
  [ do   -- '[' (Var : Type),* ']' = Term
-        bts     <- pSquared
-                $ flip P.sepEndBy1 (pTok KComma)
-                $ do  b  <- pBind
-                      P.choice
-                        [ do   pTok KColon; t <- pType; return (b, t)
-                        , do   return (b, THole) ]
+        bs      <- pSquared $ flip P.sepEndBy (pTok KComma) pBind
         pTok KEquals
         mBody   <- pTerm
-        return  (bts, mBody)
-
+        return  (bs, mBody)
 
  , do   -- Var '=' Term
         -- We need the lookahead here because plain terms
         -- in the next choice can also start with variable name.
-        -- TODO: allow type sigs.
         P.try $ P.lookAhead $ do
-                pBind
-                pTok KEquals
+                pBind; pTok KEquals
 
         nBind    <- pBind
         pTok KEquals
         mBody   <- pTerm
-        return  ([(nBind, THole)], mBody)
+        return  ([nBind], mBody)
 
  , do   -- Term
         mBody   <- pTerm
-        return  ([(BindNone, THole)], mBody)
+        return  ([], mBody)
  ]
  <?> "a statement"
 
