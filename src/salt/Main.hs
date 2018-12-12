@@ -191,7 +191,8 @@ runTestType ctx _mm mnTest mTest
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        (_m, tsResult) <- Check.checkTerm a [] ctx mTest Check.Synth
+        (_m, tsResult, _esResult)
+         <- Check.checkTerm a [] ctx mTest Check.Synth
         case tsResult of
          [t]    -> putStrLn $ P.renderIndent $ P.ppr () t
          _      -> putStrLn $ P.renderIndent $ P.ppr () tsResult

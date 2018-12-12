@@ -23,7 +23,6 @@ test eval append
  = append @#Nat [[list #Nat| 10, 11, 12], [list #Nat| 13, 14, 15]]
 
 
-
 -- Reverse
 term reverse @[a: #Data] [xx: #List a]: #List a
  = case #list'case @a xx of

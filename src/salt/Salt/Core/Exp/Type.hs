@@ -5,11 +5,6 @@ import qualified Data.Text      as T
 
 
 ---------------------------------------------------------------------------------------------------
--- | Kinds are represented the same way as types.
-type Kind a
-        = Type a
-
-
 -- | Annotated Type.
 data Type a
         = TAnn !a !(Type a)              -- ^ Annotated type.
@@ -18,6 +13,14 @@ data Type a
         | TAbs !(TypeParams a) !(Type a) -- ^ Type abstraction.
         | TKey !TypeKey ![TypeArgs a]    -- ^ Type keyword application.
         deriving (Show, Eq, Ord)
+
+
+-- | Kinds are represented the same way as types.
+type Kind a = Type a
+
+
+-- | Effects are also types, and we use this synonym to help readability.
+type Effect a = Type a
 
 
 -- | Type Reference.
