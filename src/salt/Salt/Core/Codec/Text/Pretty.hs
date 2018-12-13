@@ -102,8 +102,7 @@ pprTFun c tt
         TAnn _ t -> ppr c t
         TRef{}   -> ppr c tt
         TVar{}   -> ppr c tt
-        -- Note: nested applications (TApp) are printed with parentheses to
-        -- remove ambiguity between (f [x, y]) and ((f [x]) [y])
+        TApp{}   -> ppr c tt
         _        -> parens $ ppr c tt
 
 

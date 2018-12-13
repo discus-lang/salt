@@ -69,22 +69,23 @@ pType
 pTypesHead :: Parser (TypeArgs Location)
 pTypesHead
  = P.choice
- [ do   -- (Prm | TypeArg) TypeArg*
+ [ do   -- (Prm | TypeArg) ( TypeArg+ | ('[' Type,+ ']') )*
         tFun    <- P.choice
                 [  do   pPrm >>= return . TPrm
                 ,  do   pTypeArg ]
 
-        P.choice
-         [ do   -- '[' Type;+ ']'
-                tsArgs  <- pSquared $ P.sepEndBy pType (pTok KComma)
-                return  $  TGTypes [TApt tFun tsArgs]
+        -- Take multiple TypeArgs at once to curry them together into a
+        -- single application. Each occurrence of an uncurried form with
+        -- square brackets is a separate application.
+        tsArgs  <- P.many
+                 $ P.choice
+                 -- TypeArg+
+                 [ P.many1 pTypeArg
+                 -- '[' Type,+ ']'
+                 , pSquared $ P.sepEndBy1 pType (pTok KComma) ]
 
-         , do   -- TypeArg*
-                tsArgs  <- P.many pTypeArg
-                case tsArgs of
-                 []     -> return $ TGTypes [tFun]
-                 _      -> return $ TGTypes [TApt tFun tsArgs]
-         ]
+        let tApp = foldl TApt tFun tsArgs
+        return $ TGTypes [tApp]
 
         -- '[' Type+ ']'
  , do   ts      <- pSquared $ P.sepEndBy pType (pTok KComma)
