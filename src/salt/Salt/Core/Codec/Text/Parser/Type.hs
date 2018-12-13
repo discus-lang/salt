@@ -194,7 +194,7 @@ pTypeParams
 pTypeSigs :: Parser [(Bind, Type Location)]
 pTypeSigs
  = pSquared
-        $ flip P.sepEndBy (pTok KComma)
+        $ flip P.sepEndBy1 (pTok KComma)
         $ do b <- pBind; pTok KColon; t <- pType; return (b, t)
 
 
