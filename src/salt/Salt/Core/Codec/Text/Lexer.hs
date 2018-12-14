@@ -1,7 +1,12 @@
 
 module Salt.Core.Codec.Text.Lexer
         ( IW.Location(..)
-        , scanner)
+        , scanner
+        , checkMatch
+        , matchVar
+        , matchCon
+        , matchPrm
+        , matchSym )
 where
 import Salt.Core.Codec.Text.Token
 import Data.Text                        (Text)
@@ -64,7 +69,7 @@ scanner _fileName
                 _       -> Nothing
 
         , fmap (stamp id)
-           $ IW.munchPred Nothing (\_ix c -> isVarChar c)
+           $ IW.munchPred Nothing (\_ix c -> isIdentChar c)
            $ \case
                 "type"          -> Just KType
                 "term"          -> Just KTerm
@@ -99,6 +104,8 @@ scanner _fileName
         , fmap (stamp KSym) scanSymName
         , fmap (stamp KPrm) scanPrmName
 
+        , fmap (stamp id) scanQuotedIdent
+
         , fmap (stamp KNat) $ scanNat
         , fmap (stamp KInt) $ IW.scanInteger
         , fmap (stamp (KText . Text.pack)) $  IW.scanHaskellString
@@ -107,48 +114,83 @@ scanner _fileName
         stamp k (l, t)
           = At l (k t)
 
+-- | Check if a Text value matches a predicate outside of the lexer.
+-- This is used by the pretty-printer to decide whether to print an identifier
+-- as a normal identifier, or if it must be quoted.
+checkMatch :: (Int -> Char -> Bool) -> Text -> Bool
+checkMatch match text
+ = all (uncurry match) ([0..] `zip` Text.unpack text)
+
+isIdentChar :: Char -> Bool
+isIdentChar c = Char.isAlphaNum c || c == '\''
+{-# INLINE isIdentChar #-}
+
 
 scanVarName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
 scanVarName
- = IW.munchPred Nothing match accept
- where   match 0 c = Char.isLower c
-         match _ c = Char.isAlphaNum c || c == '\''
-         accept cs = Just $ Text.pack cs
+ = IW.munchPred Nothing matchVar (Just . Text.pack)
 {-# INLINE scanVarName #-}
 
-
-isVarChar :: Char -> Bool
-isVarChar c = Char.isAlphaNum c || c == '\''
+matchVar :: Int -> Char -> Bool
+matchVar 0 c = Char.isLower c
+matchVar _ c = isIdentChar c
+{-# INLINE matchVar #-}
 
 
 scanConName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
 scanConName
- = IW.munchPred Nothing match accept
- where  match 0 c       = Char.isUpper c
-        match _ c       = Char.isAlphaNum c || c == '\''
-        accept cs       = Just $ Text.pack cs
+ = IW.munchPred Nothing matchCon (Just . Text.pack)
 {-# INLINE scanConName #-}
+
+matchCon :: Int -> Char -> Bool
+matchCon 0 c = Char.isUpper c
+matchCon _ c = isIdentChar c
+{-# INLINE matchCon #-}
 
 
 scanSymName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
 scanSymName
- = IW.munchPred Nothing match accept
- where  match 0 c       = c == '\''
-        match _ c       = Char.isAlphaNum c
-        accept []       = Nothing
-        accept (_ : cs) = Just $ Text.pack cs
+ = IW.munchPred Nothing matchSym acceptRequireLength2
 {-# INLINE scanSymName #-}
+
+acceptRequireLength2 :: [Char] -> Maybe Text.Text
+acceptRequireLength2 []     = Nothing
+acceptRequireLength2 [_]    = Nothing
+acceptRequireLength2 (_:cs) = Just $ Text.pack cs
+
+matchSym :: Int -> Char -> Bool
+matchSym 0 c = c == '\''
+matchSym 1 c = Char.isAlpha c
+matchSym _ c = isIdentChar c
+{-# INLINE matchSym #-}
 
 
 scanPrmName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
 scanPrmName
- = IW.munchPred Nothing match accept
- where   match 0 c       = c == '#'
-         match 1 c       = Char.isAlpha c
-         match _ c       = Char.isAlphaNum c || c == '\''
-         accept []       = Nothing
-         accept (_ : cs) = Just $ Text.pack cs
+ = IW.munchPred Nothing matchPrm acceptRequireLength2
 {-# INLINE scanPrmName #-}
+
+matchPrm :: Int -> Char -> Bool
+matchPrm 0 c = c == '#'
+matchPrm 1 c = Char.isAlpha c
+matchPrm _ c = isIdentChar c
+{-# INLINE matchPrm #-}
+
+
+scanQuotedIdent :: Monad m => IW.Scanner m loc [Char] (loc, Token)
+scanQuotedIdent
+ = wrap <$> IW.accepts "##" () <*> mKlass <*> IW.scanHaskellString
+ where
+  mKlass :: Monad m => IW.Scanner m loc [Char] (loc, (Text -> Token))
+  mKlass = IW.munchPred Nothing (\_ix c -> isIdentChar c) accept
+  accept "Var" = Just KVar
+  accept "Con" = Just KCon
+  accept "Prm" = Just KPrm
+  accept "Sym" = Just KSym
+  accept _     = Nothing
+
+  wrap (loc, _) (_, klass) (_, ident) = (loc, klass $ Text.pack ident)
+{-# INLINE scanQuotedIdent #-}
 
 
 scanNat :: Monad m => IW.Scanner m loc [Char] (loc, Integer)
