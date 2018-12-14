@@ -133,3 +133,21 @@ test/20-error/10-check-type/Test.salt:91:1
 
   91:1   In kind test
 
+test/20-error/10-check-type/Test.salt:96:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  96:1   In kind test
+
+test/20-error/10-check-type/Test.salt:99:1
+  Unexpected type: #Data
+        expecting: #Effect
+
+  99:1   In kind test
+
+test/20-error/10-check-type/Test.salt:104:1
+  Unexpected type: #Data
+        expecting: #Effect
+
+  104:1  In kind test
+

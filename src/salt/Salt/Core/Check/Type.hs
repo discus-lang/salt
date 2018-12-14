@@ -120,25 +120,24 @@ checkType a wh ctx (TVariant ns tgsField)
 
 
 -- (k-susp) -----------------------------------------------
-checkType a wh ctx (TSusp tsResult tsEffect)
+checkType a wh ctx (TSusp tsResult tEffect)
  = do
         tsResult' <- checkTypesAre a wh ctx tsResult
                   $  replicate (length tsResult) TData
 
-        tsEffect' <- checkTypesAre a wh ctx tsEffect
-                  $  replicate (length tsEffect) TEffect
+        tEffect'  <- checkTypeIs a wh ctx tEffect TEffect
 
-        return  (TSusp tsResult' tsEffect', TData)
-
-
--- (k-pure) -----------------------------------------------
-checkType _a _wh _ctx TPure
- = do   return (TPure, TEffect)
+        return  (TSusp tsResult' tEffect', TData)
 
 
 -- (k-sync) -----------------------------------------------
 checkType _a _wh _ctx TSync
  = do   return (TSync, TEffect)
+
+
+-- (k-pure) -----------------------------------------------
+checkType _a _wh _ctx TPure
+ = do   return (TPure, TEffect)
 
 
 -- (k-sum) ------------------------------------------------

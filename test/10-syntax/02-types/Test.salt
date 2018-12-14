@@ -98,4 +98,3 @@ test kind susp4         = []! #Console + #Sleep
 test kind susp5         = []! pure
 test kind susp6         = []! sync
 
-

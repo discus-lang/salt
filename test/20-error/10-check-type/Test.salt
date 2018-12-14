@@ -90,3 +90,16 @@ test kind <x: [#Nat, #Console]>
 -- Error: duplicate alternatives in variant type.
 test kind <x: #Nat, x: #Nat, y: #Nat>
 
+
+-- (k-susp) -------------------------------------------------------------------
+-- Error: result type has wrong kind.
+test kind #Console ! pure
+
+-- Error: effect type has wrong kind
+test kind []!#Nat
+
+
+-- (k-sum) --------------------------------------------------------------------
+-- Error: effect sum component has wrong kind.
+test kind #Nat + #Nat
+

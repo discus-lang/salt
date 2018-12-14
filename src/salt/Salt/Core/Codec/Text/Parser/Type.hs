@@ -56,7 +56,7 @@ pType
 
          , do   pTok KBang
                 tResult <- pType
-                return $ TSusp tsHead [tResult]
+                return $ TSusp tsHead tResult
 
          , do   pTok KPlus
                 case tsHead of
@@ -112,7 +112,7 @@ pTypesResult
 
          , do   pTok KBang
                 tResult <- pType
-                return [TSusp tsHead [tResult]]
+                return [TSusp tsHead tResult]
 
          , do   return tsHead ]
  <?> "a result type"
