@@ -12,18 +12,22 @@ import qualified Hedgehog.Range as Range
 
 import qualified Data.Text as Text
 
-nameVar :: Gen Name
-nameVar = Gen.choice
-  [ Name <$> Gen.element Corpus.colours
-  -- TODO: generate more interesting names
-  -- , Name <$> Gen.text (Range.linear 0 100) Gen.unicodeAll
+-- | Usually generate using 'normal' names, but sometimes do weird names.
+-- We want to shrink to normal names to ensure we have nice counterexamples.
+nameFlip :: Gen Text -> Gen Name
+nameFlip normal = Gen.frequency
+  [ (9, Name <$> normal)
+  , (1, Name <$> Gen.text (Range.linear 0 100) Gen.unicodeAll)
   ]
 
+nameVar :: Gen Name
+nameVar = nameFlip $ Gen.element Corpus.colours
+
 namePrim :: Gen Name
-namePrim = Name <$> (Gen.element Corpus.fruits)
+namePrim = nameFlip $ Gen.element Corpus.fruits
 
 nameCon :: Gen Name
-nameCon = Name <$> (Text.toUpper <$> Gen.element Corpus.fruits)
+nameCon = nameFlip (Text.toUpper <$> Gen.element Corpus.fruits)
 
 bind :: Gen Bind
 bind = Gen.choice
