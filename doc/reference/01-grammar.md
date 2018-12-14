@@ -56,10 +56,16 @@ Type
 
   |   tapp Type Type+               (Type Types)
   |   tabs Var+ Type+ Type          ('λ' TypeParams '⇒' Type)
+
   |   tall Var+ Type+ Type          ('∀' TypeParams '.' Type)
   |   text Var+ Type+ Type          ('∃' TypeParams '.' Type)
+
   |   trec Lbl* Types*              ('∏' TypeFields)
   |   tvnt Lbl* Types*              ('∑' TypeFields)
+
+  |   tsyn                          ('sync')
+  |   tpur                          ('pure')
+  |   tsum Type*                    (Type '+' Type '+' ...)
 
   |   TypePrims
 
@@ -82,15 +88,17 @@ Prm
 
 - `tarr` is the arrow kind, used to express kinds of type constructors such as `List : #Data → #Data`
 
+- `tfun` the type of a function taking a vector of arguments and returning a vector of results.
+
 - `tapp` and `tabs` are type application and type abstraction. The application form applies a type operator to multiple type arguments at once.
 
 - `tall` and `text` are universal and existential quantification of type variables.
 
 - `trec` and `tvnc` are record and variant types. The lists of labels and field type vectors must have the same length, and are treated as a list of pairs. Variant and record types with the same (label, types) pairs, but in a different order, are different types.
 
-- `tfun` the type of a function taking a vector of arguments and returning a vector of results.
+- `tsyn` and `tpur` are the top and bottom of the effect lattice. Computations with the 'sync' effect are assumed to interfere with all others, and computations with the 'pure' effect interfere with no others.
 
-- `tdat` and `trgn` are the kind of data types and region types, which are baked-in primitives.
+- `tsum` is used to combine effect types.
 
 - `Prm` gives the list of baked-in primitive types which are needed to classify type and term level constructs that are described in the language definition. The implementation may also provide other machine level types, but they are listed separately. `#Data` and `#Region` are the kinds of data and region types. The others are standard type constructors.
 
