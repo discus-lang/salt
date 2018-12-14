@@ -97,18 +97,6 @@ checkType a wh ctx (TFun tsParam tsResult)
         return  (TFun tsParam' tsResult', TData)
 
 
--- (k-ssp) ------------------------------------------------
-checkType a wh ctx (TSusp tsResult tsEffect)
- = do
-        tsResult' <- checkTypesAre a wh ctx tsResult
-                  $  replicate (length tsResult) TData
-
-        tsEffect' <- checkTypesAre a wh ctx tsEffect
-                  $  replicate (length tsEffect) TEffect
-
-        return  (TSusp tsResult' tsEffect', TData)
-
-
 -- (k-rec) ------------------------------------------------
 checkType a wh ctx (TRecord ns tgsField)
  = do
@@ -129,6 +117,37 @@ checkType a wh ctx (TVariant ns tgsField)
 
         tgsField' <- mapM (checkTypeArgsAreAll a wh ctx TData) tgsField
         return  (TVariant ns tgsField', TData)
+
+
+-- (k-susp) -----------------------------------------------
+checkType a wh ctx (TSusp tsResult tsEffect)
+ = do
+        tsResult' <- checkTypesAre a wh ctx tsResult
+                  $  replicate (length tsResult) TData
+
+        tsEffect' <- checkTypesAre a wh ctx tsEffect
+                  $  replicate (length tsEffect) TEffect
+
+        return  (TSusp tsResult' tsEffect', TData)
+
+
+-- (k-pure) -----------------------------------------------
+checkType _a _wh _ctx TPure
+ = do   return (TPure, TEffect)
+
+
+-- (k-sync) -----------------------------------------------
+checkType _a _wh _ctx TSync
+ = do   return (TSync, TEffect)
+
+
+-- (k-sum) ------------------------------------------------
+checkType a wh ctx (TSum ts)
+ = do
+        ts'     <- checkTypesAre a wh ctx ts
+                $  replicate (length ts) TEffect
+
+        return  (TSum ts', TEffect)
 
 
 -----------------------------------------------------------

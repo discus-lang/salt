@@ -48,6 +48,7 @@ scanner _fileName
                 '`'     -> Just KBacktick
                 '_'     -> Just KHole
                 '!'     -> Just KBang
+                '+'     -> Just KPlus
 
                 '∙'     -> Just KHole
                 '⟨'     -> Just KABra
@@ -72,8 +73,14 @@ scanner _fileName
 
                 "forall"        -> Just KForall
                 "exists"        -> Just KExists
-                "the"           -> Just KThe
                 "as"            -> Just KAs
+                "pure"          -> Just KPure
+                "sync"          -> Just KSync
+
+                "the"           -> Just KThe
+
+                "box"           -> Just KBox
+                "run"           -> Just KRun
 
                 "where"         -> Just KWhere
 
@@ -89,8 +96,6 @@ scanner _fileName
                 "of"            -> Just KOf
                 "otherwise"     -> Just KOtherwise
 
-                "box"           -> Just KBox
-                "run"           -> Just KRun
 
                 _               -> Nothing
 

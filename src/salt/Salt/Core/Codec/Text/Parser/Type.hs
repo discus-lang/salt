@@ -42,6 +42,7 @@ pType
  , do   -- TypesHead '->' TypesResult
         -- TypesHead '=>' TypesResult
         -- TypesHead '!'  Type
+        -- TypesHead '+'  Type
         -- TypesHead
         TGTypes tsHead <- pTypesHead
         P.choice
@@ -56,6 +57,13 @@ pType
          , do   pTok KBang
                 tResult <- pType
                 return $ TSusp tsHead [tResult]
+
+         , do   pTok KPlus
+                case tsHead of
+                 [t] -> do
+                        tResult <- pType
+                        return  $ TSum [t, tResult]
+                 _   -> P.unexpected "type sequence"
 
          , do   case tsHead of
                  [t]    -> return t
@@ -168,6 +176,15 @@ pTypeArg
         pAngled $ do
                 lts  <- pTypeFields
                 return $ TVariant (map fst lts) (map snd lts)
+
+        -- Effect Types -------------------------
+        -- 'pure'
+ , do   pTok KPure
+        return TPure
+
+        -- 'sync'
+ , do   pTok KSync
+        return TSync
 
  , do   -- '(' Term ')'
         pTok KRBra

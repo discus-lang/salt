@@ -149,6 +149,9 @@ instance Pretty c TypeKey where
         TKRecord ns     -> text "##record"  %% bracketed (map (ppr c) ns)
         TKVariant ns    -> text "##variant" %% bracketed (map (ppr c) ns)
         TKSusp          -> text "##susp"
+        TKSync          -> text "##sync"
+        TKPure          -> text "##pure"
+        TKSum           -> text "##sum"
 
 
 -- Term -------------------------------------------------------------------------------------------

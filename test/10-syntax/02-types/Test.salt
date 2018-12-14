@@ -82,11 +82,20 @@ test kind fun2'sugar    = [#Nat] -> [#Nat] -> [#Bool]
 test kind fun3'sugar    = #Map [#Nat, #Bool] -> #Nat
 test kind fun4'sugar    = #Nat -> #Map [#Nat, #Bool]
 
+-- Effect types
+test kind effect1       = pure
+test kind effect2       = sync
+test kind effect3       = #Console
+test kind effect4       = #Console + #Sleep
+test kind effect5       = pure + #Console + (#Sleep + sync)
+test kind effect6       = (pure + #Console) + (#Sleep + sync)
 
 -- Suspension types.
 test kind susp1         = [#Nat, #Nat] ! #Console
 test kind susp2         = #Nat ! #Console
 test kind susp3         = #Nat → [#Nat, #Nat] ! #Console
-test kind susp4         = []! #Console
-test kind susp5         = []! #Console
+test kind susp4         = []! #Console + #Sleep
+test kind susp5         = []! pure
+test kind susp6         = []! sync
+
 

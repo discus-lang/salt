@@ -15,11 +15,3 @@ term hello2 : []! #Console
 
 test exec hello2
 
-
---
-term pure : []! #Pure
- = box []
-
-test exec pure
-
-

@@ -53,6 +53,9 @@ data TypeKey
         | TKRecord  ![Name]             -- ^ Record type former.
         | TKVariant ![Name]             -- ^ Variant type former.
         | TKSusp                        -- ^ Suspension type former.
+        | TKSync                        -- ^ Top of the effect lattice, interferes with everything.
+        | TKPure                        -- ^ Bot of the effect lattice, interferes with nothing.
+        | TKSum                         -- ^ Effect sum.
         deriving (Show, Eq, Ord)
 
 
@@ -72,6 +75,9 @@ pattern TExists bks t   = TKey TKExists       [TGTypes [TAbs (TPTypes bks) t]]
 pattern TRecord  ns mgs = TKey (TKRecord  ns) mgs
 pattern TVariant ns mgs = TKey (TKVariant ns) mgs
 pattern TSusp   tsv tse = TKey TKSusp         [TGTypes tsv, TGTypes tse]
+pattern TPure           = TKey TKPure         []
+pattern TSync           = TKey TKSync         []
+pattern TSum    ts      = TKey TKSum          [TGTypes ts]
 pattern (:=>) ks1 k2    = TArr    ks1 k2
 pattern (:->) ts1 ts2   = TFun    ts1 ts2
 pattern (:*>) tps t     = TForall tps t

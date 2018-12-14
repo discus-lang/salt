@@ -34,12 +34,13 @@ data Token
         | KArrowRightFat
         | KLambda
         | KProd   | KSum
-        | KBang
+        | KBang   | KPlus
 
         -- Keywords
         | KType   | KTerm  | KTest
         | KForall | KExists
         | KThe    | KAs
+        | KPure   | KSync
         | KWhere
         | KFun
         | KLet    | KDo
