@@ -82,3 +82,9 @@ test kind fun2'sugar    = [#Nat] -> [#Nat] -> [#Bool]
 test kind fun3'sugar    = #Map [#Nat, #Bool] -> #Nat
 test kind fun4'sugar    = #Nat -> #Map [#Nat, #Bool]
 
+
+-- Quoted identifiers
+test kind quoted1 = fun [##Var"x" : #Data] => x
+test kind quoted2 = fun [##Var"x" : ##Prm"Data"] => ##Var"x"
+test kind quoted3 = fun [##Var"->" : #Data => #Data] => ##Var"->"
+
