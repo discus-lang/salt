@@ -97,6 +97,18 @@ checkType a wh ctx (TFun tsParam tsResult)
         return  (TFun tsParam' tsResult', TData)
 
 
+-- (k-ssp) ------------------------------------------------
+checkType a wh ctx (TSusp tsResult tsEffect)
+ = do
+        tsResult' <- checkTypesAre a wh ctx tsResult
+                  $  replicate (length tsResult) TData
+
+        tsEffect' <- checkTypesAre a wh ctx tsEffect
+                  $  replicate (length tsEffect) TEffect
+
+        return  (TSusp tsResult' tsEffect', TData)
+
+
 -- (k-rec) ------------------------------------------------
 checkType a wh ctx (TRecord ns tgsField)
  = do

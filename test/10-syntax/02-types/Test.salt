@@ -82,3 +82,11 @@ test kind fun2'sugar    = [#Nat] -> [#Nat] -> [#Bool]
 test kind fun3'sugar    = #Map [#Nat, #Bool] -> #Nat
 test kind fun4'sugar    = #Nat -> #Map [#Nat, #Bool]
 
+
+-- Suspension types.
+test kind susp1         = [#Nat, #Nat] ! #Console
+test kind susp2         = #Nat ! #Console
+test kind susp3         = #Nat → [#Nat, #Nat] ! #Console
+test kind susp4         = []! #Console
+test kind susp5         = []! #Console
+
