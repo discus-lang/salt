@@ -171,6 +171,11 @@ data Error a
         , errorType             :: Type a
         , errorLabel            :: Name }
 
+        | ErrorRecordDuplicateFields
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorFields           :: [Name] }
+
         | ErrorRecordTypeDuplicateFields
         { errorAnnot            :: a
         , errorWhere            :: [Where a]

@@ -212,6 +212,10 @@ ppre _ (ErrorRecordTypeDuplicateFields _a _wh ns)
  = vcat [ text "Duplicate fields in record type"
         , text "  fields:" %% braced (map pprLbl ns) ]
 
+ppre _ (ErrorRecordDuplicateFields _a _wh ns)
+ = vcat [ text "Duplicate fields in record"
+        , text "  fields:" %% braced (map pprLbl ns) ]
+
 
 -- Variant problems ---------------------------------------
 ppre _ (ErrorVariantTypeDuplicateAlts _a _wh ns)

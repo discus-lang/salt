@@ -134,4 +134,21 @@ test type let x: #Nat = #true; #true
 test type let x = #true; #true #true
 
 
+-- (t-rec) --------------------------------------------------------------------
+-- Error: field type does not match expected type.
+test type the [x: #Bool, y: #Nat]. [x = #true, y = #false]
+
+-- Error: expected type is not a record type.
+test type the #Nat. [x = #true, y = #false]
+
+-- Error: duplicate fields in record
+test type [x = 3, y = 3, x = 3]
+
+-- Error: duplicate fields in record
+test type [x = 3, y = 3, x = 3, y = 4]
+
+-- Error: ill-typed field.
+test type [x = #true #true]
+
+
 

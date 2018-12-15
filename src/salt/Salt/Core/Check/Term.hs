@@ -13,6 +13,7 @@ import Salt.Core.Exp
 import Salt.Core.Codec.Text             ()
 import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
+import qualified Salt.Data.List         as List
 import qualified Salt.Data.Pretty       as P
 
 import Control.Exception
@@ -265,18 +266,23 @@ checkTerm a wh ctx (MLet bts mBind mBody) Synth
 
 
 -- (t-rec) ------------------------------------------------
--- TODO: check for repeated labels.
 checkTerm a wh ctx mm@(MRecord ns ms) mode
  = case mode of
+        -- If we have an expected type for all the fields then check the fields
+        -- separately. This gives better error messages as we don't need to report
+        -- types for fields that are irrelevant to the problem.
         Check [TRecord ns' tgsExpected]
          | Set.fromList ns == Set.fromList ns'
          , Set.size (Set.fromList ns)  == length ns
          , Set.size (Set.fromList ns') == length ns'
          -> do
+                -- Check each of the field terms against the expected type for it.
                 let nts   = Map.fromList $ zip ns' tgsExpected
                 let nmtgs = [ let Just tg = Map.lookup n nts in (n, m, tg)
                             | m  <- ms | n <- ns ]
 
+                -- When we do this we set the 'where' to the specific field we
+                -- are checking, which makes the error messages easier to read.
                 (ms', tss', ess')
                   <- fmap unzip3 $ forM nmtgs $ \(n, m, (TGTypes ts))
                   -> do let wh' = WhereRecordField a n (Just ts) : wh
@@ -286,11 +292,20 @@ checkTerm a wh ctx mm@(MRecord ns ms) mode
                         , [TRecord ns $ map TGTypes tss']
                         , concat ess')
 
+        -- The expected type we have doesn't cover all the fields of the record
+        -- being constructed. We call the default checker and let that fail.
         Check _
          -> checkTerm_default a wh ctx mm mode
 
+        -- Synthesise a type for the record.
         Synth
-         -> do  (ms', tss', ess')
+         -> do  -- Check for duplicate fields.
+                let nsDup = List.duplicates ns
+                when (not $ null nsDup)
+                 $ throw $ ErrorRecordDuplicateFields a wh nsDup
+
+                -- Check each of the field terms.
+                (ms', tss', ess')
                  <- fmap unzip3
                   $ mapM (\m -> checkTerm a wh ctx m Synth) ms
 

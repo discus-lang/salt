@@ -217,3 +217,34 @@ test/20-error/11-check-term/Test.salt:134:26
 
   134:1  In type test
 
+test/20-error/11-check-term/Test.salt:139:52
+  Unexpected type: #Bool
+        expecting: #Nat
+
+  139:36 In field "y" of type [#Nat]
+  139:1  In type test
+
+test/20-error/11-check-term/Test.salt:142:21
+  Unexpected type: ∏[x: #Bool, y: #Bool]
+        expecting: #Nat
+
+  142:1  In type test
+
+test/20-error/11-check-term/Test.salt:145:11
+  Duplicate fields in record
+    fields: {x}
+
+  145:1  In type test
+
+test/20-error/11-check-term/Test.salt:148:11
+  Duplicate fields in record
+    fields: {x; y}
+
+  148:1  In type test
+
+test/20-error/11-check-term/Test.salt:151:16
+  Cannot apply non-function 
+    of type: #Bool
+
+  151:1  In type test
+

@@ -2,6 +2,7 @@
 module Salt.Data.List where
 import Data.Set as Set
 
+
 duplicates :: Ord a => [a] -> [a]
 duplicates xx
  = go Set.empty Set.empty xx
