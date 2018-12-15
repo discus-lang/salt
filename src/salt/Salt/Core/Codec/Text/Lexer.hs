@@ -56,8 +56,6 @@ scanner _fileName
                 '+'     -> Just KPlus
 
                 '∙'     -> Just KHole
-                '⟨'     -> Just KABra
-                '⟩'     -> Just KAKet
                 '∏'     -> Just KProd
                 '∑'     -> Just KSum
                 'λ'     -> Just KFun
@@ -78,27 +76,25 @@ scanner _fileName
 
                 "forall"        -> Just KForall
                 "exists"        -> Just KExists
-                "as"            -> Just KAs
                 "pure"          -> Just KPure
                 "sync"          -> Just KSync
 
                 "the"           -> Just KThe
+                "of"            -> Just KOf
 
+                "fun"           -> Just KFun
                 "box"           -> Just KBox
                 "run"           -> Just KRun
 
-                "where"         -> Just KWhere
-
-                "fun"           -> Just KFun
                 "let"           -> Just KLet
                 "do"            -> Just KDo
+                "where"         -> Just KWhere
 
                 "if"            -> Just KIf
                 "then"          -> Just KThen
                 "else"          -> Just KElse
 
                 "case"          -> Just KCase
-                "of"            -> Just KOf
                 "otherwise"     -> Just KOtherwise
 
 

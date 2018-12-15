@@ -1,4 +1,4 @@
-test/20-error/11-check-term/Test.salt:6:21
+test/20-error/11-check-term/Test.salt:6:23
   Unexpected type: #Bool
         expecting: #Nat
 
@@ -217,14 +217,14 @@ test/20-error/11-check-term/Test.salt:134:26
 
   134:1  In type test
 
-test/20-error/11-check-term/Test.salt:139:52
+test/20-error/11-check-term/Test.salt:139:54
   Unexpected type: #Bool
         expecting: #Nat
 
-  139:36 In field "y" of type [#Nat]
+  139:38 In field "y" of type [#Nat]
   139:1  In type test
 
-test/20-error/11-check-term/Test.salt:142:21
+test/20-error/11-check-term/Test.salt:142:23
   Unexpected type: ∏[x: #Bool, y: #Bool]
         expecting: #Nat
 
@@ -253,4 +253,17 @@ test/20-error/11-check-term/Test.salt:156:1
     of type: #Bool
 
   156:1  In type test
+
+test/20-error/11-check-term/Test.salt:159:11
+  Record does not have field y
+    actual type: ∏[x: #Nat]
+
+  159:1  In type test
+
+test/20-error/11-check-term/Test.salt:162:11
+  Too many values
+    of types: [#Nat, #Nat]
+    expected: [#Data]
+
+  162:1  In type test
 

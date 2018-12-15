@@ -20,8 +20,8 @@ test type none          = []
 
 
 -- Type Ascription ------------------------------------------------------------
-test type the'nat       = the #Nat. 3
-test type the'things    = the [#Nat, #Bool]. [3, #true]
+test type the'nat       = the #Nat of 3
+test type the'things    = the [#Nat, #Bool] of [3, #true]
 
 test type the'nat's     = 3 : #Nat
 test type the'things's  = [3, #true] : [#Nat, #Bool]
@@ -92,7 +92,8 @@ test type let'some      = let a = 2; let b = 3; #nat'add [a, b]
 
 
 -- If expressions -------------------------------------------------------------
-test type if'then'else  = if #nat'eq [1, 2] then 3 else 4
+test type if'then'else
+ = if #nat'eq [1, 2] then 3 else 4
 
 test type ifs'three
  = if   { #nat'eq [1, 2] → 3
@@ -139,9 +140,9 @@ test type field'multi   = [xs = [1, 2, 3], ys = [#unit, 1, #true, #false]].ys
 
 
 -- Variants --------------------------------------------------------------------
-test type variant0      = `foo 5 as <foo: #Nat>
-test type variant1      = `foo 5 as <foo: #Nat, bar: #Nat>
-test type variant2      = `foo [1, 2] as <foo: [#Nat, #Nat]>
+test type variant0      = the <foo: #Nat> of `foo 5
+test type variant1      = the <foo: #Nat, bar: #Nat> of `foo 5
+test type variant2      = the <foo: [#Nat, #Nat]> of `foo [1, 2]
 
 test type case0
  = λ[xx: <none: #Unit, some: #Nat>]

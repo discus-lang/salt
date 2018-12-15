@@ -30,12 +30,26 @@ pTerm
 pTerm_  :: Parser (Term Location)
 pTerm_
  = P.choice
- [ do   -- 'the' Type '.' Term
+ [ do   -- 'the' Type 'of' '`' Lbl TermArg
+        -- 'the' Type 'of' Term
         pTok KThe
         TGTypes ts <- pTypesHead
-        pTok KDot
-        m       <- pTerm
-        return  $ MThe ts m
+        pTok KOf
+
+        P.choice
+         [ do   pTok KBacktick
+                l       <- pLbl
+                ms      <- P.choice
+                                [ do   pSquared $ flip P.sepEndBy (pTok KComma) pTerm
+                                , do   m <- pTermArg; return [m]]
+
+                -- TODO: check properly
+                let [t] = ts
+                return  $ MVariant l ms t
+
+         , do   m <- pTerm
+                return $ MThe ts m ]
+
 
  , do   -- 'box' Term
         pTok KBox
@@ -117,18 +131,6 @@ pTerm_
                 mElse   <- pTerm
                 return  $ MIf [mCond] [mThen] mElse
          ]
-
-
- , do   -- '`' Lbl TermArg 'as' TypeArg
-        pTok KBacktick
-        l       <- pLbl
-        ms      <- P.choice
-                        [ do   pSquared $ flip P.sepEndBy (pTok KComma) pTerm
-                        , do   m <- pTermArg; return [m]]
-        pTok KAs
-        t       <- pTypeArg
-        return  $ MVariant l ms t
-
 
  , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}'
         pTok KCase

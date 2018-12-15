@@ -3,7 +3,7 @@
 
 -- (t-the) --------------------------------------------------------------------
 -- Error: type does not match ascription.
-test type the #Nat. #true
+test type the #Nat of #true
 
 
 -- (t-run) --------------------------------------------------------------------
@@ -136,10 +136,10 @@ test type let x = #true; #true #true
 
 -- (t-rec) --------------------------------------------------------------------
 -- Error: field type does not match expected type.
-test type the [x: #Bool, y: #Nat]. [x = #true, y = #false]
+test type the [x: #Bool, y: #Nat] of [x = #true, y = #false]
 
 -- Error: expected type is not a record type.
-test type the #Nat. [x = #true, y = #false]
+test type the #Nat of [x = #true, y = #false]
 
 -- Error: duplicate fields in record
 test type [x = 3, y = 3, x = 3]
@@ -160,6 +160,11 @@ test type [x = 3].y
 
 -- Error: body has too many values.
 test type [1, 2].x
+
+
+-- (t-vnt) --------------------------------------------------------------------
+-- test type the <foo: #Nat> of `foo 5
+
 
 
 

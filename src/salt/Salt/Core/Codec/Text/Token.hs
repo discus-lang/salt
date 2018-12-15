@@ -37,16 +37,13 @@ data Token
         | KBang   | KPlus
 
         -- Keywords
-        | KType   | KTerm  | KTest
-        | KForall | KExists
-        | KThe    | KAs
-        | KPure   | KSync
-        | KWhere
-        | KFun
-        | KLet    | KDo
-        | KIf     | KThen  | KElse
-        | KCase   | KOf | KOtherwise
-        | KBox    | KRun
+        | KType   | KTerm   | KTest
+        | KForall | KExists | KPure | KSync
+        | KThe    | KOf
+        | KFun    | KBox    | KRun
+        | KLet    | KDo     | KWhere
+        | KIf     | KThen   | KElse
+        | KCase   | KOtherwise
 
         -- Names
         | KVar  Text            -- Plain variable name, "foo"
