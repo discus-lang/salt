@@ -44,3 +44,27 @@ flattenType tt
         parts TPure     = []
         parts t         = [t]
 
+
+-- | Strip params.
+stripTermParamsOfType
+        :: Annot a => Context a -> Type a
+        -> IO [Either [(Bind, Kind a)] [Type a]]
+
+stripTermParamsOfType ctx tt
+ = case tt of
+        TAnn _ t
+         -> stripTermParamsOfType ctx t
+
+        TForall bks tBody
+         -> do  rest    <- stripTermParamsOfType ctx tBody
+                return  $ Left bks : rest
+
+        TFun tsParam [tBody]
+         -> do  rest    <- stripTermParamsOfType ctx tBody
+                return  $ Right tsParam : rest
+
+        TFun tsParam _tsBody
+         -> do  return  $ [Right tsParam]
+
+        _ -> return []
+

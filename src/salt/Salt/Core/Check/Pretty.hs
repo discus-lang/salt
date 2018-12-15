@@ -125,6 +125,16 @@ ppre c (ErrorTypeMismatch _a _wh tExpected tActual)
  = vcat [ text "Unexpected type:" %% ppr c tActual
         , text "      expecting:" %% ppr c tExpected ]
 
+
+-- Application problems -----------------------------------
+ppre c (ErrorUnsaturatedPrim _a _wh n t)
+ = vcat [ text "Unsaturated primitive #" % pprLbl n
+        , text "  of type:" %% ppr c t ]
+
+ppre c (ErrorUnsaturatedCtor _a _wh n t)
+ = vcat [ text "Unsaturated data constructor" %% pprLbl n
+        , text "  of type:" %% ppr c t ]
+
 -- type/type
 ppre c (ErrorAppTypeTypeCannot _a _wh tFun)
  = vcat [ text "Cannot apply type "

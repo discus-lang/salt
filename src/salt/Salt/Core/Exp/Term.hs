@@ -251,6 +251,14 @@ takeMPrm mm
         _               -> Nothing
 
 
+-- | Take the initial sequence of MGTypes from a list of TermArgs
+takeMGTypesPrefix :: [TermArgs a] -> [TermArgs a]
+takeMGTypesPrefix mgs
+ = case mgs of
+        mg@MGTypes{} : mgs' -> mg : takeMGTypesPrefix mgs'
+        _                   -> []
+
+
 -- | Take a closure from a value, if this is one.
 takeVClosure :: Value a -> Maybe (Closure a)
 takeVClosure (VClosure c) = Just c

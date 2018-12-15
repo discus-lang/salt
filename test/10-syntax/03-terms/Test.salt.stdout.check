@@ -69,7 +69,7 @@
 * variant2: ∑[foo: [#Nat, #Nat]]
 * case0: [∑[none: #Unit, some: #Nat]] → [#Nat]
 * case1: [∑[none: [], one: #Nat, two: [#Nat, #Nat]]] → [#Nat]
-* none: ∀[a: #Data]. [] → [#Option [a]]
+* none: #Option [#Nat]
 * some: #Option [#Nat]
 * list'empty: #List [#Nat]
 * list'some: #List [#Nat]

@@ -15,144 +15,168 @@ test/20-error/11-check-term/Test.salt:16:11
 
   16:1   In type test
 
-test/20-error/11-check-term/Test.salt:21:11
+test/20-error/11-check-term/Test.salt:19:11
+  Unsaturated primitive #map'insert
+    of type: ∀[k: #Data, v: #Data]. [k, v, #Map [k, v]] → [#Map [k, v]]
+
+  19:1   In type test
+
+test/20-error/11-check-term/Test.salt:22:11
+  Unsaturated data constructor ##Var"None"
+    of type: ∀[a: #Data]. [] → [#Option [a]]
+
+  22:1   In type test
+
+test/20-error/11-check-term/Test.salt:27:11
   Unknown data constructor 'Derp'.
 
-  21:1   In type test
+  27:1   In type test
 
-test/20-error/11-check-term/Test.salt:26:11
+test/20-error/11-check-term/Test.salt:32:11
   Variable 'x' is not in scope.
 
-  26:1   In type test
-
-test/20-error/11-check-term/Test.salt:31:12
-  Unknown kind constructor 'Nat'.
-
-  31:1   In type test
-
-test/20-error/11-check-term/Test.salt:34:12
-  Malformed kind.
-
-  34:1   In type test
+  32:1   In type test
 
 test/20-error/11-check-term/Test.salt:37:12
-  Not enough values
-    of types: []
-    expected: [#Data]
+  Unknown kind constructor 'Nat'.
 
   37:1   In type test
 
 test/20-error/11-check-term/Test.salt:40:12
-  Impure type abstraction
-   causes effect #Console
+  Malformed kind.
 
   40:1   In type test
 
-test/20-error/11-check-term/Test.salt:45:12
-  Unknown type primitive '#Data'.
+test/20-error/11-check-term/Test.salt:43:12
+  Not enough values
+    of types: []
+    expected: [#Data]
 
-  45:1   In type test
+  43:1   In type test
 
-test/20-error/11-check-term/Test.salt:48:12
-  Cannot apply type 
-    of kind: #Data
+test/20-error/11-check-term/Test.salt:46:12
+  Impure type abstraction
+   causes effect #Console
 
-  48:1   In type test
+  46:1   In type test
 
 test/20-error/11-check-term/Test.salt:51:12
-  Unexpected type: #Effect
-        expecting: #Data
+  Unknown type primitive '#Data'.
 
   51:1   In type test
 
 test/20-error/11-check-term/Test.salt:54:12
-  Impure term abstraction
-   causes effect #Console
+  Cannot apply type 
+    of kind: #Data
 
   54:1   In type test
 
-test/20-error/11-check-term/Test.salt:59:11
+test/20-error/11-check-term/Test.salt:57:12
+  Unexpected type: #Effect
+        expecting: #Data
+
+  57:1   In type test
+
+test/20-error/11-check-term/Test.salt:60:12
+  Impure term abstraction
+   causes effect #Console
+
+  60:1   In type test
+
+test/20-error/11-check-term/Test.salt:65:11
   Too many values
     of types: [#Bool, #Bool]
     expected: [#Data]
 
-  59:1   In type test
+  65:1   In type test
 
-test/20-error/11-check-term/Test.salt:63:11
+test/20-error/11-check-term/Test.salt:70:11
   Cannot instantiate non-polymorphic value 
     of type: #Nat
 
-  63:1   In type test
+  70:1   In type test
 
-test/20-error/11-check-term/Test.salt:66:11
+test/20-error/11-check-term/Test.salt:73:11
   Not enough type arguments in application.
    parameter kinds: [a : #Data, b : #Data]
     argument types: [#Nat]
 
-  66:1   In type test
+  73:1   In type test
 
-test/20-error/11-check-term/Test.salt:69:11
+test/20-error/11-check-term/Test.salt:76:11
   Too many type arguments in application.
    parameter kinds: [a : #Data]
     argument types: [#Nat, #Nat]
 
-  69:1   In type test
-
-test/20-error/11-check-term/Test.salt:72:11
-  Unexpected type: #Effect
-        expecting: #Data
-
-  72:1   In type test
-
-test/20-error/11-check-term/Test.salt:76:11
-  Cannot apply non-function 
-    of type: #Nat
-
   76:1   In type test
 
 test/20-error/11-check-term/Test.salt:79:11
+  Unexpected type: #Effect
+        expecting: #Data
+
+  79:1   In type test
+
+test/20-error/11-check-term/Test.salt:83:11
+  Cannot apply non-function 
+    of type: #Nat
+
+  83:1   In type test
+
+test/20-error/11-check-term/Test.salt:86:11
   Too many values
     of types: [#Bool]
     expected: [#Data]
 
-  79:1   In type test
+  86:1   In type test
 
-test/20-error/11-check-term/Test.salt:82:11
+test/20-error/11-check-term/Test.salt:89:11
   Too many values
     of types: [#Bool, #Bool, #Bool]
     expected: [#Data, #Data, #Data]
 
-  82:1   In type test
+  89:1   In type test
 
-test/20-error/11-check-term/Test.salt:85:22
+test/20-error/11-check-term/Test.salt:92:22
   Unexpected type: #Nat
         expecting: #Bool
 
-  85:1   In type test
+  92:1   In type test
 
-test/20-error/11-check-term/Test.salt:89:11
+test/20-error/11-check-term/Test.salt:96:11
   Cannot apply non-function 
     of type: #Nat
 
-  89:1   In type test
+  96:1   In type test
 
-test/20-error/11-check-term/Test.salt:92:11
+test/20-error/11-check-term/Test.salt:99:11
   Not enough values
     of types: [#Bool]
     expected: [#Bool, #Bool]
 
-  92:1   In type test
+  99:1   In type test
 
-test/20-error/11-check-term/Test.salt:95:22
+test/20-error/11-check-term/Test.salt:102:22
   Too many values
     of types: [#Bool, #Bool, #Bool]
     expected: [#Bool, #Bool]
 
-  95:1   In type test
+  102:1  In type test
 
-test/20-error/11-check-term/Test.salt:98:22
+test/20-error/11-check-term/Test.salt:105:22
   Unexpected type: #Nat
         expecting: #Bool
 
-  98:1   In type test
+  105:1  In type test
+
+test/20-error/11-check-term/Test.salt:108:11
+  Unsaturated primitive #map'insert
+    of type: ∀[k: #Data, v: #Data]. [k, v, #Map [k, v]] → [#Map [k, v]]
+
+  108:1  In type test
+
+test/20-error/11-check-term/Test.salt:111:11
+  Unsaturated primitive #map'insert
+    of type: ∀[k: #Data, v: #Data]. [k, v, #Map [k, v]] → [#Map [k, v]]
+
+  111:1  In type test
 

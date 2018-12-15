@@ -77,7 +77,9 @@ test type appt'double   = (λ@[a: #Data] [x: a] → [x, x]) @[#Nat] [5]
 test type appt'double'1 = (λ@[a: #Data] [x: a] → [x, x]) @#Nat [5]
 
 test type appt'app      = (λ@[a: #Data, b: #Data] [f: a → b, x: a] → f x)
-                                @[#Bool, #Bool] [#bool'not, #true]
+                                @[#Bool, #Bool]
+                                 [ (λ[a: #Bool] → #bool'not a)
+                                 , #true]
 
 
 -- Let bindings ---------------------------------------------------------------
@@ -156,7 +158,7 @@ test type case1
 
 
 -- Option-----------------------------------------------------------------------
-test type none          = #None
+test type none          = #None @#Nat []
 test type some          = #Some @#Nat 4
 
 

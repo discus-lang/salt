@@ -105,11 +105,28 @@ instance IsString (Type a) where
  fromString name = TVar (Bound (Name $ T.pack name))
 
 
--- Compounds --------------------------------------------------------------------------------------
+-- Predicates -------------------------------------------------------------------------------------
+-- | Check if this type is the pure effect.
 isTPure :: Type a -> Bool
 isTPure tt
  = case tt of
         TPure   -> True
         _       -> False
+
+
+-- Compounds --------------------------------------------------------------------------------------
+-- | If this is a `forall` type then split off the parameters and body.
+takeTForalls :: Type a -> Maybe ([[(Bind, Type a)]], Type a)
+takeTForalls tt
+ = start
+ where start
+        = case tt of
+                TForall tps tBody   -> Just $ go [tps] tBody
+                _                   -> Nothing
+
+       go tpss tBody
+        = case tBody of
+                TForall tps' tBody' -> go (tps' : tpss) tBody'
+                _                   -> (reverse tpss, tBody)
 
 

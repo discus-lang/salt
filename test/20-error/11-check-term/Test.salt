@@ -15,6 +15,12 @@ test type run #true
 -- Error: unknown primitive.
 test type #derp
 
+-- Error: unsaturated primitive operator.
+test type #map'insert
+
+-- Error: unsaturated primitive constructor.
+test type #None
+
 
 -- (t-con) --------------------------------------------------------------------
 -- Error: unknown data constructor.
@@ -58,6 +64,7 @@ test type (λ[x: #Text] → #console'print "derp")
 -- Error: cannot apply a type vector.
 test type [#true, #true] 3
 
+
 -- (app term/types) -------------------
 -- Error: cannot instantiate non-polymorphic value.
 test type 5 @#Nat
@@ -96,4 +103,10 @@ test type #bool'and ((λ[] → [#true, #true, #true]) [])
 
 -- Error: wrong argument types.
 test type #bool'and ((λ[] → [1, 2]) [])
+
+-- Error: unsaturated primitive.
+test type #map'insert
+
+-- Error: unsaturated primitive.
+test type #map'insert @[#Nat, #Nat]
 

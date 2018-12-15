@@ -92,6 +92,19 @@ data Error a
         , errorTypeExpected     :: Type a
         , errorTypeActual       :: Type a }
 
+        -- Application problems ------------------
+        | ErrorUnsaturatedPrim
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name
+        , errorType             :: Type a }
+
+        | ErrorUnsaturatedCtor
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name
+        , errorType             :: Type a }
+
         -- type/type
         | ErrorAppTypeTypeCannot
         { errorAnnot            :: a

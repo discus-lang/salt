@@ -10,19 +10,18 @@ import Salt.Core.Check.Error
 import Salt.Core.Transform.MapAnnot
 import Salt.Core.Transform.Subst
 import Salt.Core.Exp
+import Salt.Core.Codec.Text             ()
 import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
-import qualified Data.Map.Strict        as Map
-import qualified Data.Set               as Set
-
-import Salt.Core.Codec.Text             ()
 import qualified Salt.Data.Pretty       as P
 
 import Control.Exception
 import Control.Monad
 import Data.Maybe
-
+import qualified Data.Map.Strict        as Map
+import qualified Data.Set               as Set
 import qualified Text.Show.Pretty       as Text
+
 
 
 ---------------------------------------------------------------------------------------------------
@@ -80,17 +79,28 @@ checkTerm a wh ctx m@(MRef (MRVal v)) Synth
 
 
 -- (t-prm) ------------------------------------------------
-checkTerm a wh _ctx m@(MRef (MRPrm nPrim)) Synth
+checkTerm a wh ctx m@(MRef (MRPrm nPrim)) Synth
  | Just pp <- Map.lookup nPrim Prim.primOps
  = do   let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
+
+        pss <- stripTermParamsOfType ctx tPrim
+        when (not $ null pss)
+         $ throw $ ErrorUnsaturatedPrim a wh nPrim tPrim
+
         return (m, [tPrim], [])
 
- | Just t  <- Map.lookup nPrim Prim.primDataCtors
- = do   let tPrim = mapAnnot (const a) t
-        return (m, [tPrim], [])
+ | Just t <- Map.lookup nPrim Prim.primDataCtors
+ = do   let tCon = mapAnnot (const a) t
+
+        pss <- stripTermParamsOfType ctx tCon
+        when (not $ null pss)
+         $ throw $ ErrorUnsaturatedCtor a wh nPrim tCon
+
+        return (m, [tCon], [])
 
  | otherwise
  = throw $ ErrorUnknownPrimitive a wh nPrim
+
 
 
 -- (t-con) ------------------------------------------------
@@ -151,30 +161,37 @@ checkTerm a wh ctx (MAbs ps@MPTerms{} m) Synth
 
 -- (t-aps) ------------------------------------------------
 -- This handles (t-apt), (t-apm) and (t-apv) from the docs.
--- TODO: check that applications are of prims to types are always saturated.
+-- TODO: check args list is not empty.
 checkTerm a wh ctx (MAps mFun0 mgss0) Synth
  = do
-        -- Check the functional expression.
-        (mFun1, tFun1, esFun)
-         <- checkTerm1 a wh ctx mFun0 Synth
-
         -- If this an effectful primitive then also add the effects
         -- we get from applying it.
-        (tFun2, esFun2)
-         <- case takeMPrm mFun1 of
+        (mFun1, tFun1, esFun1)
+         <- case takeMPrm mFun0 of
                 Just nPrm
                  | Just pp      <- Map.lookup nPrm Prim.primOps
-                 -> let tPrim   = mapAnnot (const a) $ Prim.typeOfPrim pp
-                        ePrim   = mapAnnot (const a) $ Prim.effectOfPrim pp
-                    in  return (tPrim, esFun ++ [ePrim])
+                 -> do  let tPrim   = mapAnnot (const a) $ Prim.typeOfPrim pp
+                        let ePrim   = mapAnnot (const a) $ Prim.effectOfPrim pp
+
+                        pss     <- stripTermParamsOfType ctx tPrim
+                        when (length pss /= length mgss0)
+                         $ throw $ ErrorUnsaturatedPrim a wh nPrm tPrim
+
+                        return (mFun0, tPrim, [ePrim])
 
                  | Just tCon    <- Map.lookup nPrm Prim.primDataCtors
-                 -> let tCon'   = mapAnnot (const a) tCon
-                    in  return (tCon', esFun)
+                 -> do  let tCon'   = mapAnnot (const a) tCon
+
+                        pss     <- stripTermParamsOfType ctx tCon'
+                        when (length pss /= length mgss0)
+                         $ throw $ ErrorUnsaturatedCtor a wh nPrm tCon'
+
+                        return (mFun0, tCon', [])
 
                  | otherwise    -> throw $ ErrorUnknownPrimitive a wh nPrm
 
-                Nothing -> return (tFun1, esFun)
+                Nothing
+                 -> checkTerm1 a wh ctx mFun0 Synth
 
         let -- (t-apt) -----
             checkApp [tFun] es (MGTypes tsArg : mgss) mgssAcc
@@ -200,7 +217,7 @@ checkTerm a wh ctx (MAps mFun0 mgss0) Synth
             checkApp tsResult _ _ _
              = throw $ ErrorTermsWrongArity a wh tsResult [TData]
 
-        checkApp [tFun2] esFun2 mgss0 []
+        checkApp [tFun1] esFun1 mgss0 []
 
 
 -- (t-let) ------------------------------------------------
