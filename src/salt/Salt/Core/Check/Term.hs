@@ -194,8 +194,11 @@ checkTerm a wh ctx (MAps mFun0 mgss0) Synth
             checkApp tsResult es [] mgssAcc
              = return (MAps mFun1 (reverse mgssAcc), tsResult, es)
 
-            checkApp _ _ _ _
-             = error "arity error"
+            -- If the current function is multi valued and we still have arguments
+            --   then we had a type abstraction that returned multiple values
+            --   but haven't detected that when it was constructed.
+            checkApp tsResult _ _ _
+             = throw $ ErrorTermsWrongArity a wh tsResult [TData]
 
         checkApp [tFun2] esFun2 mgss0 []
 

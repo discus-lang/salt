@@ -71,81 +71,88 @@ test/20-error/11-check-term/Test.salt:54:12
 
   54:1   In type test
 
-test/20-error/11-check-term/Test.salt:60:11
-  Cannot instantiate non-polymorphic value 
-    of type: #Nat
+test/20-error/11-check-term/Test.salt:59:11
+  Too many values
+    of types: [#Bool, #Bool]
+    expected: [#Data]
 
-  60:1   In type test
+  59:1   In type test
 
 test/20-error/11-check-term/Test.salt:63:11
-  Not enough type arguments in application.
-   parameter kinds: [a : #Data, b : #Data]
-    argument types: [#Nat]
+  Cannot instantiate non-polymorphic value 
+    of type: #Nat
 
   63:1   In type test
 
 test/20-error/11-check-term/Test.salt:66:11
-  Too many type arguments in application.
-   parameter kinds: [a : #Data]
-    argument types: [#Nat, #Nat]
+  Not enough type arguments in application.
+   parameter kinds: [a : #Data, b : #Data]
+    argument types: [#Nat]
 
   66:1   In type test
 
 test/20-error/11-check-term/Test.salt:69:11
-  Unexpected type: #Effect
-        expecting: #Data
+  Too many type arguments in application.
+   parameter kinds: [a : #Data]
+    argument types: [#Nat, #Nat]
 
   69:1   In type test
 
-test/20-error/11-check-term/Test.salt:73:11
-  Cannot apply non-function 
-    of type: #Nat
+test/20-error/11-check-term/Test.salt:72:11
+  Unexpected type: #Effect
+        expecting: #Data
 
-  73:1   In type test
+  72:1   In type test
 
 test/20-error/11-check-term/Test.salt:76:11
-  Too many values
-    of types: [#Bool]
-    expected: [#Data]
+  Cannot apply non-function 
+    of type: #Nat
 
   76:1   In type test
 
 test/20-error/11-check-term/Test.salt:79:11
   Too many values
-    of types: [#Bool, #Bool, #Bool]
-    expected: [#Data, #Data, #Data]
+    of types: [#Bool]
+    expected: [#Data]
 
   79:1   In type test
 
-test/20-error/11-check-term/Test.salt:82:22
-  Unexpected type: #Nat
-        expecting: #Bool
+test/20-error/11-check-term/Test.salt:82:11
+  Too many values
+    of types: [#Bool, #Bool, #Bool]
+    expected: [#Data, #Data, #Data]
 
   82:1   In type test
 
-test/20-error/11-check-term/Test.salt:86:11
+test/20-error/11-check-term/Test.salt:85:22
+  Unexpected type: #Nat
+        expecting: #Bool
+
+  85:1   In type test
+
+test/20-error/11-check-term/Test.salt:89:11
   Cannot apply non-function 
     of type: #Nat
 
-  86:1   In type test
-
-test/20-error/11-check-term/Test.salt:89:11
-  Not enough values
-    of types: [#Bool]
-    expected: [#Bool, #Bool]
-
   89:1   In type test
 
-test/20-error/11-check-term/Test.salt:92:22
-  Too many values
-    of types: [#Bool, #Bool, #Bool]
+test/20-error/11-check-term/Test.salt:92:11
+  Not enough values
+    of types: [#Bool]
     expected: [#Bool, #Bool]
 
   92:1   In type test
 
 test/20-error/11-check-term/Test.salt:95:22
+  Too many values
+    of types: [#Bool, #Bool, #Bool]
+    expected: [#Bool, #Bool]
+
+  95:1   In type test
+
+test/20-error/11-check-term/Test.salt:98:22
   Unexpected type: #Nat
         expecting: #Bool
 
-  95:1   In type test
+  98:1   In type test
 

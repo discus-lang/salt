@@ -55,6 +55,9 @@ test type (λ[x: #Text] → #console'print "derp")
 
 
 -- (t-aps) --------------------------------------------------------------------
+-- Error: cannot apply a type vector.
+test type [#true, #true] 3
+
 -- (app term/types) -------------------
 -- Error: cannot instantiate non-polymorphic value.
 test type 5 @#Nat
@@ -93,4 +96,7 @@ test type #bool'and ((λ[] → [#true, #true, #true]) [])
 
 -- Error: wrong argument types.
 test type #bool'and ((λ[] → [1, 2]) [])
+
+
+
 
