@@ -135,9 +135,13 @@ ppre c (ErrorUnsaturatedCtor _a _wh n t)
  = vcat [ text "Unsaturated data constructor" %% pprLbl n
         , text "  of type:" %% ppr c t ]
 
+ppre c (ErrorAppNoArguments _a _wh tFun)
+ = vcat [ text "No arguments for function application"
+        , text "  of type:" %% ppr c tFun ]
+
 -- type/type
 ppre c (ErrorAppTypeTypeCannot _a _wh tFun)
- = vcat [ text "Cannot apply type "
+ = vcat [ text "Cannot apply type"
         , text "  of kind:" %% ppr c tFun ]
 
 ppre c (ErrorAppTypeTypeWrongArity _a _wh ksExpected ksActual)

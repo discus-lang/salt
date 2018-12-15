@@ -23,7 +23,6 @@ import qualified Data.Set               as Set
 import qualified Text.Show.Pretty       as Text
 
 
-
 ---------------------------------------------------------------------------------------------------
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
@@ -102,7 +101,6 @@ checkTerm a wh ctx m@(MRef (MRPrm nPrim)) Synth
  = throw $ ErrorUnknownPrimitive a wh nPrim
 
 
-
 -- (t-con) ------------------------------------------------
 checkTerm a wh ctx m@(MRef (MRCon nCon)) Synth
  =  contextResolveDataCtor nCon ctx
@@ -161,7 +159,6 @@ checkTerm a wh ctx (MAbs ps@MPTerms{} m) Synth
 
 -- (t-aps) ------------------------------------------------
 -- This handles (t-apt), (t-apm) and (t-apv) from the docs.
--- TODO: check args list is not empty.
 checkTerm a wh ctx (MAps mFun0 mgss0) Synth
  = do
         -- If this an effectful primitive then also add the effects
@@ -193,6 +190,11 @@ checkTerm a wh ctx (MAps mFun0 mgss0) Synth
                 Nothing
                  -> checkTerm1 a wh ctx mFun0 Synth
 
+        -- Check that we have at least some arguments to apply.
+        when (null mgss0)
+         $ throw $ ErrorAppNoArguments a wh tFun1
+
+        -- Check argument types line up with parameter types.
         let -- (t-apt) -----
             checkApp [tFun] es (MGTypes tsArg : mgss) mgssAcc
              = do (tsArg', tResult)  <- checkTermAppTypes a wh ctx tFun tsArg

@@ -64,6 +64,9 @@ test type (λ[x: #Text] → #console'print "derp")
 -- Error: cannot apply a type vector.
 test type [#true, #true] 3
 
+-- Error: there must be some arguments in the application,
+-- but a term without any is not syntactically well formed,
+-- so we can't test for it.
 
 -- (app term/types) -------------------
 -- Error: cannot instantiate non-polymorphic value.

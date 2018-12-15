@@ -105,6 +105,11 @@ data Error a
         , errorName             :: Name
         , errorType             :: Type a }
 
+        | ErrorAppNoArguments
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorType             :: Type a }
+
         -- type/type
         | ErrorAppTypeTypeCannot
         { errorAnnot            :: a
