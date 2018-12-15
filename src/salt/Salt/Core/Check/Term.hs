@@ -316,9 +316,13 @@ checkTerm a wh ctx mm@(MRecord ns ms) mode
 
 -- (t-prj) ------------------------------------------------
 checkTerm a wh ctx (MProject nLabel mRecord) Synth
- = do   (mRecord', tsRecord, esRecord)
+ = do
+        -- Check the body expression.
+        (mRecord', tsRecord, esRecord)
          <- checkTerm a wh ctx mRecord Synth
 
+        -- The body needs to have record type with the field that we
+        -- were expecting.
         case tsRecord of
          [tRecord@(TRecord ns tgs)]
           -> case lookup nLabel $ zip ns tgs of

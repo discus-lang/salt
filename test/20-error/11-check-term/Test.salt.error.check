@@ -248,3 +248,9 @@ test/20-error/11-check-term/Test.salt:151:16
 
   151:1  In type test
 
+test/20-error/11-check-term/Test.salt:156:1
+  Cannot project field x from non-record
+    of type: #Bool
+
+  156:1  In type test
+

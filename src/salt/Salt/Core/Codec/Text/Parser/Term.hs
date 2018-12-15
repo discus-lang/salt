@@ -21,6 +21,10 @@ pTerm
                 TGTypes ts <- pTypesHead
                 return  $ MAnn l1 (MThe ts m)
 
+         , do   P.lookAhead $ pTok KDot
+                nsLabel <- P.many (do pTok KDot; pLbl)
+                return  $  foldl (flip MProject) m nsLabel
+
          , do   return  $ MAnn l1 m ]
 
 pTerm_  :: Parser (Term Location)

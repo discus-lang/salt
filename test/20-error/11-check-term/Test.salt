@@ -151,4 +151,16 @@ test type [x = 3, y = 3, x = 3, y = 4]
 test type [x = #true #true]
 
 
+-- (t-prj) --------------------------------------------------------------------
+-- Error: body does not have record type.
+test type #true.x
+
+-- Error: record does not have required field.
+test type [x = 3].y
+
+-- Error: body has too many values.
+test type [1, 2].x
+
+
+
 
