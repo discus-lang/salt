@@ -1,32 +1,61 @@
 
--- App Term/Term --------------------------------------------------------------
--- Error: cannot apply non function.
-test type 5 5
-test type 5 [1, 2]
+-- Trigger all the errors that can be produced by checkTerm.
 
--- Error: not enough arguments.
-test type #bool'and #true
-test type #bool'and [#true]
+-- (t-the) --------------------------------------------------------------------
+-- Error: type does not match ascription.
+test type the #Nat. #true
 
--- Error: too many arguments.
-test type #bool'and [#true, #true, #true]
-test type #bool'and ((λ[] → [#true, #true, #true]) [])
 
--- Error: wrong argument types.
-test type #bool'and [1, 2]
-test type #bool'and ((λ[] → [1, 2]) [])
+-- (t-run) --------------------------------------------------------------------
+-- Error: value to run is not a suspension.
+test type run #true
+
+
+-- (t-prm) --------------------------------------------------------------------
+-- Error: unknown primitive.
+test type #derp
+
+
+-- (t-con) --------------------------------------------------------------------
+-- Error: unknown data constructor.
+test type Derp
+
+
+-- (t-var) --------------------------------------------------------------------
+-- Error: unknown term variable.
+test type x
+
+
+-- (t-abt) --------------------------------------------------------------------
+-- Error: parameter annotation from the wrong universe.
+test type (λ@[a: #Nat] → #unit)
+
+-- Error: parameter annotation is ill-formed.
+test type (λ@[a: #Data #Data] → #unit)
+
+-- Error: body must produce a value.
+test type (λ@[a: #Data] → [])
+
+-- Error: body is not pure.
+test type (λ@[a: #Data] → do { #console'print "derp"; #unit })
+
+
+-- (t-abm) --------------------------------------------------------------------
+-- Error: parameter type in wrong universe.
+test type (λ[x: #Data] → [])
 
 -- Error: parameter annotation is ill kinded.
 test type (λ[x: #Nat #Nat] → [])
 
--- Error: parameter does not have data kind.
+-- Error: parameter annotation does not have data kind.
 test type (λ[x: #Console] → [])
 
--- Error: parameter type in wrong universe.
-test type (λ[x: #Data] → [])
+-- Error: body is not pure.
+test type (λ[x: #Text] → #console'print "derp")
 
 
--- App Term/Type --------------------------------------------------------------
+-- (t-aps) --------------------------------------------------------------------
+-- (app term/types) -------------------
 -- Error: cannot instantiate non-polymorphic value.
 test type 5 @#Nat
 
@@ -39,11 +68,29 @@ test type (λ@[a: #Data] → #unit) @[#Nat, #Nat]
 -- Error: kind mismatch in application.
 test type (λ@[a: #Data] → #unit) @#Console
 
--- Error: body must produce a value.
-test type (λ@[a: #Data] → [])
+-- (app term/terms) -------------------
+-- Error: cannot apply non function.
+test type 5 [1, 2]
 
--- Error: parameter annotation from the wrong universe.
-test type (λ@[a: #Nat] → #unit)
+-- Error: not enough arguments.
+test type #bool'and [#true]
 
--- Error: parameter annotation is ill-formed.
-test type (λ@[a: #Data #Data] → #unit)
+-- Error: too many arguments.
+test type #bool'and [#true, #true, #true]
+
+-- Error: wrong argument types.
+test type #bool'and [1, 2]
+
+-- (app term/term) --------------------
+-- Error: cannot apply non function.
+test type 5 5
+
+-- Error: not enough arguments.
+test type #bool'and #true
+
+-- Error: too many arguments.
+test type #bool'and ((λ[] → [#true, #true, #true]) [])
+
+-- Error: wrong argument types.
+test type #bool'and ((λ[] → [1, 2]) [])
+

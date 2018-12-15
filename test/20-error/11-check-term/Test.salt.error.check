@@ -1,112 +1,151 @@
-test/20-error/11-check-term/Test.salt:4:11
-  Cannot apply non-function 
-    of type: #Nat
+test/20-error/11-check-term/Test.salt:4:21
+  Unexpected type: #Bool
+        expecting: #Nat
 
   1:1    In type test
 
-test/20-error/11-check-term/Test.salt:5:11
-  Cannot apply non-function 
-    of type: #Nat
-
-  5:1    In type test
-
-test/20-error/11-check-term/Test.salt:8:11
-  Not enough values
-    of types: [#Bool]
-    expected: [#Bool, #Bool]
-
-  8:1    In type test
-
 test/20-error/11-check-term/Test.salt:9:11
-  Too many values
+  Cannot run non-suspension
     of types: [#Bool]
-    expected: [#Data]
 
   9:1    In type test
 
-test/20-error/11-check-term/Test.salt:12:11
-  Too many values
-    of types: [#Bool, #Bool, #Bool]
-    expected: [#Data, #Data, #Data]
+test/20-error/11-check-term/Test.salt:14:11
+  Unknown primitive '#derp'.
 
-  12:1   In type test
+  14:1   In type test
 
-test/20-error/11-check-term/Test.salt:13:22
-  Too many values
-    of types: [#Bool, #Bool, #Bool]
-    expected: [#Bool, #Bool]
+test/20-error/11-check-term/Test.salt:19:11
+  Unknown data constructor 'Derp'.
 
-  13:1   In type test
+  19:1   In type test
 
-test/20-error/11-check-term/Test.salt:16:22
-  Unexpected type: #Nat
-        expecting: #Bool
+test/20-error/11-check-term/Test.salt:24:11
+  Variable 'x' is not in scope.
 
-  16:1   In type test
+  24:1   In type test
 
-test/20-error/11-check-term/Test.salt:17:22
-  Unexpected type: #Nat
-        expecting: #Bool
+test/20-error/11-check-term/Test.salt:29:12
+  Unknown kind constructor 'Nat'.
 
-  17:1   In type test
+  29:1   In type test
 
-test/20-error/11-check-term/Test.salt:20:12
-  Cannot apply type 
-    of kind: #Data
+test/20-error/11-check-term/Test.salt:32:12
+  Malformed kind.
 
-  20:1   In type test
+  32:1   In type test
 
-test/20-error/11-check-term/Test.salt:23:12
-  Unexpected type: #Effect
-        expecting: #Data
-
-  23:1   In type test
-
-test/20-error/11-check-term/Test.salt:26:12
-  Unknown type primitive '#Data'.
-
-  26:1   In type test
-
-test/20-error/11-check-term/Test.salt:31:11
-  Cannot instantiate non-polymorphic value 
-    of type: #Nat
-
-  31:1   In type test
-
-test/20-error/11-check-term/Test.salt:34:11
-  Not enough type arguments in application.
-   parameter kinds: [a : #Data, b : #Data]
-    argument types: [#Nat]
-
-  34:1   In type test
-
-test/20-error/11-check-term/Test.salt:37:11
-  Too many type arguments in application.
-   parameter kinds: [a : #Data]
-    argument types: [#Nat, #Nat]
-
-  37:1   In type test
-
-test/20-error/11-check-term/Test.salt:40:11
-  Unexpected type: #Effect
-        expecting: #Data
-
-  40:1   In type test
-
-test/20-error/11-check-term/Test.salt:43:12
+test/20-error/11-check-term/Test.salt:35:12
   Not enough values
     of types: []
     expected: [#Data]
 
+  35:1   In type test
+
+test/20-error/11-check-term/Test.salt:38:12
+  Impure type abstraction
+   causes effect #Console
+
+  38:1   In type test
+
+test/20-error/11-check-term/Test.salt:43:12
+  Unknown type primitive '#Data'.
+
   43:1   In type test
 
 test/20-error/11-check-term/Test.salt:46:12
-  Unknown kind constructor 'Nat'.
+  Cannot apply type 
+    of kind: #Data
 
   46:1   In type test
 
 test/20-error/11-check-term/Test.salt:49:12
-  Malformed kind.
+  Unexpected type: #Effect
+        expecting: #Data
 
   49:1   In type test
+
+test/20-error/11-check-term/Test.salt:52:12
+  Impure term abstraction
+   causes effect #Console
+
+  52:1   In type test
+
+test/20-error/11-check-term/Test.salt:58:11
+  Cannot instantiate non-polymorphic value 
+    of type: #Nat
+
+  58:1   In type test
+
+test/20-error/11-check-term/Test.salt:61:11
+  Not enough type arguments in application.
+   parameter kinds: [a : #Data, b : #Data]
+    argument types: [#Nat]
+
+  61:1   In type test
+
+test/20-error/11-check-term/Test.salt:64:11
+  Too many type arguments in application.
+   parameter kinds: [a : #Data]
+    argument types: [#Nat, #Nat]
+
+  64:1   In type test
+
+test/20-error/11-check-term/Test.salt:67:11
+  Unexpected type: #Effect
+        expecting: #Data
+
+  67:1   In type test
+
+test/20-error/11-check-term/Test.salt:71:11
+  Cannot apply non-function 
+    of type: #Nat
+
+  71:1   In type test
+
+test/20-error/11-check-term/Test.salt:74:11
+  Too many values
+    of types: [#Bool]
+    expected: [#Data]
+
+  74:1   In type test
+
+test/20-error/11-check-term/Test.salt:77:11
+  Too many values
+    of types: [#Bool, #Bool, #Bool]
+    expected: [#Data, #Data, #Data]
+
+  77:1   In type test
+
+test/20-error/11-check-term/Test.salt:80:22
+  Unexpected type: #Nat
+        expecting: #Bool
+
+  80:1   In type test
+
+test/20-error/11-check-term/Test.salt:84:11
+  Cannot apply non-function 
+    of type: #Nat
+
+  84:1   In type test
+
+test/20-error/11-check-term/Test.salt:87:11
+  Not enough values
+    of types: [#Bool]
+    expected: [#Bool, #Bool]
+
+  87:1   In type test
+
+test/20-error/11-check-term/Test.salt:90:22
+  Too many values
+    of types: [#Bool, #Bool, #Bool]
+    expected: [#Bool, #Bool]
+
+  90:1   In type test
+
+test/20-error/11-check-term/Test.salt:93:22
+  Unexpected type: #Nat
+        expecting: #Bool
+
+  93:1   In type test
 

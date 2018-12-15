@@ -104,3 +104,12 @@ pattern TSleep          = TPrm "Sleep"
 instance IsString (Type a) where
  fromString name = TVar (Bound (Name $ T.pack name))
 
+
+-- Compounds --------------------------------------------------------------------------------------
+isTPure :: Type a -> Bool
+isTPure tt
+ = case tt of
+        TPure   -> True
+        _       -> False
+
+

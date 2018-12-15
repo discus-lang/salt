@@ -240,10 +240,22 @@ takeVMaybeClosure vv
         _               -> Nothing
 
 
+-- | Take the name of a primitive from a term, if this is one.
+--   We look through any annotations and type ascriptions.
+takeMPrm :: Term a -> Maybe Name
+takeMPrm mm
+ = case mm of
+        MAnn _ m        -> takeMPrm m
+        MThe _ m        -> takeMPrm m
+        MPrm n          -> Just n
+        _               -> Nothing
+
+
 -- | Take a closure from a value, if this is one.
 takeVClosure :: Value a -> Maybe (Closure a)
 takeVClosure (VClosure c) = Just c
 takeVClosure _            = Nothing
+
 
 
 -- | Take the parameter and result types from a function type,

@@ -31,11 +31,20 @@ data Prim
         , docs  :: Text }
 
 
+-- | Get the value type of a primitive.
 typeOfPrim :: Prim -> Type ()
 typeOfPrim pp
  = case pp of
         PP {tsig} -> tsig
         PO {tsig} -> tsig
+
+
+-- | Get the effect type of a primitive.
+effectOfPrim :: Prim -> Type ()
+effectOfPrim pp
+ = case pp of
+        PP {}     -> TPure
+        PO {teff} -> TSum teff
 
 
 primOps :: Map Name Prim
@@ -296,13 +305,13 @@ primOpsMap
 primOpsConsole
  = [ PO { name  = "console'print"
         , tsig  = [TText] :-> []
-        , teff  = [TCon "Console"]
+        , teff  = [TPrm "Console"]
         , exec  = \[NVs [VText tx]] -> do Text.putStr tx; return []
         , docs  = "Print a text string to the console." }
 
    , PO { name  = "console'println"
         , tsig  = [TText] :-> []
-        , teff  = [TCon "Console"]
+        , teff  = [TPrm "Console"]
         , exec  = \[NVs [VText tx]] -> do Text.putStrLn tx; return []
         , docs  = "Print a text string to the console, with a newline on the end." }
    ]

@@ -1,6 +1,7 @@
 
 module Salt.Core.Check.Term where
 import Salt.Core.Check.Eq
+import Salt.Core.Check.Reduce
 import Salt.Core.Check.Type
 import Salt.Core.Check.Kind
 import Salt.Core.Check.Context
@@ -52,18 +53,23 @@ checkTerm a wh ctx (MThe ts m) Synth
 -- (t-box) ------------------------------------------------
 checkTerm a wh ctx (MBox m) Synth
  = do   (m', ts, es) <- checkTerm a wh ctx m Synth
-        -- TODO: crush effects before boxing them.
-        return  (MBox m', [TSusp es (TSum ts)], [])
+        let tEff = flattenType (TSum es)
+        return  (MBox m', [TSusp ts tEff], [])
 
 
 -- (t-run) ------------------------------------------------
 checkTerm a wh ctx (MRun m) Synth
- = do   (m', ts, es) <- checkTerm a wh ctx m Synth
+ = do
+        -- Check the body.
+        (m', tsSusp', es) <- checkTerm a wh ctx m Synth
 
-        -- TODO: look through any annots.
-        case ts of
-         [TSusp ts' e'] -> return (MRun m', ts', es ++ [e'])
-         _              -> error $ "not a suspension" ++ show ts
+        -- The body must produce a suspension.
+        -- When we run it it causes the effects in its annotations.
+        tsSusp_red'       <- reduceTypes a wh ctx tsSusp'
+        case tsSusp_red' of
+         [TSusp tsResult' e']
+            -> return (MRun m', tsResult', es ++ [e'])
+         _  -> throw $ ErrorRunSuspensionIsNot a wh tsSusp_red'
 
 
 -- (t-val) ------------------------------------------------
@@ -115,29 +121,66 @@ checkTerm a wh ctx m@(MVar u) Synth
 
 -- (t-abt) ------------------------------------------------
 checkTerm a wh ctx (MAbs ps@MPTypes{} m) Synth
- = do   ps'@(MPTypes bts) <- checkTermParams a wh ctx ps
-        let ctx' =  contextBindTermParams ps ctx
-        (m', t, _es)  <- checkTerm1 a wh ctx' m Synth
-        -- TODO: check effects are empty.
+ = do
+        -- Check the parameters and bind into the context.
+        ps'@(MPTypes bts) <- checkTermParams a wh ctx ps
+        let ctx'    =  contextBindTermParams ps ctx
+
+        -- Check the body of the abstraction in the new context.
+        (m', t, es) <- checkTerm1 a wh ctx' m Synth
+
+        -- The body must be pure.
+        eBody_red   <- reduceType a wh ctx' (TSum es)
+        when (not $ isTPure eBody_red)
+         $ throw $ ErrorImpureTypeAbstraction a wh eBody_red
+
         return  (MAbs ps' m', [TForall bts t], [])
 
 
 -- (t-abm) ------------------------------------------------
 checkTerm a wh ctx (MAbs ps@MPTerms{} m) Synth
- = do   ps'@(MPTerms bts) <- checkTermParams a wh ctx ps
+ = do
+        -- Check the parameters and bind them into the context.
+        ps'@(MPTerms bts) <- checkTermParams a wh ctx ps
         let ctx' =  contextBindTermParams ps ctx
-        (m', ts, _es) <- checkTerm a wh ctx' m Synth
-        -- TODO: check effects are empty.
+
+        -- Check the body of the abstraction in the new context.
+        (m', ts, es) <- checkTerm a wh ctx' m Synth
+
+        -- The body must be pure.
+        eBody_red    <- reduceType a wh ctx' (TSum es)
+        when (not $ isTPure eBody_red)
+         $ throw $ ErrorImpureTermAbstraction a wh eBody_red
+
         return  (MAbs ps' m', [TFun (map snd bts) ts], [])
 
 
 -- (t-aps) ------------------------------------------------
 -- This handles (t-apt), (t-apm) and (t-apv) from the docs.
--- TODO: redo typing rules to use spine form for argument lists.
+-- TODO: check that applications are of prims to types are always saturated.
 checkTerm a wh ctx (MAps mFun0 mgss0) Synth
  = do
+        -- Check the functional expression.
         (mFun1, tFun1, esFun)
          <- checkTerm1 a wh ctx mFun0 Synth
+
+        -- If this an effectful primitive then also add the effects
+        -- we get from applying it.
+        (tFun2, esFun2)
+         <- case takeMPrm mFun1 of
+                Just nPrm
+                 | Just pp      <- Map.lookup nPrm Prim.primOps
+                 -> let tPrim   = mapAnnot (const a) $ Prim.typeOfPrim pp
+                        ePrim   = mapAnnot (const a) $ Prim.effectOfPrim pp
+                    in  return (tPrim, esFun ++ [ePrim])
+
+                 | Just tCon    <- Map.lookup nPrm Prim.primDataCtors
+                 -> let tCon'   = mapAnnot (const a) tCon
+                    in  return (tCon', esFun)
+
+                 | otherwise    -> throw $ ErrorUnknownPrimitive a wh nPrm
+
+                Nothing -> return (tFun1, esFun)
 
         let -- (t-apt) -----
             checkApp [tFun] es (MGTypes tsArg : mgss) mgssAcc
@@ -160,7 +203,7 @@ checkTerm a wh ctx (MAps mFun0 mgss0) Synth
             checkApp _ _ _ _
              = error "arity error"
 
-        checkApp [tFun1] esFun mgss0 []
+        checkApp [tFun2] esFun2 mgss0 []
 
 
 -- (t-let) ------------------------------------------------

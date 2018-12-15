@@ -109,6 +109,17 @@ ppre c (ErrorLetWrongArity _a _wh tsActual bsExpected)
         , text "  binders:" %% squared (map (ppr c) bsExpected)
         , text "   values:" %% squared (map (ppr c) tsActual) ]
 
+
+-- Purity problems ----------------------------------------
+ppre c (ErrorImpureTypeAbstraction _a _wh eActual)
+ = vcat [ text "Impure type abstraction"
+        , text " causes effect" %% ppr c eActual ]
+
+ppre c (ErrorImpureTermAbstraction _a _wh eActual)
+ = vcat [ text "Impure term abstraction"
+        , text " causes effect" %% ppr c eActual ]
+
+
 -- Unexpected types ---------------------------------------
 ppre c (ErrorTypeMismatch _a _wh tExpected tActual)
  = vcat [ text "Unexpected type:" %% ppr c tActual
@@ -174,9 +185,10 @@ ppre c (ErrorAppTermTermWrongArityNum _a _wh tsParam nArg)
              , text " parameter types:" %% squared (map (ppr c) tsParam) ]
 
 
--- Problems with records ----------------------------------
+-- Record problems ----------------------------------------
 ppre c (ErrorRecordProjectIsNot _a _wh t n)
- = vcat [ text "Cannot project field"       %% squotes (ppr c n) %% text "from non-record"
+ = vcat [ text "Cannot project field"
+                %% squotes (ppr c n) %% text "from non-record"
         , text "  of type:" %% ppr c t ]
 
 ppre c (ErrorRecordProjectNoField _a _wh t n)
@@ -188,8 +200,14 @@ ppre c (ErrorRecordTypeDuplicateFields _a _wh ns)
         , text "  fields:" %% braced (map (ppr c) ns) ]
 
 
--- Problems with variants ---------------------------------
+-- Variant problems ---------------------------------------
 ppre c (ErrorVariantTypeDuplicateAlts _a _wh ns)
  = vcat [ text "Duplicate alternatives in variant type"
         , text "  alternatives:" %% braced (map (ppr c) ns) ]
+
+
+-- Suspension problems ------------------------------------
+ppre c (ErrorRunSuspensionIsNot _a _wh ts)
+ = vcat [ text "Cannot run non-suspension"
+        , text "  of types:" %% squared (map (ppr c) ts) ]
 

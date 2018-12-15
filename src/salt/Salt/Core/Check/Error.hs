@@ -74,6 +74,17 @@ data Error a
         , errorTypesActual      :: [Type a]
         , errorBinds            :: [Bind] }
 
+        -- Purity problems -----------------------
+        | ErrorImpureTypeAbstraction
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorEffect           :: Type a }
+
+        | ErrorImpureTermAbstraction
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorEffect           :: Type a }
+
         -- Unexpected types ----------------------
         | ErrorTypeMismatch
         { errorAnnot            :: a
@@ -129,7 +140,6 @@ data Error a
         , errorCtorParamTypes   :: [Type a]
         , errorCtorArgNum       :: Int }
 
-
         -- Record problems ----------------------
         | ErrorRecordProjectIsNot
         { errorAnnot            :: a
@@ -153,6 +163,12 @@ data Error a
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorFields           :: [Name] }
+
+        -- Suspension problems ------------------
+        | ErrorRunSuspensionIsNot
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorTypes            :: [Type a] }
         deriving Show
 
 instance (Show a, Typeable a) => Exception (Error a)
