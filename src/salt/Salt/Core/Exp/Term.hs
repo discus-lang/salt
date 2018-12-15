@@ -77,7 +77,7 @@ data Value a
         --  The annotation on map and set elements is forced to () so that the order
         --  of values in the collection does not depend on the annotation.
         | VData     !Name ![Type a] ![Value a]  -- ^ Constructed data.
-        | VRecord   ![(Name, Value a)]          -- ^ Record value.
+        | VRecord   ![(Name, [Value a])]        -- ^ Record value.
         | VVariant  !Name !(Type a) ![Value a]  -- ^ Variant value.
         | VList     !(Type a) ![Value a]        -- ^ List value.
         | VSet      !(Type a) !(Set (Value ())) -- ^ Set value.

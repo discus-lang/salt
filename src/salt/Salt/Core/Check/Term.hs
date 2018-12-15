@@ -16,33 +16,13 @@ import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 
 import Salt.Core.Codec.Text             ()
-import qualified Salt.Data.Pretty               as P
+import qualified Salt.Data.Pretty       as P
 
 import Control.Exception
 import Control.Monad
 import Data.Maybe
 
-import Text.Show.Pretty
-
-contextBindEnv
-        :: Annot a
-        => a -> [Where a] -> Env a
-        -> Context a -> IO (Context a)
-
-contextBindEnv a wh (Env bs0) ctx0
- = go ctx0 (reverse bs0)
- where
-        go ctx (EnvType n t : bs)
-         = do   (_, k') <- checkType a wh ctx t
-                go (contextBindType n k' ctx) bs
-
-        go ctx (EnvValue n v : bs)
-         = do   (_, [t'], _) <- checkTerm a wh ctx (MVal v) Synth
-                go (contextBindTerm n t' ctx) bs
-
-        go ctx []
-         = return $ ctx
-
+import qualified Text.Show.Pretty       as Text
 
 
 ---------------------------------------------------------------------------------------------------
@@ -94,68 +74,9 @@ checkTerm a wh ctx (MRun m) Synth
 
 
 -- (t-val) ------------------------------------------------
--- TODO: split out checkValue
 checkTerm a wh ctx m@(MRef (MRVal v)) Synth
- = case v of
-        VUnit     -> return (m, [TUnit],     [])
-        VSymbol{} -> return (m, [TSymbol],   [])
-        VText{}   -> return (m, [TText],     [])
-        VBool{}   -> return (m, [TBool],     [])
-        VInt{}    -> return (m, [TInt],      [])
-        VNat{}    -> return (m, [TNat],      [])
-        VNone t   -> return (m, [TOption t], [])
-
-        VData n ts vs
-         -> do  (_m, tsResult, es)
-                 <- checkTerm a wh ctx
-                        (MApm (MApt (MCon n) ts) (map MVal vs)) Synth
-                return (MVal v, tsResult, es)
-
-        VRecord nvs
-         -> do  (_m, tsResult, es)
-                 <- checkTerm a wh ctx
-                        (MRecord (map fst nvs) (map (MVal . snd) nvs)) Synth
-                return (MVal v, tsResult, es)
-
-        VVariant n tVar vsVar
-         -> do  (_m, tsResult, es)
-                 <- checkTerm a wh ctx
-                        (MVariant n (map MVal vsVar) tVar) Synth
-                return (MVal v, tsResult, es)
-
-        VList t vs
-         -> do  (_, es) <- checkTermsAreAll a wh ctx t (map MVal vs)
-                return (MVal v, [TList t], es)
-
-        VSet t vsSet
-         -> do  let vs  = map (mapAnnot (const a)) $ Set.toList vsSet
-                checkTermsAreAll a wh ctx t (map MVal vs)
-                return (MVal v, [TSet t], [])
-
-        VMap tk tv vsMap
-         -> do  let vsk = map (mapAnnot (const a)) $ Map.keys vsMap
-                let vsv = Map.elems vsMap
-                checkTermsAreAll a wh ctx tk (map MVal vsk)
-                checkTermsAreAll a wh ctx tv (map MVal vsv)
-                return (MVal v, [TMap tk tv], [])
-
-        VClosure (Closure env mps mBody)
-         -> do  let ctx0
-                        = Context
-                         { contextModuleTerm = contextModuleTerm ctx
-                         , contextLocal      = []}
-
-                ctx1    <- contextBindEnv a wh env ctx0
-
-                (MPTerms btsParam)
-                         <- checkTermParams a wh ctx mps
-                let ctx2 =  contextBindTermParams mps ctx1
-
-                let tsParam = map snd btsParam
-                (_, tsResult, []) <- checkTerm a wh ctx2 mBody Synth
-                -- TODO: check body is pure
-
-                return  (MVal v, [TFun tsParam tsResult], [])
+ = do   t <- checkValue a wh ctx v
+        return (m, [t], [])
 
 
 -- (t-prm) ------------------------------------------------
@@ -459,8 +380,8 @@ checkTerm_default a wh ctx m (Check tsExpected)
 checkTerm_default _ _ _ mm mode
  =  error $ unlines
         [ "checkTerm: not finished"
-        , ppShow mode
-        , ppShow mm
+        , Text.ppShow mode
+        , Text.ppShow mm
         , P.renderIndent $ P.ppr () mm ]
 
 
@@ -655,4 +576,122 @@ checkTermAppTerms a wh ctx tFun msArg
          Just ((_aErr1', tErr1), (_aErr2', tErr2))
            -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
          _ -> return  (msArg', tsResult, esArgs)
+
+
+---------------------------------------------------------------------------------------------------
+-- | Check a value, yielding its type.
+checkValue
+        :: Annot a => a -> [Where a]
+        -> Context a -> Value a -> IO (Type a)
+
+checkValue a wh ctx v
+ = case v of
+        VUnit     -> return TUnit
+        VSymbol{} -> return TSymbol
+        VText{}   -> return TText
+        VBool{}   -> return TBool
+        VInt{}    -> return TInt
+        VNat{}    -> return TNat
+        VNone t   -> return $ TOption t
+
+        VData n ts vs
+         -> do  -- Use the term checker to check the applications.
+                (_m, tResult, [])
+                 <- checkTerm1 a wh ctx
+                        (MApm (MApt (MCon n) ts) (map MVal vs)) Synth
+                return tResult
+
+        VRecord nvs
+         -> do  let (ns, vss) = unzip nvs
+                tss <- mapM (mapM (checkValue a wh ctx)) vss
+                return (TRecord ns $ map TGTypes tss)
+
+        VVariant _n tVar vs
+         -> do  checkType a wh ctx tVar
+                _ts <- mapM (checkValue a wh ctx) vs
+                -- TODO: check embedded type.
+                return tVar
+
+        VList t vs
+         -> do  checkType a wh ctx t
+                checkValuesAreAll a wh ctx t vs
+                return $ TList t
+
+        VSet t vsSet
+         -> do  checkType a wh ctx t
+                checkValuesAreAll a wh ctx t  $ map (mapAnnot (const a)) $ Set.toList vsSet
+                return $ TSet t
+
+        VMap tk tv vsMap
+         -> do  checkType a wh ctx tk
+                checkType a wh ctx tv
+                checkValuesAreAll a wh ctx tk $ map (mapAnnot (const a)) $ Map.keys vsMap
+                checkValuesAreAll a wh ctx tv $ Map.elems vsMap
+                return $ TMap tk tv
+
+        VClosure (Closure env mps mBody)
+         -> do  -- Build a context with just the closure environment.
+                ctx1    <- contextBindEnv a wh env
+                        $  Context
+                        {  contextModuleTerm = contextModuleTerm ctx
+                        ,  contextLocal      = []}
+
+                -- Bind the closure parameters into the context.
+                MPTerms btsParam <- checkTermParams a wh ctx mps
+                let tsParam     = map snd btsParam
+                let ctx2        = contextBindTermParams mps ctx1
+
+                -- Check the body expression.
+                (_, tsResult, esBody) <- checkTerm a wh ctx2 mBody Synth
+
+                -- The body must be pure.
+                eBody_red    <- reduceType a wh ctx2 (TSum esBody)
+                when (not $ isTPure eBody_red)
+                 $ throw $ ErrorImpureTermAbstraction a wh eBody_red
+
+                return $ TFun tsParam tsResult
+
+
+-- | Check that a value has the given type.
+checkValueIs
+        :: Annot a => a -> [Where a] -> Context a
+        -> Type a -> Value a -> IO ()
+
+checkValueIs a wh ctx tExpected v
+ = do   tActual <- checkValue a wh ctx v
+
+        case checkTypeEqs a [] [tExpected] a [] [tActual] of
+         Nothing -> return ()
+         Just ((_a1, t1Err), (_a2, t2Err))
+          -> throw $ ErrorTypeMismatch a wh t1Err t2Err
+
+
+-- | Check that a list of values all have the given type.
+checkValuesAreAll
+        :: Annot a => a -> [Where a] -> Context a
+        -> Type a -> [Value a] -> IO ()
+
+checkValuesAreAll a wh ctx t vs
+ = mapM_ (checkValueIs a wh ctx t) vs
+
+
+-- | Check an environment binding and add it to the context.
+contextBindEnv
+        :: Annot a
+        => a -> [Where a] -> Env a
+        -> Context a -> IO (Context a)
+
+contextBindEnv a wh (Env bs0) ctx0
+ = go ctx0 (reverse bs0)
+ where
+        go ctx (EnvType n t : bs)
+         = do   (_, k') <- checkType a wh ctx t
+                go (contextBindType n k' ctx) bs
+
+        go ctx (EnvValue n v : bs)
+         = do   (_, [t'], _) <- checkTerm a wh ctx (MVal v) Synth
+                go (contextBindTerm n t' ctx) bs
+
+        go ctx []
+         = return $ ctx
 

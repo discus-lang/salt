@@ -417,6 +417,13 @@ pValue
  , do   pTermValueRecord ]
 
 
+pValues :: Parser [Value Location]
+pValues
+ = P.choice
+ [ do   pSquared $ flip P.sepEndBy (pTok KComma) pValue
+ , do   v <- pValue; return [v] ]
+
+
 -- | Parser for record value.
 pTermValueRecord :: Parser (Value Location)
 pTermValueRecord
@@ -425,8 +432,8 @@ pTermValueRecord
         lvs <- P.sepEndBy1
                 (do l   <- pLbl
                     pTok KEquals
-                    v   <- pValue
-                    return (l, v))
+                    vs  <- pValues
+                    return (l, vs))
                 (pTok KComma)
         pTok KSKet
         return $ VRecord lvs

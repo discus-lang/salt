@@ -158,8 +158,8 @@ evalTerm s a env (MKey (MKCon nCon) [MGTypes ts, MGTerms msArg])
 -- Record constructor application.
 evalTerm s a env (MRecord nsField msArg)
  | length nsField == length msArg
- = do   vsArg <- evalTerms s a env msArg
-        return [VRecord $ zip nsField vsArg]
+ = do   vssArg <- mapM (evalTerm s a env) msArg
+        return [VRecord $ zip nsField vssArg]
 
 
 -- Record field projection.
@@ -169,7 +169,7 @@ evalTerm s a env (MProject nField mRecord)
          VRecord nvs
           -> case lookup nField nvs of
                 Nothing -> throw $ ErrorProjectMissingField a vRec nField
-                Just v  -> return [v]
+                Just vs -> return vs
          _ -> throw $ ErrorProjectTypeMismatch a vRec nField
 
 

@@ -118,7 +118,7 @@ instance MapAnnot Value where
         VInt i          -> VInt i
         VNat n          -> VNat n
         VData n ts vs   -> VData n    (map (mapAnnot f) ts) (map (mapAnnot f) vs)
-        VRecord  nvs    -> VRecord    [ (n, mapAnnot f v)        | (n, v) <- nvs ]
+        VRecord  nvss   -> VRecord    [ (n, map (mapAnnot f) vs) | (n, vs) <- nvss ]
         VVariant n t vs -> VVariant n (mapAnnot f t)  (map (mapAnnot f) vs)
         VList t vs      -> VList      (mapAnnot f t)  (map (mapAnnot f) vs)
         VSet  t vs      -> VSet       (mapAnnot f t)  vs
