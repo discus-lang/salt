@@ -118,10 +118,12 @@ pTerm_
  , do   -- '`' Lbl TermArg 'as' TypeArg
         pTok KBacktick
         l       <- pLbl
-        m       <- pTermArg
+        ms      <- P.choice
+                        [ do   pSquared $ flip P.sepEndBy (pTok KComma) pTerm
+                        , do   m <- pTermArg; return [m]]
         pTok KAs
         t       <- pTypeArg
-        return  $ MVariant l m t
+        return  $ MVariant l ms t
 
 
  , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}'
@@ -418,7 +420,7 @@ pValue
 -- | Parser for record value.
 pTermValueRecord :: Parser (Value Location)
 pTermValueRecord
- = do   -- '⟨' (Lbl '=' Value)* '⟩'
+ = do   -- '[' (Lbl '=' Value)* ']'
         pTok KSBra
         lvs <- P.sepEndBy1
                 (do l   <- pLbl

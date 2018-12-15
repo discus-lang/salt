@@ -78,7 +78,7 @@ data Value a
         --  of values in the collection does not depend on the annotation.
         | VData     !Name ![Type a] ![Value a]  -- ^ Constructed data.
         | VRecord   ![(Name, Value a)]          -- ^ Record value.
-        | VVariant  !Name ![Value a]            -- ^ Variant value.
+        | VVariant  !Name !(Type a) ![Value a]  -- ^ Variant value.
         | VList     !(Type a) ![Value a]        -- ^ List value.
         | VSet      !(Type a) !(Set (Value ())) -- ^ Set value.
         | VMap      !(Type a) !(Type a) !(Map (Value ()) (Value a))
@@ -126,7 +126,7 @@ pattern MIf  mCond mThen mElse  = MKey   MKIf   [MGTerms mCond,  MGTerms mThen, 
 pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]
 pattern MProject l  m           = MKey  (MKProject l) [MGTerms [m]]
 
-pattern MVariant l m tResult    = MKey  (MKVariant l) [MGTerm  m,      MGTypes [tResult]]
+pattern MVariant l ms tResult   = MKey  (MKVariant l) [MGTerms ms,     MGTypes [tResult]]
 pattern MCase mScrut ls msAlt   = MKey  (MKCase ls)   [MGTerm  mScrut, MGTerms msAlt]
 
 pattern MList tElem msElem      = MKey   MKList [MGTypes [tElem],  MGTerms msElem]

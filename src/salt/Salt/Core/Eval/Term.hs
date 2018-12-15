@@ -178,7 +178,7 @@ evalTerm s a env (MProject nField mRecord)
 evalTerm s a env (MCase mScrut lsAlt msAlt)
  = do   vScrut  <- evalTerm1 s a env mScrut
         case vScrut of
-         VVariant l vs
+         VVariant l _t vs
           -> case lookup l $ zip lsAlt msAlt of
                 Nothing -> error "variant is not in alts"
                 Just mAlt

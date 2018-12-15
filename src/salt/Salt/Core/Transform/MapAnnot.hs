@@ -117,13 +117,13 @@ instance MapAnnot Value where
         VBool b         -> VBool b
         VInt i          -> VInt i
         VNat n          -> VNat n
-        VData n ts vs   -> VData n (map (mapAnnot f) ts) (map (mapAnnot f) vs)
+        VData n ts vs   -> VData n    (map (mapAnnot f) ts) (map (mapAnnot f) vs)
         VRecord  nvs    -> VRecord    [ (n, mapAnnot f v)        | (n, v) <- nvs ]
-        VVariant n vs   -> VVariant n (map (mapAnnot f) vs)
-        VList t vs      -> VList (mapAnnot f t)  (map (mapAnnot f) vs)
-        VSet  t vs      -> VSet  (mapAnnot f t)  vs
-        VMap  tk tv kvs -> VMap  (mapAnnot f tk) (mapAnnot f tv) (Map.map (mapAnnot f) kvs)
-        VClosure clo    -> VClosure (mapAnnot f clo)
+        VVariant n t vs -> VVariant n (mapAnnot f t)  (map (mapAnnot f) vs)
+        VList t vs      -> VList      (mapAnnot f t)  (map (mapAnnot f) vs)
+        VSet  t vs      -> VSet       (mapAnnot f t)  vs
+        VMap  tk tv kvs -> VMap       (mapAnnot f tk) (mapAnnot f tv) (Map.map (mapAnnot f) kvs)
+        VClosure clo    -> VClosure   (mapAnnot f clo)
 
 
 instance MapAnnot Closure where

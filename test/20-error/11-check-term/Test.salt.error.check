@@ -1,151 +1,151 @@
-test/20-error/11-check-term/Test.salt:4:21
+test/20-error/11-check-term/Test.salt:6:21
   Unexpected type: #Bool
         expecting: #Nat
 
   1:1    In type test
 
-test/20-error/11-check-term/Test.salt:9:11
+test/20-error/11-check-term/Test.salt:11:11
   Cannot run non-suspension
     of types: [#Bool]
 
-  9:1    In type test
+  11:1   In type test
 
-test/20-error/11-check-term/Test.salt:14:11
+test/20-error/11-check-term/Test.salt:16:11
   Unknown primitive '#derp'.
 
-  14:1   In type test
+  16:1   In type test
 
-test/20-error/11-check-term/Test.salt:19:11
+test/20-error/11-check-term/Test.salt:21:11
   Unknown data constructor 'Derp'.
 
-  19:1   In type test
+  21:1   In type test
 
-test/20-error/11-check-term/Test.salt:24:11
+test/20-error/11-check-term/Test.salt:26:11
   Variable 'x' is not in scope.
 
-  24:1   In type test
+  26:1   In type test
 
-test/20-error/11-check-term/Test.salt:29:12
+test/20-error/11-check-term/Test.salt:31:12
   Unknown kind constructor 'Nat'.
 
-  29:1   In type test
+  31:1   In type test
 
-test/20-error/11-check-term/Test.salt:32:12
+test/20-error/11-check-term/Test.salt:34:12
   Malformed kind.
 
-  32:1   In type test
+  34:1   In type test
 
-test/20-error/11-check-term/Test.salt:35:12
+test/20-error/11-check-term/Test.salt:37:12
   Not enough values
     of types: []
     expected: [#Data]
 
-  35:1   In type test
+  37:1   In type test
 
-test/20-error/11-check-term/Test.salt:38:12
+test/20-error/11-check-term/Test.salt:40:12
   Impure type abstraction
    causes effect #Console
 
-  38:1   In type test
+  40:1   In type test
 
-test/20-error/11-check-term/Test.salt:43:12
+test/20-error/11-check-term/Test.salt:45:12
   Unknown type primitive '#Data'.
 
-  43:1   In type test
+  45:1   In type test
 
-test/20-error/11-check-term/Test.salt:46:12
+test/20-error/11-check-term/Test.salt:48:12
   Cannot apply type 
     of kind: #Data
 
-  46:1   In type test
+  48:1   In type test
 
-test/20-error/11-check-term/Test.salt:49:12
+test/20-error/11-check-term/Test.salt:51:12
   Unexpected type: #Effect
         expecting: #Data
 
-  49:1   In type test
+  51:1   In type test
 
-test/20-error/11-check-term/Test.salt:52:12
+test/20-error/11-check-term/Test.salt:54:12
   Impure term abstraction
    causes effect #Console
 
-  52:1   In type test
+  54:1   In type test
 
-test/20-error/11-check-term/Test.salt:58:11
+test/20-error/11-check-term/Test.salt:60:11
   Cannot instantiate non-polymorphic value 
     of type: #Nat
 
-  58:1   In type test
+  60:1   In type test
 
-test/20-error/11-check-term/Test.salt:61:11
+test/20-error/11-check-term/Test.salt:63:11
   Not enough type arguments in application.
    parameter kinds: [a : #Data, b : #Data]
     argument types: [#Nat]
 
-  61:1   In type test
+  63:1   In type test
 
-test/20-error/11-check-term/Test.salt:64:11
+test/20-error/11-check-term/Test.salt:66:11
   Too many type arguments in application.
    parameter kinds: [a : #Data]
     argument types: [#Nat, #Nat]
 
-  64:1   In type test
+  66:1   In type test
 
-test/20-error/11-check-term/Test.salt:67:11
+test/20-error/11-check-term/Test.salt:69:11
   Unexpected type: #Effect
         expecting: #Data
 
-  67:1   In type test
+  69:1   In type test
 
-test/20-error/11-check-term/Test.salt:71:11
+test/20-error/11-check-term/Test.salt:73:11
   Cannot apply non-function 
     of type: #Nat
 
-  71:1   In type test
+  73:1   In type test
 
-test/20-error/11-check-term/Test.salt:74:11
+test/20-error/11-check-term/Test.salt:76:11
   Too many values
     of types: [#Bool]
     expected: [#Data]
 
-  74:1   In type test
+  76:1   In type test
 
-test/20-error/11-check-term/Test.salt:77:11
+test/20-error/11-check-term/Test.salt:79:11
   Too many values
     of types: [#Bool, #Bool, #Bool]
     expected: [#Data, #Data, #Data]
 
-  77:1   In type test
+  79:1   In type test
 
-test/20-error/11-check-term/Test.salt:80:22
+test/20-error/11-check-term/Test.salt:82:22
   Unexpected type: #Nat
         expecting: #Bool
 
-  80:1   In type test
+  82:1   In type test
 
-test/20-error/11-check-term/Test.salt:84:11
+test/20-error/11-check-term/Test.salt:86:11
   Cannot apply non-function 
     of type: #Nat
 
-  84:1   In type test
+  86:1   In type test
 
-test/20-error/11-check-term/Test.salt:87:11
+test/20-error/11-check-term/Test.salt:89:11
   Not enough values
     of types: [#Bool]
     expected: [#Bool, #Bool]
 
-  87:1   In type test
+  89:1   In type test
 
-test/20-error/11-check-term/Test.salt:90:22
+test/20-error/11-check-term/Test.salt:92:22
   Too many values
     of types: [#Bool, #Bool, #Bool]
     expected: [#Bool, #Bool]
 
-  90:1   In type test
+  92:1   In type test
 
-test/20-error/11-check-term/Test.salt:93:22
+test/20-error/11-check-term/Test.salt:95:22
   Unexpected type: #Nat
         expecting: #Bool
 
-  93:1   In type test
+  95:1   In type test
 

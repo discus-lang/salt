@@ -267,9 +267,10 @@ instance Pretty c (Value a) where
         VRecord nvs
          -> bracketed [ ppr c n %% text "=" %% ppr c v | (n, v) <- nvs ]
 
-        VVariant n vs
+        VVariant n t vs
          -> parens $  text "`" % ppr c n
                    %% squared (punctuate (text ", ") (map (ppr c) vs))
+                   %% text "as" %% pprTArg c t
 
         VList t vs
          -> brackets

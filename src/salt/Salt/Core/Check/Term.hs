@@ -24,6 +24,27 @@ import Data.Maybe
 
 import Text.Show.Pretty
 
+contextBindEnv
+        :: Annot a
+        => a -> [Where a] -> Env a
+        -> Context a -> IO (Context a)
+
+contextBindEnv a wh (Env bs0) ctx0
+ = go ctx0 (reverse bs0)
+ where
+        go ctx (EnvType n t : bs)
+         = do   (_, k') <- checkType a wh ctx t
+                go (contextBindType n k' ctx) bs
+
+        go ctx (EnvValue n v : bs)
+         = do   (_, [t'], _) <- checkTerm a wh ctx (MVal v) Synth
+                go (contextBindTerm n t' ctx) bs
+
+        go ctx []
+         = return $ ctx
+
+
+
 ---------------------------------------------------------------------------------------------------
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
@@ -73,7 +94,8 @@ checkTerm a wh ctx (MRun m) Synth
 
 
 -- (t-val) ------------------------------------------------
-checkTerm _a _wh _ctx m@(MRef (MRVal v)) Synth
+-- TODO: split out checkValue
+checkTerm a wh ctx m@(MRef (MRVal v)) Synth
  = case v of
         VUnit     -> return (m, [TUnit],     [])
         VSymbol{} -> return (m, [TSymbol],   [])
@@ -82,7 +104,58 @@ checkTerm _a _wh _ctx m@(MRef (MRVal v)) Synth
         VInt{}    -> return (m, [TInt],      [])
         VNat{}    -> return (m, [TNat],      [])
         VNone t   -> return (m, [TOption t], [])
-        _         -> error "check value not finished"
+
+        VData n ts vs
+         -> do  (_m, tsResult, es)
+                 <- checkTerm a wh ctx
+                        (MApm (MApt (MCon n) ts) (map MVal vs)) Synth
+                return (MVal v, tsResult, es)
+
+        VRecord nvs
+         -> do  (_m, tsResult, es)
+                 <- checkTerm a wh ctx
+                        (MRecord (map fst nvs) (map (MVal . snd) nvs)) Synth
+                return (MVal v, tsResult, es)
+
+        VVariant n tVar vsVar
+         -> do  (_m, tsResult, es)
+                 <- checkTerm a wh ctx
+                        (MVariant n (map MVal vsVar) tVar) Synth
+                return (MVal v, tsResult, es)
+
+        VList t vs
+         -> do  (_, es) <- checkTermsAreAll a wh ctx t (map MVal vs)
+                return (MVal v, [TList t], es)
+
+        VSet t vsSet
+         -> do  let vs  = map (mapAnnot (const a)) $ Set.toList vsSet
+                checkTermsAreAll a wh ctx t (map MVal vs)
+                return (MVal v, [TSet t], [])
+
+        VMap tk tv vsMap
+         -> do  let vsk = map (mapAnnot (const a)) $ Map.keys vsMap
+                let vsv = Map.elems vsMap
+                checkTermsAreAll a wh ctx tk (map MVal vsk)
+                checkTermsAreAll a wh ctx tv (map MVal vsv)
+                return (MVal v, [TMap tk tv], [])
+
+        VClosure (Closure env mps mBody)
+         -> do  let ctx0
+                        = Context
+                         { contextModuleTerm = contextModuleTerm ctx
+                         , contextLocal      = []}
+
+                ctx1    <- contextBindEnv a wh env ctx0
+
+                (MPTerms btsParam)
+                         <- checkTermParams a wh ctx mps
+                let ctx2 =  contextBindTermParams mps ctx1
+
+                let tsParam = map snd btsParam
+                (_, tsResult, []) <- checkTerm a wh ctx2 mBody Synth
+                -- TODO: check body is pure
+
+                return  (MVal v, [TFun tsParam tsResult], [])
 
 
 -- (t-prm) ------------------------------------------------
@@ -291,12 +364,13 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
 
 
 -- (t-vnt) ------------------------------------------------
-checkTerm a wh ctx (MVariant nLabel mValues tResult) Synth
- = do   (mValues', _tsValues, esValues) <- checkTerm a wh ctx mValues Synth
+checkTerm a wh ctx (MVariant nLabel msValues tResult) Synth
+ = do   (msValues', _tsValues, esValues)
+         <- checkTerms a wh ctx msValues Synth
 
         -- TODO: check variant is contained in given type
         -- TODO: check given type is a variant type.
-        return  ( MVariant nLabel mValues' tResult
+        return  ( MVariant nLabel msValues' tResult
                 , [tResult], esValues)
 
 
@@ -432,6 +506,21 @@ checkTerms a wh ctx ms (Check ts)
  = do   (_ms, ts', _ess')
          <- fmap unzip3 $ mapM (\m -> checkTerm1 a wh ctx m Synth) ms
         throw $ ErrorTermsWrongArity a wh ts' (replicate (length ms) TData)
+
+
+-- | Check the given terms all have the specified type,
+--   bundling all the caused effects together in the result.
+checkTermsAreAll
+        :: Annot a => a -> [Where a]
+        -> Context a -> Type a -> [Term a]
+        -> IO ([Term a], [Effect a])
+
+checkTermsAreAll a wh ctx tExpected ms
+ = do   (ms', _ts, effs)
+         <- fmap unzip3
+          $ mapM (\t -> checkTerm1 a wh ctx t (Check [tExpected])) ms
+
+        return (ms', concat effs)
 
 
 ---------------------------------------------------------------------------------------------------

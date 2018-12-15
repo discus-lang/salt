@@ -197,16 +197,19 @@ primOpsList
         , docs  = "Take the head element of a list." }
 
    , PP { name  = "list'case"
-        , tsig  =   [("a", TData)] :*> ([TList "a"]
-                :-> [TVariant ["nil", "cons"]
-                              [ TGTypes []
-                              , TGTypes ["a", TList "a"] ]])
+        , tsig  =  [("a", TData)] :*> ([TList "a"] :-> [makeListType "a"])
         , step  = \[NTs [t], NVs [VList _ vv]]
                   -> case vv of
-                      []      -> [VVariant "nil"  []]
-                      v : vs  -> [VVariant "cons" [v, VList t vs]]
+                      []      -> [VVariant "nil"  (makeListType t) []]
+                      v : vs  -> [VVariant "cons" (makeListType t) [v, VList t vs]]
         , docs  = "Case analysis on a list." }
    ]
+
+makeListType :: Type a -> Type a
+makeListType tArg
+ = TVariant
+        ["nil", "cons"]
+        [ TGTypes [], TGTypes [tArg, TList tArg] ]
 
 
 -- Set --------------------------------------------------------------------------------------------
