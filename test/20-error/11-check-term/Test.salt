@@ -113,3 +113,25 @@ test type #map'insert
 -- Error: unsaturated primitive.
 test type #map'insert @[#Nat, #Nat]
 
+
+-- (t-let) --------------------------------------------------------------------
+-- Error: ill-kinded annotation.
+test type let x: #Derp = #true; #true
+
+-- Error: ill-typed bound expression.
+test type let x = #true #true; #true
+
+-- Error: wrong arity in binding.
+test type let [] = [#true]; #true
+
+-- Error: wrong arity in binding.
+test type let x = [#true, #true]; #true
+
+-- Error: binder annotation does not match bound value.
+test type let x: #Nat = #true; #true
+
+-- Error: body term is ill-typed.
+test type let x = #true; #true #true
+
+
+

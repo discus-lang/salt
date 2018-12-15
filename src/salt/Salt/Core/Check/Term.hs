@@ -223,10 +223,24 @@ checkTerm a wh ctx (MAps mFun0 mgss0) Synth
 
 
 -- (t-let) ------------------------------------------------
-checkTerm a wh ctx (MLet bts mBind mResult) Synth
- = do   MPTerms bts' <- checkTermParams a wh ctx (MPTerms bts)
-        (mBind', tsBind, esBind) <- checkTerm a wh ctx mBind Synth
+checkTerm a wh ctx (MLet bts mBind mBody) Synth
+ = do
+        -- Check kinds of binder annotations.
+        MPTerms bts'
+         <- checkTermParams a wh ctx (MPTerms bts)
 
+        -- Check the bound expression.
+        (mBind', tsBind, esBind)
+         <- checkTerm a wh ctx mBind Synth
+
+        -- Check we have the same number of binders
+        -- as values produced by the binding.
+        let (bs, tsParam) = unzip bts'
+        when (not $ length tsParam == length tsBind)
+         $ throw $ ErrorLetWrongArity a wh tsBind bs
+
+        -- Check binding types against any annotations for them,
+        -- then add them to the context.
         let checkLetAnnot tAnnot tBind
              | THole    <- tAnnot
              = return tBind
@@ -237,17 +251,15 @@ checkTerm a wh ctx (MLet bts mBind mResult) Synth
                  Just ((_a1, tErr1), (_a2, tErr2))
                   -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
 
-        -- TODO: check num. of bindings
-        let (bs, tsParam) = unzip bts'
-        when (not $ length tsParam == length tsBind)
-         $ throw $ ErrorLetWrongArity a wh tsBind bs
-
         tsBind'   <- zipWithM checkLetAnnot tsParam tsBind
-        let bts'' =  zip bs tsBind'
-
+        let bts'' = zip bs tsBind'
         let ctx' = contextBindTermParams (MPTerms bts'') ctx
-        (mResult', tsResult, esResult) <- checkTerm a wh ctx' mResult Synth
-        return  ( MLet bts' mBind' mResult'
+
+        -- Check the body term.
+        (mBody', tsResult, esResult)
+         <- checkTerm a wh ctx' mBody Synth
+
+        return  ( MLet bts' mBind' mBody'
                 , tsResult
                 , esBind ++ esResult)
 
