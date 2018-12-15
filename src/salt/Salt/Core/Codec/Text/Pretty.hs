@@ -4,20 +4,23 @@ import Salt.Core.Exp
 import Salt.Data.Pretty
 import qualified Data.Set       as Set
 import qualified Data.Map       as Map
+import qualified Data.Text      as Text
+
+import qualified Salt.Core.Codec.Text.Lexer as Lexer
 
 
 ---------------------------------------------------------------------------------------------------
 instance Pretty c Bind where
- ppr c bb
+ ppr _ bb
   = case bb of
-        BindName n      -> ppr c n
+        BindName n      -> pprVar n
         BindNone        -> text "_"
 
 
 instance Pretty c Bound where
- ppr c uu
+ ppr _ uu
   = case uu of
-        Bound n         -> ppr c n
+        Bound n         -> pprVar n
 
 
 braced ds
@@ -66,7 +69,7 @@ instance Pretty c (Type a) where
         TKey (TKRecord ns) tgs
          | length ns == length tgs
          -> text "∏" % squared
-                [ ppr c n % text ":"
+                [ pprLbl n % text ":"
                         %% (case tg of
                                 TGTypes [t]     -> ppr c t
                                 _               -> ppr c tg)
@@ -75,7 +78,7 @@ instance Pretty c (Type a) where
         TKey (TKVariant ns) tgs
          | length ns == length tgs
          -> text "∑" % squared
-                [ ppr c n % text ":"
+                [ pprLbl n % text ":"
                         %% (case tg of
                                 TGTypes [t]     -> ppr c t
                                 _               -> ppr c tg)
@@ -102,8 +105,7 @@ pprTFun c tt
         TAnn _ t -> ppr c t
         TRef{}   -> ppr c tt
         TVar{}   -> ppr c tt
-        -- Note: nested applications (TApp) are printed with parentheses to
-        -- remove ambiguity between (f [x, y]) and ((f [x]) [y])
+        TApp{}   -> ppr c tt
         _        -> parens $ ppr c tt
 
 
@@ -117,10 +119,10 @@ pprTArg c tt
 
 
 instance Pretty c TypeRef where
- ppr c tr
+ ppr _ tr
   = case tr of
-        TRPrm n -> text "#" % ppr c n
-        TRCon n -> ppr c n
+        TRPrm n -> pprPrm n
+        TRCon n -> pprCon n
 
 
 instance Pretty c (TypeArgs a) where
@@ -138,7 +140,7 @@ instance Pretty c (TypeParams a) where
 
 
 instance Pretty c TypeKey where
- ppr c tk
+ ppr _ tk
   = case tk of
         TKHole          -> text "##hole"
         TKArr           -> text "##arr"
@@ -146,8 +148,8 @@ instance Pretty c TypeKey where
         TKFun           -> text "##fun"
         TKForall        -> text "##forall"
         TKExists        -> text "##exists"
-        TKRecord ns     -> text "##record"  %% bracketed (map (ppr c) ns)
-        TKVariant ns    -> text "##variant" %% bracketed (map (ppr c) ns)
+        TKRecord ns     -> text "##record"  %% bracketed (map pprLbl ns)
+        TKVariant ns    -> text "##variant" %% bracketed (map pprLbl ns)
         TKSusp          -> text "##susp"
         TKSync          -> text "##sync"
         TKPure          -> text "##pure"
@@ -176,7 +178,7 @@ instance Pretty c (Term a) where
          -> pprMFun c mFun %% squared (map (ppr c) msArg)
 
         MKey (MKProject n) [MGTerms [m]]
-         -> ppr c m % text "." % ppr c n
+         -> ppr c m % text "." % pprLbl n
 
         MKey k ms
          -> ppr c k %% (hsep $ map (ppr c) ms)
@@ -196,11 +198,11 @@ instance Pretty c (TermRef a) where
  ppr c mr
   = case mr of
         MRVal v -> ppr c v
-        MRPrm n -> text "#" % ppr c n
-        MRCon n -> text "%" % ppr c n
+        MRPrm n -> pprPrm n
+        MRCon n -> text "%" % pprCon n
 
         MRTop ns n
-         -> (hcat $ punctuate (text ".") (map (ppr c) ns))
+         -> (hcat $ punctuate (text ".") (map pprCon ns))
                   % text "." % ppr c n
 
 instance Pretty c (TermArgs a) where
@@ -225,17 +227,17 @@ instance Pretty c (TermParams a) where
 
 
 instance Pretty c TermKey where
- ppr c mk
+ ppr _ mk
   = case mk of
         MKTerms         -> text "##terms"
         MKThe           -> text "##the"
         MKApp           -> text "##app"
         MKLet           -> text "##let"
-        MKCon n         -> text "##con"     %% ppr c n
-        MKCase ns       -> text "##case"    %% braced (map (ppr c) ns)
-        MKRecord ns     -> text "##record"  %% braced (map (ppr c) ns)
-        MKProject n     -> text "##project" %% ppr c n
-        MKVariant n     -> text "##variant" %% ppr c n
+        MKCon n         -> text "##con"     %% pprCon n
+        MKCase ns       -> text "##case"    %% braced (map pprCon ns)
+        MKRecord ns     -> text "##record"  %% braced (map pprCon ns)
+        MKProject n     -> text "##project" %% pprLbl n
+        MKVariant n     -> text "##variant" %% pprCon n
         MKIf            -> text "##if"
         MKList          -> text "##list"
         MKSet           -> text "##set"
@@ -249,7 +251,7 @@ instance Pretty c (Value a) where
  ppr c
   = \case
         VUnit           -> text "#unit"
-        VSymbol s       -> text "'" % ppr c s
+        VSymbol s       -> pprSym s
         VText tx        -> string $ show tx
 
         VBool b
@@ -260,15 +262,15 @@ instance Pretty c (Value a) where
         VInt  i         -> string $ show i
         VNat  i         -> string $ show i
 
-        VData n ts vs   -> parens $ ppr c n
+        VData n ts vs   -> parens $ pprCon n
                                 %% squared (map (ppr c) ts)
                                 %% squared (map (ppr c) vs)
 
         VRecord nvs
-         -> bracketed [ ppr c n %% text "=" %% ppr c v | (n, v) <- nvs ]
+         -> bracketed [ pprLbl n %% text "=" %% ppr c v | (n, v) <- nvs ]
 
         VVariant n t vs
-         -> parens $  text "`" % ppr c n
+         -> parens $  text "`" % pprLbl n
                    %% squared (punctuate (text ", ") (map (ppr c) vs))
                    %% text "as" %% pprTArg c t
 
@@ -311,11 +313,39 @@ instance Pretty c (Env a) where
 instance Pretty c (EnvBind a) where
  ppr c eb
   = case eb of
-        EnvType  n t    -> text "@" % ppr c n % text ":" %% ppr c t
-        EnvValue n v    ->            ppr c n % text ":" %% ppr c v
+        EnvType  n t    -> text "@" % pprVar n % text ":" %% ppr c t
+        EnvValue n v    ->            pprVar n % text ":" %% ppr c v
 
 
+{-
 instance Pretty c Name where
  ppr _c (Name n)
   = text n
+-}
 
+pprNameAsIdentifier :: (Int -> Char -> Bool) -> Text -> Text -> Name -> Doc
+pprNameAsIdentifier match ident_class prefix (Name name)
+ | Text.length name > 0 && Lexer.checkMatch match (prefix <> name)
+ = text (prefix <> name)
+ | otherwise
+ = text ("##" <> ident_class) <> string (show name)
+
+pprVar :: Name -> Doc
+pprVar = pprNameAsIdentifier Lexer.matchVar "Var" ""
+
+-- | Labels are currently treated the same as variables in the lexer
+pprLbl :: Name -> Doc
+pprLbl = pprVar
+
+pprCon :: Name -> Doc
+pprCon = pprNameAsIdentifier Lexer.matchCon "Con" ""
+
+pprSym :: Name -> Doc
+pprSym = pprNameAsIdentifier Lexer.matchSym "Sym" "'"
+
+pprPrm :: Name -> Doc
+pprPrm = pprNameAsIdentifier Lexer.matchPrm "Prm" "#"
+
+pprNameQuoted :: Name -> Doc
+pprNameQuoted (Name name)
+ = string (show name)

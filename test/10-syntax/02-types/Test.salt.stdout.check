@@ -59,3 +59,6 @@
 * susp4: #Data
 * susp5: #Data
 * susp6: #Data
+* quoted1: [#Data] ⇒ #Data
+* quoted2: [#Data] ⇒ #Data
+* quoted3: [[#Data] ⇒ #Data] ⇒ [#Data] ⇒ #Data

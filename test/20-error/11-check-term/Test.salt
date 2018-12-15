@@ -97,6 +97,3 @@ test type #bool'and ((λ[] → [#true, #true, #true]) [])
 -- Error: wrong argument types.
 test type #bool'and ((λ[] → [1, 2]) [])
 
-
-
-

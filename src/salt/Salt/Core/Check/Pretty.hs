@@ -14,44 +14,44 @@ instance Show a => Pretty c (Where a) where
 pprw _c (WhereTestKind _a Nothing)
  = vcat [ text "In kind test" ]
 
-pprw c  (WhereTestKind _a (Just n))
- = vcat [ text "In kind test" %% squotes (ppr c n) ]
+pprw _c (WhereTestKind _a (Just n))
+ = vcat [ text "In kind test" %% pprNameQuoted n ]
 
 pprw _c (WhereTestType _a Nothing)
  = vcat [ text "In type test" ]
 
-pprw c  (WhereTestType _a (Just n))
- = vcat [ text "In type test" %% squotes (ppr c n) ]
+pprw _c (WhereTestType _a (Just n))
+ = vcat [ text "In type test" %% pprNameQuoted n ]
 
 pprw _c (WhereTestEval _a Nothing)
  = vcat [ text "In eval test" ]
 
-pprw c  (WhereTestEval _a (Just n))
- = vcat [ text "In eval test" %% squotes (ppr c n) ]
+pprw _c (WhereTestEval _a (Just n))
+ = vcat [ text "In eval test" %% pprNameQuoted n ]
 
 pprw _c (WhereTestExec _a Nothing)
  = vcat [ text "In exec test" ]
 
-pprw c  (WhereTestExec _a (Just n))
- = vcat [ text "In exec test" %% squotes (ppr c n) ]
+pprw _c (WhereTestExec _a (Just n))
+ = vcat [ text "In exec test" %% pprNameQuoted n ]
 
 pprw _c (WhereTestAssert _a Nothing)
  = vcat [ text "In assert test" ]
 
-pprw c  (WhereTestAssert _a (Just n))
- = vcat [ text "In assert test" %% squotes (ppr c n) ]
+pprw _c (WhereTestAssert _a (Just n))
+ = vcat [ text "In assert test" %% pprNameQuoted n ]
 
-pprw c  (WhereTermDecl _a n)
- = vcat [ text "In term declaration" %% squotes (ppr c n) ]
+pprw _c (WhereTermDecl _a n)
+ = vcat [ text "In term declaration" %% pprNameQuoted n ]
 
 pprw c  (WhereAppPrim _a n t)
- = vcat [ text "With #" % ppr c n %% text "of type" %% ppr c t ]
+ = vcat [ text "With " % squotes (pprPrm n) %% text "of type" %% ppr c t ]
 
-pprw c  (WhereRecordField _a l Nothing)
- = vcat [ text "In field"  %% squotes (ppr c l) ]
+pprw _c (WhereRecordField _a l Nothing)
+ = vcat [ text "In field"  %% pprNameQuoted l ]
 
 pprw c  (WhereRecordField _a l (Just t))
- = vcat [ text "In field"  %% squotes (ppr c l) %% text "of type" %% ppr c t ]
+ = vcat [ text "In field"  %% pprNameQuoted l %% text "of type" %% ppr c t ]
 
 
 ---------------------------------------------------------------------------------------------------
@@ -81,20 +81,20 @@ ppre c (ErrorTypesWrongArity _a _wh ts ks)
 
 
 -- Unknown vars and refs ----------------------------------
-ppre c (ErrorUnknownPrimitive _a _wh n)
- = vcat [ text "Unknown primitive" %% squotes (text "#" % ppr c n) % text "." ]
+ppre _ (ErrorUnknownPrimitive _a _wh n)
+ = vcat [ text "Unknown primitive" %% squotes (pprPrm n) % text "." ]
 
-ppre c (ErrorUnknownDataCtor _a _wh n)
- = vcat [ text "Unknown data constructor" %% squotes (ppr c n) % text "."]
+ppre _ (ErrorUnknownDataCtor _a _wh n)
+ = vcat [ text "Unknown data constructor" %% squotes (pprCon n) % text "."]
 
-ppre c (ErrorUnknownTypeCtor _a _wh n)
- = vcat [ text "Unknown type constructor" %% squotes (ppr c n) % text "."]
+ppre _ (ErrorUnknownTypeCtor _a _wh n)
+ = vcat [ text "Unknown type constructor" %% squotes (pprCon n) % text "."]
 
-ppre c (ErrorUnknownTypePrim _a _wh n)
- = vcat [ text "Unknown type primitive"   %% squotes (text "#" % ppr c n) % text "."]
+ppre _ (ErrorUnknownTypePrim _a _wh n)
+ = vcat [ text "Unknown type primitive"   %% squotes (pprPrm n) % text "."]
 
-ppre c (ErrorUnknownKindCtor _a _wh n)
- = vcat [ text "Unknown kind constructor" %% squotes (ppr c n) % text "."]
+ppre _ (ErrorUnknownKindCtor _a _wh n)
+ = vcat [ text "Unknown kind constructor" %% squotes (pprCon n) % text "."]
 
 ppre c (ErrorUnknownTypeBound _a _wh u)
  = vcat [ text "Type variable" %% squotes (ppr c u) %% text "is not in scope." ]
@@ -187,23 +187,22 @@ ppre c (ErrorAppTermTermWrongArityNum _a _wh tsParam nArg)
 
 -- Record problems ----------------------------------------
 ppre c (ErrorRecordProjectIsNot _a _wh t n)
- = vcat [ text "Cannot project field"
-                %% squotes (ppr c n) %% text "from non-record"
+ = vcat [ text "Cannot project field"       %% pprLbl n %% text "from non-record"
         , text "  of type:" %% ppr c t ]
 
 ppre c (ErrorRecordProjectNoField _a _wh t n)
- = vcat [ text "Record does not have field" %% squotes (ppr c n)
+ = vcat [ text "Record does not have field" %% pprLbl n
         , text "  actual type:" %% ppr c t ]
 
-ppre c (ErrorRecordTypeDuplicateFields _a _wh ns)
+ppre _ (ErrorRecordTypeDuplicateFields _a _wh ns)
  = vcat [ text "Duplicate fields in record type"
-        , text "  fields:" %% braced (map (ppr c) ns) ]
+        , text "  fields:" %% braced (map pprLbl ns) ]
 
 
 -- Variant problems ---------------------------------------
-ppre c (ErrorVariantTypeDuplicateAlts _a _wh ns)
+ppre _ (ErrorVariantTypeDuplicateAlts _a _wh ns)
  = vcat [ text "Duplicate alternatives in variant type"
-        , text "  alternatives:" %% braced (map (ppr c) ns) ]
+        , text "  alternatives:" %% braced (map pprLbl ns) ]
 
 
 -- Suspension problems ------------------------------------
