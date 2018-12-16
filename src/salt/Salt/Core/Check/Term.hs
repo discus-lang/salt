@@ -321,9 +321,9 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
         (mRecord', tsRecord, esRecord)
          <- checkTerm a wh ctx mRecord Synth
 
-        -- The body needs to have record type with the field that we
-        -- were expecting.
-        case tsRecord of
+        -- The body needs to have record type with the field that we were expecting.
+        tsRecord' <- reduceTypes a wh ctx tsRecord
+        case tsRecord' of
          [tRecord@(TRecord ns tgs)]
           -> case lookup nLabel $ zip ns tgs of
                 Nothing
@@ -334,18 +334,33 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
 
          [tThing]
             -> throw $ ErrorRecordProjectIsNot a wh tThing nLabel
+
          ts -> throw $ ErrorTermsWrongArity a wh ts [TData]
 
 
 -- (t-vnt) ------------------------------------------------
-checkTerm a wh ctx (MVariant nLabel msValues tResult) Synth
- = do   (msValues', _tsValues, esValues)
-         <- checkTerms a wh ctx msValues Synth
+checkTerm a wh ctx (MVariant nLabel msValues tVariant) Synth
+ = do
+        -- The annotation tells us what type to expect for the body.
+        tVariant'
+         <- reduceType a wh ctx tVariant
 
-        -- TODO: check variant is contained in given type
-        -- TODO: check given type is a variant type.
-        return  ( MVariant nLabel msValues' tResult
-                , [tResult], esValues)
+        tsExpected'
+         <- case tVariant' of
+                TVariant ns tgs
+                 -> case lookup nLabel $ zip ns tgs of
+                        Nothing
+                         -> throw $ ErrorVariantAnnotAltMissing a wh tVariant' nLabel
+                        Just (TGTypes ts)
+                         -> return ts
+                _ -> throw $ ErrorVariantAnnotIsNot a wh tVariant'
+
+        -- Check the body against the type from the annotation.
+        (msValues', _tsValues, esValues)
+         <- checkTerms a wh ctx msValues (Check tsExpected')
+
+        return  ( MVariant nLabel msValues' tVariant
+                , [tVariant], esValues)
 
 
 -- (t-cse) ------------------------------------------------

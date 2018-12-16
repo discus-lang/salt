@@ -163,9 +163,18 @@ test type [1, 2].x
 
 
 -- (t-vnt) --------------------------------------------------------------------
--- test type the <foo: #Nat> of `foo 5
+-- Error: ascribed type is ill kinded.
+test type the #Nat #Nat of `foo #true
 
+-- Error: ascribed type is not a variant type.
+test type the #Nat of `foo #true
 
+-- Error: alternative type does not match expected type.
+test type the <foo: #Nat> of `foo #true
 
+-- Error: alternative type does not match expected type.
+test type the <foo: [#Nat, #Bool]> of `foo [3, 3]
 
+-- Error: variant alternative is not in expected type.
+test type the <bar: #Nat> of `foo 5
 

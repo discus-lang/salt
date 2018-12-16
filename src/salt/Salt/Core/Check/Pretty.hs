@@ -218,6 +218,15 @@ ppre _ (ErrorRecordDuplicateFields _a _wh ns)
 
 
 -- Variant problems ---------------------------------------
+ppre c (ErrorVariantAnnotIsNot _a _wh t)
+ = vcat [ text "Variant annotation does not have variant type"
+        , text "  type:" %% ppr c t ]
+
+ppre c (ErrorVariantAnnotAltMissing _a _wh t n)
+ = vcat [ text "Variant annotation is missing specified alternative"
+        , text "   type:" %% ppr c t
+        , text "  lacks:" %% pprLbl n ]
+
 ppre _ (ErrorVariantTypeDuplicateAlts _a _wh ns)
  = vcat [ text "Duplicate alternatives in variant type"
         , text "  alternatives:" %% braced (map pprLbl ns) ]

@@ -182,6 +182,17 @@ data Error a
         , errorFields           :: [Name] }
 
         -- Variant problems ---------------------
+        | ErrorVariantAnnotIsNot
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorType             :: Type a }
+
+        | ErrorVariantAnnotAltMissing
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorType             :: Type a
+        , errorLabel            :: Name }
+
         | ErrorVariantTypeDuplicateAlts
         { errorAnnot            :: a
         , errorWhere            :: [Where a]

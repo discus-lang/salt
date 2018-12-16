@@ -267,3 +267,34 @@ test/20-error/11-check-term/Test.salt:162:11
 
   162:1  In type test
 
+test/20-error/11-check-term/Test.salt:167:11
+  Variant annotation does not have variant type
+    type: #Nat [#Nat]
+
+  167:1  In type test
+
+test/20-error/11-check-term/Test.salt:170:11
+  Variant annotation does not have variant type
+    type: #Nat
+
+  170:1  In type test
+
+test/20-error/11-check-term/Test.salt:173:11
+  Unexpected type: #Bool
+        expecting: #Nat
+
+  173:1  In type test
+
+test/20-error/11-check-term/Test.salt:176:48
+  Unexpected type: #Nat
+        expecting: #Bool
+
+  176:1  In type test
+
+test/20-error/11-check-term/Test.salt:179:11
+  Variant annotation is missing specified alternative
+     type: ∑[bar: #Nat]
+    lacks: foo
+
+  179:1  In type test
+
