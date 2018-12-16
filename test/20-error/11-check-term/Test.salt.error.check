@@ -361,3 +361,75 @@ test/20-error/11-check-term/Test.salt:212:25
 
   212:1  In type test
 
+test/20-error/11-check-term/Test.salt:217:11
+  Cannot apply type
+    of kind: #Data
+
+  217:1  In type test
+
+test/20-error/11-check-term/Test.salt:220:11
+  Unexpected type: #Effect
+        expecting: #Data
+
+  220:1  In type test
+
+test/20-error/11-check-term/Test.salt:223:23
+  Cannot apply non-function 
+    of type: #Nat
+
+  223:1  In type test
+
+test/20-error/11-check-term/Test.salt:226:23
+  Unexpected type: #Bool
+        expecting: #Nat
+
+  226:1  In type test
+
+test/20-error/11-check-term/Test.salt:231:11
+  Cannot apply type
+    of kind: #Data
+
+  231:1  In type test
+
+test/20-error/11-check-term/Test.salt:234:11
+  Unexpected type: #Effect
+        expecting: #Data
+
+  234:1  In type test
+
+test/20-error/11-check-term/Test.salt:237:22
+  Cannot apply non-function 
+    of type: #Nat
+
+  237:1  In type test
+
+test/20-error/11-check-term/Test.salt:240:22
+  Unexpected type: #Bool
+        expecting: #Nat
+
+  240:1  In type test
+
+test/20-error/11-check-term/Test.salt:245:11
+  Cannot apply type
+    of kind: #Data
+
+  245:1  In type test
+
+test/20-error/11-check-term/Test.salt:248:11
+  Unexpected type: #Effect
+        expecting: #Data
+
+  248:1  In type test
+
+test/20-error/11-check-term/Test.salt:251:27
+  Cannot apply non-function 
+    of type: #Nat
+
+  251:1  In type test
+
+test/20-error/11-check-term/Test.salt:254:32
+  Unexpected type: #Bool
+        expecting: #Nat
+
+  254:1  In type test
+

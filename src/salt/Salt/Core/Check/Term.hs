@@ -469,27 +469,45 @@ checkTerm a wh ctx mIf@(MIf msCond msThen mElse) Synth
 
 
 -- (t-lst) ------------------------------------------------
--- TODO: check embedded type.
 checkTerm a wh ctx (MList t ms) Synth
- = do   let ts = replicate (length ms) t
+ = do
+        (t', k) <- checkType a wh ctx t
+        when (not $ isTData k)
+         $ throw $ ErrorTypeMismatch a wh TData k
+
+        let ts = replicate (length ms) t'
         (ms', _, es) <- checkTerms a wh ctx ms (Check ts)
-        return  (MList t ms', [TList t], es)
+        return  (MList t' ms', [TList t], es)
 
 
 -- (t-set) ------------------------------------------------
--- TODO: check embedded type.
 checkTerm a wh ctx (MSet t ms) Synth
- = do   let ts = replicate (length ms) t
+ = do
+        (t', k) <- checkType a wh ctx t
+        when (not $ isTData k)
+         $ throw $ ErrorTypeMismatch a wh TData k
+
+        let ts = replicate (length ms) t'
         (ms', _, es) <- checkTerms a wh ctx ms (Check ts)
         return (MSet t ms', [TSet t], es)
 
 
 -- (t-map) ------------------------------------------------
--- TODO: check embedded types.
--- TODO: check keys and values same length.
-checkTerm a wh ctx (MMap tk tv msk msv) Synth
- = do   let tsk = replicate (length msk) tk
-        let tsv = replicate (length msv) tv
+checkTerm a wh ctx m@(MMap tk tv msk msv) Synth
+ = do
+        when (not $ length msk == length msv)
+         $ throw $ ErrorTermMalformed a wh m
+
+        (tk', kk) <- checkType a wh ctx tk
+        when (not $ isTData kk)
+         $ throw $ ErrorTypeMismatch a wh TData kk
+
+        (tv', kv) <- checkType a wh ctx tv
+        when (not $ isTData kv)
+         $ throw $ ErrorTypeMismatch a wh TData kv
+
+        let tsk = replicate (length msk) tk'
+        let tsv = replicate (length msv) tv'
         (msk', _, esKeys) <- checkTerms a wh ctx msk (Check tsk)
         (msv', _, esVals) <- checkTerms a wh ctx msv (Check tsv)
         return  ( MMap tk tv msk' msv'
@@ -746,7 +764,6 @@ checkValue a wh ctx v
         VVariant _n tVar vs
          -> do  checkType a wh ctx tVar
                 _ts <- mapM (checkValue a wh ctx) vs
-                -- TODO: check embedded type.
                 return tVar
 
         VList t vs

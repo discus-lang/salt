@@ -110,7 +110,15 @@ instance IsString (Type a) where
 isTPure :: Type a -> Bool
 isTPure tt
  = case tt of
-        TPure   -> True
+        TPure    -> True
+        _        -> False
+
+
+-- | Check if this is the data kind,
+isTData :: Type a -> Bool
+isTData tt
+ = case tt of
+        TData   -> True
         _       -> False
 
 

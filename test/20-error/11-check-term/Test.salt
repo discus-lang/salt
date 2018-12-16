@@ -211,3 +211,44 @@ test type if 5 then #true else #true
 -- Error: branches do not have the same types.
 test type if #true then #true else 5
 
+
+-- (t-lst) --------------------------------------------------------------------
+-- | Error: elem type is ill kinded.
+test type [list (#Nat #Nat)|]
+
+-- | Error: elem type does not have kind data.
+test type [list #Console|]
+
+-- | Error: element is ill typed.
+test type [list #Nat| 3 3]
+
+-- | Error: element type does not match annotation.
+test type [list #Nat| #true]
+
+
+-- (t-set) --------------------------------------------------------------------
+-- | Error: elem type is ill kinded.
+test type [set (#Nat #Nat)|]
+
+-- | Error: elem type does not have kind data.
+test type [set #Console|]
+
+-- | Error: element is ill typed.
+test type [set #Nat| 3 3]
+
+-- | Error: element type does not match annotation.
+test type [set #Nat| #true]
+
+
+-- (t-map) --------------------------------------------------------------------
+-- | Error: elem type is ill kinded.
+test type [map (#Nat #Nat) #Nat|]
+
+-- | Error: elem type does not have kind data.
+test type [map #Console #Nat|]
+
+-- | Error: element is ill typed.
+test type [map #Nat #Nat| 3 3 := 3]
+
+-- | Error: element type does not match annotation.
+test type [map #Nat #Nat| 3 := #true]
