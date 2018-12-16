@@ -345,15 +345,15 @@ checkTerm a wh ctx (MVariant nLabel msValues tVariant) Synth
         tVariant'
          <- reduceType a wh ctx tVariant
 
-        tsExpected'
+        (ns, tgs)
          <- case tVariant' of
-                TVariant ns tgs
-                 -> case lookup nLabel $ zip ns tgs of
-                        Nothing
-                         -> throw $ ErrorVariantAnnotAltMissing a wh tVariant' nLabel
-                        Just (TGTypes ts)
-                         -> return ts
+                TVariant ns tgs   -> return (ns, tgs)
                 _ -> throw $ ErrorVariantAnnotIsNot a wh tVariant'
+
+        tsExpected'
+         <- case lookup nLabel $ zip ns tgs of
+                Just (TGTypes ts) -> return ts
+                _ -> throw $ ErrorVariantAnnotAltMissing a wh tVariant' nLabel
 
         -- Check the body against the type from the annotation.
         (msValues', _tsValues, esValues)

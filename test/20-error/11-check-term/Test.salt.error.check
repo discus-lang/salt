@@ -298,3 +298,48 @@ test/20-error/11-check-term/Test.salt:179:11
 
   179:1  In type test
 
+test/20-error/11-check-term/Test.salt:184:16
+  Cannot apply non-function 
+    of type: #Nat
+
+  184:1  In type test
+
+test/20-error/11-check-term/Test.salt:187:11
+  Scrutinee does not have variant type
+    type: #Nat
+
+  187:1  In type test
+
+test/20-error/11-check-term/Test.salt:190:11
+  Inexhaustive alternatives
+      missing alts: {foo}
+    scrutinee type: ∑[foo: #Nat]
+
+  190:1  In type test
+
+test/20-error/11-check-term/Test.salt:193:11
+  Pattern type does not match scrutinee type
+            in alt: foo
+      pattern type: #Bool
+    scrutinee type: #Nat
+
+  193:1  In type test
+
+test/20-error/11-check-term/Test.salt:196:11
+  Overlapping alternatives {foo}
+
+  196:1  In type test
+
+test/20-error/11-check-term/Test.salt:200:11
+  Inexhaustive alternatives
+      missing alts: {bar}
+    scrutinee type: ∑[foo: #Nat, bar: #Nat]
+
+  200:1  In type test
+
+test/20-error/11-check-term/Test.salt:205:36
+  Unexpected type: #Nat
+        expecting: #Bool
+
+  204:1  In type test
+
