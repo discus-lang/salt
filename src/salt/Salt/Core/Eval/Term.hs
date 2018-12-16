@@ -175,21 +175,27 @@ evalTerm s a env (MProject nField mRecord)
 
 -- Case matching.
 -- TODO: proper errors.
-evalTerm s a env (MCase mScrut lsAlt msAlt)
+evalTerm s a env (MVarCase mScrut msAlt0)
  = do   vScrut  <- evalTerm1 s a env mScrut
-        case vScrut of
-         VVariant l _t vs
-          -> case lookup l $ zip lsAlt msAlt of
-                Nothing -> error "variant is not in alts"
-                Just mAlt
-                 -> do  vAlt <- evalTerm1 s a env mAlt
-                        case vAlt of
-                         VClosure (Closure env' (MPTerms bts) mBody)
-                          -> let bs     = map fst bts
-                                 env''  = envExtendsValue (zip bs vs) env'
-                             in  evalTerm s a env'' mBody
-                         _ -> error "alt is not a closure"
-         _ -> error "scrut is not a variant"
+
+        let (nScrut, vsData)
+             = case vScrut of
+                VVariant l _ vs -> (l, vs)
+                _  -> error "scrut is not a variant"
+
+        let go (MVarAlt nAlt btsPat mBody : msAlt)
+                |  nAlt == nScrut = (btsPat, mBody)
+                |  otherwise      = go msAlt
+            go [] = error "no match in case "
+            go _  = error "malformed alts"
+
+        let (btsPat, mBody) = go msAlt0
+
+        let bs   = map fst btsPat
+        let env' = envExtendsValue (zip bs vsData) env
+
+        evalTerm s a env' mBody
+
 
 
 -- If-then-else

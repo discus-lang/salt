@@ -48,16 +48,22 @@ data TermKey
         | MKApp                                 -- ^ Term application.
         | MKLet                                 -- ^ Let expression former.
         | MKCon     !Name                       -- ^ Data constructor.
-        | MKCase    ![Name]                     -- ^ Case branching.
+
+        | MKBox                                 -- ^ Box up a computation.
+        | MKRun                                 -- ^ Run a computation.
+
         | MKRecord  ![Name]                     -- ^ Record former.
         | MKProject !Name                       -- ^ Record field projection.
+
         | MKVariant !Name                       -- ^ Variant former.
+        | MKVarCase                             -- ^ Variant case matching.
+        | MKVarAlt  !Name                       -- ^ Variant case alternative.
+
         | MKIf                                  -- ^ If-then-else expression.
+
         | MKList                                -- ^ List constructor.
         | MKSet                                 -- ^ Set constructor.
         | MKMap                                 -- ^ Map constructor.
-        | MKBox                                 -- ^ Box up a computation.
-        | MKRun                                 -- ^ Run a computation.
         deriving (Show, Eq, Ord)
 
 
@@ -127,7 +133,8 @@ pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]
 pattern MProject l  m           = MKey  (MKProject l) [MGTerms [m]]
 
 pattern MVariant l ms tResult   = MKey  (MKVariant l) [MGTerms ms,     MGTypes [tResult]]
-pattern MCase mScrut ls msAlt   = MKey  (MKCase ls)   [MGTerm  mScrut, MGTerms msAlt]
+pattern MVarCase mScrut msAlt   = MKey   MKVarCase    [MGTerm  mScrut, MGTerms msAlt]
+pattern MVarAlt  n bts mBody    = MKey  (MKVarAlt n)  [MGTerm (MAbs (MPTerms bts) mBody)]
 
 pattern MList tElem msElem      = MKey   MKList [MGTypes [tElem],  MGTerms msElem]
 pattern MSet  tElem msElem      = MKey   MKSet  [MGTypes [tElem],  MGTerms msElem]

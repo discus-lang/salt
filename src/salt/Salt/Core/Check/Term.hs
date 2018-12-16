@@ -364,20 +364,83 @@ checkTerm a wh ctx (MVariant nLabel msValues tVariant) Synth
 
 
 -- (t-cse) ------------------------------------------------
-checkTerm a wh ctx (MCase mScrut ls msAlt) Synth
- = do   (mScrut', _tScrut, esScrut)
+checkTerm a wh ctx mCase@(MVarCase mScrut msAlt) Synth
+ = do
+        -- Check the scrutinee.
+        (mScrut', tScrut, esScrut)
          <- checkTerm1 a wh ctx mScrut Synth
 
-        (msAlt',  tsAlt, esAltComp)
-         <- fmap unzip3 $ mapM (\m -> checkTerm1 a wh ctx m Synth) msAlt
+        -- The scrutinee needs to be a variant.
+        (nsScrut, mgsScrut)
+         <- reduceType a wh ctx tScrut >>= \case
+                TVariant ns mgs -> return (ns, mgs)
+                _ -> throw $ ErrorCaseScrutNotVariant a wh tScrut
 
-        -- TODO: check alts all have same result type.
-        -- TODO: check scrut matches alt head.
-        -- TODO: combine result effects of all alts.
-        let (TFun _ tsResult : _) = tsAlt
-        return  ( MCase mScrut' ls msAlt'
+        -- Check for overlapping alternatives.
+        let nsAlt = [n | MVarAlt n _ _ <- msAlt]
+        let nsDup = List.duplicates nsAlt
+        when (not $ null nsDup)
+         $ throw $ ErrorCaseAltsOverlapping a wh nsDup
+
+        -- Check for inexhaustive alternatives.
+        let nsNot = Set.difference (Set.fromList nsScrut) (Set.fromList nsAlt)
+        when (not $ Set.null nsNot)
+         $ throw $ ErrorCaseAltsInexhaustive a wh (Set.toList nsNot) tScrut
+
+        -- Check all alternatives in turn,
+        --  collecting up all the effects,
+        --  and ensuring all the alt result types match.
+        let nmgsScrut = zip nsScrut mgsScrut
+        let checkAlts (MVarAlt n btsPat mBody : msAltsRest)
+                      msAltsChecked mtsResult esAlt
+             = do
+                  -- Lookup the field types from the type of the scrutinee.
+                  -- The type of the scrutinee must cover this alternative.
+                  tsField
+                   <- case lookup n nmgsScrut of
+                        Just (TGTypes ts) -> return ts
+                        Nothing
+                         -> throw $ ErrorCaseAltNotInVariant a wh n tScrut
+
+                  -- Check the pattern field types match the fields of the scrutinee.
+                  let tsPat = map snd btsPat
+                  (case checkTypeEqs a [] tsPat a [] tsField of
+                        Nothing -> return ()
+                        Just ((_a1, t1), (_a2, t2))
+                         -> throw $ ErrorCaseAltPatMismatch a wh n t1 t2)
+
+                  -- Check the result in the context extended by the fields
+                  -- we matched with the pattern. Also ensure this alternative
+                  -- has the same result type as any others we have checked before.
+                  let ctx' = contextBindTermParams (MPTerms btsPat) ctx
+                  (mBody', tsResult, esResult)
+                   <- checkTerm a wh ctx' mBody
+                   $  case mtsResult of
+                        Nothing -> Synth
+                        Just ts -> Check ts
+
+                  checkAlts
+                        msAltsRest
+                        (MVarAlt n btsPat mBody' : msAltsChecked)
+                        (Just tsResult)
+                        (esResult ++ esAlt)
+
+            checkAlts [] msAltsChecked (Just tsResult) esAlt
+                = return ( reverse msAltsChecked
+                         , tsResult
+                         , reverse esAlt)
+
+            -- There are either no alternatives or one of them is
+            -- not a MVarAlt term.
+            checkAlts _ _ _ _
+             = throw $ ErrorTermMalformed a wh mCase
+
+        (msAlt', tsResult, esResult)
+         <- checkAlts msAlt [] Nothing []
+
+        return  ( MVarCase mScrut' msAlt'
                 , tsResult
-                , esScrut ++ concat esAltComp)
+                , esScrut ++ esResult)
 
 
 -- (t-ifs) ------------------------------------------------

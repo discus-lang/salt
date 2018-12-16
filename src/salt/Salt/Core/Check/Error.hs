@@ -8,15 +8,20 @@ import Data.Typeable
 
 data Error a
         -- Malformed AST ------------------------
-        = ErrorTypeMalformed
+        = ErrorKindMalformed
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorKind             :: Kind a }
+
+        | ErrorTypeMalformed
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorType             :: Type a }
 
-        | ErrorKindMalformed
+        | ErrorTermMalformed
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
-        , errorKind             :: Kind a }
+        , errorTerm             :: Term a }
 
         -- Structural arity ---------------------
         | ErrorTermsWrongArity
@@ -197,6 +202,35 @@ data Error a
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorFields           :: [Name] }
+
+        | ErrorCaseScrutNotVariant
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorType             :: Type a }
+
+        | ErrorCaseAltNotInVariant
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorLabel            :: Name
+        , errorType             :: Type a }
+
+        | ErrorCaseAltPatMismatch
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorLabel            :: Name
+        , errorTypeField        :: Type a
+        , errorTypeScrut        :: Type a }
+
+        | ErrorCaseAltsOverlapping
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorLabels           :: [Name] }
+
+        | ErrorCaseAltsInexhaustive
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorLabels           :: [Name]
+        , errorScrutType        :: Type a }
 
         -- Suspension problems ------------------
         | ErrorRunSuspensionIsNot

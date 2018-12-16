@@ -137,18 +137,16 @@ pTerm_
         mScrut       <- pTerm
         pTok KOf
 
-        (lsAlt, msAlt)
-         <- fmap unzip
-         $  pBraced $ flip P.sepEndBy
-                (pTok KSemi)
-                (do     l       <- pLbl
-                        bts     <- pSquared $ flip P.sepEndBy (pTok KComma)
+        msAlts
+         <- pBraced $ flip P.sepEndBy (pTok KSemi)
+                (do     lAlt    <- pLbl
+                        btsPat  <- pSquared $ flip P.sepEndBy (pTok KComma)
                                 $  do   b <- pBind; pTok KColon; t <- pType; return (b, t)
                         pTok KArrowRight
-                        m       <- pTerm
-                        return (l, MAbm bts m))
+                        mBody   <- pTerm
+                        return $ MVarAlt lAlt btsPat mBody)
 
-        return  $ MCase mScrut lsAlt msAlt
+        return  $ MVarCase mScrut msAlts
 
 
  , do   -- Con TypeArg* TermArg*

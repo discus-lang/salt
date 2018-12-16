@@ -59,13 +59,16 @@ instance Show a => Pretty c (Error a) where
  ppr c err = ppre c err
 
 -- Malformed AST ------------------------------------------
+ppre _c (ErrorKindMalformed _a _wh _k)
+ = vcat [ text "Malformed kind." ]
+--        , string (show k) ]
+
 ppre _c (ErrorTypeMalformed _a _wh _t)
  = vcat [ text "Malformed type." ]
 --        , string (show t) ]
 
-ppre _c (ErrorKindMalformed _a _wh _k)
- = vcat [ text "Malformed kind." ]
---        , string (show k) ]
+ppre _c (ErrorTermMalformed _a _wc _m)
+ = vcat [ text "Malformed term." ]
 
 -- Structural arity ---------------------------------------
 ppre c (ErrorTermsWrongArity _a _wh ts ks)
@@ -230,6 +233,29 @@ ppre c (ErrorVariantAnnotAltMissing _a _wh t n)
 ppre _ (ErrorVariantTypeDuplicateAlts _a _wh ns)
  = vcat [ text "Duplicate alternatives in variant type"
         , text "  alternatives:" %% braced (map pprLbl ns) ]
+
+ppre c (ErrorCaseScrutNotVariant _a _wh t)
+ = vcat [ text "Scrutinee does not have variant type"
+        , text "  type:" %% ppr c t ]
+
+ppre c (ErrorCaseAltNotInVariant _a _wh n t)
+ = vcat [ text "Alternative is not in scrutinee type"
+        , text "   alt:" %% pprLbl n
+        , text "  type:" %% ppr c t ]
+
+ppre c (ErrorCaseAltPatMismatch _a _wh n tAlt tScrut)
+ = vcat [ text "Pattern type does not match scrutinee type"
+        , text "          in alt:" %% pprLbl n
+        , text "    pattern type:" %% ppr c tAlt
+        , text "  scrutinee type:" %% ppr c tScrut ]
+
+ppre _c (ErrorCaseAltsOverlapping _a _wh ns)
+ = vcat [ text "Overlapping alternatives" %% braced (map pprLbl ns) ]
+
+ppre c (ErrorCaseAltsInexhaustive _a _wh ns tScrut)
+ = vcat [ text "Inexhaustive alternatives"
+        , text "    missing alts:" %% braced (map pprLbl ns)
+        , text "  scrutinee type:" %% ppr c tScrut ]
 
 
 -- Suspension problems ------------------------------------

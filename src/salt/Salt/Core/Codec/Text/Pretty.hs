@@ -234,10 +234,11 @@ instance Pretty c TermKey where
         MKApp           -> text "##app"
         MKLet           -> text "##let"
         MKCon n         -> text "##con"     %% pprCon n
-        MKCase ns       -> text "##case"    %% braced (map pprCon ns)
         MKRecord ns     -> text "##record"  %% braced (map pprCon ns)
         MKProject n     -> text "##project" %% pprLbl n
         MKVariant n     -> text "##variant" %% pprCon n
+        MKVarCase       -> text "##var'case"
+        MKVarAlt n      -> text "##var'alt" %% pprLbl n
         MKIf            -> text "##if"
         MKList          -> text "##list"
         MKSet           -> text "##set"

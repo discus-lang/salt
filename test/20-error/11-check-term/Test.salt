@@ -178,3 +178,30 @@ test type the <foo: [#Nat, #Bool]> of `foo [3, 3]
 -- Error: variant alternative is not in expected type.
 test type the <bar: #Nat> of `foo 5
 
+
+-- (t-cse-vnt) ----------------------------------------------------------------
+-- Error: scrutinee is ill-typed.
+test type case 2 2 of { one [] → [] }
+
+-- Error: scrutinee does not have variant tpye.
+test type case 2 of { one [] → [] }
+
+-- Error: alternative is not in scrutinee type.
+test type case (the <foo: #Nat> of `foo 5) of { bar [] → [] }
+
+-- Error: pattern type does not match scrutinee type.
+test type case (the <foo: #Nat> of `foo 5) of { foo [x: #Bool] → [] }
+
+-- Error: case alternatives are overlapping.
+test type case (the <foo: #Nat> of `foo 5) of
+        { foo [x: #Bool] → []; foo [x: #Bool] → [] }
+
+-- Error: case alts are inexhaustive.
+test type case (the <foo: #Nat, bar: #Nat> of `foo 5) of
+        { foo [x: #Nat] → [] }
+
+-- Error: result types do not match.
+test type case (the <foo: #Nat, bar: []> of `foo 5) of
+        { foo [] → #true; bar [] → 5 }
+
+
