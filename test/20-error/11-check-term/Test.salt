@@ -64,10 +64,6 @@ test type (λ[x: #Text] → #console'print "derp")
 -- Error: cannot apply a type vector.
 test type [#true, #true] 3
 
--- Error: there must be some arguments in the application,
--- but a term without any is not syntactically well formed,
--- so we can't test for it.
-
 -- (app term/types) -------------------
 -- Error: cannot instantiate non-polymorphic value.
 test type 5 @#Nat
@@ -204,4 +200,14 @@ test type case (the <foo: #Nat, bar: #Nat> of `foo 5) of
 test type case (the <foo: #Nat, bar: []> of `foo 5) of
         { foo [] → #true; bar [] → 5 }
 
+
+-- (t-ifs) --------------------------------------------------------------------
+-- Error: scrutinee is ill-typed.
+test type if 1 2 then #true else #true
+
+-- Error: scrutinee is not a boolean.
+test type if 5 then #true else #true
+
+-- Error: branches do not have the same types.
+test type if #true then #true else 5
 

@@ -341,6 +341,9 @@ checkTerm a wh ctx (MProject nLabel mRecord) Synth
 -- (t-vnt) ------------------------------------------------
 checkTerm a wh ctx (MVariant nLabel msValues tVariant) Synth
  = do
+        -- Check annotation is well kinded.
+        checkType a wh ctx tVariant
+
         -- The annotation tells us what type to expect for the body.
         tVariant'
          <- reduceType a wh ctx tVariant
@@ -444,22 +447,25 @@ checkTerm a wh ctx mCase@(MVarCase mScrut msAlt) Synth
 
 
 -- (t-ifs) ------------------------------------------------
-checkTerm a wh ctx (MIf msCond msThen mElse) Synth
- = do   (msCond', _tssCond, esCond)
+checkTerm a wh ctx mIf@(MIf msCond msThen mElse) Synth
+ = do
+        when (not $ length msCond == length msThen)
+         $ throw $ ErrorTermMalformed a wh mIf
+
+        (msCond', _tssCond, esCond)
          <- checkTerms a wh ctx msCond
          $  Check $ replicate (length msCond) TBool
-
-        (msThen', _tssThen, esThen)
-         <- checkTerms a wh ctx msThen Synth
 
         (mElse',  tsElse, esElse)
          <- checkTerm  a wh ctx mElse  Synth
 
-        -- TODO: check tsThen and tsElse matches
-        -- TODO: check there are the same number of conds and then exps.
+        (msThen', _tssThen, essThen)
+         <- fmap unzip3
+         $  mapM (\m -> checkTerm a wh ctx m (Check tsElse)) msThen
+
         return  ( MIf msCond' msThen' mElse'
                 , tsElse
-                , esCond ++ esThen ++ esElse)
+                , esCond ++ concat essThen ++ esElse)
 
 
 -- (t-lst) ------------------------------------------------
