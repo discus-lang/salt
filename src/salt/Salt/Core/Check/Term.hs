@@ -1,24 +1,15 @@
 
 module Salt.Core.Check.Term where
-import Salt.Core.Check.Eq
-import Salt.Core.Check.Reduce
+import Salt.Core.Check.Term.App
+import Salt.Core.Check.Term.Params
+import Salt.Core.Check.Term.Value
+import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Type
-import Salt.Core.Check.Kind
-import Salt.Core.Check.Context
-import Salt.Core.Check.Where
-import Salt.Core.Check.Error
-import Salt.Core.Transform.MapAnnot
-import Salt.Core.Transform.Subst
-import Salt.Core.Exp
 import Salt.Core.Codec.Text             ()
 import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Salt.Data.Pretty       as P
-
-import Control.Exception
-import Control.Monad
-import Data.Maybe
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 import qualified Text.Show.Pretty       as Text
@@ -27,38 +18,35 @@ import qualified Text.Show.Pretty       as Text
 ---------------------------------------------------------------------------------------------------
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
-checkTerm
-        :: Annot a => a -> [Where a]
-        -> Context a -> Mode a -> Term a
-        -> IO (Term a, [Type a], [Effect a])
+checkTermWith :: CheckTerm a
 
 -- (t-ann) ------------------------------------------------
-checkTerm _a wh ctx mode (MAnn a' m)
+checkTermWith _a wh ctx mode (MAnn a' m)
  = checkTerm a' wh ctx mode m
 
 
 -- (t-mmm) ------------------------------------------------
-checkTerm a wh ctx mode (MTerms msArg)
+checkTermWith a wh ctx mode (MTerms msArg)
  = do   (msArg', tsArg, esArg)
          <- checkTerms a wh ctx mode msArg
         return  (MTerms msArg', tsArg, esArg)
 
 
 -- (t-the) ------------------------------------------------
-checkTerm a wh ctx Synth (MThe ts m)
+checkTermWith a wh ctx Synth (MThe ts m)
  = do   (m', _, es) <- checkTerm a wh ctx (Check ts) m
         return  (MThe ts m', ts, es)
 
 
 -- (t-box) ------------------------------------------------
-checkTerm a wh ctx Synth (MBox m)
+checkTermWith a wh ctx Synth (MBox m)
  = do   (m', ts, es) <- checkTerm a wh ctx Synth m
         let tEff = flattenType (TSum es)
         return  (MBox m', [TSusp ts tEff], [])
 
 
 -- (t-run) ------------------------------------------------
-checkTerm a wh ctx Synth (MRun m)
+checkTermWith a wh ctx Synth (MRun m)
  = do
         -- Check the body.
         (m', tsSusp', es) <- checkTerm a wh ctx Synth m
@@ -73,13 +61,13 @@ checkTerm a wh ctx Synth (MRun m)
 
 
 -- (t-val) ------------------------------------------------
-checkTerm a wh ctx Synth m@(MRef (MRVal v))
+checkTermWith a wh ctx Synth m@(MRef (MRVal v))
  = do   t <- checkValue a wh ctx v
         return (m, [t], [])
 
 
 -- (t-prm) ------------------------------------------------
-checkTerm a wh ctx Synth m@(MRef (MRPrm nPrim))
+checkTermWith a wh ctx Synth m@(MRef (MRPrm nPrim))
  | Just pp <- Map.lookup nPrim Prim.primOps
  = do
         let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
@@ -103,7 +91,7 @@ checkTerm a wh ctx Synth m@(MRef (MRPrm nPrim))
 
 
 -- (t-con) ------------------------------------------------
-checkTerm a wh ctx Synth m@(MRef (MRCon nCon))
+checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
  =  contextResolveDataCtor nCon ctx
  >>= \case
         Nothing
@@ -115,7 +103,7 @@ checkTerm a wh ctx Synth m@(MRef (MRCon nCon))
 
 
 -- (t-var) ------------------------------------------------
-checkTerm a wh ctx Synth m@(MVar u)
+checkTermWith a wh ctx Synth m@(MVar u)
  = do   mt <- contextResolveTermBound u ctx
         case mt of
          Just t  -> return (m, [t], [])
@@ -123,7 +111,7 @@ checkTerm a wh ctx Synth m@(MVar u)
 
 
 -- (t-abt) ------------------------------------------------
-checkTerm a wh ctx Synth (MAbs ps@MPTypes{} m)
+checkTermWith a wh ctx Synth (MAbs ps@MPTypes{} m)
  = do
         -- Check the parameters and bind into the context.
         ps'@(MPTypes bts) <- checkTermParams a wh ctx ps
@@ -141,7 +129,7 @@ checkTerm a wh ctx Synth (MAbs ps@MPTypes{} m)
 
 
 -- (t-abm) ------------------------------------------------
-checkTerm a wh ctx Synth (MAbs ps@MPTerms{} m)
+checkTermWith a wh ctx Synth (MAbs ps@MPTerms{} m)
  = do
         -- Check the parameters and bind them into the context.
         ps'@(MPTerms bts) <- checkTermParams a wh ctx ps
@@ -160,7 +148,7 @@ checkTerm a wh ctx Synth (MAbs ps@MPTerms{} m)
 
 -- (t-aps) ------------------------------------------------
 -- This handles (t-apt), (t-apm) and (t-apv) from the docs.
-checkTerm a wh ctx Synth (MAps mFun0 mgss0)
+checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
  = do
         -- If this an effectful primitive then also add the effects
         -- we get from applying it.
@@ -169,8 +157,8 @@ checkTerm a wh ctx Synth (MAps mFun0 mgss0)
                 Just nPrm
                  | Just pp      <- Map.lookup nPrm Prim.primOps
                  -> do
-                        let tPrim   = mapAnnot (const a) $ Prim.typeOfPrim pp
-                        let ePrim   = mapAnnot (const a) $ Prim.effectOfPrim pp
+                        let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
+                        let ePrim = mapAnnot (const a) $ Prim.effectOfPrim pp
 
                         pss     <- stripTermParamsOfType ctx tPrim
                         when (length pss /= length mgss0)
@@ -225,7 +213,7 @@ checkTerm a wh ctx Synth (MAps mFun0 mgss0)
 
 
 -- (t-let) ------------------------------------------------
-checkTerm a wh ctx Synth (MLet bts mBind mBody)
+checkTermWith a wh ctx Synth (MLet bts mBind mBody)
  = do
         -- Check kinds of binder annotations.
         MPTerms bts'
@@ -255,7 +243,7 @@ checkTerm a wh ctx Synth (MLet bts mBind mBody)
 
         tsBind'   <- zipWithM checkLetAnnot tsParam tsBind
         let bts'' = zip bs tsBind'
-        let ctx' = contextBindTermParams (MPTerms bts'') ctx
+        let ctx'  = contextBindTermParams (MPTerms bts'') ctx
 
         -- Check the body term.
         (mBody', tsResult, esResult)
@@ -267,7 +255,7 @@ checkTerm a wh ctx Synth (MLet bts mBind mBody)
 
 
 -- (t-rec) ------------------------------------------------
-checkTerm a wh ctx mode mm@(MRecord ns ms)
+checkTermWith a wh ctx mode mm@(MRecord ns ms)
  = case mode of
         -- If we have an expected type for all the fields then check the fields
         -- separately. This gives better error messages as we don't need to report
@@ -295,8 +283,8 @@ checkTerm a wh ctx mode mm@(MRecord ns ms)
 
         -- The expected type we have doesn't cover all the fields of the record
         -- being constructed. We call the default checker and let that fail.
-        Check _
-         -> checkTerm_default a wh ctx mode mm
+        Check tsExpected
+         -> checkTermExpect a wh ctx tsExpected mm
 
         -- Synthesise a type for the record.
         Synth
@@ -316,7 +304,7 @@ checkTerm a wh ctx mode mm@(MRecord ns ms)
 
 
 -- (t-prj) ------------------------------------------------
-checkTerm a wh ctx Synth (MProject nLabel mRecord)
+checkTermWith a wh ctx Synth (MProject nLabel mRecord)
  = do
         -- Check the body expression.
         (mRecord', tsRecord, esRecord)
@@ -340,7 +328,7 @@ checkTerm a wh ctx Synth (MProject nLabel mRecord)
 
 
 -- (t-vnt) ------------------------------------------------
-checkTerm a wh ctx Synth (MVariant nLabel msValues tVariant)
+checkTermWith a wh ctx Synth (MVariant nLabel msValues tVariant)
  = do
         -- Check annotation is well kinded.
         checkType a wh ctx tVariant
@@ -368,7 +356,7 @@ checkTerm a wh ctx Synth (MVariant nLabel msValues tVariant)
 
 
 -- (t-cse) ------------------------------------------------
-checkTerm a wh ctx Synth mCase@(MVarCase mScrut msAlt)
+checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
  = do
         -- Check the scrutinee.
         (mScrut', tScrut, esScrut)
@@ -449,7 +437,7 @@ checkTerm a wh ctx Synth mCase@(MVarCase mScrut msAlt)
 
 
 -- (t-ifs) ------------------------------------------------
-checkTerm a wh ctx Synth mIf@(MIf msCond msThen mElse)
+checkTermWith a wh ctx Synth mIf@(MIf msCond msThen mElse)
  = do
         when (not $ length msCond == length msThen)
          $ throw $ ErrorTermMalformed a wh mIf
@@ -471,7 +459,7 @@ checkTerm a wh ctx Synth mIf@(MIf msCond msThen mElse)
 
 
 -- (t-lst) ------------------------------------------------
-checkTerm a wh ctx Synth (MList t ms)
+checkTermWith a wh ctx Synth (MList t ms)
  = do
         (t', k) <- checkType a wh ctx t
         when (not $ isTData k)
@@ -483,7 +471,7 @@ checkTerm a wh ctx Synth (MList t ms)
 
 
 -- (t-set) ------------------------------------------------
-checkTerm a wh ctx Synth (MSet t ms)
+checkTermWith a wh ctx Synth (MSet t ms)
  = do
         (t', k) <- checkType a wh ctx t
         when (not $ isTData k)
@@ -495,7 +483,7 @@ checkTerm a wh ctx Synth (MSet t ms)
 
 
 -- (t-map) ------------------------------------------------
-checkTerm a wh ctx Synth m@(MMap tk tv msk msv)
+checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
  = do
         when (not $ length msk == length msv)
          $ throw $ ErrorTermMalformed a wh m
@@ -516,12 +504,26 @@ checkTerm a wh ctx Synth m@(MMap tk tv msk msv)
                 , [TMap tk tv]
                 , esKeys ++ esVals)
 
-checkTerm a wh ctx m mode
- = checkTerm_default a wh ctx m mode
+checkTermWith a wh ctx (Check tsExpected) m
+ = checkTermExpect a wh ctx tsExpected m
+
+checkTermWith _ _ _ mode mm
+ =  error $ unlines
+        [ "checkTerm: no match"
+        , Text.ppShow mode
+        , Text.ppShow mm
+        , P.renderIndent $ P.ppr () mm ]
 
 
------------------------------------------------------------
-checkTerm_default a wh ctx (Check tsExpected) m
+---------------------------------------------------------------------------------------------------
+-- | Synthesise the actual types of a term,
+--   then check it against the expected types.
+checkTermExpect
+        :: Annot a => a -> [Where a]
+        -> Context a -> [Type a] -> Term a
+        -> IO (Term a, [Type a], [Effect a])
+
+checkTermExpect a wh ctx tsExpected m
  = do
         (m', tsActual, esActual)
          <- checkTerm a wh ctx Synth m
@@ -534,332 +536,4 @@ checkTerm_default a wh ctx (Check tsExpected) m
          Just ((_a1, t1Err), (_a2, t2Err))
           -> throw $ ErrorTypeMismatch a wh t1Err t2Err
 
-
-checkTerm_default _ _ _ mode mm
- =  error $ unlines
-        [ "checkTerm: not finished"
-        , Text.ppShow mode
-        , Text.ppShow mm
-        , P.renderIndent $ P.ppr () mm ]
-
-
--- (t-one) ----------------------------------------------------------------------------------------
--- | Like 'checkTerm' but expect a single result type.
-checkTerm1
-        :: Annot a => a -> [Where a]
-        -> Context a -> Mode a -> Term a
-        -> IO (Term a, Type a, [Effect a])
-
-checkTerm1 a wh ctx mode m
- = do
-        (m', ts', es')
-         <- checkTerm a wh ctx mode m
-
-        case ts' of
-         [t]    -> return (m', t, es')
-         _      -> throw $ ErrorTermsWrongArity a wh ts' [TData]
-
-
--- (t-many / t-gets) ------------------------------------------------------------------------------
--- This function implements both the t-many and t-gets rules from the declarative
--- version of the typing rules. In this algorithmic, bidirectional implementation
--- the expected types are represented in the checker mode we get from the caller.
-
--- | Check a list of individual terms.
-checkTerms
-        :: Annot a => a -> [Where a]
-        -> Context a -> Mode a -> [Term a]
-        -> IO ([Term a], [Type a], [Effect a])
-
-checkTerms a wh ctx Synth ms
- = do
-        (ms', ts', ess')
-         <- fmap unzip3 $ mapM (checkTerm1 a wh ctx Synth) ms
-
-        return (ms', ts', concat ess')
-
-checkTerms a wh ctx (Check ts) ms
- | length ms == length ts
- = do
-        (ms', ts', ess')
-         <- fmap unzip3
-         $  zipWithM (\t m -> checkTerm1 a wh ctx (Check [t]) m) ts ms
-
-        return (ms', ts', concat ess')
-
- | otherwise
- = do   (_ms, ts', _ess')
-         <- fmap unzip3
-         $  mapM (checkTerm1 a wh ctx Synth) ms
-
-        throw $ ErrorTermsWrongArity a wh ts' (replicate (length ms) TData)
-
-
--- | Check the given terms all have the specified type,
---   bundling all the caused effects together in the result.
-checkTermsAreAll
-        :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> [Term a]
-        -> IO ([Term a], [Effect a])
-
-checkTermsAreAll a wh ctx tExpected ms
- = do
-        (ms', _ts, effs)
-         <- fmap unzip3
-         $  mapM (\t -> checkTerm1 a wh ctx (Check [tExpected]) t ) ms
-
-        return (ms', concat effs)
-
-
----------------------------------------------------------------------------------------------------
--- | Check some term function parameters.
-checkTermParams
-        :: Annot a => a -> [Where a]
-        -> Context a -> TermParams a -> IO (TermParams a)
-
-checkTermParams a wh ctx mps
- = case mps of
-        MPTerms bts
-         -> do  let (bs, ts) = unzip bts
-                ts' <- checkTypesAre a wh ctx ts (replicate (length ts) TData)
-                return  $ MPTerms $ zip bs ts'
-
-        MPTypes bks
-         -> do  let (bs, ks) = unzip bks
-                ks' <- mapM (checkKind a wh ctx) ks
-                return  $ MPTypes $ zip bs ks'
-
-
--- | Check a list of term function parameters,
---   where type variables bound earlier in the list are in scope
---   when checking types annotating term variables later in the list.
-checkTermParamss
-        :: Annot a => a -> [Where a]
-        -> Context a -> [TermParams a] -> IO [TermParams a]
-
-checkTermParamss _a _wh _ctx []
- = return []
-
-checkTermParamss a wh ctx (tps : tpss)
- = do   tps'  <- checkTermParams  a wh ctx  tps
-        let ctx'  = contextBindTermParams tps' ctx
-        tpss' <- checkTermParamss a wh ctx' tpss
-        return $ tps' : tpss'
-
-
----------------------------------------------------------------------------------------------------
--- | Check the application of a term to some types.
-checkTermAppTypes
-        :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> [Type a]
-        -> IO ([Type a], Type a)
-
-checkTermAppTypes a wh ctx tFun tsArg
- = do
-        -- The funtion needs to have a forall type.
-        (bksParam, tResult)
-         <- case tFun of
-                TForall bksParam tResult
-                  -> return (bksParam, tResult)
-                _ -> throw $ ErrorAppTermTypeCannot a wh tFun
-
-        -- Check the kinds of the arguments.
-        (tsArg', ksArg) <- checkTypes a wh ctx tsArg
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length bksParam == length tsArg)
-         $ throw $ ErrorAppTermTypeWrongArity a wh bksParam tsArg
-
-        -- Check the parameter and argument kinds match.
-        (case checkTypeEqs a [] (map snd bksParam) a [] ksArg of
-                Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                  -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
-                _ -> return ())
-
-        -- Substitute arguments into the result type to instantiate
-        -- the type scheme.
-        let subst   = Map.fromList
-                        [ (n, t) | (BindName n, _k) <- bksParam
-                                 | t <- tsArg ]
-        let tSubst  = substTypeType [subst] tResult
-
-        -- Return the checked argument types and the instantiated scheme.
-        return  (tsArg', tSubst)
-
-
--- | Check the application of a functional term to an argument term.
---   Reduction of the argument may produce a vector of values.
-checkTermAppTerm
-        :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> Term a
-        -> IO (Term a, [Type a], [Effect a])
-
-checkTermAppTerm a wh ctx tFun mArg
- = do
-        -- The function needs to have a functional type.
-        let (tsParam, tsResult)
-                = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
-                $ takeTFun tFun
-
-        -- Check the types of the argument.
-        (mArg', tsArg, esArg)
-         <- checkTerm a wh ctx (Check tsParam) mArg
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length tsParam == length tsArg)
-         $ throw $ ErrorAppTermTermWrongArity a wh tsParam tsArg
-
-        -- Check the parameter and argument tpyes match.
-        case checkTypeEqs a [] tsParam a [] tsArg of
-         Just ((_aErr1', tErr1), (_aErr2', tErr2))
-           -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
-         _ -> return (mArg', tsResult, esArg)
-
-
--- | Check the application of a functional term to some argument terms.
---   The arguments can only produce a single value each.
-checkTermAppTerms
-        :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> [Term a]
-        -> IO ([Term a], [Type a], [Effect a])
-
-checkTermAppTerms a wh ctx tFun msArg
- = do
-        -- The function needs to have a functional type.
-        let (tsParam, tsResult)
-                = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
-                $ takeTFun tFun
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length msArg == length tsParam)
-         $ throw $ ErrorAppTermTermWrongArityNum a wh tsParam (length msArg)
-
-        -- Check the types of the arguments.
-        (msArg', tsArg, esArgs)
-         <- checkTerms a wh ctx (Check tsParam) msArg
-
-        -- Check the parameter and argument types match.
-        case checkTypeEqs a [] tsParam a [] tsArg of
-         Just ((_aErr1', tErr1), (_aErr2', tErr2))
-           -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
-         _ -> return  (msArg', tsResult, esArgs)
-
-
----------------------------------------------------------------------------------------------------
--- | Check a value, yielding its type.
-checkValue
-        :: Annot a => a -> [Where a]
-        -> Context a -> Value a -> IO (Type a)
-
-checkValue a wh ctx v
- = case v of
-        VUnit     -> return TUnit
-        VSymbol{} -> return TSymbol
-        VText{}   -> return TText
-        VBool{}   -> return TBool
-        VInt{}    -> return TInt
-        VNat{}    -> return TNat
-        VNone t   -> return $ TOption t
-
-        VData n ts vs
-         -> do  -- Use the term checker to check the applications.
-                (_m, tResult, [])
-                 <- checkTerm1 a wh ctx Synth
-                        (MApm (MApt (MCon n) ts) (map MVal vs))
-                return tResult
-
-        VRecord nvs
-         -> do  let (ns, vss) = unzip nvs
-                tss <- mapM (mapM (checkValue a wh ctx)) vss
-                return (TRecord ns $ map TGTypes tss)
-
-        VVariant _n tVar vs
-         -> do  checkType a wh ctx tVar
-                _ts <- mapM (checkValue a wh ctx) vs
-                return tVar
-
-        VList t vs
-         -> do  checkType a wh ctx t
-                checkValuesAreAll a wh ctx t vs
-                return $ TList t
-
-        VSet t vsSet
-         -> do  checkType a wh ctx t
-                checkValuesAreAll a wh ctx t  $ map (mapAnnot (const a)) $ Set.toList vsSet
-                return $ TSet t
-
-        VMap tk tv vsMap
-         -> do  checkType a wh ctx tk
-                checkType a wh ctx tv
-                checkValuesAreAll a wh ctx tk $ map (mapAnnot (const a)) $ Map.keys vsMap
-                checkValuesAreAll a wh ctx tv $ Map.elems vsMap
-                return $ TMap tk tv
-
-        VClosure (Closure env mps mBody)
-         -> do  -- Build a context with just the closure environment.
-                ctx1    <- contextBindEnv a wh env
-                        $  Context
-                        {  contextModuleTerm = contextModuleTerm ctx
-                        ,  contextLocal      = []}
-
-                -- Bind the closure parameters into the context.
-                MPTerms btsParam <- checkTermParams a wh ctx mps
-                let tsParam     = map snd btsParam
-                let ctx2        = contextBindTermParams mps ctx1
-
-                -- Check the body expression.
-                (_, tsResult, esBody)
-                 <- checkTerm a wh ctx2 Synth mBody
-
-                -- The body must be pure.
-                eBody_red <- reduceType a wh ctx2 (TSum esBody)
-                when (not $ isTPure eBody_red)
-                 $ throw $ ErrorImpureTermAbstraction a wh eBody_red
-
-                return $ TFun tsParam tsResult
-
-
--- | Check that a value has the given type.
-checkValueIs
-        :: Annot a => a -> [Where a] -> Context a
-        -> Type a -> Value a -> IO ()
-
-checkValueIs a wh ctx tExpected v
- = do
-        tActual <- checkValue a wh ctx v
-
-        case checkTypeEqs a [] [tExpected] a [] [tActual] of
-         Nothing -> return ()
-         Just ((_a1, t1Err), (_a2, t2Err))
-          -> throw $ ErrorTypeMismatch a wh t1Err t2Err
-
-
--- | Check that a list of values all have the given type.
-checkValuesAreAll
-        :: Annot a => a -> [Where a] -> Context a
-        -> Type a -> [Value a] -> IO ()
-
-checkValuesAreAll a wh ctx t vs
- = mapM_ (checkValueIs a wh ctx t) vs
-
-
--- | Check an environment binding and add it to the context.
-contextBindEnv
-        :: Annot a
-        => a -> [Where a] -> Env a
-        -> Context a -> IO (Context a)
-
-contextBindEnv a wh (Env bs0) ctx0
- = go ctx0 (reverse bs0)
- where
-        go ctx (EnvType n t : bs)
-         = do   (_, k') <- checkType a wh ctx t
-                go (contextBindType n k' ctx) bs
-
-        go ctx (EnvValue n v : bs)
-         = do   (_, [t'], _) <- checkTerm a wh ctx Synth (MVal v)
-                go (contextBindTerm n t' ctx) bs
-
-        go ctx []
-         = return $ ctx
 

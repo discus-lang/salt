@@ -1,5 +1,6 @@
 
 module Salt.Core.Check.Context where
+import Salt.Core.Check.Where
 import Salt.Core.Exp
 import qualified Salt.Core.Prim.Ctor    as Prim
 
@@ -22,21 +23,24 @@ data Elem a
 
 data Context a
         = Context
-        { -- | Holds types of top-level bindings in the current module.
-          contextModuleTerm     :: Map Name (Type a)
+        { -- | Function to check a term.
+          --   We hold a reference to the checker here o tie the mutually recursive
+          --   knot without needing mutually recursive modules.
+          contextCheckTerm      :: CheckTerm a
+
+          -- | Holds types of top-level bindings in the current module.
+        , contextModuleTerm     :: Map Name (Type a)
 
           -- | Holds types of local name bindings.
           --   This is used for bindings within a single top-level declaration.
         , contextLocal          :: [Elem a]
         }
-        deriving Show
 
--- | Construct an empty context.
-contextEmpty :: Context a
-contextEmpty
-        = Context
-        { contextModuleTerm     = Map.empty
-        , contextLocal          = [] }
+
+type CheckTerm a
+        =  Annot a => a -> [Where a]
+        -> Context a -> Mode a -> Term a
+        -> IO (Term a, [Type a], [Effect a])
 
 
 ---------------------------------------------------------------------------------------------------

@@ -4,8 +4,8 @@ import Salt.Core.Check.Error
 import Salt.Core.Check.Where
 import Salt.Core.Check.Type
 import Salt.Core.Check.Term
-import Salt.Core.Check.Context
-import Salt.Core.Exp
+import Salt.Core.Check.Term.Params
+import Salt.Core.Check.Term.Base
 import qualified Control.Exception      as Control
 import qualified Data.Map               as Map
 
@@ -28,7 +28,8 @@ checkModule a mm
         -- Build the top level context.
         let ctx = Context
                 { contextModuleTerm     = Map.fromList ntsDeclTerm
-                , contextLocal          = [] }
+                , contextLocal          = []
+                , contextCheckTerm      = checkTermWith }
 
         (ds', errss)
          <- fmap unzip
