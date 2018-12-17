@@ -49,11 +49,12 @@ checkTermWith a wh ctx Synth (MBox m)
 checkTermWith a wh ctx Synth (MRun m)
  = do
         -- Check the body.
-        (m', tsSusp', es) <- checkTerm a wh ctx Synth m
+        (m', tsSusp', es)
+         <- checkTerm a wh ctx Synth m
 
         -- The body must produce a suspension.
         -- When we run it it causes the effects in its annotations.
-        tsSusp_red'       <- reduceTypes a wh ctx tsSusp'
+        tsSusp_red' <- reduceTypes a wh ctx tsSusp'
         case tsSusp_red' of
          [TSusp tsResult' e']
             -> return (MRun m', tsResult', es ++ [e'])
@@ -115,7 +116,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTypes{} m)
  = do
         -- Check the parameters and bind into the context.
         ps'@(MPTypes bts) <- checkTermParams a wh ctx ps
-        let ctx'    =  contextBindTermParams ps ctx
+        let ctx' = contextBindTermParams ps ctx
 
         -- Check the body of the abstraction in the new context.
         (m', t, es) <- checkTerm1 a wh ctx' Synth m
@@ -155,7 +156,7 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
         (mFun1, tFun1, esFun1)
          <- case takeMPrm mFun0 of
                 Just nPrm
-                 | Just pp      <- Map.lookup nPrm Prim.primOps
+                 | Just pp  <- Map.lookup nPrm Prim.primOps
                  -> do
                         let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
                         let ePrim = mapAnnot (const a) $ Prim.effectOfPrim pp
@@ -166,9 +167,10 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
 
                         return (mFun0, tPrim, [ePrim])
 
-                 | Just tCon    <- Map.lookup nPrm Prim.primDataCtors
+                 | Just tCon <- Map.lookup nPrm Prim.primDataCtors
                  -> do
                         let tCon'   = mapAnnot (const a) tCon
+
                         pss <- stripTermParamsOfType ctx tCon'
                         when (length pss /= length mgss0)
                          $ throw $ ErrorUnsaturatedCtor a wh nPrm tCon'
@@ -284,7 +286,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
         -- The expected type we have doesn't cover all the fields of the record
         -- being constructed. We call the default checker and let that fail.
         Check tsExpected
-         -> checkTermExpect a wh ctx tsExpected mm
+         -> checkTermIs a wh ctx tsExpected mm
 
         -- Synthesise a type for the record.
         Synth
@@ -295,8 +297,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
 
                 -- Check each of the field terms.
                 (ms', tss', ess')
-                 <- fmap unzip3
-                 $  mapM (checkTerm a wh ctx Synth) ms
+                 <- fmap unzip3 $ mapM (checkTerm a wh ctx Synth) ms
 
                 return  ( MRecord ns ms'
                         , [TRecord ns (map TGTypes tss')]
@@ -307,24 +308,24 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
 checkTermWith a wh ctx Synth (MProject nLabel mRecord)
  = do
         -- Check the body expression.
-        (mRecord', tsRecord, esRecord)
-         <- checkTerm a wh ctx Synth mRecord
+        (mRecord', tRecord, esRecord)
+         <- checkTerm1 a wh ctx Synth mRecord
 
         -- The body needs to have record type with the field that we were expecting.
-        tsRecord' <- reduceTypes a wh ctx tsRecord
-        case tsRecord' of
-         [tRecord@(TRecord ns tgs)]
-          -> case lookup nLabel $ zip ns tgs of
-                Nothing
-                 -> throw $ ErrorRecordProjectNoField a wh tRecord nLabel
+        (ns, tgs, tRecord')
+         <- reduceType a wh ctx tRecord
+         >>= \case
+                t@(TRecord ns tgs) -> return (ns, tgs, t)
+                tThing  -> throw $ ErrorRecordProjectIsNot a wh tThing nLabel
 
-                Just (TGTypes tsField)
-                 -> return (MProject nLabel mRecord', tsField, esRecord)
+        -- Lookup the types of the field.
+        tsField
+         <- case lookup nLabel $ zip ns tgs of
+                Just (TGTypes tsField) -> return tsField
+                Nothing -> throw $ ErrorRecordProjectNoField a wh tRecord' nLabel
 
-         [tThing]
-            -> throw $ ErrorRecordProjectIsNot a wh tThing nLabel
-
-         ts -> throw $ ErrorTermsWrongArity a wh ts [TData]
+        return  ( MProject nLabel mRecord'
+                , tsField, esRecord)
 
 
 -- (t-vnt) ------------------------------------------------
@@ -334,14 +335,13 @@ checkTermWith a wh ctx Synth (MVariant nLabel msValues tVariant)
         checkType a wh ctx tVariant
 
         -- The annotation tells us what type to expect for the body.
-        tVariant'
+        (ns, tgs, tVariant')
          <- reduceType a wh ctx tVariant
+         >>= \case
+                t@(TVariant ns tgs) -> return (ns, tgs, t)
+                tThing -> throw $ ErrorVariantAnnotIsNot a wh tThing
 
-        (ns, tgs)
-         <- case tVariant' of
-                TVariant ns tgs   -> return (ns, tgs)
-                _ -> throw $ ErrorVariantAnnotIsNot a wh tVariant'
-
+        -- Lookup the types of the alternative.
         tsExpected'
          <- case lookup nLabel $ zip ns tgs of
                 Just (TGTypes ts) -> return ts
@@ -364,7 +364,8 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
 
         -- The scrutinee needs to be a variant.
         (nsScrut, mgsScrut)
-         <- reduceType a wh ctx tScrut >>= \case
+         <- reduceType a wh ctx tScrut
+         >>= \case
                 TVariant ns mgs -> return (ns, mgs)
                 _ -> throw $ ErrorCaseScrutNotVariant a wh tScrut
 
@@ -391,8 +392,7 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
                   tsField
                    <- case lookup n nmgsScrut of
                         Just (TGTypes ts) -> return ts
-                        Nothing
-                         -> throw $ ErrorCaseAltNotInVariant a wh n tScrut
+                        Nothing -> throw $ ErrorCaseAltNotInVariant a wh n tScrut
 
                   -- Check the pattern field types match the fields of the scrutinee.
                   let tsPat = map snd btsPat
@@ -442,12 +442,11 @@ checkTermWith a wh ctx Synth mIf@(MIf msCond msThen mElse)
         when (not $ length msCond == length msThen)
          $ throw $ ErrorTermMalformed a wh mIf
 
-        let mode = Check $ replicate (length msCond) TBool
-        (msCond', _tssCond, esCond)
-         <- checkTerms a wh ctx mode msCond
+        (msCond', esCond)
+         <- checkTermsAreAll a wh ctx TBool msCond
 
         (mElse',  tsElse, esElse)
-         <- checkTerm  a wh ctx Synth mElse
+         <- checkTerm a wh ctx Synth mElse
 
         (msThen', _tssThen, essThen)
          <- fmap unzip3
@@ -460,25 +459,15 @@ checkTermWith a wh ctx Synth mIf@(MIf msCond msThen mElse)
 
 -- (t-lst) ------------------------------------------------
 checkTermWith a wh ctx Synth (MList t ms)
- = do
-        (t', k) <- checkType a wh ctx t
-        when (not $ isTData k)
-         $ throw $ ErrorTypeMismatch a wh TData k
-
-        let ts = replicate (length ms) t'
-        (ms', _, es) <- checkTerms a wh ctx (Check ts) ms
+ = do   t' <- checkTypeIs a wh ctx TData t
+        (ms', es) <- checkTermsAreAll a wh ctx t' ms
         return  (MList t' ms', [TList t], es)
 
 
 -- (t-set) ------------------------------------------------
 checkTermWith a wh ctx Synth (MSet t ms)
- = do
-        (t', k) <- checkType a wh ctx t
-        when (not $ isTData k)
-         $ throw $ ErrorTypeMismatch a wh TData k
-
-        let ts = replicate (length ms) t'
-        (ms', _, es) <- checkTerms a wh ctx (Check ts) ms
+ = do   t' <- checkTypeIs a wh ctx TData t
+        (ms', es) <- checkTermsAreAll a wh ctx t' ms
         return (MSet t ms', [TSet t], es)
 
 
@@ -488,24 +477,17 @@ checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
         when (not $ length msk == length msv)
          $ throw $ ErrorTermMalformed a wh m
 
-        (tk', kk) <- checkType a wh ctx tk
-        when (not $ isTData kk)
-         $ throw $ ErrorTypeMismatch a wh TData kk
+        tk' <- checkTypeIs a wh ctx TData tk
+        tv' <- checkTypeIs a wh ctx TData tv
 
-        (tv', kv) <- checkType a wh ctx tv
-        when (not $ isTData kv)
-         $ throw $ ErrorTypeMismatch a wh TData kv
-
-        let tsk = replicate (length msk) tk'
-        let tsv = replicate (length msv) tv'
-        (msk', _, esKeys) <- checkTerms a wh ctx (Check tsk) msk
-        (msv', _, esVals) <- checkTerms a wh ctx (Check tsv) msv
+        (msk', esKeys) <- checkTermsAreAll a wh ctx tk' msk
+        (msv', esVals) <- checkTermsAreAll a wh ctx tv' msv
         return  ( MMap tk tv msk' msv'
                 , [TMap tk tv]
                 , esKeys ++ esVals)
 
 checkTermWith a wh ctx (Check tsExpected) m
- = checkTermExpect a wh ctx tsExpected m
+ = checkTermIs a wh ctx tsExpected m
 
 checkTermWith _ _ _ mode mm
  =  error $ unlines
@@ -518,12 +500,12 @@ checkTermWith _ _ _ mode mm
 ---------------------------------------------------------------------------------------------------
 -- | Synthesise the actual types of a term,
 --   then check it against the expected types.
-checkTermExpect
+checkTermIs
         :: Annot a => a -> [Where a]
         -> Context a -> [Type a] -> Term a
         -> IO (Term a, [Type a], [Effect a])
 
-checkTermExpect a wh ctx tsExpected m
+checkTermIs a wh ctx tsExpected m
  = do
         (m', tsActual, esActual)
          <- checkTerm a wh ctx Synth m
@@ -535,5 +517,4 @@ checkTermExpect a wh ctx tsExpected m
          Nothing -> return (m', tsActual, esActual)
          Just ((_a1, t1Err), (_a2, t2Err))
           -> throw $ ErrorTypeMismatch a wh t1Err t2Err
-
 

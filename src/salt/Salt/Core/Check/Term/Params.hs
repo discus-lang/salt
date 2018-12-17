@@ -14,7 +14,7 @@ checkTermParams a wh ctx mps
  = case mps of
         MPTerms bts
          -> do  let (bs, ts) = unzip bts
-                ts' <- checkTypesAre a wh ctx ts (replicate (length ts) TData)
+                ts' <- checkTypesAre a wh ctx (replicate (length ts) TData) ts
                 return  $ MPTerms $ zip bs ts'
 
         MPTypes bks

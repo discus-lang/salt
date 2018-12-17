@@ -73,7 +73,7 @@ checkType a wh ctx (TApt tFun tsArg)
 checkType a wh ctx (TForall bks tBody)
  = do   TPTypes bks' <- checkTypeParams a wh ctx (TPTypes bks)
         let ctx' = contextBindTypeParams (TPTypes bks') ctx
-        tBody'  <- checkTypeIs a wh ctx' tBody TData
+        tBody'  <- checkTypeIs a wh ctx' TData tBody
         return  (TForall bks' tBody', TData)
 
 
@@ -81,18 +81,20 @@ checkType a wh ctx (TForall bks tBody)
 checkType a wh ctx (TExists bks tBody)
  = do   TPTypes bks' <- checkTypeParams a wh ctx (TPTypes bks)
         let ctx' = contextBindTypeParams (TPTypes bks') ctx
-        tBody'  <- checkTypeIs a wh ctx' tBody TData
+        tBody'  <- checkTypeIs a wh ctx' TData tBody
         return  (TExists bks' tBody', TData)
 
 
 -- (k-fun) ------------------------------------------------
 checkType a wh ctx (TFun tsParam tsResult)
  = do
-        tsParam'  <- checkTypesAre a wh ctx tsParam
-                  $  replicate (length tsParam)  TData
+        tsParam'  <- checkTypesAre a wh ctx
+                        (replicate (length tsParam) TData)
+                        tsParam
 
-        tsResult' <- checkTypesAre a wh ctx tsResult
-                  $  replicate (length tsResult) TData
+        tsResult' <- checkTypesAre a wh ctx
+                        (replicate (length tsResult) TData)
+                        tsResult
 
         return  (TFun tsParam' tsResult', TData)
 
@@ -122,10 +124,11 @@ checkType a wh ctx (TVariant ns tgsField)
 -- (k-susp) -----------------------------------------------
 checkType a wh ctx (TSusp tsResult tEffect)
  = do
-        tsResult' <- checkTypesAre a wh ctx tsResult
-                  $  replicate (length tsResult) TData
+        tsResult' <- checkTypesAre a wh ctx
+                        (replicate (length tsResult) TData)
+                        tsResult
 
-        tEffect'  <- checkTypeIs a wh ctx tEffect TEffect
+        tEffect'  <- checkTypeIs a wh ctx TEffect tEffect
 
         return  (TSusp tsResult' tEffect', TData)
 
@@ -143,8 +146,9 @@ checkType _a _wh _ctx TPure
 -- (k-sum) ------------------------------------------------
 checkType a wh ctx (TSum ts)
  = do
-        ts'     <- checkTypesAre a wh ctx ts
-                $  replicate (length ts) TEffect
+        ts'     <- checkTypesAre a wh ctx
+                        (replicate (length ts) TEffect)
+                        ts
 
         return  (TSum ts', TEffect)
 
@@ -168,19 +172,20 @@ checkTypes a wh ctx ts
 -- | Check the kind of a single type matches the expected one.
 checkTypeIs
         :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> Kind a -> IO (Type a)
-checkTypeIs a wh ctx t k
- = do   [t']    <- checkTypesAre a wh ctx [t] [k]
+        -> Context a -> Kind a -> Type a -> IO (Type a)
+checkTypeIs a wh ctx k t
+ = do   [t']    <- checkTypesAre a wh ctx [k] [t]
         return t'
 
 
 -- | Check the kinds of some types match the expected ones.
 checkTypesAre
         :: Annot a => a -> [Where a]
-        -> Context a -> [Type a] -> [Kind a] -> IO [Type a]
+        -> Context a -> [Kind a] -> [Type a] -> IO [Type a]
 
-checkTypesAre a wh ctx ts ksExpected
- = do   (ts', ksActual) <- checkTypes a wh ctx ts
+checkTypesAre a wh ctx ksExpected ts
+ = do   (ts', ksActual)
+         <- checkTypes a wh ctx ts
 
         if length ts' /= length ksActual
          then throw $ ErrorAppTypeTypeWrongArity a wh ksExpected ksActual
@@ -214,8 +219,10 @@ checkTypeArgsAreAll
 checkTypeArgsAreAll a wh ctx kExpected tgs
  = case tgs of
         TGTypes ts
-         -> do  ts' <- checkTypesAre a wh ctx ts
-                     $ replicate (length ts) kExpected
+         -> do  ts' <- checkTypesAre a wh ctx
+                        (replicate (length ts) kExpected)
+                        ts
+
                 return $ TGTypes ts'
 
 
