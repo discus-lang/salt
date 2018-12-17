@@ -130,47 +130,47 @@ All type expressions can be written without using unicode characters, using the 
 
 ```
 Term
- ::=  mvar Var                      (Var)
-  |   mcon Con                      (Con)
-  |   msym Sym                      ('Sym)
-  |   mprm Prm                      (#Prm)
+ ::=  mvar   Var                    (Var)
+  |   mcon   Con                    (Con)
+  |   msym   Sym                    ('Sym)
+  |   mprm   Prm                    (#Prm)
 
-  |   mmmm Termⁿ                    ('[' Term,* ']')
+  |   mmmm n Termⁿ                  ('[' Term,* ']')
 
-  |   mthe Typeⁿ Term               ('the' Types '.' Term)
+  |   mthe n Typeⁿ Term             ('the' Types 'of' Term)
 
-  |   mapp Term TermArgs            (Term  TermArgs)
-  |   mabs TermParams Term          ('λ'   TermParams '→'  Term)
+  |   mapp   Term TermArgs          (Term  TermArgs)
+  |   mabs   TermParams Term        ('λ'   TermParams '→'  Term)
 
-  |   mlet Varⁿ Term Term           ('let' TermBind ';' Term)
+  |   mlet n Varⁿ Term Term         ('let' TermBind ';' Term)
 
-  |   mifs Termⁿ Termⁿ Termⁿ        ('if' '{' (Term '→' Term);* 'otherwise' '→' Term '}' )
+  |   mifs n Termⁿ Termⁿ Termⁿ      ('if' '{' (Term '→' Term);* 'otherwise' '→' Term '}' )
 
-  |   mrec Lblⁿ Termⁿ               (∏ '[' (Lbl '=' Term),* ']')
-  |   mprj Term Lbl                 (Term '.' Lbl)
+  |   mrec n Lblⁿ Termⁿ             (∏ '[' (Lbl '=' Term),* ']')
+  |   mprj   Term Lbl               (Term '.' Lbl)
 
-  |   mvnt Lbl  Term Type           ('`' Lbl Term as Type)
-  |   mcse Term Lblⁿ Typeⁿ Termⁿ    ('case' Term 'of' '{' (Lbl '[' Var ':' Type ']' → Term);+ '}')
+  |   mvnt   Lbl  Term Type         ('the' Type 'of' '`' Lbl Term)
+  |   mcse n Term Lblⁿ Typeⁿ Termⁿ  ('case' Term 'of' '{' (Lbl '[' Var ':' Type ']' → Term);+ '}')
 
-  |   mlst Type Termⁿ               ('[list' Type '|' Term,* ']')
-  |   mset Type Termⁿ               ('[set'  Type '|' Term,* ']')
-  |   mmap Type Type Termⁿ Termⁿ    ('[map'  Type Type '|' TermMapBind,* ']')
+  |   mlst n Type Termⁿ             ('[list' Type '|' Term,* ']')
+  |   mset n Type Termⁿ             ('[set'  Type '|' Term,* ']')
+  |   mmap n Type Type Termⁿ Termⁿ  ('[map'  Type Type '|' TermMapBind,* ']')
 
 
 TermParams
- ::=  mpst Varⁿ Typeⁿ               ('@' '[' (Var ':' Type),* ']')
-  |   mpsm Varⁿ Typeⁿ               (    '[' (Var ':' Type),* ']')
+ ::=  mpst n Varⁿ Typeⁿ             ('@' '[' (Var ':' Type),* ']')
+  |   mpsm n Varⁿ Typeⁿ             (    '[' (Var ':' Type),* ']')
 
 TermArgs
- ::=  mgst Typeⁿ                    ('@' '[' Type,* ']')
-  |   mgsm Termⁿ                    (    '[' Term,* ']')
-  |   mgsv Term                     (Term)
+ ::=  mgst n Typeⁿ                  ('@' '[' Type,* ']')
+  |   mgsm n Termⁿ                  (    '[' Term,* ']')
+  |   mgsv   Term                   (Term)
 
 TermBind
- ::=  mbnd Varⁿ Term                ('[' Var;* ']' '=' Term)
+ ::=  mbnd n Varⁿ Term              ('[' Var;* ']' '=' Term)
 
 TermMapBind
- ::=  mpbd Term Term                (Term ':=' Term)
+ ::=  mpbd   Term Term              (Term ':=' Term)
 ```
 
 ### Term Sugar
