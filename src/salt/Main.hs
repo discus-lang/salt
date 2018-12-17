@@ -195,7 +195,7 @@ runTestType ctx _mm mnTest mTest
         System.hFlush System.stdout
 
         (_m, tsResult, _esResult)
-         <- Check.checkTerm a [] ctx mTest Check.Synth
+         <- Check.checkTerm a [] ctx Check.Synth mTest
         case tsResult of
          [t]    -> putStrLn $ P.renderIndent $ P.ppr () t
          _      -> putStrLn $ P.renderIndent $ P.ppr () tsResult

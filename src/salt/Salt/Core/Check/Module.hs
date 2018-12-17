@@ -83,7 +83,7 @@ checkDecl _a ctx (DTest (DeclTestKind a' n t))
 checkDecl _a ctx (DTest (DeclTestType a' n m))
  = do   let wh  = [WhereTestType a' n]
         (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx m Synth
+         <- checkTerm a' wh ctx Synth m
         return  $ DTest $ DeclTestType a' n m'
 
 
@@ -91,7 +91,7 @@ checkDecl _a ctx (DTest (DeclTestType a' n m))
 checkDecl _a ctx (DTest (DeclTestEval a' n m))
  = do   let wh  = [WhereTestEval a' n]
         (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx m Synth
+         <- checkTerm a' wh ctx Synth m
 
         -- TODO: check effects are empty.
         return  $ DTest $ DeclTestEval a' n m'
@@ -101,7 +101,7 @@ checkDecl _a ctx (DTest (DeclTestEval a' n m))
 checkDecl _a ctx (DTest (DeclTestExec a' n m))
  = do   let wh  = [WhereTestExec a' n]
         (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx m Synth
+         <- checkTerm a' wh ctx Synth m
 
         -- TODO: check effects are empty.
         -- TODO: check expr returns a suspension
@@ -112,7 +112,7 @@ checkDecl _a ctx (DTest (DeclTestExec a' n m))
 checkDecl _a ctx (DTest (DeclTestAssert a' n m))
  = do   let wh  = [WhereTestAssert a' n]
         (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx m (Check [TBool])
+         <- checkTerm a' wh ctx (Check [TBool]) m
 
         -- TODO: check effects are empty.
         return  $ DTest $ DeclTestAssert a' n m'
@@ -125,7 +125,7 @@ checkDecl _a ctx (DTerm (DeclTerm a n tpss mtResult mBody))
         let ctx' =  foldl (flip contextBindTermParams) ctx tpss'
 
         (mBody', _tsResult, _esResult)
-         <- checkTerm a wh ctx' mBody Synth
+         <- checkTerm a wh ctx' Synth mBody
 
         -- TODO: result type needs to be a vector.
         -- TODO: check against result type.
