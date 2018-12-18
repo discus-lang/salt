@@ -27,5 +27,6 @@ contextEmpty
         = Context
         { contextCheckType      = checkTypeWith
         , contextCheckTerm      = checkTermWith
+        , contextModuleType     = Map.empty
         , contextModuleTerm     = Map.empty
         , contextLocal          = [] }

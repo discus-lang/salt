@@ -31,7 +31,10 @@ data Context a
           -- | Function to check a term.
         , contextCheckTerm      :: CheckTerm a
 
-          -- | Holds types of top-level bindings in the current module.
+          -- | Kinds of top-level type bindings in the current module.
+        , contextModuleType     :: Map Name (Kind a)
+
+          -- | Types of top-level term bindings in the current module.
         , contextModuleTerm     :: Map Name (Type a)
 
           -- | Holds types of local name bindings.

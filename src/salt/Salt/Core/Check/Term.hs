@@ -15,7 +15,6 @@ import qualified Data.Set               as Set
 import qualified Text.Show.Pretty       as Text
 
 
----------------------------------------------------------------------------------------------------
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
 checkTermWith :: CheckTerm a

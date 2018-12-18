@@ -20,7 +20,13 @@ checkModule
 
 checkModule a mm
  = do
-        -- Extract a list of signatures for top-level declarations.
+        -- Extract a list of kind signatures for top-level declarations.
+        -- TODO: sort-check these before adding them to the context.
+        let ntsDeclType
+                = [ (n, makeDeclKindOfParamsResult pss kResult)
+                  | DType (DeclType _a n pss kResult _kBody) <- moduleDecls mm ]
+
+        -- Extract a list of type signatures for top-level declarations.
         -- TODO: kind-check these before adding them to the context.
         let ntsDeclTerm
                 = [ (n, makeDeclTypeOfParamsResult pss tsResult)
@@ -30,6 +36,7 @@ checkModule a mm
         let ctx = Context
                 { contextCheckType      = checkTypeWith
                 , contextCheckTerm      = checkTermWith
+                , contextModuleType     = Map.fromList ntsDeclType
                 , contextModuleTerm     = Map.fromList ntsDeclTerm
                 , contextLocal          = [] }
 
@@ -41,6 +48,15 @@ checkModule a mm
         return  ( ctx
                 , mm { moduleDecls = ds' }
                 , concat errss)
+
+
+makeDeclKindOfParamsResult :: [TypeParams a] -> Kind a -> Kind a
+makeDeclKindOfParamsResult pss0 kResult
+ = loop pss0
+ where
+        loop [] = kResult
+        loop (TPTypes bks : pss')
+         = TArr (map snd bks) $ loop pss'
 
 
 -- TODO: throw proper arity errors.
@@ -57,6 +73,7 @@ makeDeclTypeOfParamsResult pss0 tsResult
          = case loop pss' of
                 [t] -> [TForall bts t]
                 _   -> error "arity error when making decl type"
+
 
 
 ---------------------------------------------------------------------------------------------------
