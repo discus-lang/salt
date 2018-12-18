@@ -1,8 +1,8 @@
 
 module Salt.Core.Check.Term.Params where
 import Salt.Core.Check.Kind
-import Salt.Core.Check.Type
 import Salt.Core.Check.Term.Base
+import Salt.Core.Check.Type.Base
 
 
 -- | Check some term function parameters.

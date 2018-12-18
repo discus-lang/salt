@@ -1,6 +1,7 @@
 
 module Salt.Core.Check
         ( module Salt.Core.Check.Type
+        , module Salt.Core.Check.Type.Base
         , module Salt.Core.Check.Term
         , module Salt.Core.Check.Term.Base
         , module Salt.Core.Check.Module
@@ -10,6 +11,7 @@ module Salt.Core.Check
         , contextEmpty)
 where
 import Salt.Core.Check.Type
+import Salt.Core.Check.Type.Base
 import Salt.Core.Check.Term
 import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Module
@@ -23,7 +25,7 @@ import qualified Data.Map.Strict        as Map
 contextEmpty :: Context a
 contextEmpty
         = Context
-        { contextModuleTerm     = Map.empty
-        , contextLocal          = []
-        , contextCheckTerm      = checkTermWith }
-
+        { contextCheckType      = checkTypeWith
+        , contextCheckTerm      = checkTermWith
+        , contextModuleTerm     = Map.empty
+        , contextLocal          = [] }

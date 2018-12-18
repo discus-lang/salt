@@ -6,6 +6,7 @@ import Salt.Core.Check.Type
 import Salt.Core.Check.Term
 import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Base
+import Salt.Core.Check.Type.Base
 import qualified Control.Exception      as Control
 import qualified Data.Map               as Map
 
@@ -27,9 +28,10 @@ checkModule a mm
 
         -- Build the top level context.
         let ctx = Context
-                { contextModuleTerm     = Map.fromList ntsDeclTerm
-                , contextLocal          = []
-                , contextCheckTerm      = checkTermWith }
+                { contextCheckType      = checkTypeWith
+                , contextCheckTerm      = checkTermWith
+                , contextModuleTerm     = Map.fromList ntsDeclTerm
+                , contextLocal          = [] }
 
         (ds', errss)
          <- fmap unzip

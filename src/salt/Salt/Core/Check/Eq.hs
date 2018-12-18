@@ -4,7 +4,7 @@ import Salt.Core.Exp
 import Control.Applicative
 
 
-type CheckType a x
+type CheckTypeEq a x
         =  a -> [TypeParams a] -> x
         -> a -> [TypeParams a] -> x
         -> Maybe ((a, Type a), (a, Type a))
@@ -13,7 +13,7 @@ type CheckType a x
 -- | Check that two types are equal.
 --   If the types are not equal we give the inner-most annotation from
 --   both sides.
-checkTypeEq :: CheckType a (Type a)
+checkTypeEq :: CheckTypeEq a (Type a)
 checkTypeEq a1 ps1 t1 a2 ps2 t2
  = case (t1, t2) of
         (TAnn a1' t1', _)
@@ -48,7 +48,7 @@ checkTypeEq a1 ps1 t1 a2 ps2 t2
 -- | Check that two lists are equal pairwise.
 --   We require the caller to already have checked the lists are
 --   of equal length.
-checkTypeEqs :: CheckType a [Type a]
+checkTypeEqs :: CheckTypeEq a [Type a]
 checkTypeEqs a1 ps1 ts1 a2 ps2 ts2
  = foldl (<|>) Nothing
         [ checkTypeEq a1 ps1 t1 a2 ps2 t2
@@ -56,7 +56,7 @@ checkTypeEqs a1 ps1 ts1 a2 ps2 ts2
 
 
 -- | Check that two type argument blocks are equal pairwise.
-checkTypeArgsEq :: Type a -> Type a -> CheckType a (TypeArgs a)
+checkTypeArgsEq :: Type a -> Type a -> CheckTypeEq a (TypeArgs a)
 checkTypeArgsEq tBlame1 tBlame2 a1 ps1 g1 a2 ps2 g2
  = case (g1, g2) of
         (TGTypes ts1, TGTypes ts2)
@@ -67,7 +67,7 @@ checkTypeArgsEq tBlame1 tBlame2 a1 ps1 g1 a2 ps2 g2
 
 
 -- Check that two lists of type arguments are equal pairwise.
-checkTypeArgsEqs :: Type a -> Type a -> CheckType a [TypeArgs a]
+checkTypeArgsEqs :: Type a -> Type a -> CheckTypeEq a [TypeArgs a]
 checkTypeArgsEqs tBlame1 tBlame2 a1 ps1 gs1 a2 ps2 gs2
  = foldl (<|>) Nothing
         [ checkTypeArgsEq tBlame1 tBlame2 a1 ps1 g1 a2 ps2 g2

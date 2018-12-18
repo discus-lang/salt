@@ -23,10 +23,13 @@ data Elem a
 
 data Context a
         = Context
-        { -- | Function to check a term.
+        { -- | Function to check a type.
           --   We hold a reference to the checker here o tie the mutually recursive
           --   knot without needing mutually recursive modules.
-          contextCheckTerm      :: CheckTerm a
+          contextCheckType      :: CheckType a
+
+          -- | Function to check a term.
+        , contextCheckTerm      :: CheckTerm a
 
           -- | Holds types of top-level bindings in the current module.
         , contextModuleTerm     :: Map Name (Type a)
@@ -35,6 +38,12 @@ data Context a
           --   This is used for bindings within a single top-level declaration.
         , contextLocal          :: [Elem a]
         }
+
+
+type CheckType a
+        =  Annot a => a -> [Where a]
+        -> Context a -> Type a
+        -> IO (Type a, Kind a)
 
 
 type CheckTerm a

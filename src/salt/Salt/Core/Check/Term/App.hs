@@ -1,7 +1,7 @@
 
 module Salt.Core.Check.Term.App where
-import Salt.Core.Check.Type
 import Salt.Core.Check.Term.Base
+import Salt.Core.Check.Type.Base
 import qualified Data.Map       as Map
 
 

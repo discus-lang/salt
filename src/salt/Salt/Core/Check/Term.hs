@@ -4,7 +4,7 @@ import Salt.Core.Check.Term.App
 import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Value
 import Salt.Core.Check.Term.Base
-import Salt.Core.Check.Type
+import Salt.Core.Check.Type.Base
 import Salt.Core.Codec.Text             ()
 import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
