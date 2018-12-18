@@ -1,151 +1,151 @@
-test/20-error/10-check-type/Test.salt:1:1
+test/30-error/10-check-type/Test.salt:1:1
   Unknown type primitive '#derp'.
 
   1:1    In kind test
 
-test/20-error/10-check-type/Test.salt:11:1
+test/30-error/10-check-type/Test.salt:11:1
   Type variable 'a' is not in scope.
 
   11:1   In kind test
 
-test/20-error/10-check-type/Test.salt:16:1
+test/30-error/10-check-type/Test.salt:16:1
   Unknown kind constructor 'Derp'.
 
   16:1   In kind test
 
-test/20-error/10-check-type/Test.salt:19:1
+test/30-error/10-check-type/Test.salt:19:1
   Unexpected type: #Effect
         expecting: #Data
 
   19:1   In kind test
 
-test/20-error/10-check-type/Test.salt:24:1
+test/30-error/10-check-type/Test.salt:24:1
   Unknown kind constructor 'Derp'.
 
   24:1   In kind test
 
-test/20-error/10-check-type/Test.salt:27:1
+test/30-error/10-check-type/Test.salt:27:1
   Unknown type primitive '#Derp'.
 
   27:1   In kind test
 
-test/20-error/10-check-type/Test.salt:30:1
+test/30-error/10-check-type/Test.salt:30:1
   Unexpected type: #Data
         expecting: #Effect
 
   30:1   In kind test
 
-test/20-error/10-check-type/Test.salt:33:1
+test/30-error/10-check-type/Test.salt:33:1
   Not enough arguments in type application.
    parameter types: [#Data, #Data]
 
   33:1   In kind test
 
-test/20-error/10-check-type/Test.salt:36:1
+test/30-error/10-check-type/Test.salt:36:1
   Too many arguments in type application.
    parameter types: [#Data, #Data]
 
   36:1   In kind test
 
-test/20-error/10-check-type/Test.salt:39:1
+test/30-error/10-check-type/Test.salt:39:1
   Too many arguments in type application.
    parameter types: [#Data, #Data]
 
   39:1   In kind test
 
-test/20-error/10-check-type/Test.salt:44:1
+test/30-error/10-check-type/Test.salt:44:1
   Unknown kind constructor 'Derp'.
 
   44:1   In kind test
 
-test/20-error/10-check-type/Test.salt:47:1
+test/30-error/10-check-type/Test.salt:47:1
   Unexpected type: #Effect
         expecting: #Data
 
   47:1   In kind test
 
-test/20-error/10-check-type/Test.salt:52:1
+test/30-error/10-check-type/Test.salt:52:1
   Unknown kind constructor 'Derp'.
 
   52:1   In kind test
 
-test/20-error/10-check-type/Test.salt:55:1
+test/30-error/10-check-type/Test.salt:55:1
   Unexpected type: #Effect
         expecting: #Data
 
   55:1   In kind test
 
-test/20-error/10-check-type/Test.salt:60:1
+test/30-error/10-check-type/Test.salt:60:1
   Unknown type primitive '#Derp'.
 
   60:1   In kind test
 
-test/20-error/10-check-type/Test.salt:63:1
+test/30-error/10-check-type/Test.salt:63:1
   Unexpected type: #Effect
         expecting: #Data
 
   63:1   In kind test
 
-test/20-error/10-check-type/Test.salt:66:1
+test/30-error/10-check-type/Test.salt:66:1
   Unknown type primitive '#Derp'.
 
   66:1   In kind test
 
-test/20-error/10-check-type/Test.salt:69:1
+test/30-error/10-check-type/Test.salt:69:1
   Unexpected type: #Effect
         expecting: #Data
 
   69:1   In kind test
 
-test/20-error/10-check-type/Test.salt:74:1
+test/30-error/10-check-type/Test.salt:74:1
   Unexpected type: #Effect
         expecting: #Data
 
   74:1   In kind test
 
-test/20-error/10-check-type/Test.salt:77:1
+test/30-error/10-check-type/Test.salt:77:1
   Unexpected type: #Effect
         expecting: #Data
 
   77:1   In kind test
 
-test/20-error/10-check-type/Test.salt:80:1
+test/30-error/10-check-type/Test.salt:80:1
   Duplicate fields in record type
     fields: {x}
 
   80:1   In kind test
 
-test/20-error/10-check-type/Test.salt:85:1
+test/30-error/10-check-type/Test.salt:85:1
   Unexpected type: #Effect
         expecting: #Data
 
   85:1   In kind test
 
-test/20-error/10-check-type/Test.salt:88:1
+test/30-error/10-check-type/Test.salt:88:1
   Unexpected type: #Effect
         expecting: #Data
 
   88:1   In kind test
 
-test/20-error/10-check-type/Test.salt:91:1
+test/30-error/10-check-type/Test.salt:91:1
   Duplicate alternatives in variant type
     alternatives: {x}
 
   91:1   In kind test
 
-test/20-error/10-check-type/Test.salt:96:1
+test/30-error/10-check-type/Test.salt:96:1
   Unexpected type: #Effect
         expecting: #Data
 
   96:1   In kind test
 
-test/20-error/10-check-type/Test.salt:99:1
+test/30-error/10-check-type/Test.salt:99:1
   Unexpected type: #Data
         expecting: #Effect
 
   99:1   In kind test
 
-test/20-error/10-check-type/Test.salt:104:1
+test/30-error/10-check-type/Test.salt:104:1
   Unexpected type: #Data
         expecting: #Effect
 
