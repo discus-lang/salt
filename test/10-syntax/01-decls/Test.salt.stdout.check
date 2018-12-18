@@ -2,7 +2,9 @@
 * nat: #Data
 * #Nat
 * nat: #Nat
-* fac05: [120]
 * [720]
+* fac05: [120]
+print: hello
+world
 * ok
 * ok

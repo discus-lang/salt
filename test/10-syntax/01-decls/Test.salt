@@ -22,8 +22,13 @@ test type nat = 5
 
 
 -- Test eval decls.
-test eval fac05 = fac 5
 test eval fac 6
+test eval fac05 = fac 5
+
+
+-- Test exec decls.
+test exec print = box #console'println "hello"
+test exec box #console'println "world"
 
 
 -- Test assert decls.
