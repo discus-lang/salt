@@ -1,3 +1,4 @@
+-- Test syntax of terms.
 
 -- Primitive Values -----------------------------------------------------------
 test type unit          = #unit

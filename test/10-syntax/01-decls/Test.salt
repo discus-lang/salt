@@ -1,0 +1,32 @@
+-- Test syntax of top-level declarations.
+
+-- Type decls.
+-- type Nat = #Nat
+
+
+-- Term decls.
+term fac [x: #Nat]: #Nat
+ = if #nat'eq [x, 0]
+        then 1
+        else #nat'mul [x, fac [#nat'sub [x, 1]]]
+
+
+-- Test kind decls.
+test kind #Nat
+test kind nat = #Nat
+
+
+-- Test type decls.
+test type 5
+test type nat = 5
+
+
+-- Test eval decls.
+test eval fac05 = fac 5
+test eval fac 6
+
+
+-- Test assert decls.
+test assert #true
+test assert #bool'and [#true, #true]
+

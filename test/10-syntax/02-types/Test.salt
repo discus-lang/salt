@@ -1,3 +1,4 @@
+-- Test sytnax of types.
 
 -- Check kinding of primitive data constructors.
 test kind unit          = #Unit
