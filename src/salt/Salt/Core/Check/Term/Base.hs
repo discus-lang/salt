@@ -13,6 +13,7 @@ module Salt.Core.Check.Term.Base
         , module Data.Maybe
         , checkTerm
         , checkTerm1
+        , checkTermIs
         , checkTerms
         , checkTermsAreAll)
 where
@@ -49,6 +50,28 @@ checkTerm1 a wh ctx mode m
         case ts' of
          [t]    -> return (m', t, es')
          _      -> throw $ ErrorTermsWrongArity a wh ts' [TData]
+
+
+-- (t-check) --------------------------------------------------------------------------------------
+-- | Synthesise the actual types of a term,
+--   then check it against the expected types.
+checkTermIs
+        :: Annot a => a -> [Where a]
+        -> Context a -> [Type a] -> Term a
+        -> IO (Term a, [Type a], [Effect a])
+
+checkTermIs a wh ctx tsExpected m
+ = do
+        (m', tsActual, esActual)
+         <- checkTerm a wh ctx Synth m
+
+        when (length tsActual /= length tsExpected)
+         $ throw $ ErrorTermsWrongArity a wh tsActual tsExpected
+
+        case checkTypeEqs a [] tsExpected a [] tsActual of
+         Nothing -> return (m', tsActual, esActual)
+         Just ((_a1, t1Err), (_a2, t2Err))
+          -> throw $ ErrorTypeMismatch a wh t1Err t2Err
 
 
 -- (t-many / t-gets) ------------------------------------------------------------------------------
