@@ -1,12 +1,12 @@
 
 module Salt.Core.Check.Type where
+import Salt.Core.Check.Type.App
 import Salt.Core.Check.Type.Base
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Data.Map               as Map
 
 
----------------------------------------------------------------------------------------------------
 -- | Check and elaborate a type producing, a new type and its kind.
 --   Type errors are thrown as exceptions in the IO monad.
 checkTypeWith :: CheckType a
@@ -43,11 +43,10 @@ checkTypeWith a wh ctx t@(TVar u)
 
 -- (k-abs) ------------------------------------------------
 checkTypeWith a wh ctx (TAbs ps tBody)
- = do   ps'     <- checkTypeParams a wh ctx ps
-        let ctx' = contextBindTypeParams ps' ctx
+ = do   ps'@(TPTypes bks)  <- checkTypeParams a wh ctx ps
+        let ctx'     = contextBindTypeParams ps' ctx
         (tBody', kResult)  <- checkType a wh ctx' tBody
-        let TPTypes bks = ps'
-        let ksParam     = map snd bks
+        let ksParam  = map snd bks
         return  ( TAbs ps' tBody'
                 , TArr ksParam kResult)
 
@@ -77,22 +76,14 @@ checkTypeWith a wh ctx (TExists bks tBody)
 
 -- (k-fun) ------------------------------------------------
 checkTypeWith a wh ctx (TFun tsParam tsResult)
- = do
-        tsParam'  <- checkTypesAre a wh ctx
-                        (replicate (length tsParam) TData)
-                        tsParam
-
-        tsResult' <- checkTypesAre a wh ctx
-                        (replicate (length tsResult) TData)
-                        tsResult
-
+ = do   tsParam'  <- checkTypesAreAll a wh ctx TData tsParam
+        tsResult' <- checkTypesAreAll a wh ctx TData tsResult
         return  (TFun tsParam' tsResult', TData)
 
 
 -- (k-rec) ------------------------------------------------
 checkTypeWith a wh ctx (TRecord ns tgsField)
- = do
-        let nsDup = List.duplicates ns
+ = do   let nsDup = List.duplicates ns
         when (not $ null nsDup)
          $ throw $ ErrorRecordTypeDuplicateFields a wh nsDup
 
@@ -102,8 +93,7 @@ checkTypeWith a wh ctx (TRecord ns tgsField)
 
 -- (k-vnt) ------------------------------------------------
 checkTypeWith a wh ctx (TVariant ns tgsField)
- = do
-        let nsDup = List.duplicates ns
+ = do   let nsDup = List.duplicates ns
         when (not $ null nsDup)
          $ throw $ ErrorVariantTypeDuplicateAlts a wh nsDup
 
@@ -113,13 +103,8 @@ checkTypeWith a wh ctx (TVariant ns tgsField)
 
 -- (k-susp) -----------------------------------------------
 checkTypeWith a wh ctx (TSusp tsResult tEffect)
- = do
-        tsResult' <- checkTypesAre a wh ctx
-                        (replicate (length tsResult) TData)
-                        tsResult
-
+ = do   tsResult' <- checkTypesAreAll a wh ctx TData tsResult
         tEffect'  <- checkTypeIs a wh ctx TEffect tEffect
-
         return  (TSusp tsResult' tEffect', TData)
 
 
@@ -135,11 +120,7 @@ checkTypeWith _a _wh _ctx TPure
 
 -- (k-sum) ------------------------------------------------
 checkTypeWith a wh ctx (TSum ts)
- = do
-        ts'     <- checkTypesAre a wh ctx
-                        (replicate (length ts) TEffect)
-                        ts
-
+ = do   ts' <- checkTypesAreAll  a wh ctx TEffect ts
         return  (TSum ts', TEffect)
 
 
@@ -148,5 +129,4 @@ checkTypeWith a wh ctx (TSum ts)
 --   so we don't have any rule that could match it.
 checkTypeWith a wh _ t
  = throw $ ErrorTypeMalformed a wh t
-
 
