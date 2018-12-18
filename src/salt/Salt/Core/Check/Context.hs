@@ -92,8 +92,8 @@ contextBindTermMaybe (Just n) t ctx
 
 -- | Bind the types of term parameters into the context.
 contextBindTermParams :: TermParams a -> Context a -> Context a
-contextBindTermParams tps ctx
- = case tps of
+contextBindTermParams mps ctx
+ = case mps of
         MPTerms bts
          -> let nts = [ (n, t) | (BindName n, t) <- bts ]
             in  ctx { contextLocal = ElemTerms (Map.fromList nts) : contextLocal ctx }

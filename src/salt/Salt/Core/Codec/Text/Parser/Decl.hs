@@ -17,7 +17,41 @@ import qualified Text.Parsec                    as P
 pDecl :: Parser (Decl Location)
 pDecl
  = P.choice
- [ do   -- 'test' 'kind'   (Name '=')? Type
+ [ do   -- 'type' Var TypeParams* ':' Type '=' Type
+        loc <- getLocation
+        pTok KType
+        nType   <- pCon
+        tps     <- P.many pTypeParams
+        pTok KColon
+        kResult <- pType
+        pTok KEquals
+        tBody   <- pType
+        return  $ DType $ DeclType
+                { declAnnot       = loc
+                , declName        = nType
+                , declParams      = tps
+                , declKindResult  = kResult
+                , declBody        = tBody }
+
+
+ , do   -- 'term' Var TermParams* (':' Type)? '=' Term
+        loc <- getLocation
+        pTok KTerm
+        nTerm   <- pVar
+        mps     <- P.many pTermParams
+        pTok KColon
+        tsResult <- pTypesResult
+        pTok KEquals
+        mBody   <- pTerm
+        return  $  DTerm $ DeclTerm
+                { declAnnot       = loc
+                , declName        = nTerm
+                , declParams      = mps
+                , declTypesResult = tsResult
+                , declBody        = mBody }
+
+
+ , do   -- 'test' 'kind'   (Name '=')? Type
         -- 'test' 'type'   (Name '=')? Term
         -- 'test' 'eval'   (Name '=')? Term
         -- 'test' 'exec'   (Name '=')? Term
@@ -77,22 +111,6 @@ pDecl
                         , declTestBody  = mBody }
          ]
          <?> "a test declaration"
-
- , do   -- 'term' Var TermParams* (':' Type)? '=' Term
-        loc <- getLocation
-        pTok KTerm
-        n       <- pVar
-        mps     <- P.many pTermParams
-        pTok KColon
-        ts      <- pTypesResult
-        pTok KEquals
-        mBody   <- pTerm
-        return  $  DTerm $ DeclTerm
-                { declAnnot       = loc
-                , declName        = n
-                , declParams      = mps
-                , declTypesResult = ts
-                , declBody        = mBody }
  ]
  <?> "a declaration"
 

@@ -18,6 +18,7 @@ module Salt.Core.Check.Type.Base
         , checkTypesAreAll
 
         , checkTypeParams
+        , checkTypeParamss
         , checkTypeArgsAreAll)
 where
 import Salt.Core.Check.Context
@@ -96,6 +97,23 @@ checkTypeParams a wh ctx tps
          -> do  let (bs, ks) = unzip bks
                 ks' <- mapM (checkKind a wh ctx) ks
                 return $ TPTypes $ zip bs ks'
+
+
+-- | Check a list of type function parameters,
+--   where type variables bound earlier in the list are in scope
+--   when checking types annotating term variables later in the list.
+checkTypeParamss
+        :: Annot a => a -> [Where a]
+        -> Context a -> [TypeParams a] -> IO [TypeParams a]
+
+checkTypeParamss _a _wh _ctx []
+ = return []
+
+checkTypeParamss a wh ctx (tps : tpss)
+ = do   tps'  <- checkTypeParams  a wh ctx  tps
+        let ctx'  = contextBindTypeParams tps' ctx
+        tpss' <- checkTypeParamss a wh ctx' tpss
+        return $ tps' : tpss'
 
 
 ---------------------------------------------------------------------------------------------------

@@ -75,6 +75,32 @@ checkHandleDecl a ctx decl
 -- | Check the given declaration.
 checkDecl :: Annot a => a -> Context a -> Decl a -> IO (Decl a)
 
+-- (t-decl-type) ------------------------------------------
+checkDecl _a ctx (DType (DeclType a n tpss kResult tBody))
+ = do   let wh   = [WhereTypeDecl a n]
+        tpss'    <- checkTypeParamss a wh ctx tpss
+        let ctx' =  foldl (flip contextBindTypeParams) ctx tpss'
+
+        tBody'   <- checkTypeIs a wh ctx' kResult tBody
+        return  $ DType $ DeclType a n tpss' kResult tBody'
+
+
+-- (t-decl-term) ------------------------------------------
+checkDecl _a ctx (DTerm (DeclTerm a n mpss mtResult mBody))
+ = do   let wh   = [WhereTermDecl a n]
+        mpss'    <- checkTermParamss a wh ctx mpss
+        let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
+
+        (mBody', _tsResult, _esResult)
+         <- checkTerm a wh ctx' Synth mBody
+
+        -- TODO: result type needs to be a vector.
+        -- TODO: check against result type.
+        -- TODO: check result type.
+        -- TODO: check effects are empty.
+        return  $ DTerm $ DeclTerm a n mpss' mtResult mBody'
+
+
 -- (t-decl-kind) ------------------------------------------
 checkDecl _a ctx (DTest (DeclTestKind a' n t))
  = do   let wh = [WhereTestKind a' n]
@@ -119,20 +145,4 @@ checkDecl _a ctx (DTest (DeclTestAssert a' n m))
 
         -- TODO: check effects are empty.
         return  $ DTest $ DeclTestAssert a' n m'
-
-
--- (t-decl-term) ------------------------------------------
-checkDecl _a ctx (DTerm (DeclTerm a n tpss mtResult mBody))
- = do   let wh   = [WhereTermDecl a n]
-        tpss'    <- checkTermParamss a wh ctx tpss
-        let ctx' =  foldl (flip contextBindTermParams) ctx tpss'
-
-        (mBody', _tsResult, _esResult)
-         <- checkTerm a wh ctx' Synth mBody
-
-        -- TODO: result type needs to be a vector.
-        -- TODO: check against result type.
-        -- TODO: check result type.
-        -- TODO: check effects are empty.
-        return  $ DTerm $ DeclTerm a n tpss' mtResult mBody'
 

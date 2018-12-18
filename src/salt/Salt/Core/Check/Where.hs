@@ -6,7 +6,18 @@ import Salt.Core.Exp
 -- | Tracks where we are a source program during type checking,
 --   to help error reporting.
 data Where a
-        = WhereTestKind
+        -- type decls -------------------------------------
+        = WhereTypeDecl
+        { whereAnnot            :: a
+        , whereDeclName         :: Name }
+
+        -- term decls -------------------------------------
+        | WhereTermDecl
+        { whereAnnot            :: a
+        , whereDeclName         :: Name }
+
+        -- test decls -------------------------------------
+        | WhereTestKind
         { whereAnnot            :: a
         , whereTestName         :: Maybe Name }
 
@@ -26,10 +37,7 @@ data Where a
         { whereAnnot            :: a
         , whereTestName         :: Maybe Name }
 
-        | WhereTermDecl
-        { whereAnnot            :: a
-        , whereDeclName         :: Name }
-
+        -- terms ------------------------------------------
         | WhereAppPrim
         { whereAnnot            :: a
         , wherePrimName         :: Name
