@@ -107,26 +107,25 @@ contextBindTermParams mps ctx
 
 
 ---------------------------------------------------------------------------------------------------
--- | Lookup the parameter and result types of a data constructor.
-contextResolveDataCtor :: Name -> Context a -> IO (Maybe (Type ()))
-contextResolveDataCtor nCtor _ctx
- = return $ Map.lookup nCtor Prim.primDataCtors
-
-
 -- | Lookup a bound type variable from the context.
-contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Type a))
+contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Kind a))
 contextResolveTypeBound (Bound n) ctx
- = go $ contextLocal ctx
+ = goGlobal
  where
-        go []   = return Nothing
+        goGlobal
+         = case Map.lookup n (contextModuleType ctx) of
+                Nothing -> goLocal (contextLocal ctx)
+                Just t  -> return $ Just t
 
-        go (ElemTerms _  : rest)
-         = go rest
+        goLocal [] = return Nothing
 
-        go (ElemTypes mp : rest)
+        goLocal (ElemTerms _  : rest)
+         = goLocal rest
+
+        goLocal (ElemTypes mp : rest)
          = case Map.lookup n mp of
                 Just k  -> return $ Just k
-                Nothing -> go rest
+                Nothing -> goLocal rest
 
 
 -- | Lookup a bound term variable from the context.
@@ -139,7 +138,7 @@ contextResolveTermBound (Bound n) ctx
                 Nothing -> goLocal (contextLocal ctx)
                 Just t  -> return $ Just t
 
-        goLocal []   = return Nothing
+        goLocal [] = return Nothing
 
         goLocal (ElemTerms mp : rest)
          = case Map.lookup n mp of
@@ -148,4 +147,10 @@ contextResolveTermBound (Bound n) ctx
 
         goLocal (ElemTypes _ : rest)
          = goLocal rest
+
+
+-- | Lookup the parameter and result types of a data constructor.
+contextResolveDataCtor :: Name -> Context a -> IO (Maybe (Type ()))
+contextResolveDataCtor nCtor _ctx
+ = return $ Map.lookup nCtor Prim.primDataCtors
 

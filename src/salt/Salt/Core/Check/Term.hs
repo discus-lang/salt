@@ -104,8 +104,8 @@ checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
 
 -- (t-var) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MVar u)
- = do   mt <- contextResolveTermBound u ctx
-        case mt of
+ =   contextResolveTermBound u ctx
+ >>= \case
          Just t  -> return (m, [t], [])
          Nothing -> throw $ ErrorUnknownTermBound a wh u
 

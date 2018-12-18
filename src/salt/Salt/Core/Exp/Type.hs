@@ -26,7 +26,7 @@ type Effect a = Type a
 -- | Type Reference.
 data TypeRef
         = TRPrm !Name                   -- ^ Primitive type constructor.
-        | TRCon !Name                   -- ^ Used defined type constructor.
+        | TRCon !Name                   -- ^ User defined type synonym or constructor.
         deriving (Show, Eq, Ord)
 
 

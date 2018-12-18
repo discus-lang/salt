@@ -28,15 +28,10 @@ checkTypeWith a wh _ctx t@(TRef (TRPrm n))
         Nothing -> throw $ ErrorUnknownTypePrim a wh n
 
 
--- (k-con) ------------------------------------------------
-checkTypeWith _a _wh _ctx t@(TRef (TRCon _n))
- = error $ "TODO: check type synonyms" ++ show t
-
-
 -- (k-var) ------------------------------------------------
 checkTypeWith a wh ctx t@(TVar u)
- = do   mt <- contextResolveTypeBound u ctx
-        case mt of
+ = contextResolveTypeBound u ctx
+ >>= \case
          Just k  -> return (t, k)
          Nothing -> throw $ ErrorUnknownTypeBound a wh u
 

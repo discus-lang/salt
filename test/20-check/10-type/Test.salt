@@ -1,0 +1,8 @@
+
+-- type synonym lookup in kind checker.
+type nat: #Data = #Nat
+test kind nat
+
+
+-- (t-the) type synonym look through.
+-- test type the nat of 5

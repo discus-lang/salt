@@ -20,7 +20,7 @@ pDecl
  [ do   -- 'type' Var TypeParams* ':' Type '=' Type
         loc <- getLocation
         pTok KType
-        nType   <- pCon
+        nType   <- pVar
         tps     <- P.many pTypeParams
         pTok KColon
         kResult <- pType
