@@ -493,5 +493,5 @@ checkTermWith _ _ _ mode mm
         [ "checkTerm: no match"
         , Text.ppShow mode
         , Text.ppShow mm
-        , P.renderIndent $ P.ppr () mm ]
+        , P.render $ P.ppr () mm ]
 
