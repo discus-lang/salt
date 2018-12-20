@@ -4,6 +4,8 @@ import Salt.Core.Exp.Type
 import Salt.Core.Exp.Name
 import Data.Map                 (Map)
 import Data.Set                 (Set)
+import qualified Data.Int       as Int
+import qualified Data.Word      as Word
 
 
 ---------------------------------------------------------------------------------------------------
@@ -74,6 +76,15 @@ data Value a
         | VBool     !Bool                       -- ^ Boolean value.
         | VNat      !Integer                    -- ^ Natural value.
         | VInt      !Integer                    -- ^ Integer value.
+        | VInt8     !Int.Int8                   -- ^ 8 bit Integer value.
+        | VInt16    !Int.Int16                  -- ^ 16 bit Integer value.
+        | VInt32    !Int.Int32                  -- ^ 32 bit Integer value.
+        | VInt64    !Int.Int64                  -- ^ 64 bit Integer value.
+        | VWord     !Word.Word                  -- ^ Word value.
+        | VWord8    !Word.Word8                 -- ^ 8 bit Word value.
+        | VWord16   !Word.Word16                -- ^ 16 bit Word value.
+        | VWord32   !Word.Word32                -- ^ 32 bit Word value.
+        | VWord64   !Word.Word64                -- ^ 64 bit Word value.
         | VText     !Text                       -- ^ Text value.
         | VSymbol   !Name                       -- ^ Symbol value.
 
@@ -147,8 +158,17 @@ pattern MUnit                   = MRef  (MRVal VUnit)
 pattern MBool b                 = MRef  (MRVal (VBool b))
 pattern MTrue                   = MRef  (MRVal (VBool True))
 pattern MFalse                  = MRef  (MRVal (VBool False))
-pattern MInt i                  = MRef  (MRVal (VInt i))
 pattern MNat i                  = MRef  (MRVal (VNat i))
+pattern MInt i                  = MRef  (MRVal (VInt i))
+pattern MInt8 i                 = MRef  (MRVal (VInt8 i))
+pattern MInt16 i                = MRef  (MRVal (VInt16 i))
+pattern MInt32 i                = MRef  (MRVal (VInt32 i))
+pattern MInt64 i                = MRef  (MRVal (VInt64 i))
+pattern MWord i                 = MRef  (MRVal (VWord i))
+pattern MWord8 i                = MRef  (MRVal (VWord8 i))
+pattern MWord16 i               = MRef  (MRVal (VWord16 i))
+pattern MWord32 i               = MRef  (MRVal (VWord32 i))
+pattern MWord64 i               = MRef  (MRVal (VWord64 i))
 pattern MSymbol n               = MRef  (MRVal (VSymbol n))
 pattern MText tx                = MRef  (MRVal (VText tx))
 
