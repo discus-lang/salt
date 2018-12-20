@@ -23,11 +23,8 @@ dataOfText p text = do
   toks <- scanner text
   parser (MapAnnot.stripAnnot <$> p) toks
 
-textOfDataPlain :: Pretty.Pretty () a => a -> String
-textOfDataPlain a = Pretty.renderPlain $ Pretty.ppr () a
-
-textOfDataIndent :: Pretty.Pretty () a => a -> String
-textOfDataIndent a = Pretty.renderIndent $ Pretty.ppr () a
+textOfData :: Pretty.Pretty () a => a -> String
+textOfData a = Pretty.render $ Pretty.ppr () a
 
 
 -- | The kinds of errors that can occur when we try to lex & parse the result of pretty-printing:
