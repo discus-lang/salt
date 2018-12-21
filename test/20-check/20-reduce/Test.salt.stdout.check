@@ -1,1 +1,3 @@
 * [some [#Nat]] → [#Nat]
+* [some2 [#Nat]] → [#Nat]
+* [some3 [#Nat, #Bool]] → [#Bool]

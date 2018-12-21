@@ -2,3 +2,14 @@
 -- Check type operator reduction.
 type some: #Data ⇒ #Data = λ[a: #Data] ⇒ [x: a, y: a]
 test type λ[r: some #Nat] → r.x
+
+
+-- As above, but use the form with explicit parameters.
+-- This makes sure the parameters are attached to the decl properly.
+type some2 [a: #Data]: #Data = [x: a, y: a]
+test type λ[r: some2 #Nat] → r.x
+
+
+-- Multi parameter type operator.
+type some3 [a: #Data, b: #Data]: #Data = [x: a, y: b]
+test type λ[r: some3 [#Nat, #Bool]] → r.y
