@@ -73,9 +73,13 @@ typeKey = Gen.choice
   , argsN (return TKFun) [r03, r03]
   , (,) TKForall <$> tAbs
   , (,) TKExists <$> tAbs
+  , (\nts -> (TKRecord (map fst nts), map (TGTypes . (:[]) . snd) nts)) <$> typeFields
+  , (\nts -> (TKVariant (map fst nts), map (TGTypes . (:[]) . snd) nts)) <$> typeFields
   -- TODO: generate types for the following keys
-  -- , argsN (TKRecord <$> Gen.list (Range.linear 1 3) nameCon) [r03]
-  -- , argsN (TKVariant <$> Gen.list (Range.linear 1 3) nameCon) [r03]
+  -- , argsN (return TKSusp) [r03, r11]
+  -- , argsN (return TKPure) []
+  -- , argsN (return TKSync) []
+  -- , argsN (return TKSum)  [r03]
   ]
  where
   argsN k ns = (,) <$> k <*> mapM (\r -> TGTypes <$> Gen.list r type_) ns
@@ -83,6 +87,10 @@ typeKey = Gen.choice
   r13 = Range.linear 1 3
   r03 = Range.linear 0 3
   tAbs = ((:[]) . TGTypes . (:[])) <$> (TAbs <$> typeParams <*> type_)
+
+typeFields :: Gen [(Name, Type ())]
+typeFields = Gen.list (Range.linear 0 3) ((,) <$> nameVar <*> type_)
+
 
 
 -- Something bigger than a machine int

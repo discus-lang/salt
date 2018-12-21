@@ -25,6 +25,8 @@ prop_value_roundtrip_parse = property $ do
 prop_string_roundtrip :: Property
 prop_string_roundtrip = property $ do
   x <- forAll $ GenX.valueText $ Range.linear 0 1000
+  -- NOTE: This needs the latest version of inchworm on github.
+  -- NOTE: You may need to upgrade if this fails.
   tripping x Codec.textOfData (Codec.dataOfText Parser.pValue)
 
 tests :: IO Bool
