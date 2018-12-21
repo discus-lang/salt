@@ -103,6 +103,8 @@ instance Pretty c (Type a) where
         TSync   -> text "sync"
         TPure   -> text "pure"
 
+        TSum ts -> hcat $ punctuate (text " + ") $ map (pprTArg c) ts
+
         TKey k ts
          ->  ppr c k %% (hsep $ map (ppr c) ts)
 
