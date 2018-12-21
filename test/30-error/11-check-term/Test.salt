@@ -146,6 +146,12 @@ test type [x = 3, y = 3, x = 3, y = 4]
 -- Error: ill-typed field.
 test type [x = #true #true]
 
+-- Error: field type does not match expected type,
+-- and we've looked through a synonym to see the expected type.
+type recx: #Data = [x: #Nat, y: #Nat]
+test type the recx of [x = 1, y = #true]
+
+
 
 -- (t-prj) --------------------------------------------------------------------
 -- Error: body does not have record type.

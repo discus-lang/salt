@@ -1,3 +1,9 @@
 * #Data
 * nat
 * [foo] → [[#Nat]!(#Console + #Sleep)]
+* [thing2thing] → [#Nat]
+* [nat2nats] → [#Nat]
+* [nat2nat] → [#Nat]
+* [recy] → [#Nat]
+* vntx
+* [vnty] → [#Nat]

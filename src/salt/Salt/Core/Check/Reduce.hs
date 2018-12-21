@@ -5,19 +5,7 @@ import Salt.Core.Check.Context
 import Salt.Core.Exp
 import qualified Data.Map as Map
 
-
 ---------------------------------------------------------------------------------------------------
--- | Reduce all the given types to head normal form.
---   We look through annotations, unfold synonyms and reduce type applications
---   to reveal the head constructor.
-reduceTypes
-        :: Annot a => a -> [Where a] -> Context a
-        -> [Type a] -> IO [Type a]
-
-reduceTypes a wh ctx ts
- = mapM (reduceType a wh ctx) ts
-
-
 -- | Reduce a type to weak head normal form.
 --   If the head is also an effect type then normalize it.
 reduceType
@@ -36,6 +24,31 @@ reduceType _a _wh _ctx tt@(TSum{})
 
 reduceType _ _ _ tt
  = return tt
+
+
+-- | Reduce all the given types to head normal form.
+--   We look through annotations, unfold synonyms and reduce type applications
+--   to reveal the head constructor.
+reduceTypes
+        :: Annot a => a -> [Where a] -> Context a
+        -> [Type a] -> IO [Type a]
+
+reduceTypes a wh ctx ts
+ = mapM (reduceType a wh ctx) ts
+
+
+-- | Reduce the expected types in a Mode
+reduceMode
+        :: Annot a => a -> [Where a] -> Context a
+        -> Mode a -> IO (Mode a)
+
+reduceMode a wh ctx mode
+ = case mode of
+        Check ts
+         -> do  ts'     <- reduceTypes a wh ctx ts
+                return  $ Check ts'
+
+        _ -> return mode
 
 
 ---------------------------------------------------------------------------------------------------

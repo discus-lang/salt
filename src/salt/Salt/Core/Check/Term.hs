@@ -121,6 +121,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTypes{} m)
         (m', t, es) <- checkTerm1 a wh ctx' Synth m
 
         -- The body must be pure.
+        -- TODO: ensure types like (pure + pure) are reduced to pure,
         eBody_red   <- reduceType a wh ctx' (TSum es)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorImpureTypeAbstraction a wh eBody_red
@@ -139,6 +140,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTerms{} m)
         (m', ts, es) <- checkTerm a wh ctx' Synth m
 
         -- The body must be pure.
+        -- TODO: ensure types like (pure + pure) are reduced to pure,
         eBody_red    <- reduceType a wh ctx' (TSum es)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorImpureTermAbstraction a wh eBody_red
@@ -257,15 +259,17 @@ checkTermWith a wh ctx Synth (MLet bts mBind mBody)
 
 -- (t-rec) ------------------------------------------------
 checkTermWith a wh ctx mode mm@(MRecord ns ms)
- = case mode of
-        -- If we have an expected type for all the fields then check the fields
-        -- separately. This gives better error messages as we don't need to report
-        -- types for fields that are irrelevant to the problem.
-        Check [TRecord ns' tgsExpected]
-         | Set.fromList ns == Set.fromList ns'
-         , Set.size (Set.fromList ns)  == length ns
-         , Set.size (Set.fromList ns') == length ns'
-         -> do
+ = do
+        mode'   <- reduceMode a wh ctx mode
+        case mode' of
+         -- If we have an expected type for all the fields then check the fields
+         -- separately. This gives better error messages as we don't need to report
+         -- types for fields that are irrelevant to the problem.
+         Check [TRecord ns' tgsExpected]
+          | Set.fromList ns == Set.fromList ns'
+          , Set.size (Set.fromList ns)  == length ns
+          , Set.size (Set.fromList ns') == length ns'
+          -> do
                 -- Check each of the field terms against the expected type for it.
                 let nts   = Map.fromList $ zip ns' tgsExpected
                 let nmtgs = [ let Just tg = Map.lookup n nts in (n, m, tg)
@@ -282,25 +286,25 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
                         , [TRecord ns $ map TGTypes tss']
                         , concat ess')
 
-        -- The expected type we have doesn't cover all the fields of the record
-        -- being constructed. We call the default checker and let that fail.
-        Check tsExpected
-         -> checkTermIs a wh ctx tsExpected mm
+         -- The expected type we have doesn't cover all the fields of the record
+         -- being constructed. We call the default checker and let that fail.
+         Check tsExpected
+          -> checkTermIs a wh ctx tsExpected mm
 
-        -- Synthesise a type for the record.
-        Synth
-         -> do  -- Check for duplicate fields.
-                let nsDup = List.duplicates ns
-                when (not $ null nsDup)
-                 $ throw $ ErrorRecordDuplicateFields a wh nsDup
+         -- Synthesise a type for the record.
+         Synth
+          -> do  -- Check for duplicate fields.
+                 let nsDup = List.duplicates ns
+                 when (not $ null nsDup)
+                  $ throw $ ErrorRecordDuplicateFields a wh nsDup
 
-                -- Check each of the field terms.
-                (ms', tss', ess')
-                 <- fmap unzip3 $ mapM (checkTerm a wh ctx Synth) ms
+                 -- Check each of the field terms.
+                 (ms', tss', ess')
+                  <- fmap unzip3 $ mapM (checkTerm a wh ctx Synth) ms
 
-                return  ( MRecord ns ms'
-                        , [TRecord ns (map TGTypes tss')]
-                        , concat ess')
+                 return  ( MRecord ns ms'
+                         , [TRecord ns (map TGTypes tss')]
+                         , concat ess')
 
 
 -- (t-prj) ------------------------------------------------

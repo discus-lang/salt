@@ -4,10 +4,42 @@ type nat: #Data = #Nat
 test kind nat
 
 
--- (t-the) type synonym look through.
+-- (t-the) look through synonyms when checking ascribed types.
 test type the nat of 5
 
 
--- (t-run) run look through.
+-- (t-run) look through synonyms when running suspensions.
 type foo: #Data = [#Nat] ! #Console + #Sleep
 test type λ[x: foo] → box run x
+
+
+-- (t-apt) look through synontms in term/type  application.
+type thing2thing: #Data = ∀[a: #Data]. a → a
+test type λ[f: thing2thing] → f @#Nat 3
+
+
+-- (t-apm) look through synonyms in term/terms application.
+type nat2nats: #Data = [#Nat, #Nat] → #Nat
+test type λ[f: nat2nats] → f [2, 3]
+
+
+-- (t-apv) look through synonyms in term/term  application.
+type nat2nat: #Data = #Nat → #Nat
+test type λ[f: nat2nat] → f 3
+
+
+-- (t-prj) look through synonyms when projecting fields from records.
+type recy: #Data = [x: #Nat, y: #Nat, z: #Nat]
+test type λ[r: recy] → r.x
+
+
+-- (t-vnt) look through synonym to see expected type of body.
+type vntx: #Data = <foo: #Nat, bar: #Nat>
+test type the vntx of `foo 3
+
+
+-- (t-cse) look through synonym to see type of scrutinee.
+type vnty: #Data = <foo: #Nat, bar: #Nat>
+test type λ[x: vnty] → case x of { foo [x: #Nat] → x; bar [y: #Nat] → y }
+
+

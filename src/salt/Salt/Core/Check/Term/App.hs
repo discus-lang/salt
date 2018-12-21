@@ -14,8 +14,9 @@ checkTermAppTypes
 checkTermAppTypes a wh ctx tFun tsArg
  = do
         -- The funtion needs to have a forall type.
+        tFun_red <- reduceType a wh ctx tFun
         (bksParam, tResult)
-         <- case tFun of
+         <- case tFun_red of
                 TForall bksParam tResult
                   -> return (bksParam, tResult)
                 _ -> throw $ ErrorAppTermTypeCannot a wh tFun
@@ -55,9 +56,10 @@ checkTermAppTerms
 checkTermAppTerms a wh ctx tFun msArg
  = do
         -- The function needs to have a functional type.
+        tFun_red <- reduceType a wh ctx tFun
         let (tsParam, tsResult)
                 = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
-                $ takeTFun tFun
+                $ takeTFun tFun_red
 
         -- The number of arguments must match the number of parameters.
         when (not $ length msArg == length tsParam)
@@ -84,9 +86,10 @@ checkTermAppTerm
 checkTermAppTerm a wh ctx tFun mArg
  = do
         -- The function needs to have a functional type.
+        tFun_red <- reduceType a wh ctx tFun
         let (tsParam, tsResult)
                 = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
-                $ takeTFun tFun
+                $ takeTFun tFun_red
 
         -- Check the types of the argument.
         (mArg', tsArg, esArg)
