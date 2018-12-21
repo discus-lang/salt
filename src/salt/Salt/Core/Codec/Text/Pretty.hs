@@ -260,8 +260,19 @@ instance Pretty c (Value a) where
                 True    -> text "#true"
                 False   -> text "#false"
 
-        VInt  i         -> string $ show i
         VNat  i         -> string $ show i
+
+        VInt  i         -> string $ show i
+        VInt8  i        -> string $ show i
+        VInt16  i       -> string $ show i
+        VInt32  i       -> string $ show i
+        VInt64  i       -> string $ show i
+
+        VWord  i        -> string $ show i
+        VWord8  i       -> string $ show i
+        VWord16  i      -> string $ show i
+        VWord32  i      -> string $ show i
+        VWord64  i      -> string $ show i
 
         VData n ts vs   -> parens $ pprCon n
                                 %% squared (map (ppr c) ts)

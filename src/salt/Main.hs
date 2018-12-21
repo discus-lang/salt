@@ -109,7 +109,7 @@ runCheck filePath mm
 printError filePath err
  = do   let (IW.Location nLine nCol) = Error.errorAnnot err
         putStrLn
-         $ P.renderIndent $ vcat
+         $ P.render $ vcat
          $      [ P.padL 6 $ P.string filePath
                         % text ":" % P.string (show nLine)
                         % text ":" % P.string (show nCol)
@@ -176,7 +176,7 @@ runTestKind ctx _mm mnTest tTest
         System.hFlush System.stdout
 
         (_t, kResult) <- Check.checkType a [] ctx tTest
-        putStrLn $ P.renderIndent $ P.ppr () kResult
+        putStrLn $ P.render $ P.ppr () kResult
 
 
 -- TestType ---------------------------------------------------------------------------------------
@@ -197,8 +197,8 @@ runTestType ctx _mm mnTest mTest
         (_m, tsResult, _esResult)
          <- Check.checkTerm a [] ctx Check.Synth mTest
         case tsResult of
-         [t]    -> putStrLn $ P.renderIndent $ P.ppr () t
-         _      -> putStrLn $ P.renderIndent $ P.ppr () tsResult
+         [t]    -> putStrLn $ P.render $ P.ppr () t
+         _      -> putStrLn $ P.render $ P.ppr () tsResult
 
 
 -- TestEval ---------------------------------------------------------------------------------------
@@ -226,7 +226,7 @@ runTestEval mm mnTest mTest
                 , Eval.stateDeclTerms   = declTerms }
 
         vResult <- Eval.evalTerm state a (Env []) mTest
-        putStrLn $ P.renderIndent $ P.ppr () vResult
+        putStrLn $ P.render $ P.ppr () vResult
 
 
 -- TestExec ---------------------------------------------------------------------------------------
@@ -260,7 +260,7 @@ runTestExec mm mnTest mTest
                  -> do  vsResult <- Eval.evalTerm state a (Env []) mBody
                         case vsResult of
                          [] -> return ()
-                         _  -> putStrLn $ P.renderIndent $ P.ppr () vsResult
+                         _  -> putStrLn $ P.render $ P.ppr () vsResult
 
                 _ -> error $ "runTestEval: term did not produce a suspension"
                            ++ show vsSusp

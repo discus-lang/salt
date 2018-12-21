@@ -36,10 +36,7 @@ module Salt.Data.Pretty
         , P.fill, P.width
 
         -- * Rendering
-        , RenderMode (..)
         , render
-        , renderPlain
-        , renderIndent
         , putDoc, putDocLn
 
         -- * Utils
@@ -110,65 +107,28 @@ instance (Pretty c a, Pretty c b) => Pretty c (a, b) where
 
 padL :: Int -> P.Doc -> P.Doc
 padL n d
- = let  len     = length $ renderIndent d
+ = let  len     = length $ render d
         pad     = n - len
    in   if pad > 0
          then  d % P.text (replicate pad ' ')
          else  d
 
 
--- Rendering ------------------------------------------------------------------
--- | How to pretty print a doc.
-data RenderMode
-        -- | Render the doc with indenting.
-        = RenderPlain
-
-        -- | Render the doc without indenting.
-        | RenderIndent
-        deriving (Eq, Show)
-
-
 -- | Render a doc with the given mode.
-render :: RenderMode -> P.Doc -> String
-render mode doc
- = case mode of
-        RenderPlain  -> eatSpace True $ P.displayS (P.renderCompact doc) ""
-        RenderIndent -> P.displayS (P.renderPretty 0.8 100000 doc) ""
-
- where  eatSpace :: Bool -> String -> String
-        eatSpace _    []        = []
-        eatSpace True (c:cs)
-         = case c of
-                ' '     -> eatSpace True cs
-                '\n'    -> eatSpace True cs
-                _       -> c   : eatSpace False cs
-
-        eatSpace False (c:cs)
-         = case c of
-                ' '     -> ' ' : eatSpace True cs
-                '\n'    -> ' ' : eatSpace True cs
-                _       -> c   : eatSpace False cs
+render :: P.Doc -> String
+render doc
+ = P.displayS (P.renderPretty 0.8 100000 doc) ""
 
 
--- | Convert a `Doc` to a string without indentation.
-renderPlain  :: P.Doc -> String
-renderPlain = render RenderPlain
+-- | Put a `Doc` to `stdout`
+putDoc :: P.Doc -> IO ()
+putDoc doc
+        = putStr   $ render doc
 
-
--- | Convert a `Doc` to a string with indentation
-renderIndent :: P.Doc -> String
-renderIndent = render RenderIndent
-
-
--- | Put a `Doc` to `stdout` using the given mode.
-putDoc :: RenderMode -> P.Doc -> IO ()
-putDoc mode doc
-        = putStr   $ render mode doc
-
--- | Put a `Doc` to `stdout` using the given mode.
-putDocLn  :: RenderMode -> P.Doc -> IO ()
-putDocLn mode doc
-        = putStrLn $ render mode doc
+-- | Put a `Doc` to `stdout`
+putDocLn  :: P.Doc -> IO ()
+putDocLn doc
+        = putStrLn $ render doc
 
 
 -- Utils ---------------------------------------------------------------------

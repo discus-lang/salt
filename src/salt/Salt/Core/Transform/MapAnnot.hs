@@ -125,8 +125,17 @@ instance MapAnnot Value where
         VSymbol n       -> VSymbol n
         VText t         -> VText t
         VBool b         -> VBool b
-        VInt i          -> VInt i
         VNat n          -> VNat n
+        VInt i          -> VInt i
+        VInt8 i         -> VInt8 i
+        VInt16 i        -> VInt16 i
+        VInt32 i        -> VInt32 i
+        VInt64 i        -> VInt64 i
+        VWord i         -> VWord i
+        VWord8 i        -> VWord8 i
+        VWord16 i       -> VWord16 i
+        VWord32 i       -> VWord32 i
+        VWord64 i       -> VWord64 i
         VData n ts vs   -> VData n    (map (mapAnnot f) ts) (map (mapAnnot f) vs)
         VRecord  nvss   -> VRecord    [ (n, map (mapAnnot f) vs) | (n, vs) <- nvss ]
         VVariant n t vs -> VVariant n (mapAnnot f t)  (map (mapAnnot f) vs)
