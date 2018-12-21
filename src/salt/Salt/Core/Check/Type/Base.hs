@@ -69,7 +69,7 @@ checkTypesAre a wh ctx ksExpected ts
 
         if length ts' /= length ksActual
          then throw $ ErrorAppTypeTypeWrongArity a wh ksExpected ksActual
-         else case checkTypeEqs a [] ksExpected a [] ksActual of
+         else case checkTypeEqs ctx a [] ksExpected a [] ksActual of
                 Just ((_aErr1', kErr1), (_aErr2, kErr2))
                  -> throw  $ ErrorTypeMismatch a wh kErr1 kErr2
 

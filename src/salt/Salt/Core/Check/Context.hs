@@ -31,8 +31,8 @@ data Context a
           -- | Function to check a term.
         , contextCheckTerm      :: CheckTerm a
 
-          -- | Kinds of top-level type bindings in the current module.
-        , contextModuleType     :: Map Name (Kind a)
+          -- | Kinds and bodies of top-level type bindings in the current module.
+        , contextModuleType     :: Map Name (Kind a, Type a)
 
           -- | Types of top-level term bindings in the current module.
         , contextModuleTerm     :: Map Name (Type a)
@@ -108,14 +108,16 @@ contextBindTermParams mps ctx
 
 ---------------------------------------------------------------------------------------------------
 -- | Lookup a bound type variable from the context.
-contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Kind a))
+--   If it is transparanetly bound as a synonym we get both the kind and body type,
+--   If it is opaquely bound by an abstraction we get just the kind.
+contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Kind a, Maybe (Type a)))
 contextResolveTypeBound (Bound n) ctx
  = goGlobal
  where
         goGlobal
          = case Map.lookup n (contextModuleType ctx) of
-                Nothing -> goLocal (contextLocal ctx)
-                Just t  -> return $ Just t
+                Nothing     -> goLocal (contextLocal ctx)
+                Just (k, t) -> return $ Just (k, Just t)
 
         goLocal [] = return Nothing
 
@@ -124,7 +126,7 @@ contextResolveTypeBound (Bound n) ctx
 
         goLocal (ElemTypes mp : rest)
          = case Map.lookup n mp of
-                Just k  -> return $ Just k
+                Just k  -> return $ Just (k, Nothing)
                 Nothing -> goLocal rest
 
 

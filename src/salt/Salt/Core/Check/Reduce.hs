@@ -3,8 +3,10 @@ module Salt.Core.Check.Reduce where
 import Salt.Core.Check.Where
 import Salt.Core.Check.Context
 import Salt.Core.Exp
+import qualified Data.Map as Map
 
 
+---------------------------------------------------------------------------------------------------
 -- | Reduce all the given types to head normal form.
 --   We look through annotations, unfold synonyms and reduce type applications
 --   to reveal the head constructor.
@@ -25,6 +27,10 @@ reduceType
 reduceType a wh ctx (TAnn _a t)
  = reduceType a wh ctx t
 
+reduceType a wh ctx (TVar (Bound n))
+ | Just (_k, tBody) <- Map.lookup n (contextModuleType ctx)
+ = reduceType a wh ctx tBody
+
 reduceType _a _wh _ctx tt@(TSum{})
  = return $ flattenType tt
 
@@ -32,6 +38,7 @@ reduceType _ _ _ tt
  = return tt
 
 
+---------------------------------------------------------------------------------------------------
 -- | Flatten nested TSums in a type.
 flattenType :: Type a -> Type a
 flattenType tt
@@ -45,6 +52,7 @@ flattenType tt
         parts t         = [t]
 
 
+---------------------------------------------------------------------------------------------------
 -- | Strip params.
 stripTermParamsOfType
         :: Annot a => Context a -> Type a

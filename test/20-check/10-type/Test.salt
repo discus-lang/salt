@@ -5,4 +5,9 @@ test kind nat
 
 
 -- (t-the) type synonym look through.
--- test type the nat of 5
+test type the nat of 5
+
+
+-- (t-run) run look through.
+type foo: #Data = [#Nat] ! #Console
+test type λ[x: foo] → box run x

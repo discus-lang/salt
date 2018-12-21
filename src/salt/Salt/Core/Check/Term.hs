@@ -237,7 +237,7 @@ checkTermWith a wh ctx Synth (MLet bts mBind mBody)
              = return tBind
 
              | otherwise
-             = case checkTypeEq a [] tAnnot a [] tBind of
+             = case checkTypeEq ctx a [] tAnnot a [] tBind of
                  Nothing        -> return tBind
                  Just ((_a1, tErr1), (_a2, tErr2))
                   -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
@@ -395,7 +395,7 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
 
                   -- Check the pattern field types match the fields of the scrutinee.
                   let tsPat = map snd btsPat
-                  (case checkTypeEqs a [] tsPat a [] tsField of
+                  (case checkTypeEqs ctx a [] tsPat a [] tsField of
                         Nothing -> return ()
                         Just ((_a1, t1), (_a2, t2))
                          -> throw $ ErrorCaseAltPatMismatch a wh n t1 t2)

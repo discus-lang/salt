@@ -68,7 +68,7 @@ checkTermIs a wh ctx tsExpected m
         when (length tsActual /= length tsExpected)
          $ throw $ ErrorTermsWrongArity a wh tsActual tsExpected
 
-        case checkTypeEqs a [] tsExpected a [] tsActual of
+        case checkTypeEqs ctx a [] tsExpected a [] tsActual of
          Nothing -> return (m', tsActual, esActual)
          Just ((_a1, t1Err), (_a2, t2Err))
           -> throw $ ErrorTypeMismatch a wh t1Err t2Err

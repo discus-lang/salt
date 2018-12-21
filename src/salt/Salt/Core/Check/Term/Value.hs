@@ -97,7 +97,7 @@ checkValueIs
 checkValueIs a wh ctx tExpected v
  = do   tActual <- checkValue a wh ctx v
 
-        case checkTypeEqs a [] [tExpected] a [] [tActual] of
+        case checkTypeEqs ctx a [] [tExpected] a [] [tActual] of
          Nothing -> return ()
          Just ((_a1, t1Err), (_a2, t2Err))
           -> throw $ ErrorTypeMismatch a wh t1Err t2Err

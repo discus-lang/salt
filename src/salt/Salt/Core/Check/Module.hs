@@ -22,9 +22,12 @@ checkModule a mm
  = do
         -- Extract a list of kind signatures for top-level declarations.
         -- TODO: sort-check these before adding them to the context.
-        let ntsDeclType
-                = [ (n, makeDeclKindOfParamsResult pss kResult)
-                  | DType (DeclType _a n pss kResult _kBody) <- moduleDecls mm ]
+        -- TODO: check the synonyms aren't defined recursively.
+        let nktsDeclType
+                = [ ( n
+                    , ( makeDeclKindOfParamsResult pss kResult
+                      , makeTAbsOfParams pss tBody))
+                  | DType (DeclType _a n pss kResult tBody) <- moduleDecls mm ]
 
         -- Extract a list of type signatures for top-level declarations.
         -- TODO: kind-check these before adding them to the context.
@@ -36,7 +39,7 @@ checkModule a mm
         let ctx = Context
                 { contextCheckType      = checkTypeWith
                 , contextCheckTerm      = checkTermWith
-                , contextModuleType     = Map.fromList ntsDeclType
+                , contextModuleType     = Map.fromList nktsDeclType
                 , contextModuleTerm     = Map.fromList ntsDeclTerm
                 , contextLocal          = [] }
 

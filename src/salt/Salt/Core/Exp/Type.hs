@@ -123,6 +123,16 @@ isTData tt
 
 
 -- Compounds --------------------------------------------------------------------------------------
+-- | Given some type parameters and a body type,
+--   if we have any parameters then build a type abstraction,
+--   otherwise return the body type with no parameters.
+makeTAbsOfParams :: [TypeParams a] -> Type a -> Type a
+makeTAbsOfParams tps tBody
+ = case tps of
+        []      -> tBody
+        _       -> foldr TAbs tBody tps
+
+
 -- | If this is a `forall` type then split off the parameters and body.
 takeTForalls :: Type a -> Maybe ([[(Bind, Type a)]], Type a)
 takeTForalls tt

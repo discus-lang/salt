@@ -22,7 +22,7 @@ checkTypeAppTypes a wh ctx kFun tsArg
                         goCheckParams ksParam kResult tsArg' ksArg
 
         goCheckParams ksParam kResult tsArg' ksArg
-         = case checkTypeEqs a [] ksParam a [] ksArg of
+         = case checkTypeEqs ctx a [] ksParam a [] ksArg of
                 Just ((_aErr1', kErr1), (_aErr2, kErr2))
                  -> throw $ ErrorTypeMismatch a wh kErr1 kErr2
 
