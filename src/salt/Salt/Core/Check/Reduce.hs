@@ -2,6 +2,7 @@
 module Salt.Core.Check.Reduce where
 import Salt.Core.Check.Where
 import Salt.Core.Check.Context
+import Salt.Core.Transform.Subst
 import Salt.Core.Exp
 import qualified Data.Map as Map
 
@@ -21,6 +22,17 @@ reduceType a wh ctx (TVar (Bound n))
 
 reduceType _a _wh _ctx tt@(TSum{})
  = return $ flattenType tt
+
+reduceType a wh ctx tt@(TApt tFun tsArgs)
+ = do   tFun' <- reduceType a wh ctx tFun
+        case tFun' of
+         TAbs (TPTypes bks) tBody
+          | length bks == length tsArgs
+          -> do let ns    = [n | BindName n <- map fst bks]
+                let subst = Map.fromList $ zip ns tsArgs
+                reduceType a wh ctx $ substTypeType [subst] tBody
+
+         _ -> return tt
 
 reduceType _ _ _ tt
  = return tt

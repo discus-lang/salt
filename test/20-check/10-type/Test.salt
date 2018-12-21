@@ -1,5 +1,5 @@
 
--- type synonym lookup in kind checker.
+-- Check type synonym lookup in kind checker.
 type nat: #Data = #Nat
 test kind nat
 
