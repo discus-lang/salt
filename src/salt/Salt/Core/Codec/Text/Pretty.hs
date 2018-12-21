@@ -50,23 +50,36 @@ instance Pretty c (Type a) where
         TAbs p t
          -> text "λ" %% ppr c p %% text "⇒" %% ppr c t
 
-        TKey TKHole []
-         -> text "∙"
 
         -- Keyed expressions
-        TKey TKArr   [TGTypes tsParam, TGTypes [tResult]]
+        THole
+         -> text "∙"
+
+        TArr tsParam tResult
          -> squared (map (ppr c) tsParam)
          %% text "⇒" %% ppr c tResult
 
-        TKey TKApp   [TGTypes [tFun], TGTypes tsArg]
+        TApt tFun tsArg
          -> pprTFun c tFun %% squared (map (pprTArg c) tsArg)
 
-        TKey TKFun    [TGTypes tsParam, TGTypes tsResult]
+        TFun tsParam tsResult
          ->  squared (map (ppr c) tsParam)
          %%  text "→"
          %%  squared (map (ppr c) tsResult)
 
-        TKey (TKRecord ns) tgs
+        TForall bks tBody
+         ->  text "∀"
+          %  squared  [ ppr c b % text ":" %% ppr c t
+                      | (b, t) <- bks ]
+          %  text "." %% ppr c tBody
+
+        TExists bks tBody
+         ->  text "∃"
+          %  squared  [ ppr c b % text ":" %% ppr c t
+                      | (b, t) <- bks ]
+          %  text "." %% ppr c tBody
+
+        TRecord ns tgs
          | length ns == length tgs
          -> text "∏" % squared
                 [ pprLbl n % text ":"
@@ -75,7 +88,7 @@ instance Pretty c (Type a) where
                                 _               -> ppr c tg)
                 | n <- ns | tg <- tgs ]
 
-        TKey (TKVariant ns) tgs
+        TVariant ns tgs
          | length ns == length tgs
          -> text "∑" % squared
                 [ pprLbl n % text ":"
@@ -84,17 +97,11 @@ instance Pretty c (Type a) where
                                 _               -> ppr c tg)
                 | n <- ns | tg <- tgs ]
 
-        TKey TKForall [TGTypes [TAbs (TPTypes bts) tBody]]
-         ->  text "∀"
-          %  squared  [ ppr c b % text ":" %% ppr c t
-                      | (b, t) <- bts ]
-          %  text "." %% ppr c tBody
+        TSusp tsv te
+         -> squared (map (ppr c) tsv) % text "!" % pprTArg c te
 
-        TKey TKExists [TGTypes [TAbs (TPTypes bts) tBody]]
-         ->  text "∃"
-          %  squared  [ ppr c b % text ":" %% ppr c t
-                      | (b, t) <- bts ]
-          %  text "." %% ppr c tBody
+        TSync   -> text "sync"
+        TPure   -> text "pure"
 
         TKey k ts
          ->  ppr c k %% (hsep $ map (ppr c) ts)
