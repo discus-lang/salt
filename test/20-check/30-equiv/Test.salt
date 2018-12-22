@@ -1,0 +1,21 @@
+
+-- Check type equivalence checking up under alpha conversion.
+-- The types themselves are closed, so when deciding equivalence the context
+-- starts out empty.
+test type
+ λ[ f: ∀[a: #Data]. [a] → [a]
+  , g: ∀[b: #Data]. [b] → [b]
+  , b: #Bool ]
+ → if b then f else g
+
+
+-- Check equivalence where the type mentions a variable bound by a term
+-- level abstraction. The context for type equivalence checking must extend
+-- the context of the term it appears in.
+test type
+ λ@[ a: #Data] →
+  λ[ f: ∀[b: #Data]. [a, b] → [a, b, a]
+   , g: ∀[c: #Data]. [a, c] → [a, c, a]
+   , b: #Bool ]
+ → if b then f else g
+

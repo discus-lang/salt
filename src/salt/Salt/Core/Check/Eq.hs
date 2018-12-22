@@ -36,15 +36,22 @@ checkTypeEq ctx a1 ps1 t1 a2 ps2 t2
          |  Just (_k, t2') <- Map.lookup n2 (contextModuleType ctx)
          -> checkTypeEq ctx a1 ps1 t1  a2 ps2 t2'
 
-        -- TODO: handle alpha equivalence.
-        (TVar u1, TVar u2)
-         | u1 == u2
+        -- variables.
+        -- To handle differences in naming we need to check where the
+        -- variable was bound, not the syntactic name.
+        (TVar (Bound u1), TVar (Bound u2))
+         | Just (l1, k1) <- levelKindOfTyVar ctx ps1 u1
+         , Just (l2, k2) <- levelKindOfTyVar ctx ps2 u2
+         , l1 == l2
+         , Nothing       <- checkTypeEq ctx a1 [] k1 a2 [] k2
          -> Nothing
 
+        -- references
         (TRef r1, TRef r2)
          | r1 == r2
          -> Nothing
 
+        -- abstractions
         (TAbs p1 t11, TAbs p2 t12)
          | TPTypes bks1 <- p1
          , TPTypes bks2 <- p2
@@ -52,6 +59,7 @@ checkTypeEq ctx a1 ps1 t1 a2 ps2 t2
          ->  checkTypeEqs ctx a1 [] (map snd bks1) a2 [] (map snd bks2)
          <|> checkTypeEq  ctx a1 (p1 : ps1) t11    a2 (p2 : ps2) t12
 
+        -- type keys
         (TKey k1 gs1, TKey k2 gs2)
          | k1 == k2
          , length gs1 == length gs2
@@ -59,6 +67,34 @@ checkTypeEq ctx a1 ps1 t1 a2 ps2 t2
 
         (_, _)
          -> Just ((a1, t1), (a2, t2))
+
+
+-- | Lookup the binding level and kind of a type variable name.
+--   The binding level is the number of enclosing type abstractions
+--   in the context between the current position and the binder
+--   of the variable.
+levelKindOfTyVar :: Context a -> [TypeParams a] -> Name -> Maybe (Int, Kind a)
+levelKindOfTyVar ctx tps0 n
+ = goParams 0 tps0
+ where
+        goParams level []
+         = goLocal level (contextLocal ctx)
+
+        goParams level (TPTypes bks : tps)
+         = case lookup (BindName n) bks of
+                Nothing -> goParams (level + 1) tps
+                Just k  -> Just (level, k)
+
+        goLocal _level []
+         = Nothing
+
+        goLocal level (ElemTypes mps : tps)
+         = case Map.lookup n mps of
+                Nothing -> goLocal (level + 1) tps
+                Just k  -> Just (level, k)
+
+        goLocal level (ElemTerms{} : tps)
+         = goLocal (level + 1) tps
 
 
 -- | Check that two lists are equal pairwise.

@@ -1,0 +1,2 @@
+* [∀[a: #Data]. [a] → [a], ∀[b: #Data]. [b] → [b], #Bool] → [∀[b: #Data]. [b] → [b]]
+* ∀[a: #Data]. [∀[b: #Data]. [a, b] → [a, b, a], ∀[c: #Data]. [a, c] → [a, c, a], #Bool] → [∀[c: #Data]. [a, c] → [a, c, a]]

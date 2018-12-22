@@ -16,7 +16,7 @@ data Mode a
 
 ---------------------------------------------------------------------------------------------------
 data Elem a
-        = ElemTypes (Map Name (Type a))
+        = ElemTypes (Map Name (Kind a))
         | ElemTerms (Map Name (Type a))
         deriving Show
 

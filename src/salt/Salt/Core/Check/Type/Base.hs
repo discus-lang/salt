@@ -87,6 +87,7 @@ checkTypesAreAll a wh ctx kExpected ts
 
 ---------------------------------------------------------------------------------------------------
 -- | Check some type parameters.
+--   TODO: check binder is not reused at the same level.
 checkTypeParams
         :: Annot a => a -> [Where a]
         -> Context a -> TypeParams a -> IO (TypeParams a)
