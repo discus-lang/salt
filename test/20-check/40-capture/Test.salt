@@ -2,32 +2,32 @@
 -- Check that variable capture is avoided.
 -- When determining the type of 'x' in the result we need to account
 -- for the fact that the binder for its type variable is shadowed.
-test type
-        λ@[a: #Data] → λ[x: a] →
+test type shadow
+ =      λ@[a: #Data] → λ[x: a] →
         λ@[a: #Data] → λ[y: a] →
         [x, y]
 
 
 -- The type of the term variable also has a conflicting quantifier,
 -- which prevents the variable in the type of 'x' from being bumped.
-test type
-        λ@[a: #Data] → λ[x: ∀[a: #Data]. a] →
+test type shadow'quant
+ =      λ@[a: #Data] → λ[x: ∀[a: #Data]. a] →
         λ@[a: #Data] → λ[y: a] →
         [x, y]
 
 
 -- Combination of the above two cases,
 -- using the explicit bump syntax to refer to an outer type variable.
-test type
-        λ@[a: #Data] → λ[x: ∀[a: #Data]. [a] → a^1] →
+test type shadow'both
+ =      λ@[a: #Data] → λ[x: ∀[a: #Data]. [a] → a^1] →
         λ@[a: #Data] → λ[y: a] →
         [x, y]
 
 
 -- Apply the outer-most type abstraction to test we can substitute for the
 -- correct type variable.
--- test type
---         (λ@[a: #Data] → λ[x: ∀[a: #Data]. [a] → a^1] →
---         λ@[a: #Data] → λ[y: a] →
---         [x, y]) @#Nat
+test type shadow'both'app
+ =      (λ@[a: #Data] → λ[x: ∀[a: #Data]. [a] → a^1] →
+         λ@[a: #Data] → λ[y: a] →
+        [x, y]) @#Nat
 

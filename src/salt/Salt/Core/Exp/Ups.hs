@@ -33,22 +33,6 @@ upsIsEmpty (Ups bs)
         _       -> False
 
 
--- | Apply an ups to a bound occcurrence of a variable.
-upsApplyBound :: Ups -> Bound -> Bound
-upsApplyBound (Ups bs) (BoundWith name ix)
- = case bs of
-        []
-         -> BoundWith name ix
-
-        ((name', depth'), inc') : bs'
-         |  name   == name'
-         ,  depth' <= ix
-         -> upsApplyBound (Ups bs') (BoundWith name (ix + inc'))
-
-         |  otherwise
-         -> upsApplyBound (Ups bs') (BoundWith name ix)
-
-
 -- | Bump an Ups due to pushing it under an absraction with the given
 --   named binders.
 upsBump :: [Name] -> Ups -> Ups
@@ -62,6 +46,21 @@ upsBump ns0 (Ups bs)
 
          | otherwise
          = Just l
+
+
+-- | Apply an ups to a bound occcurrence of a variable.
+upsApplyBound :: Ups -> Bound -> Bound
+upsApplyBound (Ups bs) (BoundWith name ix)
+ = case bs of
+        [] -> BoundWith name ix
+
+        ((name', depth'), inc') : bs'
+         |  name   == name'
+         ,  depth' <= ix
+         -> upsApplyBound (Ups bs') (BoundWith name (ix + inc'))
+
+         |  otherwise
+         -> upsApplyBound (Ups bs') (BoundWith name ix)
 
 
 -- | Combine two lists of ups.
@@ -91,3 +90,4 @@ upsCombineBump b bs
          -- Try to combine the new bump with the tail of the list.
          |  otherwise
          -> b' : upsCombineBump b bs'
+

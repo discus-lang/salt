@@ -71,7 +71,6 @@ contextBindTypeMaybe (Just n) t ctx
 
 
 -- | Bind the kinds of type parameters into the context.
---   TODO: prevent type variable shadowing.
 contextBindTypeParams :: TypeParams a -> Context a -> Context a
 contextBindTypeParams tps ctx
  = case tps of
@@ -109,8 +108,10 @@ contextBindTermParams mps ctx
 
 ---------------------------------------------------------------------------------------------------
 -- | Lookup a bound type variable from the context.
---   If it is transparanetly bound as a synonym we get both the kind and body type,
---   If it is opaquely bound by an abstraction we get just the kind.
+--
+--   * If it is transparanetly bound as a synonym we get both the kind and body type,
+--   * If it is opaquely bound by an abstraction we get just the kind.
+--
 contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Kind a, Maybe (Type a)))
 contextResolveTypeBound (BoundWith n d0) ctx
  = goLocal d0 (contextLocal ctx)
@@ -170,7 +171,7 @@ contextResolveTermBound (BoundWith n 0) ctx
         -- See if this local binder is the one we are looking for.
         goLocal upsT (ElemTerms mp : rest)
          = case Map.lookup n mp of
-                Just t  -> return $ Just $ pushUpsOfType $ TUps upsT t
+                Just t  -> return $ Just $ upsApplyType upsT t
                 Nothing -> goLocal upsT rest
 
         -- Any types we get from higher up in the context need to be
@@ -185,7 +186,7 @@ contextResolveTermBound (BoundWith n 0) ctx
         goGlobal upsT
          = case Map.lookup n (contextModuleTerm ctx) of
                 Nothing -> return $ Nothing
-                Just t  -> return $ Just $ pushUpsOfType $ TUps upsT t
+                Just t  -> return $ Just $ upsApplyType upsT t
 
 
 contextResolveTermBound _ _

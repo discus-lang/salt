@@ -6,7 +6,8 @@ module Salt.Core.Check.Term.Base
         , module Salt.Core.Check.Where
         , module Salt.Core.Check.Reduce
         , module Salt.Core.Transform.MapAnnot
-        , module Salt.Core.Transform.Subst
+        , module Salt.Core.Transform.Snv
+        , module Salt.Core.Transform.Ups
         , module Salt.Core.Exp
         , module Control.Monad
         , module Control.Exception
@@ -23,7 +24,8 @@ import Salt.Core.Check.Error
 import Salt.Core.Check.Where
 import Salt.Core.Check.Reduce
 import Salt.Core.Transform.MapAnnot
-import Salt.Core.Transform.Subst
+import Salt.Core.Transform.Snv
+import Salt.Core.Transform.Ups
 import Salt.Core.Exp
 import Control.Monad
 import Control.Exception

@@ -2,7 +2,6 @@
 module Salt.Core.Check.Term.App where
 import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Type.Base
-import qualified Data.Map       as Map
 
 
 -- | Check the application of a term to some types.
@@ -37,10 +36,9 @@ checkTermAppTypes a wh ctx tFun tsArg
 
         -- Substitute arguments into the result type to instantiate
         -- the type scheme.
-        let subst   = Map.fromList
-                        [ (n, t) | (BindName n, _k) <- bksParam
-                                 | t <- tsArg ]
-        let tSubst  = substTypeType subst tResult
+        let nts    = [ (n, t) | (BindName n, _k) <- bksParam | t <- tsArg ]
+        let snv    = snvOfBinds nts
+        let tSubst = snvApplyType upsEmpty snv tResult
 
         -- Return the checked argument types and the instantiated scheme.
         return  (tsArg', tSubst)

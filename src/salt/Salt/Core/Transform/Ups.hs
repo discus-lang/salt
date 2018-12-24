@@ -5,47 +5,32 @@ import Salt.Core.Exp.Ups
 import Salt.Core.Exp.Name
 
 
--- | Push down any outer-most Ups nodes to the leaves of the type.
---   We also push outer-most Ups that are wrapped in annotations.
-pushUpsOfType :: Type a -> Type a
-pushUpsOfType tt
+-- | Apply an `Ups` to some type arguments.
+upsApplyType :: Ups -> Type a -> Type a
+upsApplyType ups tt
  = case tt of
-        -- Look through annotations.
-        TAnn a t
-         -> TAnn a (pushUpsOfType t)
-
-        -- Lift out annotations so we can see what the bump is applied to.
-        TUps upsT (TAnn a t)
-         -> pushUpsOfType $ TAnn a (TUps upsT t)
+        -- Descend into annotations
+        TAnn a t -> TAnn a (upsApplyType ups t)
 
         -- Plain references don't have any variables.
-        TUps _upsT t@TRef{}
-         -> t
+        TRef{}   -> tt
 
         -- Apply the ups to the variable, if it matches.
-        TUps upsT (TVar u)
-         -> TVar $ upsApplyBound upsT u
+        TVar u   -> TVar $ upsApplyBound ups u
 
-        -- Push ups under abstraction,
-        -- increasing the depth of bumps that have the same name
-        -- as any of the binders.
-        TUps upsT (TAbs tps@(TPTypes bks) tBody)
+        -- Carry ups under abstraction.
+        TAbs tps@(TPTypes bks) tBody
          -> let nsBind  = [ n | (BindName n, _) <- bks ]
-                upsT'   = upsBump nsBind upsT
-            in  TAbs tps $ pushUpsOfType (TUps upsT' tBody)
-
-        -- Combine multiple ups into a single one,
-        -- to simplity the type and reduce the cost of the traversal.
-        TUps upsT1 (TUps upsT2 t)
-         -> pushUpsOfType $ TUps (upsCombine upsT1 upsT2) t
+                ups'    = upsBump nsBind ups
+            in  TAbs tps $ upsApplyType ups' tBody
 
         -- Apply ups to other types generically.
-        TUps upsT (TKey k tgss)
-         -> TKey k [TGTypes (map (pushUpsOfType . TUps upsT) ts) | TGTypes ts <- tgss]
+        TKey k tgss
+         -> TKey k $ map (upsApplyTypeArgs ups) tgss
 
-        -- We only push down outermost Ups.
-        TRef{} -> tt
-        TVar{} -> tt
-        TAbs{} -> tt
-        TKey{} -> tt
+
+-- | Apply an `Ups` to some type arguments.
+upsApplyTypeArgs :: Ups -> TypeArgs a -> TypeArgs a
+upsApplyTypeArgs ups (TGTypes ts)
+ = TGTypes $ map (upsApplyType ups) ts
 

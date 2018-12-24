@@ -2,7 +2,7 @@
 module Salt.Core.Check.Reduce where
 import Salt.Core.Check.Where
 import Salt.Core.Check.Context
-import Salt.Core.Transform.Subst
+import Salt.Core.Transform.Snv
 import Salt.Core.Exp
 import qualified Data.Map as Map
 
@@ -28,9 +28,9 @@ reduceType a wh ctx tt@(TApt tFun tsArgs)
         case tFun' of
          TAbs (TPTypes bks) tBody
           | length bks == length tsArgs
-          -> do let ns    = [n | BindName n <- map fst bks]
-                let subst = Map.fromList $ zip ns tsArgs
-                reduceType a wh ctx $ substTypeType subst tBody
+          -> do let ns  = [n | BindName n <- map fst bks]
+                let snv = snvOfBinds $ zip ns tsArgs
+                reduceType a wh ctx $ snvApplyType upsEmpty snv tBody
 
          _ -> return tt
 

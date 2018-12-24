@@ -151,10 +151,9 @@ instance Pretty c (TypeParams a) where
 
 
 instance Pretty c TypeKey where
- ppr c tk
+ ppr _ tk
   = case tk of
         TKHole          -> text "##hole"
-        TKUps ups       -> text "##ups"     %% ppr c ups
         TKArr           -> text "##arr"
         TKApp           -> text "##app"
         TKFun           -> text "##fun"
@@ -248,7 +247,6 @@ instance Pretty c TermKey where
   = case mk of
         MKTerms         -> text "##terms"
         MKThe           -> text "##the"
-        MKBump bumps    -> text "##bump"    %% braced (map pprBump $ Map.toList bumps)
         MKApp           -> text "##app"
         MKLet           -> text "##let"
         MKCon n         -> text "##con"     %% pprCon n

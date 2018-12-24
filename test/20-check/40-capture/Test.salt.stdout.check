@@ -1,3 +1,4 @@
-* ∀[a: #Data]. [a] → [∀[a: #Data]. [a] → [a^1, a]]
-* ∀[a: #Data]. [∀[a: #Data]. a] → [∀[a: #Data]. [a] → [∀[a: #Data]. a, a]]
-* ∀[a: #Data]. [∀[a: #Data]. [a] → [a^1]] → [∀[a: #Data]. [a] → [∀[a: #Data]. [a] → [a^2], a]]
+* shadow: ∀[a: #Data]. [a] → [∀[a: #Data]. [a] → [a^1, a]]
+* shadow'quant: ∀[a: #Data]. [∀[a: #Data]. a] → [∀[a: #Data]. [a] → [∀[a: #Data]. a, a]]
+* shadow'both: ∀[a: #Data]. [∀[a: #Data]. [a] → [a^1]] → [∀[a: #Data]. [a] → [∀[a: #Data]. [a] → [a^2], a]]
+* shadow'both'app: [∀[a: #Data]. [a] → [#Nat]] → [∀[a: #Data]. [a] → [∀[a: #Data]. [a] → [#Nat], a]]

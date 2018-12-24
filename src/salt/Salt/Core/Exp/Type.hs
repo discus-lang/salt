@@ -1,6 +1,5 @@
 
 module Salt.Core.Exp.Type where
-import Salt.Core.Exp.Ups
 import Salt.Core.Exp.Name
 import qualified Data.Text      as T
 
@@ -46,7 +45,6 @@ data TypeArgs a
 -- | Type Key.
 data TypeKey
         = TKHole                        -- ^ A missing type that needs to be inferred.
-        | TKUps     !Ups                -- ^ Variable bumps.
         | TKArr                         -- ^ Kind arrow.
         | TKApp                         -- ^ Type application.
         | TKFun                         -- ^ Function type former.
@@ -68,7 +66,6 @@ pattern TPrm n          = TRef (TRPrm n)
 
 -- Type keywords.
 pattern THole           = TKey TKHole         []
-pattern TUps    ups t   = TKey (TKUps ups)     [TGTypes [t]]
 pattern TArr    ks1 k2  = TKey TKArr          [TGTypes ks1,  TGTypes [k2]]
 pattern TApp    tF  gs2 = TKey TKApp          [TGTypes [tF], gs2]
 pattern TApt    tF  ts2 = TKey TKApp          [TGTypes [tF], TGTypes ts2]
