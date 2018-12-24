@@ -38,8 +38,9 @@ instance Monoid Support where
 
 -- | Construct a singleton support set with this type bound.
 supportBoundType :: Bound -> Support
-supportBoundType (Bound n)
+supportBoundType (BoundWith n 0)
         = Support (Set.singleton n) Set.empty
+supportBoundType _ = error "handle bumps in supporBoundType"
 
 
 -- | Drop a type bind from a support set.
@@ -58,8 +59,9 @@ supportDropBindTypes bs (Support nsType nsTerm)
 
 -- | Construct a singleton support set with this term bound.
 supportBoundTerm :: Bound -> Support
-supportBoundTerm (Bound n)
+supportBoundTerm (BoundWith n 0)
         = Support Set.empty (Set.singleton n)
+supportBoundTerm _ = error "handle bumps in supportBoundTerm"
 
 
 -- | Drop a term bind from a support set.

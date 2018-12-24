@@ -1,5 +1,6 @@
 
 module Salt.Core.Check.Context where
+import Salt.Core.Transform.Push
 import Salt.Core.Check.Where
 import Salt.Core.Exp
 import qualified Salt.Core.Prim.Ctor    as Prim
@@ -111,7 +112,7 @@ contextBindTermParams mps ctx
 --   If it is transparanetly bound as a synonym we get both the kind and body type,
 --   If it is opaquely bound by an abstraction we get just the kind.
 contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Kind a, Maybe (Type a)))
-contextResolveTypeBound (Bound n) ctx
+contextResolveTypeBound (BoundWith n 0) ctx
  = goGlobal
  where
         goGlobal
@@ -129,26 +130,62 @@ contextResolveTypeBound (Bound n) ctx
                 Just k  -> return $ Just (k, Nothing)
                 Nothing -> goLocal rest
 
+contextResolveTypeBound _ _
+ = error "handle bumps in contextResolveTypeBound"
+
 
 -- | Lookup a bound term variable from the context.
+---
+--   If the there are type binders between the point where a type is used
+--   and where it is defined then we need to lift free variables in that type
+--   over the binders. For example:
+--
+-- @
+--    λ\@[a: #Data]. λ[x: a]. λ\@[a: #Data]. x
+-- @
+--
+--   At the inner use site the type of `x` is `a^1`, referring to the outer
+--   most binder, not `a^0` referring to the inner one. When we search the
+--   context for the binding site we build an `Ups` that records the names
+--   of binders we need to bump in the resulting type, and apply it before
+--   returning the type.
+--
+--   We could alternatively leave the Ups node in the returned type
+--   and require consumers to push it down, but it's probably not worth the
+--   complexity in the consumer.
+--
 contextResolveTermBound :: Bound -> Context a -> IO (Maybe (Type a))
-contextResolveTermBound (Bound n) ctx
- = goGlobal
+contextResolveTermBound (BoundWith n 0) ctx
+ = goLocal upsEmpty (contextLocal ctx)
  where
-        goGlobal
-         = case Map.lookup n (contextModuleTerm ctx) of
-                Nothing -> goLocal (contextLocal ctx)
-                Just t  -> return $ Just t
+        -- No more local binders,
+        -- so look in the global context.
+        goLocal upsT []
+         = goGlobal upsT
 
-        goLocal [] = return Nothing
-
-        goLocal (ElemTerms mp : rest)
+        -- See if this local binder is the one we are looking for.
+        goLocal upsT (ElemTerms mp : rest)
          = case Map.lookup n mp of
-                Just t  -> return $ Just t
-                Nothing -> goLocal rest
+                Just t  -> return $ Just $ pushUpsOfType $ TUps upsT t
+                Nothing -> goLocal upsT rest
 
-        goLocal (ElemTypes _ : rest)
-         = goLocal rest
+        -- Any types we get from higher up in the context need to be
+        -- bumped across abstractions between the defining point and
+        -- where it was referenced.
+        goLocal upsT (ElemTypes mp : rest)
+         = let  upsT'    = upsCombine upsT (upsOfNames $ Map.keys mp)
+           in   goLocal upsT' rest
+
+        -- The top level types should all be closed, but add the ups anyway
+        -- or consistency until we explicitly check that they are closed.
+        goGlobal upsT
+         = case Map.lookup n (contextModuleTerm ctx) of
+                Nothing -> return $ Nothing
+                Just t  -> return $ Just $ pushUpsOfType $ TUps upsT t
+
+
+contextResolveTermBound _ _
+ = error "handle bumps in contextResolveTermBound"
 
 
 -- | Lookup the parameter and result types of a data constructor.

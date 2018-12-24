@@ -1,5 +1,5 @@
 
--- Check type equivalence checking up under alpha conversion.
+-- Check type equivalence checking under alpha conversion.
 -- The types themselves are closed, so when deciding equivalence the context
 -- starts out empty.
 test type

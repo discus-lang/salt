@@ -20,8 +20,8 @@ instance Pretty c Bind where
 instance Pretty c Bound where
  ppr _ uu
   = case uu of
-        Bound n         -> pprVar n
-
+        BoundWith n 0   -> pprVar n
+        BoundWith n d   -> pprVar n % text "^" % integer d
 
 braced ds
  = braces    $ hcat $ punctuate (text "; ") ds
@@ -37,6 +37,8 @@ angled ds
 
 squared ds
  = text "[" % (hcat $ punctuate (text ", ") ds) % text "]"
+
+pprBump ((n, d), b)     = pprVar n % text "^" % integer d % text ":" % integer b
 
 
 -- Type -------------------------------------------------------------------------------------------
@@ -149,9 +151,10 @@ instance Pretty c (TypeParams a) where
 
 
 instance Pretty c TypeKey where
- ppr _ tk
+ ppr c tk
   = case tk of
         TKHole          -> text "##hole"
+        TKUps ups       -> text "##ups"     %% ppr c ups
         TKArr           -> text "##arr"
         TKApp           -> text "##app"
         TKFun           -> text "##fun"
@@ -163,6 +166,11 @@ instance Pretty c TypeKey where
         TKSync          -> text "##sync"
         TKPure          -> text "##pure"
         TKSum           -> text "##sum"
+
+
+instance Pretty c Ups where
+ ppr _ (Ups bs)
+  =     braced (map pprBump bs)
 
 
 -- Term -------------------------------------------------------------------------------------------
@@ -240,6 +248,7 @@ instance Pretty c TermKey where
   = case mk of
         MKTerms         -> text "##terms"
         MKThe           -> text "##the"
+        MKBump bumps    -> text "##bump"    %% braced (map pprBump $ Map.toList bumps)
         MKApp           -> text "##app"
         MKLet           -> text "##let"
         MKCon n         -> text "##con"     %% pprCon n
@@ -254,6 +263,7 @@ instance Pretty c TermKey where
         MKMap           -> text "##map"
         MKBox           -> text "##box"
         MKRun           -> text "##run"
+
 
 
 -- Value ------------------------------------------------------------------------------------------

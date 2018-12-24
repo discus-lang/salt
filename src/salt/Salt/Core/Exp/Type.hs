@@ -45,6 +45,7 @@ data TypeArgs a
 -- | Type Key.
 data TypeKey
         = TKHole                        -- ^ A missing type that needs to be inferred.
+        | TKUps     !Ups                -- ^ Variable bumps.
         | TKArr                         -- ^ Kind arrow.
         | TKApp                         -- ^ Type application.
         | TKFun                         -- ^ Function type former.
@@ -53,8 +54,8 @@ data TypeKey
         | TKRecord  ![Name]             -- ^ Record type former.
         | TKVariant ![Name]             -- ^ Variant type former.
         | TKSusp                        -- ^ Suspension type former.
-        | TKSync                        -- ^ Top of the effect lattice, interferes with everything.
-        | TKPure                        -- ^ Bot of the effect lattice, interferes with nothing.
+        | TKSync                        -- ^ Top of the effect lattice.
+        | TKPure                        -- ^ Bot of the effect lattice.
         | TKSum                         -- ^ Effect sum.
         deriving (Show, Eq, Ord)
 
@@ -66,6 +67,7 @@ pattern TPrm n          = TRef (TRPrm n)
 
 -- Type keywords.
 pattern THole           = TKey TKHole         []
+pattern TUps    ups t   = TKey (TKUps ups)     [TGTypes [t]]
 pattern TArr    ks1 k2  = TKey TKArr          [TGTypes ks1,  TGTypes [k2]]
 pattern TApp    tF  gs2 = TKey TKApp          [TGTypes [tF], gs2]
 pattern TApt    tF  ts2 = TKey TKApp          [TGTypes [tF], TGTypes ts2]

@@ -12,10 +12,12 @@ substTypeType subst tt
         TAnn a t        -> TAnn a (substTypeType subst t)
         TRef{}          -> tt
 
-        TVar (Bound n)
+        TVar (BoundWith n 0)
          -> case goLookup n subst of
                 Nothing -> tt
                 Just t' -> t'
+
+        TVar{} -> error "handle bumps in substTypeType"
 
         -- TODO: lift types in subst across bindings.
         TAbs gs t

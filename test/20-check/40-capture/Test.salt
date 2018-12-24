@@ -1,0 +1,5 @@
+
+-- Check that variable capture is avoided.
+-- When determining the type of 'x' in the result we need to account
+-- for the fact that the binder for its type variable is shadowed.
+test type λ@[a: #Data] → λ[x: a] → λ@[a: #Data] → λ[y: a] → [x, y]

@@ -46,9 +46,12 @@ data TermArgs a
 -- | Term Keyword.
 data TermKey
         = MKTerms                               -- ^ Term sequence former.
+        | MKBump    !(Map (Name, Depth) Bump)   -- ^ Variable bumps.
         | MKThe                                 -- ^ Type ascription.
+
         | MKApp                                 -- ^ Term application.
         | MKLet                                 -- ^ Let expression former.
+
         | MKCon     !Name                       -- ^ Data constructor.
 
         | MKBox                                 -- ^ Box up a computation.
@@ -67,7 +70,6 @@ data TermKey
         | MKSet                                 -- ^ Set constructor.
         | MKMap                                 -- ^ Map constructor.
         deriving (Show, Eq, Ord)
-
 
 -- | Term Value.
 data Value a
