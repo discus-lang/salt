@@ -40,7 +40,7 @@ checkTermAppTypes a wh ctx tFun tsArg
         let subst   = Map.fromList
                         [ (n, t) | (BindName n, _k) <- bksParam
                                  | t <- tsArg ]
-        let tSubst  = substTypeType [subst] tResult
+        let tSubst  = substTypeType subst tResult
 
         -- Return the checked argument types and the instantiated scheme.
         return  (tsArg', tSubst)

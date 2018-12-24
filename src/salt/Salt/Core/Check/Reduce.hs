@@ -30,7 +30,7 @@ reduceType a wh ctx tt@(TApt tFun tsArgs)
           | length bks == length tsArgs
           -> do let ns    = [n | BindName n <- map fst bks]
                 let subst = Map.fromList $ zip ns tsArgs
-                reduceType a wh ctx $ substTypeType [subst] tBody
+                reduceType a wh ctx $ substTypeType subst tBody
 
          _ -> return tt
 
