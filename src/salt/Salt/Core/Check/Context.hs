@@ -112,26 +112,30 @@ contextBindTermParams mps ctx
 --   If it is transparanetly bound as a synonym we get both the kind and body type,
 --   If it is opaquely bound by an abstraction we get just the kind.
 contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Kind a, Maybe (Type a)))
-contextResolveTypeBound (BoundWith n 0) ctx
- = goGlobal
+contextResolveTypeBound (BoundWith n d0) ctx
+ = goLocal d0 (contextLocal ctx)
  where
+        goLocal _d []
+         = goGlobal
+
+        goLocal d (ElemTerms _  : rest)
+         = goLocal d rest
+
+        goLocal d (ElemTypes mp : rest)
+         | d < 0
+         = return $ Nothing
+
+         | otherwise
+         = case Map.lookup n mp of
+                Just k
+                 | d == 0       -> return $ Just (k, Nothing)
+                 | otherwise    -> goLocal (d - 1) rest
+                Nothing         -> goLocal d rest
+
         goGlobal
          = case Map.lookup n (contextModuleType ctx) of
-                Nothing     -> goLocal (contextLocal ctx)
+                Nothing     -> return $ Nothing
                 Just (k, t) -> return $ Just (k, Just t)
-
-        goLocal [] = return Nothing
-
-        goLocal (ElemTerms _  : rest)
-         = goLocal rest
-
-        goLocal (ElemTypes mp : rest)
-         = case Map.lookup n mp of
-                Just k  -> return $ Just (k, Nothing)
-                Nothing -> goLocal rest
-
-contextResolveTypeBound _ _
- = error "handle bumps in contextResolveTypeBound"
 
 
 -- | Lookup a bound term variable from the context.

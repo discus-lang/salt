@@ -124,7 +124,13 @@ pTypeArg :: Parser (Type Location)
 pTypeArg
  = P.choice
  [ do   -- Var
-        pVar >>= return . TVar . Bound
+        -- Var ^ Nat
+        n <- pVar
+        P.choice
+         [ do   pTok KHat
+                b <- pNat
+                return  $ TVar $ BoundWith n b
+         ,      return  $ TVar $ BoundWith n 0 ]
 
  , do   -- Con
         pCon >>= return . TCon

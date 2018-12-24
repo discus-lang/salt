@@ -47,6 +47,7 @@ scanner _fileName
                 ';'     -> Just KSemi
                 ','     -> Just KComma
                 '.'     -> Just KDot
+                '^'     -> Just KHat
                 '|'     -> Just KBar
                 '@'     -> Just KAt
                 '='     -> Just KEquals

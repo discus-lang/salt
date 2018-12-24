@@ -27,7 +27,7 @@ data Token
         | KABra   | KAKet       -- angle  brackets <>
         | KColon  | KSemi
         | KComma  | KDot  | KBar | KAt | KBacktick
-        | KHole
+        | KHole   | KHat
         | KEquals | KColonEquals
         | KArrowLeft
         | KArrowRight
