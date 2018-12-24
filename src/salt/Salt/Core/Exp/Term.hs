@@ -1,6 +1,7 @@
 
 module Salt.Core.Exp.Term where
 import Salt.Core.Exp.Type
+import Salt.Core.Exp.Ups
 import Salt.Core.Exp.Name
 import Data.Map                 (Map)
 import Data.Set                 (Set)

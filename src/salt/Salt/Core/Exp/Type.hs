@@ -1,5 +1,6 @@
 
 module Salt.Core.Exp.Type where
+import Salt.Core.Exp.Ups
 import Salt.Core.Exp.Name
 import qualified Data.Text      as T
 

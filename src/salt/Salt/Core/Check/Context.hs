@@ -1,6 +1,6 @@
 
 module Salt.Core.Check.Context where
-import Salt.Core.Transform.Push
+import Salt.Core.Transform.Ups
 import Salt.Core.Check.Where
 import Salt.Core.Exp
 import qualified Salt.Core.Prim.Ctor    as Prim

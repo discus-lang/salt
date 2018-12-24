@@ -1,6 +1,7 @@
 
-module Salt.Core.Transform.Push where
+module Salt.Core.Transform.Ups where
 import Salt.Core.Exp.Type
+import Salt.Core.Exp.Ups
 import Salt.Core.Exp.Name
 
 
