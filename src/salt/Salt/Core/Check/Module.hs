@@ -6,6 +6,7 @@ import Salt.Core.Check.Type
 import Salt.Core.Check.Term
 import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Base
+import Salt.Core.Check.Type.Params
 import Salt.Core.Check.Type.Base
 import qualified Control.Exception      as Control
 import qualified Data.Map               as Map

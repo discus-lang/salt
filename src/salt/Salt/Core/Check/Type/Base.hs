@@ -17,8 +17,6 @@ module Salt.Core.Check.Type.Base
         , checkTypesAre
         , checkTypesAreAll
 
-        , checkTypeParams
-        , checkTypeParamss
         , checkTypeArgsAreAll)
 where
 import Salt.Core.Check.Context
@@ -28,7 +26,6 @@ import Salt.Core.Check.Where
 import Salt.Core.Check.Error
 import Salt.Core.Transform.MapAnnot
 import Salt.Core.Exp
-import qualified Salt.Data.List as List
 
 import Control.Monad
 import Control.Exception
@@ -85,45 +82,6 @@ checkTypesAreAll
 
 checkTypesAreAll a wh ctx kExpected ts
  = checkTypesAre a wh ctx (replicate (length ts) kExpected) ts
-
-
----------------------------------------------------------------------------------------------------
--- | Check some type parameters.
-checkTypeParams
-        :: Annot a => a -> [Where a]
-        -> Context a -> TypeParams a -> IO (TypeParams a)
-
-checkTypeParams a wh ctx tps
- = case tps of
-        TPTypes bks
-         -> do  let (bs, ks) = unzip bks
-
-                -- Check for duplicate binder names.
-                let ns          = [ n | BindName n <- bs ]
-                let nsDup       = List.duplicates ns
-                when (not $ null nsDup)
-                 $ throw $ ErrorAbsTypeBindConflict a wh nsDup
-
-                -- Check the parameter kinds.
-                ks' <- mapM (checkKind a wh ctx) ks
-                return $ TPTypes $ zip bs ks'
-
-
--- | Check a list of type function parameters,
---   where type variables bound earlier in the list are in scope
---   when checking types annotating term variables later in the list.
-checkTypeParamss
-        :: Annot a => a -> [Where a]
-        -> Context a -> [TypeParams a] -> IO [TypeParams a]
-
-checkTypeParamss _a _wh _ctx []
- = return []
-
-checkTypeParamss a wh ctx (tps : tpss)
- = do   tps'  <- checkTypeParams  a wh ctx  tps
-        let ctx'  = contextBindTypeParams tps' ctx
-        tpss' <- checkTypeParamss a wh ctx' tpss
-        return $ tps' : tpss'
 
 
 ---------------------------------------------------------------------------------------------------

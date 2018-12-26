@@ -1,6 +1,7 @@
 
 module Salt.Core.Check.Type where
 import Salt.Core.Check.Type.App
+import Salt.Core.Check.Type.Params
 import Salt.Core.Check.Type.Base
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
