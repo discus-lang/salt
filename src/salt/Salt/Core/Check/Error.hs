@@ -233,6 +233,19 @@ data Error a
         , errorTypeField        :: Type a
         , errorTypeScrut        :: Type a }
 
+        | ErrorCaseAltPatWrongArity
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorLabel            :: Name
+        , errorTypesPat         :: [Type a]
+        , errorTypesField       :: [Type a] }
+
+        | ErrorCaseAltPatBindConflict
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorLabel            :: Name
+        , errorNames            :: [Name] }
+
         | ErrorCaseAltsOverlapping
         { errorAnnot            :: a
         , errorWhere            :: [Where a]

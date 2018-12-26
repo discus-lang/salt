@@ -135,6 +135,9 @@ test type let x: #Nat = #true; #true
 -- Error: body term is ill-typed.
 test type let x = #true; #true #true
 
+-- Error: duplicate binder names.
+test type let [x, x] = [#true, #true]; x
+
 
 -- (t-rec) --------------------------------------------------------------------
 -- Error: field type does not match expected type.
@@ -156,7 +159,6 @@ test type [x = #true #true]
 -- and we've looked through a synonym to see the expected type.
 type recx: #Data = [x: #Nat, y: #Nat]
 test type the recx of [x = 1, y = #true]
-
 
 
 -- (t-prj) --------------------------------------------------------------------
@@ -211,6 +213,18 @@ test type case (the <foo: #Nat, bar: #Nat> of `foo 5) of
 -- Error: result types do not match.
 test type case (the <foo: #Nat, bar: []> of `foo 5) of
         { foo [] → #true; bar [] → 5 }
+
+-- Error: case alt does not have enough binders.
+test type case (the <foo: [#Nat, #Nat]> of `foo [2, 3]) of
+        { foo [x: #Nat] → x }
+
+-- Error: case alt has too many binders.
+test type case (the <foo: [#Nat, #Nat]> of `foo [2, 3]) of
+        { foo [x: #Nat, y: #Nat, z: #Nat] → x }
+
+-- Error: case alt has duplicate binders
+test type case (the <foo: [#Nat, #Nat]> of `foo [2, 3]) of
+        { foo [x: #Nat, x: #Nat] → x }
 
 
 -- (t-ifs) --------------------------------------------------------------------

@@ -374,10 +374,10 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
                 _ -> throw $ ErrorCaseScrutNotVariant a wh tScrut
 
         -- Check for overlapping alternatives.
-        let nsAlt = [n | MVarAlt n _ _ <- msAlt]
-        let nsDup = List.duplicates nsAlt
-        when (not $ null nsDup)
-         $ throw $ ErrorCaseAltsOverlapping a wh nsDup
+        let nsAlt    = [n | MVarAlt n _ _ <- msAlt]
+        let nsAltDup = List.duplicates nsAlt
+        when (not $ null nsAltDup)
+         $ throw $ ErrorCaseAltsOverlapping a wh nsAltDup
 
         -- Check for inexhaustive alternatives.
         let nsNot = Set.difference (Set.fromList nsScrut) (Set.fromList nsAlt)
@@ -388,23 +388,33 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
         --  collecting up all the effects,
         --  and ensuring all the alt result types match.
         let nmgsScrut = zip nsScrut mgsScrut
-        let checkAlts (MVarAlt n btsPat mBody : msAltsRest)
+        let checkAlts (MVarAlt nPat btsPat mBody : msAltsRest)
                       msAltsChecked mtsResult esAlt
              = do
                   -- Lookup the field types from the type of the scrutinee.
                   -- The type of the scrutinee must cover this alternative.
                   tsField
-                   <- case lookup n nmgsScrut of
+                   <- case lookup nPat nmgsScrut of
                         Just (TGTypes ts) -> return ts
-                        Nothing -> throw $ ErrorCaseAltNotInVariant a wh n tScrut
+                        Nothing -> throw $ ErrorCaseAltNotInVariant a wh nPat tScrut
 
-                  -- Check the pattern field types match the fields of the scrutinee.
+                  -- Check we have the same number of pattern binders as fields.
                   let tsPat = map snd btsPat
+                  when (not $ length tsPat == length tsField)
+                   $ throw $ ErrorCaseAltPatWrongArity a wh nPat tsPat tsField
+
+                  -- Check we don't have duplicate binders.
+                  let nsPat    = [n | BindName n <- map fst btsPat ]
+                  let nsPatDup = List.duplicates nsPat
+                  when (not $ null nsPatDup)
+                   $ throw $ ErrorCaseAltPatBindConflict a wh nPat nsPatDup
+
+                  -- Check that the pattern field types match the fields of the scrutinee.
                   (checkTypeEqs ctx a [] tsPat a [] tsField
                    >>= \case
                         Nothing -> return ()
                         Just ((_a1, t1), (_a2, t2))
-                         -> throw $ ErrorCaseAltPatMismatch a wh n t1 t2)
+                         -> throw $ ErrorCaseAltPatMismatch a wh nPat t1 t2)
 
                   -- Check the result in the context extended by the fields
                   -- we matched with the pattern. Also ensure this alternative
@@ -419,7 +429,7 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
 
                   checkAlts
                         msAltsRest
-                        (MVarAlt n btsPat mBody' : msAltsChecked)
+                        (MVarAlt nPat btsPat mBody' : msAltsChecked)
                         (Just tsResult)
                         (esResult ++ esAlt)
 

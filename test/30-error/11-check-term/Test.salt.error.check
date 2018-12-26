@@ -229,176 +229,176 @@ test/30-error/11-check-term/Test.salt:136:26
 
   136:1  In type test
 
-test/30-error/11-check-term/Test.salt:141:54
+test/30-error/11-check-term/Test.salt:139:11
+  Duplicate term binders at same level
+   with names {x}
+
+  139:1  In type test
+
+test/30-error/11-check-term/Test.salt:144:54
   Unexpected type: #Bool
         expecting: #Nat
 
-  141:38 In field "y" of type [#Nat]
-  141:1  In type test
-
-test/30-error/11-check-term/Test.salt:144:23
-  Unexpected type: ∏[x: #Bool, y: #Bool]
-        expecting: #Nat
-
+  144:38 In field "y" of type [#Nat]
   144:1  In type test
 
-test/30-error/11-check-term/Test.salt:147:11
-  Duplicate fields in record
-    fields: {x}
+test/30-error/11-check-term/Test.salt:147:23
+  Unexpected type: ∏[x: #Bool, y: #Bool]
+        expecting: #Nat
 
   147:1  In type test
 
 test/30-error/11-check-term/Test.salt:150:11
   Duplicate fields in record
-    fields: {x; y}
+    fields: {x}
 
   150:1  In type test
 
-test/30-error/11-check-term/Test.salt:153:16
-  Cannot apply non-function 
-    of type: #Bool
+test/30-error/11-check-term/Test.salt:153:11
+  Duplicate fields in record
+    fields: {x; y}
 
   153:1  In type test
 
-test/30-error/11-check-term/Test.salt:158:35
+test/30-error/11-check-term/Test.salt:156:16
+  Cannot apply non-function 
+    of type: #Bool
+
+  156:1  In type test
+
+test/30-error/11-check-term/Test.salt:161:35
   Unexpected type: #Bool
         expecting: #Nat
 
-  158:23 In field "y" of type [#Nat]
-  158:1  In type test
+  161:23 In field "y" of type [#Nat]
+  161:1  In type test
 
-test/30-error/11-check-term/Test.salt:164:1
+test/30-error/11-check-term/Test.salt:166:1
   Cannot project field x from non-record
     of type: #Bool
 
-  164:1  In type test
+  166:1  In type test
 
-test/30-error/11-check-term/Test.salt:167:11
+test/30-error/11-check-term/Test.salt:169:11
   Record does not have field y
     actual type: ∏[x: #Nat]
 
-  167:1  In type test
+  169:1  In type test
 
-test/30-error/11-check-term/Test.salt:170:11
+test/30-error/11-check-term/Test.salt:172:11
   Too many values
     of types: [#Nat, #Nat]
     expected: [#Data]
 
-  170:1  In type test
+  172:1  In type test
 
-test/30-error/11-check-term/Test.salt:175:11
+test/30-error/11-check-term/Test.salt:177:11
   Cannot apply type
     of kind: #Data
 
-  175:1  In type test
+  177:1  In type test
 
-test/30-error/11-check-term/Test.salt:178:11
+test/30-error/11-check-term/Test.salt:180:11
   Variant annotation does not have variant type
     type: #Nat
 
-  178:1  In type test
+  180:1  In type test
 
-test/30-error/11-check-term/Test.salt:181:11
+test/30-error/11-check-term/Test.salt:183:11
   Unexpected type: #Bool
         expecting: #Nat
 
-  181:1  In type test
+  183:1  In type test
 
-test/30-error/11-check-term/Test.salt:184:48
+test/30-error/11-check-term/Test.salt:186:48
   Unexpected type: #Nat
         expecting: #Bool
 
-  184:1  In type test
+  186:1  In type test
 
-test/30-error/11-check-term/Test.salt:187:11
+test/30-error/11-check-term/Test.salt:189:11
   Variant annotation is missing specified alternative
      type: ∑[bar: #Nat]
     lacks: foo
 
-  187:1  In type test
+  189:1  In type test
 
-test/30-error/11-check-term/Test.salt:192:16
+test/30-error/11-check-term/Test.salt:194:16
   Cannot apply non-function 
     of type: #Nat
 
-  192:1  In type test
+  194:1  In type test
 
-test/30-error/11-check-term/Test.salt:195:11
+test/30-error/11-check-term/Test.salt:197:11
   Scrutinee does not have variant type
     type: #Nat
 
-  195:1  In type test
+  197:1  In type test
 
-test/30-error/11-check-term/Test.salt:198:11
+test/30-error/11-check-term/Test.salt:200:11
   Inexhaustive alternatives
       missing alts: {foo}
     scrutinee type: ∑[foo: #Nat]
 
-  198:1  In type test
+  200:1  In type test
 
-test/30-error/11-check-term/Test.salt:201:11
+test/30-error/11-check-term/Test.salt:203:11
   Pattern type does not match scrutinee type
             in alt: foo
       pattern type: #Bool
     scrutinee type: #Nat
 
-  201:1  In type test
+  203:1  In type test
 
-test/30-error/11-check-term/Test.salt:204:11
+test/30-error/11-check-term/Test.salt:206:11
   Overlapping alternatives {foo}
 
-  204:1  In type test
+  206:1  In type test
 
-test/30-error/11-check-term/Test.salt:208:11
+test/30-error/11-check-term/Test.salt:210:11
   Inexhaustive alternatives
       missing alts: {bar}
     scrutinee type: ∑[foo: #Nat, bar: #Nat]
 
-  208:1  In type test
+  210:1  In type test
 
-test/30-error/11-check-term/Test.salt:213:36
-  Unexpected type: #Nat
-        expecting: #Bool
+test/30-error/11-check-term/Test.salt:214:11
+  Not enough binders in pattern
+    with field types: [#Nat]
 
-  212:1  In type test
+  214:1  In type test
 
-test/30-error/11-check-term/Test.salt:218:14
-  Cannot apply non-function 
-    of type: #Nat
+test/30-error/11-check-term/Test.salt:218:11
+  Not enough binders in pattern
+    with field types: [#Nat, #Nat]
 
   218:1  In type test
 
-test/30-error/11-check-term/Test.salt:221:14
-  Unexpected type: #Nat
-        expecting: #Bool
+test/30-error/11-check-term/Test.salt:222:11
+  Too many binders in pattern
+    with field types: [#Nat, #Nat]
 
-  221:1  In type test
+  222:1  In type test
 
-test/30-error/11-check-term/Test.salt:224:25
-  Unexpected type: #Bool
-        expecting: #Nat
+test/30-error/11-check-term/Test.salt:226:11
+  Duplicate binders in pattern
+    with names: {x}
 
-  224:1  In type test
+  226:1  In type test
 
-test/30-error/11-check-term/Test.salt:229:11
-  Cannot apply type
-    of kind: #Data
-
-  229:1  In type test
-
-test/30-error/11-check-term/Test.salt:232:11
-  Unexpected type: #Effect
-        expecting: #Data
-
-  232:1  In type test
-
-test/30-error/11-check-term/Test.salt:235:23
+test/30-error/11-check-term/Test.salt:232:14
   Cannot apply non-function 
     of type: #Nat
 
+  232:1  In type test
+
+test/30-error/11-check-term/Test.salt:235:14
+  Unexpected type: #Nat
+        expecting: #Bool
+
   235:1  In type test
 
-test/30-error/11-check-term/Test.salt:238:23
+test/30-error/11-check-term/Test.salt:238:25
   Unexpected type: #Bool
         expecting: #Nat
 
@@ -416,13 +416,13 @@ test/30-error/11-check-term/Test.salt:246:11
 
   246:1  In type test
 
-test/30-error/11-check-term/Test.salt:249:22
+test/30-error/11-check-term/Test.salt:249:23
   Cannot apply non-function 
     of type: #Nat
 
   249:1  In type test
 
-test/30-error/11-check-term/Test.salt:252:22
+test/30-error/11-check-term/Test.salt:252:23
   Unexpected type: #Bool
         expecting: #Nat
 
@@ -440,15 +440,39 @@ test/30-error/11-check-term/Test.salt:260:11
 
   260:1  In type test
 
-test/30-error/11-check-term/Test.salt:263:27
+test/30-error/11-check-term/Test.salt:263:22
   Cannot apply non-function 
     of type: #Nat
 
   263:1  In type test
 
-test/30-error/11-check-term/Test.salt:266:32
+test/30-error/11-check-term/Test.salt:266:22
   Unexpected type: #Bool
         expecting: #Nat
 
   266:1  In type test
+
+test/30-error/11-check-term/Test.salt:271:11
+  Cannot apply type
+    of kind: #Data
+
+  271:1  In type test
+
+test/30-error/11-check-term/Test.salt:274:11
+  Unexpected type: #Effect
+        expecting: #Data
+
+  274:1  In type test
+
+test/30-error/11-check-term/Test.salt:277:27
+  Cannot apply non-function 
+    of type: #Nat
+
+  277:1  In type test
+
+test/30-error/11-check-term/Test.salt:280:32
+  Unexpected type: #Bool
+        expecting: #Nat
+
+  280:1  In type test
 

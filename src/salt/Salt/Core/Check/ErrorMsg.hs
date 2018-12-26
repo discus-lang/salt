@@ -210,6 +210,15 @@ ppre c (ErrorCaseAltPatMismatch _a _wh n tAlt tScrut)
         , text "    pattern type:" %% ppr c tAlt
         , text "  scrutinee type:" %% ppr c tScrut ]
 
+ppre c (ErrorCaseAltPatWrongArity _a _wh _nAlt tsPat tsField)
+ = let  reason = if length tsPat >= length tsField then "Too many" else "Not enough"
+   in   vcat [ text reason %% text "binders in pattern"
+             , text "  with field types:" %% squared (map (ppr c) tsField) ]
+
+ppre _c (ErrorCaseAltPatBindConflict _a _wh _nAlt nsDup)
+ = vcat [ text "Duplicate binders in pattern"
+        , text "  with names:" %% braced (map pprVar nsDup) ]
+
 ppre _c (ErrorCaseAltsOverlapping _a _wh ns)
  = vcat [ text "Overlapping alternatives" %% braced (map pprLbl ns) ]
 
