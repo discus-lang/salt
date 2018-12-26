@@ -160,6 +160,8 @@ resolveLevelKind ctx ps0 (BoundWith n d0)
 
         -- Look through local bindings in the context.
         goLocal level d ups (ElemTypes nks : tpss)
+         | d < 0        = return Nothing
+         | otherwise
          = case Map.lookup n nks of
             Nothing
              -> let ups' = upsCombine ups (upsOfNames $ Map.keys nks)
@@ -178,11 +180,11 @@ resolveLevelKind ctx ps0 (BoundWith n d0)
          | d == 0       = goGlobal ups
          | otherwise    = return $ Nothing
 
-        -- Look through synonyms.
+        -- Look for synonyms in the global context.
         goGlobal ups
          = case Map.lookup n (contextModuleType ctx) of
-            Nothing         -> return Nothing
-            Just (_k, tSyn) -> return $ Just $ Left $ upsApplyType ups tSyn
+            Nothing      -> return Nothing
+            Just (_k, t) -> return $ Just $ Left $ upsApplyType ups t
 
 
 ---------------------------------------------------------------------------------------------------

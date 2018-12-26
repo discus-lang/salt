@@ -8,6 +8,7 @@ import qualified Salt.Core.Prim.Ctor    as Prim
 import Data.Map.Strict                  (Map)
 import qualified Data.Map               as Map
 
+
 ---------------------------------------------------------------------------------------------------
 data Mode a
         = Synth
@@ -112,33 +113,37 @@ contextBindTermParams mps ctx
 --   * If it is transparanetly bound as a synonym we get both the kind and body type,
 --   * If it is opaquely bound by an abstraction we get just the kind.
 --
---  TODO: lift synonyms through binders in the context.
-
 contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Kind a, Maybe (Type a)))
 contextResolveTypeBound (BoundWith n d0) ctx
- = goLocal d0 (contextLocal ctx)
+ = goLocal d0 upsEmpty (contextLocal ctx)
  where
-        goLocal _d []
-         = goGlobal
-
-        goLocal d (ElemTerms _  : rest)
-         = goLocal d rest
-
-        goLocal d (ElemTypes mp : rest)
-         | d < 0
-         = return $ Nothing
-
+        -- Look through the local context.
+        goLocal d ups (ElemTypes nks : rest)
+         | d < 0        = return $ Nothing
          | otherwise
-         = case Map.lookup n mp of
-                Just k
-                 | d == 0       -> return $ Just (k, Nothing)
-                 | otherwise    -> goLocal (d - 1) rest
-                Nothing         -> goLocal d rest
+         = case Map.lookup n nks of
+            Nothing
+             -> let ups' = upsCombine ups (upsOfNames $ Map.keys nks)
+                in  goLocal d ups' rest
 
-        goGlobal
+            Just k
+             | d == 0       -> return $ Just (k, Nothing)
+             | otherwise
+             -> let ups' = upsCombine ups (upsOfNames $ Map.keys nks)
+                in  goLocal (d - 1) ups' rest
+
+        goLocal d ups (ElemTerms{} : rest)
+         = goLocal d ups rest
+
+        goLocal d ups []
+         | d == 0       = goGlobal ups
+         | otherwise    = return Nothing
+
+        -- Look for synonyms in the global context.
+        goGlobal ups
          = case Map.lookup n (contextModuleType ctx) of
-                Nothing     -> return $ Nothing
-                Just (k, t) -> return $ Just (k, Just t)
+            Nothing     -> return $ Nothing
+            Just (k, t) -> return $ Just (k, Just $ upsApplyType ups t)
 
 
 -- | Lookup a bound term variable from the context.
@@ -167,28 +172,28 @@ contextResolveTermBound (BoundWith n 0) ctx
  where
         -- No more local binders,
         -- so look in the global context.
-        goLocal upsT []
-         = goGlobal upsT
+        goLocal ups []
+         = goGlobal ups
 
         -- See if this local binder is the one we are looking for.
-        goLocal upsT (ElemTerms mp : rest)
+        goLocal ups (ElemTerms mp : rest)
          = case Map.lookup n mp of
-                Just t  -> return $ Just $ upsApplyType upsT t
-                Nothing -> goLocal upsT rest
+                Just t  -> return $ Just $ upsApplyType ups t
+                Nothing -> goLocal ups rest
 
         -- Any types we get from higher up in the context need to be
         -- bumped across abstractions between the defining point and
         -- where it was referenced.
-        goLocal upsT (ElemTypes mp : rest)
-         = let  upsT'    = upsCombine upsT (upsOfNames $ Map.keys mp)
-           in   goLocal upsT' rest
+        goLocal ups (ElemTypes mp : rest)
+         = let  ups'    = upsCombine ups (upsOfNames $ Map.keys mp)
+           in   goLocal ups' rest
 
         -- The top level types should all be closed, but add the ups anyway
         -- or consistency until we explicitly check that they are closed.
-        goGlobal upsT
+        goGlobal ups
          = case Map.lookup n (contextModuleTerm ctx) of
                 Nothing -> return $ Nothing
-                Just t  -> return $ Just $ upsApplyType upsT t
+                Just t  -> return $ Just $ upsApplyType ups t
 
 
 contextResolveTermBound _ _

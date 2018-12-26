@@ -57,13 +57,3 @@ test type equiv'syn'shadow'pull
         , b: #Bool ]
         → if b then f else g
 
-
--- Type equivalene where a binding shadows a synonym.
---  TODO: this the second nat^1 is out of scope, which should have been
---  picked up by the kind checker.
--- type nat: #Data = #Nat
--- test type equiv'syn'shadow
---  =     λ[ f: ∀[a: #Data]. ∀[nat: #Data]. [a] → [nat, a, nat^1]
---         , g: ∀[b: #Data]. ∀[c:   #Data]. [b] → [c,   b, nat^1]
---         , b: #Bool ]
---         → if b then f else g
