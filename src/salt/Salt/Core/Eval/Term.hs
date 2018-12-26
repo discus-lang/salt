@@ -2,6 +2,7 @@
 module Salt.Core.Eval.Term where
 import Salt.Core.Eval.Error
 import Salt.Core.Eval.State
+import Salt.Core.Analysis.Support       ()
 import Salt.Core.Transform.MapAnnot
 import Control.Exception
 import qualified Salt.Core.Prim.Ops     as Ops
