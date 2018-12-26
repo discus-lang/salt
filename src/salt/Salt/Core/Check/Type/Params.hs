@@ -10,6 +10,7 @@ import qualified Salt.Data.List as List
 import Control.Monad
 import Control.Exception
 
+
 -- | Check some type parameters.
 checkTypeParams
         :: Annot a => a -> [Where a]
