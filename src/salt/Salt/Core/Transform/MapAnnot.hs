@@ -155,9 +155,9 @@ instance MapAnnot Env where
   = Env (map (mapAnnot f) bs)
 
 
-instance MapAnnot EnvBind where
+instance MapAnnot EnvBinds where
  mapAnnot f eb
   = case eb of
-        EnvType  n t    -> EnvType  n (mapAnnot f t)
-        EnvValue n v    -> EnvValue n (mapAnnot f v)
+        EnvTypes  ts    -> EnvTypes  (Map.map (mapAnnot f) ts)
+        EnvValues vs    -> EnvValues (Map.map (mapAnnot f) vs)
 

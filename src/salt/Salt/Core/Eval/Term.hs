@@ -2,7 +2,7 @@
 module Salt.Core.Eval.Term where
 import Salt.Core.Eval.Error
 import Salt.Core.Eval.State
-import Salt.Core.Analysis.Support
+-- import Salt.Core.Analysis.Support
 import Salt.Core.Transform.MapAnnot
 import Control.Exception
 import qualified Salt.Core.Prim.Ops     as Ops
@@ -70,14 +70,14 @@ evalTerm s a env (MVar u@(Bound n))
 --   closure is produced so that the closure is easier to read in logs.
 --   For a production interpreter we'd avoid the trimming.
 evalTerm _s _a env (MAbm bts mBody)
- = do   let nsTermFree  = freeTermVarsOf mBody
+ = do   -- let nsTermFree  = freeTermVarsOf mBody
         let Env ebs     = env
 
-        -- TODO: also trim type binds.
-        let keepEnvBind (EnvValue n _) = Set.member n nsTermFree
-            keepEnvBind (EnvType  _ _) = True
+        -- TODO trim env
+--        let keepEnvBind (EnvValues n _) = Set.member n nsTermFree
+--            keepEnvBind (EnvTypes  _ _) = True
 
-        let env'        = Env (filter keepEnvBind ebs)
+        let env'        = Env ebs -- (filter keepEnvBind ebs)
         return [VClosure (Closure env' (MPTerms bts) mBody)]
 
 

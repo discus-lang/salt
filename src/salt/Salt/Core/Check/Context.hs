@@ -71,13 +71,16 @@ contextBindTypeMaybe (Just n) t ctx
  = ctx  { contextLocal = ElemTypes (Map.singleton n t) : contextLocal ctx }
 
 
+-- | Bind a list of type variables all at the same level.
+contextBindTypes :: [(Name, Kind a)] -> Context a -> Context a
+contextBindTypes nts ctx
+ = ctx  { contextLocal = ElemTypes (Map.fromList nts) : contextLocal ctx }
+
+
 -- | Bind the kinds of type parameters into the context.
 contextBindTypeParams :: TypeParams a -> Context a -> Context a
-contextBindTypeParams tps ctx
- = case tps of
-        TPTypes bts
-         -> let nts = [ (n, t) | (BindName n, t) <- bts ]
-            in  ctx { contextLocal = ElemTypes (Map.fromList nts) : contextLocal ctx }
+contextBindTypeParams (TPTypes bts) ctx
+ = flip contextBindTypes ctx [ (n, t) | (BindName n, t) <- bts ]
 
 
 ---------------------------------------------------------------------------------------------------
@@ -94,17 +97,21 @@ contextBindTermMaybe (Just n) t ctx
  = ctx  { contextLocal = ElemTerms (Map.singleton n t) : contextLocal ctx }
 
 
+-- | Bin a list of term variables all at the same level.
+contextBindTerms :: [(Name, Type a)] -> Context a -> Context a
+contextBindTerms nts ctx
+ = ctx  { contextLocal = ElemTerms (Map.fromList nts) : contextLocal ctx }
+
+
 -- | Bind the types of term parameters into the context.
 contextBindTermParams :: TermParams a -> Context a -> Context a
 contextBindTermParams mps ctx
  = case mps of
-        MPTerms bts
-         -> let nts = [ (n, t) | (BindName n, t) <- bts ]
-            in  ctx { contextLocal = ElemTerms (Map.fromList nts) : contextLocal ctx }
-
         MPTypes bts
-         -> let nts = [ (n, t) | (BindName n, t) <- bts ]
-            in  ctx { contextLocal = ElemTypes (Map.fromList nts) : contextLocal ctx }
+         -> flip contextBindTypes ctx [ (n, t) | (BindName n, t) <- bts ]
+
+        MPTerms bts
+         -> flip contextBindTerms ctx [ (n, t) | (BindName n, t) <- bts ]
 
 
 ---------------------------------------------------------------------------------------------------

@@ -336,14 +336,18 @@ instance Pretty c (Closure a) where
 
 instance Pretty c (Env a) where
  ppr c (Env ebs)
-  = bracketed' "env"  (punctuate (text ",") $ map (ppr c) ebs)
+  = bracketed' "env"  (punctuate (text " ") $ map (ppr c) ebs)
 
 
-instance Pretty c (EnvBind a) where
+instance Pretty c (EnvBinds a) where
  ppr c eb
   = case eb of
-        EnvType  n t    -> text "@" % pprVar n % text ":" %% ppr c t
-        EnvValue n v    ->            pprVar n % text ":" %% ppr c v
+        EnvTypes  nts
+         -> text "@"
+         %  squared [ pprVar n % text ":" %% ppr c t | (n, t) <- Map.toList nts ]
+
+        EnvValues nvs
+         -> squared [ pprVar n % text ":" %% ppr c v | (n, v) <- Map.toList nvs ]
 
 
 pprNameAsIdentifier :: (Int -> Char -> Bool) -> Text -> Text -> Name -> Doc

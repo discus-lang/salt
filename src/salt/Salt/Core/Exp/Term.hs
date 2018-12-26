@@ -119,6 +119,19 @@ data TermNormals a
         deriving (Show, Eq, Ord)
 
 
+-- | Environments captured in closures.
+data Env a
+        = Env [EnvBinds a]
+        deriving (Show, Eq, Ord)
+
+
+-- | Bindings in environments.
+data EnvBinds a
+        = EnvTypes  (Map Name (Type a))
+        | EnvValues (Map Name (Value a))
+        deriving (Show, Eq, Ord)
+
+
 -- Patterns ---------------------------------------------------------------------------------------
 pattern MVal v                  = MRef  (MRVal v)
 pattern MPrm n                  = MRef  (MRPrm n)
@@ -181,18 +194,6 @@ pattern VTrue                   = VBool  True
 pattern VFalse                  = VBool  False
 pattern VSome t v               = VData (Name "Some") [t] [v]
 pattern VNone t                 = VData (Name "None") [t] []
-
-
----------------------------------------------------------------------------------------------------
--- | Environments captured in closures.
-data Env a
-        = Env [EnvBind a]
-        deriving (Show, Eq, Ord)
-
-data EnvBind a
-        = EnvType  Name (Type a)
-        | EnvValue Name (Value a)
-        deriving (Show, Eq, Ord)
 
 
 -- Predicates -------------------------------------------------------------------------------------

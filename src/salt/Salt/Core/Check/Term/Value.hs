@@ -122,13 +122,19 @@ contextBindEnv
 contextBindEnv a wh (Env bs0) ctx0
  = go ctx0 (reverse bs0)
  where
-        go ctx (EnvType n t : bs)
-         = do   (_, k') <- checkType a wh ctx t
-                go (contextBindType n k' ctx) bs
+        go ctx (EnvTypes nts : bs)
+         = do   let (ns, ts) = unzip $ Map.toList nts
+                ks'     <- fmap (map snd)
+                        $  mapM (checkType a wh ctx) ts
+                let nks' = zip ns ks'
+                go (contextBindTypes nks' ctx) bs
 
-        go ctx (EnvValue n v : bs)
-         = do   (_, [t'], _) <- checkTerm a wh ctx Synth (MVal v)
-                go (contextBindTerm n t' ctx) bs
+        go ctx (EnvValues nvs : bs)
+         = do   let (ns, vs) = unzip $ Map.toList nvs
+                ts'     <- fmap (map (\(_, t, _) -> t))
+                        $  mapM (\v -> checkTerm1 a wh ctx Synth (MVal v)) vs
+                let nts' = zip ns ts'
+                go (contextBindTerms nts' ctx) bs
 
         go ctx []
          = return $ ctx
