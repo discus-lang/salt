@@ -15,6 +15,9 @@ test kind a
 -- Error: parameter kind is ill-formed.
 test kind (λ[a: #Derp] ⇒ a)
 
+-- Error: duplicate in binder names.
+test kind (λ[a: #Data, a: #Data] ⇒ #List a)
+
 -- Error: body type is ill-kinded.
 test kind (λ[a: #Effect] ⇒ #List a)
 
@@ -43,6 +46,9 @@ test kind (λ[a: #Data, b: #Data] ⇒ #Map [a, b, b]) [#Nat, #Nat]
 -- Error: parameter kind is ill-formed.
 test kind (∀[a: #Derp]. #Nat)
 
+-- Error: duplicate binder names.
+test kind (∀[a: #Data, a: #Data]. #Nat)
+
 -- Error: body type does not have kind data.
 test kind (∀[a: #Effect]. a)
 
@@ -50,6 +56,9 @@ test kind (∀[a: #Effect]. a)
 -- (k-ext) --------------------------------------------------------------------
 -- Error: parameter kind is ill-formed.
 test kind (∃[a: #Derp]. #Nat)
+
+-- Error: duplicate binder names.
+test kind (∃[a: #Data, a: #Data]. #Nat)
 
 -- Error: body type does not have kind data.
 test kind (∃[a: #Effect]. a)

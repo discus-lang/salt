@@ -14,35 +14,35 @@ test/30-error/10-check-type/Test.salt:16:1
   16:1   In kind test
 
 test/30-error/10-check-type/Test.salt:19:1
-  Unexpected type: #Effect
-        expecting: #Data
+  Duplicate type binders at same level
+   with names {a}
 
   19:1   In kind test
 
-test/30-error/10-check-type/Test.salt:24:1
-  Unknown kind constructor 'Derp'.
+test/30-error/10-check-type/Test.salt:22:1
+  Unexpected type: #Effect
+        expecting: #Data
 
-  24:1   In kind test
+  22:1   In kind test
 
 test/30-error/10-check-type/Test.salt:27:1
-  Unknown type primitive '#Derp'.
+  Unknown kind constructor 'Derp'.
 
   27:1   In kind test
 
 test/30-error/10-check-type/Test.salt:30:1
-  Unexpected type: #Data
-        expecting: #Effect
+  Unknown type primitive '#Derp'.
 
   30:1   In kind test
 
 test/30-error/10-check-type/Test.salt:33:1
-  Not enough arguments in type application.
-   parameter types: [#Data, #Data]
+  Unexpected type: #Data
+        expecting: #Effect
 
   33:1   In kind test
 
 test/30-error/10-check-type/Test.salt:36:1
-  Too many arguments in type application.
+  Not enough arguments in type application.
    parameter types: [#Data, #Data]
 
   36:1   In kind test
@@ -53,101 +53,119 @@ test/30-error/10-check-type/Test.salt:39:1
 
   39:1   In kind test
 
-test/30-error/10-check-type/Test.salt:44:1
-  Unknown kind constructor 'Derp'.
+test/30-error/10-check-type/Test.salt:42:1
+  Too many arguments in type application.
+   parameter types: [#Data, #Data]
 
-  44:1   In kind test
+  42:1   In kind test
 
 test/30-error/10-check-type/Test.salt:47:1
-  Unexpected type: #Effect
-        expecting: #Data
+  Unknown kind constructor 'Derp'.
 
   47:1   In kind test
 
-test/30-error/10-check-type/Test.salt:52:1
+test/30-error/10-check-type/Test.salt:50:1
+  Duplicate type binders at same level
+   with names {a}
+
+  50:1   In kind test
+
+test/30-error/10-check-type/Test.salt:53:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  53:1   In kind test
+
+test/30-error/10-check-type/Test.salt:58:1
   Unknown kind constructor 'Derp'.
 
-  52:1   In kind test
+  58:1   In kind test
 
-test/30-error/10-check-type/Test.salt:55:1
+test/30-error/10-check-type/Test.salt:61:1
+  Duplicate type binders at same level
+   with names {a}
+
+  61:1   In kind test
+
+test/30-error/10-check-type/Test.salt:64:1
   Unexpected type: #Effect
         expecting: #Data
 
-  55:1   In kind test
-
-test/30-error/10-check-type/Test.salt:60:1
-  Unknown type primitive '#Derp'.
-
-  60:1   In kind test
-
-test/30-error/10-check-type/Test.salt:63:1
-  Unexpected type: #Effect
-        expecting: #Data
-
-  63:1   In kind test
-
-test/30-error/10-check-type/Test.salt:66:1
-  Unknown type primitive '#Derp'.
-
-  66:1   In kind test
+  64:1   In kind test
 
 test/30-error/10-check-type/Test.salt:69:1
-  Unexpected type: #Effect
-        expecting: #Data
+  Unknown type primitive '#Derp'.
 
   69:1   In kind test
 
-test/30-error/10-check-type/Test.salt:74:1
+test/30-error/10-check-type/Test.salt:72:1
   Unexpected type: #Effect
         expecting: #Data
 
-  74:1   In kind test
+  72:1   In kind test
 
-test/30-error/10-check-type/Test.salt:77:1
+test/30-error/10-check-type/Test.salt:75:1
+  Unknown type primitive '#Derp'.
+
+  75:1   In kind test
+
+test/30-error/10-check-type/Test.salt:78:1
   Unexpected type: #Effect
         expecting: #Data
 
-  77:1   In kind test
+  78:1   In kind test
 
-test/30-error/10-check-type/Test.salt:80:1
+test/30-error/10-check-type/Test.salt:83:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  83:1   In kind test
+
+test/30-error/10-check-type/Test.salt:86:1
+  Unexpected type: #Effect
+        expecting: #Data
+
+  86:1   In kind test
+
+test/30-error/10-check-type/Test.salt:89:1
   Duplicate fields in record type
     fields: {x}
 
-  80:1   In kind test
+  89:1   In kind test
 
-test/30-error/10-check-type/Test.salt:85:1
+test/30-error/10-check-type/Test.salt:94:1
   Unexpected type: #Effect
         expecting: #Data
 
-  85:1   In kind test
+  94:1   In kind test
 
-test/30-error/10-check-type/Test.salt:88:1
+test/30-error/10-check-type/Test.salt:97:1
   Unexpected type: #Effect
         expecting: #Data
 
-  88:1   In kind test
+  97:1   In kind test
 
-test/30-error/10-check-type/Test.salt:91:1
+test/30-error/10-check-type/Test.salt:100:1
   Duplicate alternatives in variant type
     alternatives: {x}
 
-  91:1   In kind test
+  100:1  In kind test
 
-test/30-error/10-check-type/Test.salt:96:1
+test/30-error/10-check-type/Test.salt:105:1
   Unexpected type: #Effect
         expecting: #Data
 
-  96:1   In kind test
+  105:1  In kind test
 
-test/30-error/10-check-type/Test.salt:99:1
+test/30-error/10-check-type/Test.salt:108:1
   Unexpected type: #Data
         expecting: #Effect
 
-  99:1   In kind test
+  108:1  In kind test
 
-test/30-error/10-check-type/Test.salt:104:1
+test/30-error/10-check-type/Test.salt:113:1
   Unexpected type: #Data
         expecting: #Effect
 
-  104:1  In kind test
+  113:1  In kind test
 

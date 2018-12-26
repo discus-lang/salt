@@ -84,7 +84,7 @@ checkValue a wh ctx v
                 -- The body must be pure.
                 eBody_red <- simplType a wh ctx2 (TSum esBody)
                 when (not $ isTPure eBody_red)
-                 $ throw $ ErrorImpureTermAbstraction a wh eBody_red
+                 $ throw $ ErrorAbsTermImpure a wh eBody_red
 
                 return $ TFun tsParam tsResult
 

@@ -124,7 +124,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTypes{} m)
         -- TODO: ensure types like (pure + pure) are reduced to pure,
         eBody_red   <- simplType a wh ctx' (TSum es)
         when (not $ isTPure eBody_red)
-         $ throw $ ErrorImpureTypeAbstraction a wh eBody_red
+         $ throw $ ErrorAbsTypeImpure a wh eBody_red
 
         return  (MAbs ps' m', [TForall bts t], [])
 
@@ -143,7 +143,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTerms{} m)
         -- TODO: ensure types like (pure + pure) are reduced to pure,
         eBody_red    <- simplType a wh ctx' (TSum es)
         when (not $ isTPure eBody_red)
-         $ throw $ ErrorImpureTermAbstraction a wh eBody_red
+         $ throw $ ErrorAbsTermImpure a wh eBody_red
 
         return  (MAbs ps' m', [TFun (map snd bts) ts], [])
 

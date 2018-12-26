@@ -28,6 +28,7 @@ import Salt.Core.Check.Where
 import Salt.Core.Check.Error
 import Salt.Core.Transform.MapAnnot
 import Salt.Core.Exp
+import qualified Salt.Data.List as List
 
 import Control.Monad
 import Control.Exception
@@ -88,7 +89,6 @@ checkTypesAreAll a wh ctx kExpected ts
 
 ---------------------------------------------------------------------------------------------------
 -- | Check some type parameters.
---   TODO: check binder is not reused at the same level.
 checkTypeParams
         :: Annot a => a -> [Where a]
         -> Context a -> TypeParams a -> IO (TypeParams a)
@@ -97,6 +97,14 @@ checkTypeParams a wh ctx tps
  = case tps of
         TPTypes bks
          -> do  let (bs, ks) = unzip bks
+
+                -- Check for duplicate binder names.
+                let ns          = [ n | BindName n <- bs ]
+                let nsDup       = List.duplicates ns
+                when (not $ null nsDup)
+                 $ throw $ ErrorAbsTypeBindConflict a wh nsDup
+
+                -- Check the parameter kinds.
                 ks' <- mapM (checkKind a wh ctx) ks
                 return $ TPTypes $ zip bs ks'
 

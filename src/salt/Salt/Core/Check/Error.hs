@@ -72,30 +72,35 @@ data Error a
         , errorWhere            :: [Where a]
         , errorVar              :: Bound }
 
-        -- Let bindings --------------------------
-        | ErrorLetWrongArity
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorTypesActual      :: [Type a]
-        , errorBinds            :: [Bind] }
-
-        -- Purity problems -----------------------
-        | ErrorImpureTypeAbstraction
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorEffect           :: Type a }
-
-        | ErrorImpureTermAbstraction
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorEffect           :: Type a }
-
         -- Unexpected types ----------------------
         | ErrorTypeMismatch
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorTypeExpected     :: Type a
         , errorTypeActual       :: Type a }
+
+        -- Abstraction problems ------------------
+        -- type
+        | ErrorAbsTypeImpure
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorEffect           :: Type a }
+
+        | ErrorAbsTypeBindConflict
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorNames            :: [Name] }
+
+        -- term
+        | ErrorAbsTermImpure
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorEffect           :: Type a }
+
+        | ErrorAbsTermBindConflict
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorNames            :: [Name] }
 
         -- Application problems ------------------
         | ErrorUnsaturatedPrim
@@ -162,6 +167,13 @@ data Error a
         , errorWhere            :: [Where a]
         , errorCtorParamTypes   :: [Type a]
         , errorCtorArgNum       :: Int }
+
+        -- Let bindings --------------------------
+        | ErrorLetWrongArity
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorTypesActual      :: [Type a]
+        , errorBinds            :: [Bind] }
 
         -- Record problems ----------------------
         | ErrorRecordProjectIsNot

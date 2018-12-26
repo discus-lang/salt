@@ -45,6 +45,9 @@ test type (λ@[a: #Data] → [])
 -- Error: body is not pure.
 test type (λ@[a: #Data] → do { #console'print "derp"; #unit })
 
+-- Error: duplicate parameter names.
+test type (λ@[a: #Data, a: #Data] → [])
+
 
 -- (t-abm) --------------------------------------------------------------------
 -- Error: parameter type in wrong universe.
@@ -58,6 +61,9 @@ test type (λ[x: #Console] → [])
 
 -- Error: body is not pure.
 test type (λ[x: #Text] → #console'print "derp")
+
+-- Error: duplciate parameter names
+test type (λ[x: #Nat, x: #Nat] → [])
 
 
 -- (t-aps) --------------------------------------------------------------------

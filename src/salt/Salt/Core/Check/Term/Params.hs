@@ -3,7 +3,7 @@ module Salt.Core.Check.Term.Params where
 import Salt.Core.Check.Kind
 import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Type.Base
-
+import qualified Salt.Data.List as List
 
 -- | Check some term function parameters.
 checkTermParams
@@ -12,15 +12,31 @@ checkTermParams
 
 checkTermParams a wh ctx mps
  = case mps of
-        MPTerms bts
-         -> do  let (bs, ts) = unzip bts
-                ts' <- checkTypesAre a wh ctx (replicate (length ts) TData) ts
-                return  $ MPTerms $ zip bs ts'
-
         MPTypes bks
          -> do  let (bs, ks) = unzip bks
+
+                -- Check for duplicate binder names.
+                let ns          = [ n | BindName n <- bs]
+                let nsDup       = List.duplicates ns
+                when (not $ null nsDup)
+                 $ throw $ ErrorAbsTypeBindConflict a wh nsDup
+
+                -- Check the parameter kinds.
                 ks' <- mapM (checkKind a wh ctx) ks
                 return  $ MPTypes $ zip bs ks'
+
+        MPTerms bts
+         -> do  let (bs, ts)    = unzip bts
+
+                -- Check for duplicate binder names.
+                let ns          = [ n | BindName n <- bs]
+                let nsDup       = List.duplicates ns
+                when (not $ null nsDup)
+                 $ throw $ ErrorAbsTermBindConflict a wh nsDup
+
+                -- Check the parameter types.
+                ts' <- checkTypesAre a wh ctx (replicate (length ts) TData) ts
+                return  $ MPTerms $ zip bs ts'
 
 
 -- | Check a list of term function parameters,
