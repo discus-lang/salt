@@ -1,5 +1,6 @@
 
 module Salt.Core.Check.Eq where
+import Salt.Core.Check.Reduce
 import Salt.Core.Check.Context
 import Salt.Core.Transform.Ups
 import Salt.Core.Exp
@@ -13,7 +14,7 @@ import qualified Data.Map       as Map
 --   annotation seen so far, as well as the list of type parameters we've
 --   descended under.
 type CheckTypeEq a x
-        =  Context a
+        =  Annot a => Context a
         -> a -> [TypeParams a] -> x
         -> a -> [TypeParams a] -> x
         -> IO (Maybe ((a, Type a), (a, Type a)))
@@ -22,8 +23,6 @@ type CheckTypeEq a x
 ---------------------------------------------------------------------------------------------------
 -- | Check that two types are equal.
 --   If the types are not equal we give the inner-most annotation from both sides.
---
---   TODO: reduce type applications during equality checking.
 --
 checkTypeEq :: CheckTypeEq a (Type a)
 checkTypeEq ctx aL psL tL aR psR tR
@@ -67,8 +66,27 @@ checkTypeEq ctx aL psL tL aR psR tR
          | levelL == levelR
          = checkTypeEq ctx aL [] kindL aR [] kindR
 
-        goBound Nothing Nothing = goRest
+        goBound Nothing Nothing = goReduceL
         goBound _ _             = goFail
+
+        -- Reduce applications of type operators.
+        goReduceL
+         | TApt{}       <- tL
+         = reduceType aL [] ctx tL
+         >>= \case
+                Just tL' -> checkTypeEq ctx aL psL tL' aR psR tR
+                Nothing  -> goReduceR
+
+         | otherwise    = goReduceR
+
+        goReduceR
+         | TApt{}       <- tR
+         = reduceType aR [] ctx tR
+         >>= \case
+                Just tR' -> checkTypeEq ctx aL psL tL aR psR tR'
+                Nothing  -> goRest
+
+         | otherwise    = goRest
 
         -- Compare other types generically.
         goRest

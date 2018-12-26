@@ -57,3 +57,12 @@ test type equiv'syn'shadow'pull
         , b: #Bool ]
         → if b then f else g
 
+
+-- Type equivalence where we need to reduce a type operator application.
+type ids [a: #Data]: #Data = [a] → [a]
+test type equiv'red
+ =      λ [f: ids #Nat, b: #Bool]
+        → if b then f else λ[x: #Nat] → x
+
+
+

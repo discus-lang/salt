@@ -4,3 +4,4 @@
 * equiv'alpha'local: ∀[a: #Data]. [∀[b: #Data]. ∀[b: #Data]. [a, b^1] → [a, b^1, b], ∀[c: #Data]. ∀[d: #Data]. [a, c] → [a, c, d], #Bool] → [∀[c: #Data]. ∀[d: #Data]. [a, c] → [a, c, d]]
 * equiv'syn'shadow: [∀[a: #Data]. ∀[nat: #Data]. [a] → [nat, a, nat^1], ∀[b: #Data]. ∀[c: #Data]. [b] → [c, b, nat], #Bool] → [∀[b: #Data]. ∀[c: #Data]. [b] → [c, b, nat]]
 * equiv'syn'shadow'pull: [∀[a: #Data]. ∀[nat: #Data]. [a] → [nat, a, nat^1], ∀[b: #Data]. ∀[bar: #Data]. [b] → [bar, b, foo], #Bool] → [∀[b: #Data]. ∀[bar: #Data]. [b] → [bar, b, foo]]
+* equiv'red: [ids [#Nat], #Bool] → [[#Nat] → [#Nat]]
