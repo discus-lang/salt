@@ -20,7 +20,7 @@ test type vec           = [1, 2, 3]
 test type none          = []
 
 
--- Type Ascription ------------------------------------------------------------
+-- Type ascription ------------------------------------------------------------
 test type the'nat       = the #Nat of 3
 test type the'things    = the [#Nat, #Bool] of [3, #true]
 
@@ -28,28 +28,32 @@ test type the'nat's     = 3 : #Nat
 test type the'things's  = [3, #true] : [#Nat, #Bool]
 
 
--- Term abstraction -----------------------------------------------------------
-test type abs1          = λ[x: #Bool] → x
-test type abs2          = λ[x: #Bool, y: #Nat] → x
-test type abs3          = λ[x: #Bool, y: #Nat] → [x, y]
-test type abs4          = λ[x: #Bool, y: #Nat] → []
-test type abs5          = λ[] → []
-
-test type abs1'sugar    = fun [x: #Bool] -> x
-test type abs2'sugar    = fun [x: #Bool, y: #Nat] -> x
-test type abs3'sugar    = fun [x: #Bool, y: #Nat] -> [x, y]
-test type abs4'sugar    = fun [x: #Bool, y: #Nat] -> []
-test type abs5'sugar    = fun [] -> []
-
-
 -- Type abstraction -----------------------------------------------------------
 test type abt1          = λ@[a: #Data] → λ[x: a] → x
 test type abt2          = λ@[a: #Data] [x: a] → x
 test type abt3          = λ@[a: #Data, b: #Data] [f: a → b, x: a] → f x
 
+test type abt1'bump     = λ@[a: #Data] @[a: #Data] [f: a^1 → a^1, x: a^1] → f x
+
 test type abt1'sugar    = fun @[a: #Data] -> λ[x: a] -> x
 test type abt2'sugar    = fun @[a: #Data] [x: a] -> x
 test type abt3'sugar    = fun @[a: #Data, b: #Data] [f: a -> b, x: a] -> f x
+
+
+-- Term abstraction -----------------------------------------------------------
+test type abm1          = λ[x: #Bool] → x
+test type abm2          = λ[x: #Bool, y: #Nat] → x
+test type abm3          = λ[x: #Bool, y: #Nat] → [x, y]
+test type abm4          = λ[x: #Bool, y: #Nat] → []
+test type abm5          = λ[] → []
+
+test type abm1'bump     = λ[x: #Bool] [x: #Nat] → x^1
+
+test type abm1'sugar    = fun [x: #Bool] -> x
+test type abm2'sugar    = fun [x: #Bool, y: #Nat] -> x
+test type abm3'sugar    = fun [x: #Bool, y: #Nat] -> [x, y]
+test type abm4'sugar    = fun [x: #Bool, y: #Nat] -> []
+test type abm5'sugar    = fun [] -> []
 
 
 -- Term/Term application ------------------------------------------------------

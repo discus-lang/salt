@@ -239,13 +239,29 @@ pTermArgProj
 pTermArg :: Parser (Term Location)
 pTermArg
  = P.choice
- [ do   pVar    >>= return . MVar . Bound
- , do   pCon    >>= return . MCon
- , do   pSym    >>= return . MSymbol
- , do   pNat    >>= return . MNat
- , do   pText   >>= return . MText
+ [ do   -- Var
+        -- Var ^ Nat
+        n <- pVar
+        P.choice
+         [ do   pTok KHat
+                b <- pNat
+                return $ MVar $ BoundWith n b
+         , do   return $ MVar $ BoundWith n 0 ]
 
-        -- #name
+
+ , do   -- Con
+        pCon    >>= return . MCon
+
+ , do   -- Syn
+        pSym    >>= return . MSymbol
+
+ , do   -- Nat
+        pNat    >>= return . MNat
+
+ , do   -- Text
+        pText   >>= return . MText
+
+        -- #Name
         -- This matches primitive values.
         -- Primitive operators that should be applied to arguments are
         -- handled by the general term parser.

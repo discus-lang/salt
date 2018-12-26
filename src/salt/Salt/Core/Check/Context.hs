@@ -119,7 +119,7 @@ contextResolveTypeBound (BoundWith n d0) ctx
  where
         -- Look through the local context.
         goLocal d ups (ElemTypes nks : rest)
-         | d < 0        = return $ Nothing
+         | d < 0        = return Nothing
          | otherwise
          = case Map.lookup n nks of
             Nothing
@@ -162,42 +162,36 @@ contextResolveTypeBound (BoundWith n d0) ctx
 --   of binders we need to bump in the resulting type, and apply it before
 --   returning the type.
 --
---   We could alternatively leave the Ups node in the returned type
---   and require consumers to push it down, but it's probably not worth the
---   complexity in the consumer.
---
 contextResolveTermBound :: Bound -> Context a -> IO (Maybe (Type a))
-contextResolveTermBound (BoundWith n 0) ctx
- = goLocal upsEmpty (contextLocal ctx)
+contextResolveTermBound (BoundWith n d0) ctx
+ = goLocal d0 upsEmpty (contextLocal ctx)
  where
-        -- No more local binders,
-        -- so look in the global context.
-        goLocal ups []
-         = goGlobal ups
-
         -- See if this local binder is the one we are looking for.
-        goLocal ups (ElemTerms mp : rest)
-         = case Map.lookup n mp of
-                Just t  -> return $ Just $ upsApplyType ups t
-                Nothing -> goLocal ups rest
+        goLocal d ups (ElemTerms nts : rest)
+         | d < 0        = return Nothing
+         | otherwise
+         = case Map.lookup n nts of
+                Nothing -> goLocal d ups rest
+                Just t
+                 | d == 0       -> return $ Just $ upsApplyType ups t
+                 | otherwise    -> goLocal (d - 1) ups rest
 
-        -- Any types we get from higher up in the context need to be
-        -- bumped across abstractions between the defining point and
-        -- where it was referenced.
-        goLocal ups (ElemTypes mp : rest)
+        goLocal d ups (ElemTypes mp : rest)
          = let  ups'    = upsCombine ups (upsOfNames $ Map.keys mp)
-           in   goLocal ups' rest
+           in   goLocal d ups' rest
 
-        -- The top level types should all be closed, but add the ups anyway
-        -- or consistency until we explicitly check that they are closed.
+        goLocal d ups []
+         | d == 0       = goGlobal ups
+         | otherwise    = return Nothing
+
+        -- Look for declarations in the global context.
+        --  The types of top level terms should all be closed,
+        --  but apply the ups anyway to be consistent in case they
+        --  are not actually closed.
         goGlobal ups
          = case Map.lookup n (contextModuleTerm ctx) of
                 Nothing -> return $ Nothing
                 Just t  -> return $ Just $ upsApplyType ups t
-
-
-contextResolveTermBound _ _
- = error "handle bumps in contextResolveTermBound"
 
 
 -- | Lookup the parameter and result types of a data constructor.
