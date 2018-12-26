@@ -1,0 +1,5 @@
+test/30-error/21-check-type-decls/Test.salt:1:1
+  Type variable 'a' is not in scope.
+
+  1:1    In type declaration "syn4"
+

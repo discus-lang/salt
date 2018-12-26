@@ -1,0 +1,4 @@
+
+-- Out of scope variable in type synonym.
+type syn4: #Data = a
+

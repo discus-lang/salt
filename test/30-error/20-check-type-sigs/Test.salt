@@ -1,0 +1,15 @@
+
+-- Malformed kind annotation on type synonym parameter.
+type syn1 [a: #Derp]: #Data = #Nat
+
+-- Malformed kind annotation on type synonym result.
+type syn2 [a: #Data]: #Derp = #Nat
+
+-- Type synonym has duplicate parameters.
+type syn3 [a: #Data, a: #Data]: #Data = #Nat
+
+-- Synonym is rebound.
+-- TODO: check for this.
+type syn4: #Data = #Nat
+type syn4: #Data = #Nat
+
