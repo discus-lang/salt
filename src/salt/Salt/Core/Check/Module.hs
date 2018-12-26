@@ -14,6 +14,13 @@ import qualified Data.Map               as Map
 
 ---------------------------------------------------------------------------------------------------
 -- | Check a whole module.
+---
+--   We need to do this in stages to ensure that type synonyms are are well
+--   kinded before checking terms that may mention them etc.
+--
+--   We want to do this so we don't accidently reduce type operator
+--   applications that were actually ill-kinded.
+--
 checkModule
         :: Annot a
         => a -> Module a
@@ -32,15 +39,14 @@ checkModule a mm
 
         -- Check kind signatures on types, before adding them to the context.
         goTypeSigs  ctx decls
-         = do   -- TODO: just check the sig part.
-                (decls', errs)
+         = do   (decls', errs)
                  <- checkDecls (checkDeclTypeSig a ctx) decls
 
                 let nktsDeclType
-                        = [ ( n
-                            , ( makeDeclKindOfParamsResult pss kResult
-                              , makeTAbsOfParams pss tBody))
-                          | DType (DeclType _a n pss kResult tBody) <- decls' ]
+                         = [ ( n
+                             , ( makeDeclKindOfParamsResult pss kResult
+                               , makeTAbsOfParams pss tBody))
+                           | DType (DeclType _a n pss kResult tBody) <- decls' ]
 
                 let ctx' = ctx { contextModuleType = Map.fromList nktsDeclType }
                 if null errs
@@ -58,21 +64,19 @@ checkModule a mm
 
         -- Check type signatures on terms, before adding them to the context.
         goTermSigs ctx decls
-         = do   -- TODO: check just the sig part.
-                (decls', errs)
+         = do   (decls', errs)
                  <- checkDecls (checkDeclTermSig a ctx) decls
 
-                -- Extract a list of type signatures for top-level declarations.
-                -- TODO: kind-check these before adding them to the context.
                 let ntsDeclTerm
-                        = [ (n, makeDeclTypeOfParamsResult pss tsResult)
-                          | DTerm (DeclTerm _a n pss tsResult _mBody) <- decls' ]
+                         = [ (n, makeDeclTypeOfParamsResult pss tsResult)
+                           | DTerm (DeclTerm _a n pss tsResult _mBody) <- decls' ]
 
                 let ctx' = ctx { contextModuleTerm = Map.fromList ntsDeclTerm }
                 if null errs
                  then goTermDecls ctx' decls'
                  else return (ctx, mm, errs)
 
+        -- Check term declarations.
         goTermDecls ctx decls
          = do   (decls', errs)
                  <- checkDecls (checkDeclTerm a ctx) decls
@@ -81,6 +85,7 @@ checkModule a mm
                  then goTestDecls ctx decls'
                  else return (ctx, mm, errs)
 
+        -- Check test declarations.
         goTestDecls ctx decls
          = do   (decls', errs)
                  <- checkDecls (checkDeclTest a ctx) decls
@@ -141,8 +146,11 @@ checkDecls check (d1 : ds2)
 ---------------------------------------------------------------------------------------------------
 -- | Check kind signatures of type declarations.
 checkDeclTypeSig :: CheckDecl a
-checkDeclTypeSig _a _ctx decl@(DType _)
- = return decl
+checkDeclTypeSig _a ctx (DType (DeclType a n tpss kResult tBody))
+ = do   let wh  = [WhereTypeDecl a n]
+        tpss'    <- checkTypeParamss a wh ctx tpss
+        kResult' <- checkKind a wh ctx kResult
+        return  $ DType $ DeclType a n tpss' kResult' tBody
 
 checkDeclTypeSig _ _ decl
  = return decl
@@ -153,9 +161,11 @@ checkDeclType :: CheckDecl a
 checkDeclType _a ctx (DType (DeclType a n tpss kResult tBody))
  = do   let wh   = [WhereTypeDecl a n]
         tpss'    <- checkTypeParamss a wh ctx tpss
+        kResult' <- checkKind a wh ctx kResult
+
         let ctx' =  foldl (flip contextBindTypeParams) ctx tpss'
-        tBody'   <- checkTypeIs a wh ctx' kResult tBody
-        return  $ DType $ DeclType a n tpss' kResult tBody'
+        tBody'   <- checkTypeIs a wh ctx' kResult' tBody
+        return  $ DType $ DeclType a n tpss' kResult' tBody'
 
 checkDeclType _ _ decl
  = return decl
@@ -164,8 +174,13 @@ checkDeclType _ _ decl
 ---------------------------------------------------------------------------------------------------
 -- | Check type signatures of term declarations.
 checkDeclTermSig :: CheckDecl a
-checkDeclTermSig _a _ctx decl@(DTerm _)
- = return decl
+checkDeclTermSig _a ctx (DTerm (DeclTerm a n mpss tsResult mBody))
+ = do   let wh  = [WhereTermDecl a n]
+        mpss'     <- checkTermParamss a wh ctx mpss
+
+        let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
+        tsResult' <- checkTypesAreAll a wh ctx' TData tsResult
+        return  $ DTerm $ DeclTerm a n mpss' tsResult' mBody
 
 checkDeclTermSig _ _ decl
  = return decl
@@ -173,10 +188,11 @@ checkDeclTermSig _ _ decl
 
 -- | Check bodies of term declarations
 checkDeclTerm :: CheckDecl a
-checkDeclTerm _a ctx (DTerm (DeclTerm a n mpss mtResult mBody))
+checkDeclTerm _a ctx (DTerm (DeclTerm a n mpss tResult mBody))
  = do   let wh   = [WhereTermDecl a n]
-        mpss'    <- checkTermParamss a wh ctx mpss
+        mpss'     <- checkTermParamss a wh ctx mpss
         let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
+        tsResult' <- checkTypesAreAll a wh ctx' TData tResult
 
         (mBody', _tsResult, _esResult)
          <- checkTerm a wh ctx' Synth mBody
@@ -185,7 +201,7 @@ checkDeclTerm _a ctx (DTerm (DeclTerm a n mpss mtResult mBody))
         -- TODO: check against result type.
         -- TODO: check result type.
         -- TODO: check effects are empty.
-        return  $ DTerm $ DeclTerm a n mpss' mtResult mBody'
+        return  $ DTerm $ DeclTerm a n mpss' tsResult' mBody'
 
 checkDeclTerm _ _ decl
  = return decl
