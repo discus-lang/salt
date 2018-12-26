@@ -156,4 +156,3 @@ takeTForalls tt
                 TForall tps' tBody' -> go (tps' : tpss) tBody'
                 _                   -> (reverse tpss, tBody)
 
-

@@ -346,12 +346,6 @@ instance Pretty c (EnvBind a) where
         EnvValue n v    ->            pprVar n % text ":" %% ppr c v
 
 
-{-
-instance Pretty c Name where
- ppr _c (Name n)
-  = text n
--}
-
 pprNameAsIdentifier :: (Int -> Char -> Bool) -> Text -> Text -> Name -> Doc
 pprNameAsIdentifier match ident_class prefix (Name name)
  | Text.length name > 0 && Lexer.checkMatch match (prefix <> name)

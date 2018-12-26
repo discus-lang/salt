@@ -33,9 +33,9 @@ data Bind
         -- | Named binder.
         = BindName Name
 
-        -- | Non-binding binder,
-        --   which behaves like binding a name which is not used
-        --   elsewhere in the program.
+        -- | Non-binding binder.
+        --   This behaves like a binder where the name is not mentioned
+        --   anywhere else in the program.
         | BindNone
         deriving (Show, Eq, Ord)
 

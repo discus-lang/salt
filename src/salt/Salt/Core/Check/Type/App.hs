@@ -15,11 +15,11 @@ checkTypeAppTypes a wh ctx kFun tsArg
         _ -> throw $ ErrorAppTypeTypeCannot a wh kFun
  where
         goCheckArgs ksParam kResult
-         = do   if length ksParam /= length tsArg
-                 then throw $ ErrorAppTypeTypeWrongArityNum a wh ksParam (length tsArg)
-                 else do
-                        (tsArg', ksArg) <- checkTypes a wh ctx tsArg
-                        goCheckParams ksParam kResult tsArg' ksArg
+         = if length ksParam /= length tsArg
+             then throw $ ErrorAppTypeTypeWrongArityNum a wh ksParam (length tsArg)
+             else do
+                (tsArg', ksArg) <- checkTypes a wh ctx tsArg
+                goCheckParams ksParam kResult tsArg' ksArg
 
         goCheckParams ksParam kResult tsArg' ksArg
          = checkTypeEqs ctx a [] ksParam a [] ksArg

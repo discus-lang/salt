@@ -30,6 +30,7 @@ snvIsEmpty (Snv bs) = null bs
 --
 --   This adjusts the depth fields in the substitution, but does not apply
 --   ups to the bindings. This needs to be done separately.
+--
 snvBump :: [Name] -> Snv x -> Snv x
 snvBump ns (Snv bs)
  = Snv $ map snvBump1 bs

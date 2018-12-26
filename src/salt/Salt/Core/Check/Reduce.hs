@@ -17,6 +17,7 @@ reduceType a wh ctx (TAnn _a t)
  = reduceType a wh ctx t
 
 reduceType a wh ctx (TVar (Bound n))
+ -- TODO: need to do a resolve here, not bare lookup as it doesn't add bumps.
  | Just (_k, tBody) <- Map.lookup n (contextModuleType ctx)
  = reduceType a wh ctx tBody
 
