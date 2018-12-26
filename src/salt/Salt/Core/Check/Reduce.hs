@@ -4,7 +4,7 @@ import Salt.Core.Check.Where
 import Salt.Core.Check.Context
 import Salt.Core.Transform.Snv
 import Salt.Core.Exp
-import qualified Data.Map as Map
+
 
 ---------------------------------------------------------------------------------------------------
 -- | Reduce a type to weak head normal form.
@@ -16,24 +16,26 @@ reduceType
 reduceType a wh ctx (TAnn _a t)
  = reduceType a wh ctx t
 
-reduceType a wh ctx (TVar (Bound n))
- -- TODO: need to do a resolve here, not bare lookup as it doesn't add bumps.
- | Just (_k, tBody) <- Map.lookup n (contextModuleType ctx)
- = reduceType a wh ctx tBody
+reduceType a wh ctx tt@(TVar u)
+ = contextResolveTypeBound u ctx
+ >>= \case
+        Just (_k, Just tSyn)
+          -> reduceType a wh ctx tSyn
+        _ -> return tt
 
 reduceType _a _wh _ctx tt@(TSum{})
  = return $ flattenType tt
 
 reduceType a wh ctx tt@(TApt tFun tsArgs)
- = do   tFun' <- reduceType a wh ctx tFun
-        case tFun' of
-         TAbs (TPTypes bks) tBody
-          | length bks == length tsArgs
-          -> do let ns  = [n | BindName n <- map fst bks]
+ = reduceType a wh ctx tFun
+ >>= \case
+        TAbs (TPTypes bks) tBody
+         | length bks == length tsArgs
+         -> do  let ns  = [n | BindName n <- map fst bks]
                 let snv = snvOfBinds $ zip ns tsArgs
                 reduceType a wh ctx $ snvApplyType upsEmpty snv tBody
 
-         _ -> return tt
+        _ -> return tt
 
 reduceType _ _ _ tt
  = return tt

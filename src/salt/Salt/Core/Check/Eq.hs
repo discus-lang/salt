@@ -22,6 +22,9 @@ type CheckTypeEq a x
 ---------------------------------------------------------------------------------------------------
 -- | Check that two types are equal.
 --   If the types are not equal we give the inner-most annotation from both sides.
+--
+--   TODO: reduce type applications during equality checking.
+--
 checkTypeEq :: CheckTypeEq a (Type a)
 checkTypeEq ctx aL psL tL aR psR tR
  = goAnn
