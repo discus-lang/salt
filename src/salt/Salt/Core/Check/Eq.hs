@@ -1,100 +1,96 @@
 
 module Salt.Core.Check.Eq where
 import Salt.Core.Check.Context
+import Salt.Core.Transform.Ups
 import Salt.Core.Exp
-import Control.Applicative
 import qualified Data.Map       as Map
 
 
+---------------------------------------------------------------------------------------------------
+-- Type of our checker functions.
+--   We take a top-level context which holds type synonynms.
+--   During comparison we walk down both type trees, mainintaining the last
+--   annotation seen so far, as well as the list of type parameters we've
+--   descended under.
 type CheckTypeEq a x
         =  Context a
         -> a -> [TypeParams a] -> x
         -> a -> [TypeParams a] -> x
-        -> Maybe ((a, Type a), (a, Type a))
+        -> IO (Maybe ((a, Type a), (a, Type a)))
 
 
+---------------------------------------------------------------------------------------------------
 -- | Check that two types are equal.
---   If the types are not equal we give the inner-most annotation from
---   both sides.
+--   If the types are not equal we give the inner-most annotation from both sides.
 checkTypeEq :: CheckTypeEq a (Type a)
-checkTypeEq ctx a1 ps1 t1 a2 ps2 t2
- = case (t1, t2) of
-        (TAnn a1' t1', _)
-         -> checkTypeEq ctx a1' ps1 t1' a2 ps2 t2
-
-        (_, TAnn a2' t2')
-         -> checkTypeEq ctx a1 ps1 t1 a2' ps2 t2'
-
-        -- TODO: avoid variable capture.
-        -- We need to bump the bound type past all the quantifiers we've
-        -- currently underneath.
-        (TVar (Bound n1), _)
-         |  Just (_k, t1') <- Map.lookup n1 (contextModuleType ctx)
-         -> checkTypeEq ctx a1 ps1 t1' a2 ps2 t2
-
-        (_, TVar (Bound n2))
-         |  Just (_k, t2') <- Map.lookup n2 (contextModuleType ctx)
-         -> checkTypeEq ctx a1 ps1 t1  a2 ps2 t2'
-
-        -- variables.
-        -- To handle differences in naming we need to check where the
-        -- variable was bound, not the syntactic name.
-        (TVar (Bound u1), TVar (Bound u2))
-         | Just (l1, k1) <- levelKindOfTyVar ctx ps1 u1
-         , Just (l2, k2) <- levelKindOfTyVar ctx ps2 u2
-         , l1 == l2
-         , Nothing       <- checkTypeEq ctx a1 [] k1 a2 [] k2
-         -> Nothing
-
-        -- references
-        (TRef r1, TRef r2)
-         | r1 == r2
-         -> Nothing
-
-        -- abstractions
-        (TAbs p1 t11, TAbs p2 t12)
-         | TPTypes bks1 <- p1
-         , TPTypes bks2 <- p2
-         , length bks1 == length bks2
-         ->  checkTypeEqs ctx a1 [] (map snd bks1) a2 [] (map snd bks2)
-         <|> checkTypeEq  ctx a1 (p1 : ps1) t11    a2 (p2 : ps2) t12
-
-        -- type keys
-        (TKey k1 gs1, TKey k2 gs2)
-         | k1 == k2
-         , length gs1 == length gs2
-         ->  checkTypeArgsEqs t1 t2 ctx a1 ps1 gs1 a2 ps2 gs2
-
-        (_, _)
-         -> Just ((a1, t1), (a2, t2))
-
-
--- | Lookup the binding level and kind of a type variable name.
---   The binding level is the number of enclosing type abstractions
---   in the context between the current position and the binder
---   of the variable.
-levelKindOfTyVar :: Context a -> [TypeParams a] -> Name -> Maybe (Int, Kind a)
-levelKindOfTyVar ctx tps0 n
- = goParams 0 tps0
+checkTypeEq ctx aL psL tL aR psR tR
+ = goAnn
  where
-        goParams level []
-         = goLocal level (contextLocal ctx)
+        -- Look through annotations.
+        goAnn
+         | TAnn aL' tL' <- tL
+         = checkTypeEq ctx aL' psL tL' aR  psR tR
 
-        goParams level (TPTypes bks : tps)
-         = case lookup (BindName n) bks of
-                Nothing -> goParams (level + 1) tps
-                Just k  -> Just (level, k)
+         | TAnn aR' tR' <- tR
+         = checkTypeEq ctx aL  psL tL  aR' psR tR'
 
-        goLocal _level []
-         = Nothing
+         | otherwise = goSynL
 
-        goLocal level (ElemTypes mps : tps)
-         = case Map.lookup n mps of
-                Nothing -> goLocal (level + 1) tps
-                Just k  -> Just (level, k)
+        -- Lookup whether a variable is bound as a parameter or is a synonym.
+        --   If it's a synonym then we unfold it in-place.
+        goSynL
+         | TVar uL <- tL
+         = resolveLevelKind ctx psL uL
+         >>= \case
+                Just (Left tL')  -> checkTypeEq ctx aL psL tL' aR psR tR
+                Just (Right lkL) -> goSynR (Just lkL)
+                Nothing          -> goSynR  Nothing
 
-        goLocal level (ElemTerms{} : tps)
-         = goLocal (level + 1) tps
+         | otherwise = goSynR Nothing
+
+        goSynR mlkL
+         | TVar uR <- tR
+         = resolveLevelKind ctx psR uR
+         >>= \case
+                Just (Left tR')  -> checkTypeEq ctx aL psL tL  aR psR tR'
+                Just (Right lkR) -> goBound mlkL (Just lkR)
+                Nothing          -> goBound mlkL Nothing
+
+         | otherwise = goBound mlkL Nothing
+
+        -- Compare variables based on binding level.
+        --   Comparing on level instead of raw name handles alpha equivalence.
+        goBound (Just (levelL, kindL)) (Just (levelR, kindR))
+         | levelL == levelR
+         = checkTypeEq ctx aL [] kindL aR [] kindR
+
+        goBound Nothing Nothing = goRest
+        goBound _ _             = goFail
+
+        -- Compare other types generically.
+        goRest
+         | TRef rL <- tL
+         , TRef rR <- tR
+         , rL == rR
+         = return $ Nothing
+
+         | TAbs pL tBodyL <- tL
+         , TAbs pR tBodyR <- tR
+         , TPTypes bksL   <- pL
+         , TPTypes bksR   <- pR
+         = altsM [ checkTypeEqs ctx aL [] (map snd bksL) aR [] (map snd bksR)
+                 , checkTypeEq  ctx aL (pL : psL) tBodyL aR (pR : psR) tBodyR ]
+
+         | TKey tkL tgssL <- tL
+         , TKey tkR tgssR <- tR
+         , tkL == tkR
+         = checkTypeArgsEqs tL tR ctx aL psL tgssL aL psR tgssR
+
+         | otherwise = goFail
+
+        -- When the types are not equivalent report the
+        -- annotation that we last descended into in both sides.
+        goFail = return $ Just ((aL, tL), (aR, tR))
 
 
 -- | Check that two lists are equal pairwise.
@@ -102,9 +98,8 @@ levelKindOfTyVar ctx tps0 n
 --   of equal length.
 checkTypeEqs :: CheckTypeEq a [Type a]
 checkTypeEqs ctx a1 ps1 ts1 a2 ps2 ts2
- = foldl (<|>) Nothing
-        [ checkTypeEq ctx a1 ps1 t1 a2 ps2 t2
-        | t1 <- ts1 | t2 <- ts2 ]
+ = altsM [ checkTypeEq ctx a1 ps1 t1 a2 ps2 t2
+         | t1 <- ts1 | t2 <- ts2 ]
 
 
 -- | Check that two type argument blocks are equal pairwise.
@@ -115,13 +110,87 @@ checkTypeArgsEq tBlame1 tBlame2 ctx a1 ps1 g1 a2 ps2 g2
          | length ts1 == length ts2
          -> checkTypeEqs ctx a1 ps1 ts1 a2 ps2 ts2
 
-        _ -> Just ((a1, tBlame1), (a2, tBlame2))
+        _ -> return $ Just ((a1, tBlame1), (a2, tBlame2))
 
 
 -- Check that two lists of type arguments are equal pairwise.
 checkTypeArgsEqs :: Type a -> Type a -> CheckTypeEq a [TypeArgs a]
 checkTypeArgsEqs tBlame1 tBlame2 ctx a1 ps1 gs1 a2 ps2 gs2
- = foldl (<|>) Nothing
-        [ checkTypeArgsEq tBlame1 tBlame2 ctx a1 ps1 g1 a2 ps2 g2
-        | g1 <- gs1 | g2 <- gs2 ]
+ = altsM [ checkTypeArgsEq tBlame1 tBlame2 ctx a1 ps1 g1 a2 ps2 g2
+         | g1 <- gs1 | g2 <- gs2 ]
+
+
+---------------------------------------------------------------------------------------------------
+-- | Resolve a bound type variable.
+--
+--    We take the top level context which contains definitions of
+--    type synonyms, along with the stack of parameters we've descended
+--    into so far.
+--
+--    If the variable is bound to a synonym we get Left the definition,
+--    where any variables in the type have been lifted over the binders
+--    in the stack of parameters.
+--
+--    If the variable is bound via a parameter we get the binding level,
+--    counting outwards from the current position, and the kind of the
+--    binding.
+--
+resolveLevelKind
+        :: Context a -> [TypeParams a] -> Bound
+        -> IO (Maybe (Either (Type a) (Int, Kind a)))
+
+resolveLevelKind ctx ps0 (BoundWith n d0)
+ = goParams 0 d0 upsEmpty ps0
+ where
+        -- Look through the parameters.
+        goParams level d ups (TPTypes bks : tpss)
+         = case lookup (BindName n) bks of
+            Nothing
+             -> let ups' = upsCombine ups (upsOfBinds $ map fst bks)
+                in  goParams (level + 1) d ups' tpss
+
+            Just k
+             | d == 0    -> return $ Just $ Right (level, k)
+             | otherwise
+             -> let ups' = upsCombine ups (upsOfBinds $ map fst bks)
+                in  goParams (level + 1) (d - 1) ups' tpss
+
+        goParams level d ups []
+         = goLocal level d ups (contextLocal ctx)
+
+        -- Look through local bindings in the context.
+        goLocal level d ups (ElemTypes nks : tpss)
+         = case Map.lookup n nks of
+            Nothing
+             -> let ups' = upsCombine ups (upsOfNames $ Map.keys nks)
+                in  goLocal level d ups' tpss
+
+            Just k
+             | d == 0    -> return $ Just $ Right (level, k)
+             | otherwise
+             -> let ups' = upsCombine ups (upsOfNames $ Map.keys nks)
+                in  goLocal  (level + 1) (d - 1) ups' tpss
+
+        goLocal level d ups (ElemTerms{} : tpss)
+         = goLocal level d ups tpss
+
+        goLocal _level d ups []
+         | d == 0       = goGlobal ups
+         | otherwise    = return $ Nothing
+
+        -- Look through synonyms.
+        goGlobal ups
+         = case Map.lookup n (contextModuleType ctx) of
+            Nothing         -> return Nothing
+            Just (_k, tSyn) -> return $ Just $ Left $ upsApplyType ups tSyn
+
+
+---------------------------------------------------------------------------------------------------
+altsM :: [IO (Maybe a)] -> IO (Maybe a)
+altsM [] = return Nothing
+altsM (c : cs)
+ = do   m <- c
+        case m of
+         Nothing        -> altsM cs
+         Just err       -> return $ Just err
 

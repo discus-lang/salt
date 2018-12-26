@@ -19,13 +19,19 @@ upsEmpty :: Ups
 upsEmpty = Ups []
 
 
--- | An ups that bumps the given names by one, starting at depth zero.
+-- | Construct an `Ups` that bumps the given names by one, starting at depth zero.
 upsOfNames :: [Name] -> Ups
 upsOfNames ns
  = Ups [((n, 0), 1) | n <- ns]
 
 
--- | Check if the given ups is empty.
+-- | Construct an `Ups` that bumps names in the given list of binders.
+upsOfBinds :: [Bind] -> Ups
+upsOfBinds bs
+ = upsOfNames [n | BindName n <- bs ]
+
+
+-- | Check if the given `Ups` is empty.
 upsIsEmpty :: Ups -> Bool
 upsIsEmpty (Ups bs)
  = case bs of
@@ -33,10 +39,9 @@ upsIsEmpty (Ups bs)
         _       -> False
 
 
--- | Bump an Ups due to pushing it under an absraction with the given
---   named binders.
-upsBump :: [Name] -> Ups -> Ups
-upsBump ns0 (Ups bs)
+-- | Bump an Ups due to pushing it under an absraction with the given names.
+upsBumpNames :: [Name] -> Ups -> Ups
+upsBumpNames ns0 (Ups bs)
  = Ups $ mapMaybe (upsBump1 ns0) bs
  where
         upsBump1 ns l
@@ -46,6 +51,13 @@ upsBump ns0 (Ups bs)
 
          | otherwise
          = Just l
+
+
+-- | Bump an Ups due to pushing it under an abstraction with the given binders.
+upsBumpBinds :: [Bind] -> Ups -> Ups
+upsBumpBinds bs ups
+ = let  ns = [n | BindName n <- bs ]
+   in   upsBumpNames ns ups
 
 
 -- | Apply an ups to a bound occcurrence of a variable.

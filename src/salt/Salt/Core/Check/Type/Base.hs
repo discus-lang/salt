@@ -67,13 +67,14 @@ checkTypesAre a wh ctx ksExpected ts
  = do   (ts', ksActual)
          <- checkTypes a wh ctx ts
 
-        if length ts' /= length ksActual
-         then throw $ ErrorAppTypeTypeWrongArity a wh ksExpected ksActual
-         else case checkTypeEqs ctx a [] ksExpected a [] ksActual of
-                Just ((_aErr1', kErr1), (_aErr2, kErr2))
-                 -> throw  $ ErrorTypeMismatch a wh kErr1 kErr2
+        when (not $ length ts' == length ksActual)
+         $ throw $ ErrorAppTypeTypeWrongArity a wh ksExpected ksActual
 
+        checkTypeEqs ctx a [] ksExpected a [] ksActual
+         >>= \case
                 Nothing -> return ts'
+                Just ((_aErr1', kErr1), (_aErr2, kErr2))
+                 -> throw $ ErrorTypeMismatch a wh kErr1 kErr2
 
 
 -- | Check that some types all have the given kind.

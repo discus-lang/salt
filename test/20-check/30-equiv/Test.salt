@@ -1,21 +1,69 @@
 
--- Check type equivalence checking under alpha conversion.
--- The types themselves are closed, so when deciding equivalence the context
--- starts out empty.
-test type
- λ[ f: ∀[a: #Data]. [a] → [a]
-  , g: ∀[b: #Data]. [b] → [b]
-  , b: #Bool ]
- → if b then f else g
+-- Type equivalence checking under alpha conversion.
+--   The types themselves are closed, so when deciding equivalence the
+--   context starts out empty.
+test type equiv'alpha
+ =      λ[ f: ∀[a: #Data]. [a] → [a]
+         , g: ∀[b: #Data]. [b] → [b]
+         , b: #Bool ]
+        → if b then f else g
 
 
--- Check equivalence where the type mentions a variable bound by a term
--- level abstraction. The context for type equivalence checking must extend
--- the context of the term it appears in.
-test type
- λ@[ a: #Data] →
-  λ[ f: ∀[b: #Data]. [a, b] → [a, b, a]
-   , g: ∀[c: #Data]. [a, c] → [a, c, a]
-   , b: #Bool ]
- → if b then f else g
+-- Type mentions a variable bound by a term level abstraction.
+--   The context for type equivalence checking must extend the context of the
+--   term it appears in.
+test type equiv'alpha'local
+ =      λ@[ a: #Data] →
+         λ[ f: ∀[b: #Data]. [a, b] → [a, b, a]
+          , g: ∀[c: #Data]. [a, c] → [a, c, a]
+          , b: #Bool ]
+        → if b then f else g
 
+
+-- Type equivalence where variables being compared are bumped.
+test type equiv'bump
+ =      λ@[a: #Data] → λ@[a: #Data] → λ[f: [a^1] → [a^1], x: a^1] → f x
+
+
+-- Type equivalence where the variables being compared have different bumps.
+-- Type mentions a variable bound by a term level abstraction.
+--   The context for type equivalence checking must extend the context of the
+--   term it appears in.
+test type equiv'alpha'local
+ =      λ@[ a: #Data] →
+         λ[ f: ∀[b: #Data]. ∀[b: #Data]. [a, b^1] → [a, b^1, b]
+          , g: ∀[c: #Data]. ∀[d: #Data]. [a, c]   → [a, c,   d]
+          , b: #Bool ]
+        → if b then f else g
+
+
+-- Type equivalene where a binding shadows a synonym.
+type nat: #Data = #Nat
+test type equiv'syn'shadow
+ =     λ[ f: ∀[a: #Data]. ∀[nat: #Data]. [a] → [nat, a, nat^1]
+        , g: ∀[b: #Data]. ∀[c:   #Data]. [b] → [c,   b, nat]
+        , b: #Bool ]
+        → if b then f else g
+
+
+-- Type equivalence when the type bound by a synonym is shadowed by a
+-- local binding. When resolving synonyms we need to lift the right hand
+-- sides across names used as local parameters.
+type bar: #Data = #Nat
+type foo: #Data = bar
+test type equiv'syn'shadow'pull
+ =     λ[ f: ∀[a: #Data]. ∀[nat: #Data]. [a] → [nat, a, nat^1]
+        , g: ∀[b: #Data]. ∀[bar: #Data]. [b] → [bar, b, foo]
+        , b: #Bool ]
+        → if b then f else g
+
+
+-- Type equivalene where a binding shadows a synonym.
+--  TODO: this the second nat^1 is out of scope, which should have been
+--  picked up by the kind checker.
+-- type nat: #Data = #Nat
+-- test type equiv'syn'shadow
+--  =     λ[ f: ∀[a: #Data]. ∀[nat: #Data]. [a] → [nat, a, nat^1]
+--         , g: ∀[b: #Data]. ∀[c:   #Data]. [b] → [c,   b, nat^1]
+--         , b: #Bool ]
+--         → if b then f else g

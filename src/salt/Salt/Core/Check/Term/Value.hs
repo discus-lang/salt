@@ -106,10 +106,11 @@ checkValueIs
 checkValueIs a wh ctx tExpected v
  = do   tActual <- checkValue a wh ctx v
 
-        case checkTypeEqs ctx a [] [tExpected] a [] [tActual] of
-         Nothing -> return ()
-         Just ((_a1, t1Err), (_a2, t2Err))
-          -> throw $ ErrorTypeMismatch a wh t1Err t2Err
+        checkTypeEqs ctx a [] [tExpected] a [] [tActual]
+         >>= \case
+                Nothing -> return ()
+                Just ((_a1, t1Err), (_a2, t2Err))
+                 -> throw $ ErrorTypeMismatch a wh t1Err t2Err
 
 
 -- | Check an environment binding and add it to the context.

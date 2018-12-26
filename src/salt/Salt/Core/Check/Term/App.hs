@@ -29,10 +29,11 @@ checkTermAppTypes a wh ctx tFun tsArg
          $ throw $ ErrorAppTermTypeWrongArity a wh bksParam tsArg
 
         -- Check the parameter and argument kinds match.
-        (case checkTypeEqs ctx a [] (map snd bksParam) a [] ksArg of
+        (checkTypeEqs ctx a [] (map snd bksParam) a [] ksArg
+         >>= \case
+                Nothing -> return ()
                 Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                  -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
-                _ -> return ())
+                  -> throw $ ErrorTypeMismatch a wh tErr1 tErr2)
 
         -- Substitute arguments into the result type to instantiate
         -- the type scheme.
@@ -68,10 +69,11 @@ checkTermAppTerms a wh ctx tFun msArg
          <- checkTerms a wh ctx (Check tsParam) msArg
 
         -- Check the parameter and argument types match.
-        case checkTypeEqs ctx a [] tsParam a [] tsArg of
-         Just ((_aErr1', tErr1), (_aErr2', tErr2))
-           -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
-         _ -> return  (msArg', tsResult, esArgs)
+        checkTypeEqs ctx a [] tsParam a [] tsArg
+         >>= \case
+                Nothing -> return  (msArg', tsResult, esArgs)
+                Just ((_aErr1', tErr1), (_aErr2', tErr2))
+                 -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
 
 
 -- | Check the application of a functional term to an argument term.
@@ -98,8 +100,9 @@ checkTermAppTerm a wh ctx tFun mArg
          $ throw $ ErrorAppTermTermWrongArity a wh tsParam tsArg
 
         -- Check the parameter and argument tpyes match.
-        case checkTypeEqs ctx a [] tsParam a [] tsArg of
-         Just ((_aErr1', tErr1), (_aErr2', tErr2))
-           -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
-         _ -> return (mArg', tsResult, esArg)
+        checkTypeEqs ctx a [] tsParam a [] tsArg
+         >>= \case
+                Nothing -> return (mArg', tsResult, esArg)
+                Just ((_aErr1', tErr1), (_aErr2', tErr2))
+                 -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
 

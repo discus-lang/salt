@@ -112,6 +112,8 @@ contextBindTermParams mps ctx
 --   * If it is transparanetly bound as a synonym we get both the kind and body type,
 --   * If it is opaquely bound by an abstraction we get just the kind.
 --
+--  TODO: lift synonyms through binders in the context.
+
 contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Kind a, Maybe (Type a)))
 contextResolveTypeBound (BoundWith n d0) ctx
  = goLocal d0 (contextLocal ctx)
