@@ -6,6 +6,7 @@ import Control.Exception
 import Data.Typeable
 
 
+-- Error messages that the type checker can throw.
 data Error a
         -- Malformed AST ------------------------
         = ErrorKindMalformed

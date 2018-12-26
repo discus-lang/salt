@@ -5,6 +5,7 @@ import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Type.Base
 import qualified Salt.Data.List as List
 
+
 -- | Check some term function parameters.
 checkTermParams
         :: Annot a => a -> [Where a]

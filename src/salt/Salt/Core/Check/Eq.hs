@@ -30,13 +30,9 @@ checkTypeEq ctx aL psL tL aR psR tR
  where
         -- Look through annotations.
         goAnn
-         | TAnn aL' tL' <- tL
-         = checkTypeEq ctx aL' psL tL' aR  psR tR
-
-         | TAnn aR' tR' <- tR
-         = checkTypeEq ctx aL  psL tL  aR' psR tR'
-
-         | otherwise = goSynL
+         | TAnn aL' tL' <- tL   = checkTypeEq ctx aL' psL tL' aR  psR tR
+         | TAnn aR' tR' <- tR   = checkTypeEq ctx aL  psL tL  aR' psR tR'
+         | otherwise            = goSynL
 
         -- Lookup whether a variable is bound as a parameter or is a synonym.
         --   If it's a synonym then we unfold it in-place.
