@@ -10,10 +10,8 @@ import Salt.Core.Codec.Text             ()
 import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
-import qualified Salt.Data.Pretty       as P
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
-import qualified Text.Show.Pretty       as Text
 
 
 -- | Check and elaborate a term producing, a new term and its type.
@@ -447,14 +445,15 @@ checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
                 , [TMap tk tv]
                 , esKeys ++ esVals)
 
+-- (t-check) ----------------------------------------------
+-- Switch modes in bidirectional type checking.
+--  We don't have an explicit check rule for this term,
+--  so synthesise result types for it then compare the expected types
+--  against the synthesised types.
 checkTermWith a wh ctx (Check tsExpected) m
  = checkTermIs a wh ctx tsExpected m
 
--- TODO: throw malformed AST error.
-checkTermWith _ _ _ mode mm
- =  error $ unlines
-        [ "checkTerm: no match"
-        , Text.ppShow mode
-        , Text.ppShow mm
-        , P.render $ P.ppr () mm ]
+-- We don't know how to check this sort of term.
+checkTermWith a wh _ctx _mode mm
+ = throw $ ErrorTermMalformed a wh mm
 
