@@ -216,15 +216,16 @@ pTypeParams
 -- | Parser for some type signatures.
 pTypeSigs :: Parser [(Bind, Type Location)]
 pTypeSigs
- = pSquared
+ = (pSquared
         $ flip P.sepEndBy1 (pTok KComma)
-        $ do b <- pBind; pTok KColon; t <- pType; return (b, t)
+        $ do b <- pBind; pTok KColon; t <- pType; return (b, t))
+ <?> "some type signatures"
 
 
 -- | Parser for some type fields.
 pTypeFields :: Parser [(Name, TypeArgs Location)]
 pTypeFields
- = flip P.sepEndBy (pTok KComma)
+ = (flip P.sepEndBy (pTok KComma)
  $ do   n       <- pLbl
         pTok KColon
         ts      <- P.choice
@@ -235,5 +236,6 @@ pTypeFields
                 , do    ts <- pSquared $ P.sepEndBy pType (pTok KComma)
                         return $ TGTypes ts
                 ]
-        return (n, ts)
+        return (n, ts))
+ <?> "some field types"
 

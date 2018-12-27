@@ -16,13 +16,15 @@ import qualified Data.Text                as Text
 
 
 -- | Scanner for Salt.
---   TODO: bake filename into tokens.
 scanner :: Monad m => FilePath -> IW.Scanner m IW.Location [Char] (At Token)
 scanner _fileName
  = IW.skip Char.isSpace
  $ IW.alts
-        [ fmap (stamp (KComment . Text.pack)) $ IW.scanHaskellCommentLine
-        , fmap (stamp (KComment . Text.pack)) $ IW.scanHaskellCommentBlock
+        [ fmap (stamp (KComment . Text.pack))
+           $ IW.scanHaskellCommentLine
+
+        , fmap (stamp (KComment . Text.pack))
+           $ IW.scanHaskellCommentBlock
 
         , fmap (stamp id)
            $ IW.munchPred Nothing (\_ix c -> elem c ['<', '-', '>', ':', '='])
@@ -98,7 +100,6 @@ scanner _fileName
                 "case"          -> Just KCase
                 "otherwise"     -> Just KOtherwise
 
-
                 _               -> Nothing
 
         , fmap (stamp KVar) scanVarName
@@ -110,18 +111,20 @@ scanner _fileName
 
         , fmap (stamp KNat) $ scanNat
         , fmap (stamp KInt) $ IW.scanInteger
-        , fmap (stamp (KText . Text.pack)) $  IW.scanHaskellString
+
+        , fmap (stamp (KText . Text.pack)) $ IW.scanHaskellString
         ]
  where  -- Stamp a token with source location information.
         stamp k (l, t)
           = At l (k t)
 
 -- | Check if a Text value matches a predicate outside of the lexer.
--- This is used by the pretty-printer to decide whether to print an identifier
--- as a normal identifier, or if it must be quoted.
+--   This is used by the pretty-printer to decide whether to print an identifier
+--   as a normal identifier, or if it must be quoted.
 checkMatch :: (Int -> Char -> Bool) -> Text -> Bool
 checkMatch match text
  = all (uncurry match) ([0..] `zip` Text.unpack text)
+
 
 isIdentChar :: Char -> Bool
 isIdentChar c = Char.isAlphaNum c || c == '\''
@@ -132,6 +135,7 @@ scanVarName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
 scanVarName
  = IW.munchPred Nothing matchVar (Just . Text.pack)
 {-# INLINE scanVarName #-}
+
 
 matchVar :: Int -> Char -> Bool
 matchVar 0 c = Char.isLower c
@@ -144,6 +148,7 @@ scanConName
  = IW.munchPred Nothing matchCon (Just . Text.pack)
 {-# INLINE scanConName #-}
 
+
 matchCon :: Int -> Char -> Bool
 matchCon 0 c = Char.isUpper c
 matchCon _ c = isIdentChar c
@@ -155,10 +160,12 @@ scanSymName
  = IW.munchPred Nothing matchSym acceptRequireLength2
 {-# INLINE scanSymName #-}
 
+
 acceptRequireLength2 :: [Char] -> Maybe Text.Text
 acceptRequireLength2 []     = Nothing
 acceptRequireLength2 [_]    = Nothing
 acceptRequireLength2 (_:cs) = Just $ Text.pack cs
+
 
 matchSym :: Int -> Char -> Bool
 matchSym 0 c = c == '\''

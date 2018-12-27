@@ -42,10 +42,9 @@ pTerm_
                 ms      <- P.choice
                                 [ do   pSquared $ flip P.sepEndBy (pTok KComma) pTerm
                                 , do   m <- pTermArg; return [m]]
-
-                -- TODO: check properly
-                let [t] = ts
-                return  $ MVariant l ms t
+                case ts of
+                 [t] -> return $ MVariant l ms t
+                 _   -> P.unexpected "type vector"
 
          , do   m <- pTerm
                 return $ MThe ts m ]
@@ -56,10 +55,12 @@ pTerm_
         m       <- pTerm
         return  $ MBox m
 
+
  , do   -- 'run' Term
         pTok KRun
         m       <- pTerm
         return  $ MRun m
+
 
  , do   -- 'λ' TermParams+ '->' Term
         pTok KFun
@@ -67,6 +68,7 @@ pTerm_
         pTok KArrowRight
         mBody   <- pTerm
         return  $ foldr MAbs mBody mps
+
 
  , do   -- 'let' '[' Var,* ']' '=' Term ';' Term
         pTok KLet
@@ -177,6 +179,7 @@ pTermAppArgs mFun
         return $ foldl MApp mFun gsArgs
 
  , do   return mFun]
+ <?> "a term application"
 
 
 -- | Parse arguments to the given function
@@ -188,7 +191,7 @@ pTermAppArgsSat mFun
         return  $ MAps mFun gsArgs
 
  , do   return mFun ]
-
+ <?> "a primitive application"
 
 -- | Parse some term arguments.
 pTermArgs :: Parser (TermArgs Location)
@@ -219,15 +222,17 @@ pTermArgs
  <?> "some term arguments"
 
 
+-- | Parser for a type argument.
 pTermArgType :: Parser (Type Location)
 pTermArgType
  = do   -- '@' Type
         pTok KAt
         t       <- pTypeArg
         return t
- <?> "a term argument"
+ <?> "a type argument"
 
 
+-- | Parser for a term argument or record projection.
 pTermArgProj :: Parser (Term Location)
 pTermArgProj
  = do   mTerm   <- pTermArg
@@ -236,6 +241,7 @@ pTermArgProj
  <?> "a term or record projection"
 
 
+-- | Parser for a term argument.
 pTermArg :: Parser (Term Location)
 pTermArg
  = P.choice
@@ -269,6 +275,7 @@ pTermArg
         case takePrimValueOfName nPrm of
          Just v  -> return $ MVal v
          Nothing -> P.unexpected "primitive value"
+
 
  , do   -- '[list Type |' Term,* ']'
         P.try $ P.lookAhead $ do
@@ -326,6 +333,7 @@ pTermArg
  <?> "a argument term"
 
 
+-- | Parser for some term parameters.
 pTermParams :: Parser (TermParams Location)
 pTermParams
  = P.choice
@@ -340,8 +348,10 @@ pTermParams
                 $  do b <- pBind; pTok KColon; t <- pType; return (b, t)
         return  $ MPTerms bts
  ]
+ <?> "some term parameters"
 
 
+-- | Parser for a term binding.
 pTermBind :: Parser (Bind, Term Location)
 pTermBind
  = do   -- Var '=' Term
@@ -366,6 +376,7 @@ pTermRecord
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
 
+
         -- '[record' (Lbl '=' Term),* ']'
   , do  P.try $ P.lookAhead $ do
                 pTok KSBra; n <- pVar; pTok KBar
@@ -378,6 +389,7 @@ pTermRecord
                          <?> "a record field")
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
+
 
  , do   -- '[' (Lbl '=' Term)+ ']'
         P.try $ P.lookAhead $ do
@@ -394,7 +406,7 @@ pTermRecord
 
 
 ---------------------------------------------------------------------------------------------------
--- TODO: use the binding forms in the let parser as well.
+-- | Parser for a statement.
 pTermStmt :: Parser ([Bind], Term Location)
 pTermStmt
  = P.choice
@@ -403,6 +415,7 @@ pTermStmt
         pTok KEquals
         mBody   <- pTerm
         return  (bs, mBody)
+
 
  , do   -- Var '=' Term
         -- We need the lookahead here because plain terms
@@ -414,6 +427,7 @@ pTermStmt
         pTok KEquals
         mBody   <- pTerm
         return  ([nBind], mBody)
+
 
  , do   -- Term
         mBody   <- pTerm
@@ -435,13 +449,21 @@ pValue
  , do   pInt    >>= return . VInt
  , do   pText   >>= return . VText
  , do   pTermValueRecord ]
+ <?> "a value"
 
 
+-- | Parser for a list of values, or a single value.
 pValues :: Parser [Value Location]
 pValues
  = P.choice
- [ do   pSquared $ flip P.sepEndBy (pTok KComma) pValue
- , do   v <- pValue; return [v] ]
+ [ do   -- '[' Value,* ']'
+        pSquared $ flip P.sepEndBy (pTok KComma) pValue
+
+ , do   -- Value
+        v <- pValue
+        return [v]
+ ]
+ <?> "some values"
 
 
 -- | Parser for record value.
@@ -457,4 +479,5 @@ pTermValueRecord
                 (pTok KComma)
         pTok KSKet
         return $ VRecord lvs
+ <?> "a record value"
 
