@@ -1,0 +1,6 @@
+test/30-error/31-check-term-decls/Test.salt:6:20
+  Unexpected type: #Bool
+        expecting: #Nat
+
+  1:1    In term declaration "term1"
+
