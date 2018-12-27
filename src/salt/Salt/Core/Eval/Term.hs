@@ -161,26 +161,28 @@ evalTerm s a env (MProject nField mRecord)
           -> case lookup nField nvs of
                 Nothing -> throw $ ErrorProjectMissingField a vRec nField
                 Just vs -> return vs
-         _ -> throw $ ErrorProjectTypeMismatch a vRec nField
+         _ -> throw $ ErrorProjectNotRecord a vRec nField
 
 
 -- Case matching.
--- TODO: proper errors.
-evalTerm s a env (MVarCase mScrut msAlt0)
+evalTerm s a env mm@(MVarCase mScrut msAlt0)
  = do   vScrut  <- evalTerm1 s a env mScrut
 
         let (nScrut, vsData)
              = case vScrut of
                 VVariant l _ vs -> (l, vs)
-                _  -> error "scrut is not a variant"
+                _ -> throw $ ErrorCaseScrutNotVariant a vScrut
 
         let go (MVarAlt nAlt btsPat mBody : msAlt)
                 |  nAlt == nScrut = (btsPat, mBody)
                 |  otherwise      = go msAlt
-            go [] = error "no match in case "
-            go _  = error "malformed alts"
+            go [] = throw $ ErrorCaseNoMatch a vScrut
+            go _  = throw $ ErrorInvalidConstruct a mm
 
         let (btsPat, mBody) = go msAlt0
+
+        when (not $ length btsPat == length vsData)
+         $ throw $ ErrorWrongTermArity a (length btsPat) vsData
 
         let bs   = map fst btsPat
         let env' = envExtendsValue (zip bs vsData) env
@@ -189,9 +191,9 @@ evalTerm s a env (MVarCase mScrut msAlt0)
 
 
 -- If-then-else
--- TODO: proper errors.
-evalTerm s a env (MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
- = let
+evalTerm s a env mm@(MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
+ = loop msCond msThen
+ where
         loop [] []
          = do   evalTerm s a env mElse
 
@@ -200,25 +202,24 @@ evalTerm s a env (MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
                 case vCond of
                  VBool True   -> evalTerm s a env mThen
                  VBool False  -> loop msCond' msThen'
-                 _            -> error "if-then-else runtime type error"
+                 _            -> throw $ ErrorIfsScrutNotBool a vCond
 
-        loop _ _ = error "if cond then length mismatch"
-
-   in   loop msCond msThen
+        loop _ _
+         = throw $ ErrorInvalidConstruct a mm
 
 
 -- Box a computation.
 evalTerm _s _a env (MBox mBody)
  = do   return  [VClosure (Closure env (MPTerms []) mBody)]
 
+
 -- Run a suspension
 evalTerm s a env (MRun mSusp)
  = do   vSusp <- evalTerm1 s a env mSusp
         case vSusp of
-                VClosure (Closure env' (MPTerms []) mBody)
-                 -> evalTerm s a env' mBody
-
-                _ -> error "term to run is not a suspension"
+         VClosure (Closure env' (MPTerms []) mBody)
+           -> evalTerm s a env' mBody
+         _ -> throw $ ErrorRunNotSuspension a vSusp
 
 
 -- List construction.

@@ -11,12 +11,6 @@ data Error a
         { errorAnnot            :: a
         , errorTerm             :: Term a }
 
-        -- | Variable binding is not in the environment.
-        | ErrorVarUnbound
-        { errorAnnot            :: a
-        , errorVarUnbound       :: Bound
-        , errorEnv              :: Env a }
-
         -- | Wrong number of types for eliminator.
         | ErrorWrongTypeArity
         { errorAnnot            :: a
@@ -29,6 +23,14 @@ data Error a
         , errorNumExpected      :: Int
         , errorValues           :: [Value a] }
 
+        -- Varaibles --------------------------------------
+        -- | Variable binding is not in the environment.
+        | ErrorVarUnbound
+        { errorAnnot            :: a
+        , errorVarUnbound       :: Bound
+        , errorEnv              :: Env a }
+
+        -- Applications -----------------------------------
         -- | Runtime type error in application,
         --   as the functional expression is not a closure.
         | ErrorAppTermTypeMismatch
@@ -48,18 +50,6 @@ data Error a
         , errorParams           :: TermParams a
         , errorArgs             :: TermArgs a }
 
-        -- | Runtime type error in record projection.
-        | ErrorProjectTypeMismatch
-        { errorAnnot            :: a
-        , errorProjectNotRecord :: Value a
-        , errorProjectField     :: Name }
-
-        -- | Missing field in record projection.
-        | ErrorProjectMissingField
-        { errorAnnot            :: a
-        , errorProjectRecord    :: Value a
-        , errorProjectField     :: Name }
-
         -- | Unknown primitive operator.
         | ErrorPrimUnknown
         { errorAnnot            :: a
@@ -70,6 +60,41 @@ data Error a
         { errorAnnot            :: a
         , errorPrimName         :: Name
         , errorPrimArgs         :: [Value a] }
+
+        -- Records ----------------------------------------
+        -- | Runtime type error in record projection.
+        | ErrorProjectNotRecord
+        { errorAnnot            :: a
+        , errorProjectNotRecord :: Value a
+        , errorProjectField     :: Name }
+
+        -- | Missing field in record projection.
+        | ErrorProjectMissingField
+        { errorAnnot            :: a
+        , errorProjectRecord    :: Value a
+        , errorProjectField     :: Name }
+
+        -- Variants --------------------------------------
+        | ErrorCaseScrutNotVariant
+        { errorAnnot            :: a
+        , errorCaseScrut        :: Value a }
+
+        | ErrorCaseNoMatch
+        { errorAnnot            :: a
+        , errorCaseScrut        :: Value a }
+
+        -- If-then-else -----------------------------------
+        -- | Scrutinee in 'ifs' construct is not a boolean value.
+        | ErrorIfsScrutNotBool
+        { errorAnnot            :: a
+        , errorValue            :: Value a }
+
+        -- Suspensions ------------------------------------
+        -- | Value to run is not a suspension.
+        | ErrorRunNotSuspension
+        { errorAnnot            :: a
+        , errorValue            :: Value a }
+
         deriving Show
 
 instance (Show a, Typeable a) => Exception (Error a)
