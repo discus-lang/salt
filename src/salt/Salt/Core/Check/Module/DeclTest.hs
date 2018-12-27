@@ -7,6 +7,7 @@ import qualified Salt.Data.List as List
 import qualified Data.Set       as Set
 
 
+---------------------------------------------------------------------------------------------------
 -- | Check test declarations.
 checkDeclTest :: CheckDecl a
 
@@ -34,9 +35,9 @@ checkDeclTest _a ctx (DTest (DeclTestEval a nDecl mBody))
          <- checkTerm a wh ctx Synth mBody
 
         -- The body must be pure.
-        eBody_red <- simplType a wh ctx (TSum esResult)
-        when (not $ isTPure eBody_red)
-         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_red
+        eBody_simp <- simplType a wh ctx (TSum esResult)
+        when (not $ isTPure eBody_simp)
+         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
 
         return  $ DTest $ DeclTestEval a nDecl mBody'
 
@@ -46,15 +47,20 @@ checkDeclTest _a ctx (DTest (DeclTestExec a nDecl mBody))
  = do   let wh  = [WhereTestDecl a nDecl]
 
         -- Check the body term.
-        (mBody', _tResult, esResult)
+        (mBody', tsResult, esResult)
          <- checkTerm a wh ctx Synth mBody
 
         -- The body must be pure.
-        eBody_red <- simplType a wh ctx (TSum esResult)
-        when (not $ isTPure eBody_red)
-         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_red
+        eBody_simp <- simplType a wh ctx (TSum esResult)
+        when (not $ isTPure eBody_simp)
+         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
 
-        -- TODO: check expr returns a suspension
+        -- The result must be a suspension to execute.
+        tsResult_simp <- simplTypes a wh ctx tsResult
+        case tsResult_simp of
+         [t] | isTSusp t        -> return ()
+         _ -> throw $ ErrorTestDeclNotSusp a wh nDecl tsResult
+
         return  $ DTest $ DeclTestExec a nDecl mBody'
 
 
@@ -67,9 +73,9 @@ checkDeclTest _a ctx (DTest (DeclTestAssert a nDecl mBody))
          <- checkTerm a wh ctx (Check [TBool]) mBody
 
         -- The body must be pure.
-        eBody_red <- simplType a wh ctx (TSum esResult)
-        when (not $ isTPure eBody_red)
-         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_red
+        eBody_simp <- simplType a wh ctx (TSum esResult)
+        when (not $ isTPure eBody_simp)
+         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
 
         return  $ DTest $ DeclTestAssert a nDecl mBody'
 
@@ -77,6 +83,7 @@ checkDeclTest _a _ctx decl
  = return decl
 
 
+---------------------------------------------------------------------------------------------------
 -- | Check for rebound test declarations.
 checkDeclTestRebound :: Annot a => [Decl a] -> [Error a]
 checkDeclTestRebound decls
@@ -87,7 +94,8 @@ checkDeclTestRebound decls
          | aDecl        <- annotOfDecl decl
          , Just nDecl   <- nameOfDecl  decl
          , Set.member nDecl nsDup
-         = Just $ ErrorTestDeclRebound aDecl [WhereTestDecl aDecl (Just nDecl)] nDecl
+         = Just $ ErrorTestDeclRebound aDecl
+                        [WhereTestDecl aDecl (Just nDecl)] nDecl
         check _ = Nothing
 
    in   mapMaybe check decls

@@ -58,6 +58,12 @@ data Error a
         , errorNameMaybe        :: Maybe Name
         , errorEffect           :: Type a }
 
+        | ErrorTestDeclNotSusp
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorNameMaybe        :: Maybe Name
+        , errorTypes            :: [Type a] }
+
         -- Structural arity ---------------------
         | ErrorTermsWrongArity
         { errorAnnot            :: a

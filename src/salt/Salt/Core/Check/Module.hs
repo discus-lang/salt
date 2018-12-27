@@ -17,7 +17,8 @@ import qualified Data.Either    as Either
 --   kinded before checking terms that may mention them etc.
 --
 --   We want to do this so we don't accidently reduce type operator
---   applications that were actually ill-kinded.
+--   applications that were actually ill-kinded. We also prefer to see errors
+--   in the term declaratoins before dealing with errors in test declarations.
 --
 checkModule
         :: Annot a

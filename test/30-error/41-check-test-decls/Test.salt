@@ -6,12 +6,15 @@
 test eval test1 = #console'print "hello"
 
 -- Error: term that produces the suspension to execute is not pure.
-test eval test2
+test exec test2
  = do   { #console'print "hello"
         ; box #console'print "world" }
 
+-- Error: term to execute is not a suspension.
+test exec test3 = #true
+
 -- Error: term to assert is not pure
-test assert test3
+test assert test4
  = do   { #console'print "hello"
         ; #true }
 

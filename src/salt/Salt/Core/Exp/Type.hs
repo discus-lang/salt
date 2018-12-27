@@ -115,6 +115,14 @@ instance IsString (Type a) where
 
 
 -- Predicates -------------------------------------------------------------------------------------
+-- | Check if this is the data kind,
+isTData :: Type a -> Bool
+isTData tt
+ = case tt of
+        TData   -> True
+        _       -> False
+
+
 -- | Check if this type is the pure effect.
 isTPure :: Type a -> Bool
 isTPure tt
@@ -123,12 +131,12 @@ isTPure tt
         _        -> False
 
 
--- | Check if this is the data kind,
-isTData :: Type a -> Bool
-isTData tt
+-- | Check if this type is a suspension.
+isTSusp :: Type a -> Bool
+isTSusp tt
  = case tt of
-        TData   -> True
-        _       -> False
+        TSusp _ _ -> True
+        _         -> False
 
 
 -- Compounds --------------------------------------------------------------------------------------

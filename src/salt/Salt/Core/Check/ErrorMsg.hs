@@ -41,8 +41,13 @@ ppre _c (ErrorTestDeclRebound _a _wh nDecl)
  = vcat [ text "Test" %% squotes (pprVar nDecl) %% text "declared multiple times." ]
 
 ppre c  (ErrorTestDeclImpure  _a _wh mnDecl tEffect)
- = vcat [ text "Impure test declaration" %% maybe empty (squotes . pprVar) mnDecl
-        , text "  has effect:" %% ppr c tEffect ]
+ = vcat [ text "Test" %% maybe empty (squotes . pprVar) mnDecl %% text "is impure"
+        , text "  with effect:" %% ppr c tEffect ]
+
+ppre c  (ErrorTestDeclNotSusp  _a _wh mnDecl tsBody)
+ = vcat [ text "Test" %% maybe empty (squotes . pprVar) mnDecl
+                      %% text "does not produce a suspension to execute."
+        , text "  actual types:" %% squared (map (ppr c) tsBody) ]
 
 
 -- Structural arity ---------------------------------------
