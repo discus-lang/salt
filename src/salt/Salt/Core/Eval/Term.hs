@@ -13,9 +13,14 @@ import qualified Data.Set               as Set
 
 
 ---------------------------------------------------------------------------------------------------
+-- | The usual shape of evaluation functions.
+type Eval a x y
+        = Annot a => State a -> a -> Env a -> x -> IO y
+
+
+---------------------------------------------------------------------------------------------------
 -- | Evaluate a term in the given environment.
-evalTerm :: Annot a
-         => State a -> a -> Env a -> Term a -> IO [Value a]
+evalTerm :: Eval a (Term a) [Value a]
 
 -- Pass through annotations.
 evalTerm s _a env (MAnn a' m)
@@ -194,9 +199,7 @@ evalTerm s a env mm@(MVarCase mScrut msAlt0)
 evalTerm s a env mm@(MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
  = loop msCond msThen
  where
-        loop [] []
-         = do   evalTerm s a env mElse
-
+        -- Try all the conditions from top to bottom.
         loop (mCond : msCond') (mThen : msThen')
          = do   vCond   <- evalTerm1 s a env mCond
                 case vCond of
@@ -204,13 +207,18 @@ evalTerm s a env mm@(MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
                  VBool False  -> loop msCond' msThen'
                  _            -> throw $ ErrorIfsScrutNotBool a vCond
 
+        -- No condition evaluated to true, so run the else branch.
+        loop [] []
+         = do   evalTerm s a env mElse
+
+        -- We have a different number of condition and branch terms.
         loop _ _
          = throw $ ErrorInvalidConstruct a mm
 
 
 -- Box a computation.
 evalTerm _s _a env (MBox mBody)
- = do   return  [VClosure (Closure env (MPTerms []) mBody)]
+ =      return  [VClosure (Closure env (MPTerms []) mBody)]
 
 
 -- Run a suspension
@@ -241,10 +249,7 @@ evalTerm _s a _ mm
 
 ---------------------------------------------------------------------------------------------------
 -- | Like `evalTerm`, but expect a single result value.
-evalTerm1
-        :: Annot a
-        => State a -> a -> Env a
-        -> Term a -> IO (Value a)
+evalTerm1 :: Eval a (Term a) (Value a)
 evalTerm1 s a env m
  = do   vs      <- evalTerm s a env m
         case vs of
@@ -253,21 +258,13 @@ evalTerm1 s a env m
 
 
 -- | Evaluate a list of terms, producing a single value for each.
-evalTerms
-        :: Annot a
-        => State a -> a -> Env a
-        -> [Term a] -> IO [Value a]
-
+evalTerms :: Eval a [Term a] [Value a]
 evalTerms s a env ms
  = mapM (evalTerm1 s a env) ms
 
 
 ---------------------------------------------------------------------------------------------------
-evalTermArgs
-        :: Annot a
-        => State a -> a -> Env a
-        -> TermArgs a -> IO (TermNormals a)
-
+evalTermArgs :: Eval a (TermArgs a) (TermNormals a)
 evalTermArgs s a env mgs
  = case mgs of
         MGTerm  m
