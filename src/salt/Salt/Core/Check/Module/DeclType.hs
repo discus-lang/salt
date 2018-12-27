@@ -11,6 +11,7 @@ import qualified Data.Map                       as Map
 import qualified Data.Set                       as Set
 
 
+---------------------------------------------------------------------------------------------------
 -- | Check kind signatures of type declarations.
 checkDeclTypeSig :: CheckDecl a
 checkDeclTypeSig _a ctx (DType (DeclType a n tpss kResult tBody))
@@ -101,4 +102,16 @@ checkDeclTypeRecursive decls
                 DType (DeclType a n' _ _ _)
                  | n == n'      -> Just (n, a)
                 _               -> Nothing
+
+
+---------------------------------------------------------------------------------------------------
+-- | Make a kind signature from the parameters and result kind of a type
+--   declaration.
+makeKindOfDeclType :: [TypeParams a] -> Kind a -> Kind a
+makeKindOfDeclType pss0 kResult
+ = loop pss0
+ where
+        loop [] = kResult
+        loop (TPTypes bks : pss')
+         = TArr (map snd bks) $ loop pss'
 

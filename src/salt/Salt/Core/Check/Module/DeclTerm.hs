@@ -8,6 +8,7 @@ import qualified Salt.Data.List as List
 import qualified Data.Set       as Set
 
 
+---------------------------------------------------------------------------------------------------
 -- | Check type signatures of term declarations.
 checkDeclTermSig :: CheckDecl a
 checkDeclTermSig _a ctx (DTerm (DeclTerm a n mpss tsResult mBody))
@@ -56,4 +57,40 @@ checkDeclTermRebound decls
 
    in   mapMaybe check decls
 
+
+---------------------------------------------------------------------------------------------------
+-- | Make a type signature from the annotations on a term declaration.
+--
+--   This will fail if the term declaration is malformed so that it tries
+--   to define a polymorphic binding that produces no value:
+--
+-- @ term thing @[a: #Data]: [] = []
+-- @
+--
+--   We can't produce a type for this as the body of a forall must have
+--   arity one. The syntax of types ensures this is always the case,
+--   but we need to check for it explicitly in term bindings.
+--
+makeTypeOfDeclTerm :: Decl a -> Either (Error a) [(Name, Type a)]
+makeTypeOfDeclTerm decl
+ = case decl of
+        DTerm (DeclTerm a n pss0 tsResult _mBody)
+         -> case loop tsResult pss0 of
+                [t] -> Right [(n, t)]
+                _   -> Left $ ErrorAbsTermNoValueForForall a
+                                [ WhereTermDecl a n ] pss0
+
+        DType{} -> Right []
+        DTest{} -> Right []
+
+ where
+        loop tsResult [] = tsResult
+
+        loop tsResult (MPTerms bts : pss')
+         = [TFun (map snd bts) (loop tsResult pss')]
+
+        loop tsResult (MPTypes bts : pss')
+         = case loop tsResult pss' of
+                [t] -> [TForall bts t]
+                _   -> []
 

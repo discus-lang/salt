@@ -14,3 +14,7 @@ term term3 [x: #Nat, x: #Nat]: #Nat = x
 -- Term declaration is rebound
 term term4: #Nat = 1
 term term4: #Nat = 2
+
+-- Term declaration does not produce a value.
+term term5 @[a: #Data]: [] = []
+test type term5 = term5

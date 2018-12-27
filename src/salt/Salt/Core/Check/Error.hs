@@ -114,6 +114,7 @@ data Error a
         , errorWhere            :: [Where a]
         , errorNames            :: [Name] }
 
+
         -- term
         | ErrorAbsTermImpure
         { errorAnnot            :: a
@@ -124,6 +125,11 @@ data Error a
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorNames            :: [Name] }
+
+        | ErrorAbsTermNoValueForForall
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorParams           :: [TermParams a] }
 
         -- Application problems ------------------
         | ErrorUnsaturatedPrim

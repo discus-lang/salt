@@ -24,3 +24,9 @@ test/30-error/30-check-term-sigs/Test.salt:16:1
 
   16:1   In term declaration "term4"
 
+test/30-error/30-check-term-sigs/Test.salt:19:1
+  Polymorphic term does not produce a value
+   with parameters @[a: #Data]
+
+  19:1   In term declaration "term5"
+

@@ -7,8 +7,8 @@ import Salt.Core.Check.Module.Base
 import Salt.Core.Check.Type
 import Salt.Core.Check.Term
 import Salt.Core.Check.Term.Base
-
-import qualified Data.Map                       as Map
+import qualified Data.Map       as Map
+import qualified Data.Either    as Either
 
 
 -- | Check a whole module.
@@ -52,7 +52,7 @@ checkModule a mm
                  else do
                         let nktsDeclType
                                 = [ ( n
-                                  , ( makeDeclKindOfParamsResult pss kResult
+                                  , ( makeKindOfDeclType pss kResult
                                     , makeTAbsOfParams pss tBody))
                                   | DType (DeclType _a n pss kResult tBody) <- decls' ]
                         let ctx' = ctx { contextModuleType = Map.fromList nktsDeclType }
@@ -78,13 +78,15 @@ checkModule a mm
                 --  though they are permitted to be recursive.
                 let errsRebound = checkDeclTermRebound decls
 
-                let errs = errsSig ++ errsRebound
+                let (errsDeclTerm, ntssDeclTerm)
+                     = Either.partitionEithers $ map makeTypeOfDeclTerm decls'
+
+                let errs = errsSig ++ errsRebound ++ errsDeclTerm
+                let ntsDeclTerm = concat ntssDeclTerm
+
                 if not $ null errs
                  then return (ctx, mm, errs)
                  else do
-                        let ntsDeclTerm
-                                = [ (n, makeDeclTypeOfParamsResult pss tsResult)
-                                  | DTerm (DeclTerm _a n pss tsResult _mBody) <- decls' ]
                         let ctx' = ctx { contextModuleTerm = Map.fromList ntsDeclTerm }
                         goTermDecls ctx' decls'
 
@@ -112,29 +114,4 @@ checkModule a mm
                 if null errs
                  then return (ctx, mm { moduleDecls = decls' }, errs)
                  else return (ctx, mm, errs)
-
-
-makeDeclKindOfParamsResult :: [TypeParams a] -> Kind a -> Kind a
-makeDeclKindOfParamsResult pss0 kResult
- = loop pss0
- where
-        loop [] = kResult
-        loop (TPTypes bks : pss')
-         = TArr (map snd bks) $ loop pss'
-
-
--- TODO: throw proper arity errors.
-makeDeclTypeOfParamsResult :: [TermParams a] -> [Type a] -> Type a
-makeDeclTypeOfParamsResult pss0 tsResult
- = case loop pss0 of
-        [t]     -> t
-        _       -> error "arity error when making decl type"
- where
-        loop []                   = tsResult
-        loop (MPTerms bts : pss') = [TFun (map snd bts) (loop pss')]
-
-        loop (MPTypes bts : pss')
-         = case loop pss' of
-                [t] -> [TForall bts t]
-                _   -> error "arity error when making decl type"
 

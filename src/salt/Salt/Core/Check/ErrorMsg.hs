@@ -92,6 +92,9 @@ ppre _ (ErrorAbsTermBindConflict _a _wh ns)
  = vcat [ text "Duplicate term binders at same level"
         , text " with names" %% braced (map pprVar ns) ]
 
+ppre c (ErrorAbsTermNoValueForForall _a _wh ps)
+ = vcat [ text "Polymorphic term does not produce a value"
+        , text " with parameters" %% hsep (map (ppr c) ps) ]
 
 -- Unexpected types ---------------------------------------
 ppre c (ErrorTypeMismatch _a _wh tExpected tActual)

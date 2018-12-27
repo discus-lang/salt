@@ -450,6 +450,7 @@ checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
 checkTermWith a wh ctx (Check tsExpected) m
  = checkTermIs a wh ctx tsExpected m
 
+-- TODO: throw malformed AST error.
 checkTermWith _ _ _ mode mm
  =  error $ unlines
         [ "checkTerm: no match"
