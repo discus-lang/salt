@@ -153,6 +153,9 @@ Term
   |   mcse n Term Lblⁿ Typeⁿ Termⁿ  ('case' Term 'of'
                                         '{' (Lbl '[' (Var ':' Type),* ']' → Term);+ '}')
 
+  |   mbox   Term                   ('box' Term)
+  |   mrun   Term                   ('run' Term)
+
   |   mlst n Type Termⁿ             ('[list' Type '|' Term,* ']')
   |   mset n Type Termⁿ             ('[set'  Type '|' Term,* ']')
   |   mmap n Type Type Termⁿ Termⁿ  ('[map'  Type Type '|' TermMapBind,* ']')

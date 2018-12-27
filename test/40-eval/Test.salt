@@ -1,8 +1,81 @@
 
--- term oneList @[a: #Data] [x: a]: #List a
---  = #list'one @a x
+-- Test out all the cases in the evaluator.
 
-term oneList @[a: #Data] [x: a]: #List a
- = [list a| x]
+-- (ev-mmm) -----------------------------------------------
+test eval eval'mmm'multi = [5, 5]
 
-test eval list = oneList @#Nat 5
+
+-- (ev-var-clo) -------------------------------------------
+term thing @[a: #Data] [x: a]: a
+ = x
+
+test eval eval'var'clo
+ = thing @#Nat
+
+
+-- (ev-abt) -----------------------------------------------
+test eval eval'abs'type
+ = (λ@[a: #Data] [y: a] → y) @#Nat
+
+
+-- (ev-abm) -----------------------------------------------
+test eval eval'abs'term
+ = (λ[x: #Nat] [y: #Nat]  → x) [5]
+
+
+-- (ev-aps-prim) ------------------------------------------
+test eval eval'aps'prim
+ = #nat'add [2, 3]
+
+
+-- (ev-aps) -----------------------------------------------
+test eval eval'aps'term'term
+ = (λ[x: #Nat] → #nat'add [x, x]) 5
+
+test eval eval'aps'term'terms
+ = (λ[x: #Nat, y: #Nat] → #nat'add [x, y]) [2, 3]
+
+test eval eval'aps'term'type
+ = (λ@[a: #Data] → λ[x: a] → x) @#Nat
+
+
+-- (ev-let) -----------------------------------------------
+test eval eval'let
+ = let [x, y] = [2, 3];
+   #nat'add [x, y]
+
+
+-- (ev-rec) -----------------------------------------------
+test eval eval'rec
+ = [ x = [#nat'add [2, 3], 5]
+   , y = [#nat'add [4, 5], 9] ]
+
+
+-- (ev-prj) -----------------------------------------------
+test eval eval'prj
+ = [ x = [#nat'add [2, 3], 5]
+   , y = 23].x
+
+
+-- (ev-lst) -----------------------------------------------
+term someList @[a: #Data] [x: a]: #List a
+ = [list a| x, x]
+
+test eval eval'list
+ = someList @#Nat 5
+
+
+-- (ev-set) -----------------------------------------------
+term someSet  @[a: #Data] [x: a, y: a]: #Set a
+ = [set a| x, y]
+
+test eval eval'set
+ = someSet @#Nat [5, 6]
+
+
+-- (ev-map) -----------------------------------------------
+term someMap  @[tk: #Data, tv: #Data] [k: tk, v: tv]: #Map [tk, tv]
+ = [map tk tv| k := v ]
+
+test eval eval'map
+ = someMap @[#Nat, #Symbol] [5, 'Derp]

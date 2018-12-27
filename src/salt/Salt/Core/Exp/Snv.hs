@@ -7,7 +7,7 @@ import Salt.Core.Exp.Ups
 -- | A substitution of things for names.
 data Snv x
         = Snv [((Name, Depth), x)]
-        deriving Show
+        deriving (Show, Eq, Ord)
 
 
 -- | An empty substitution.

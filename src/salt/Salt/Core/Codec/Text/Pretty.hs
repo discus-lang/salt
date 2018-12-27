@@ -347,10 +347,10 @@ instance Pretty c (EnvBinds a) where
   = case eb of
         EnvTypes  nts
          -> text "@"
-         %  squared [ pprVar n % text ":" %% ppr c t | (n, t) <- Map.toList nts ]
+         %  squared [ pprVar n %% text "=" %% ppr c t | (n, t) <- Map.toList nts ]
 
         EnvValues nvs
-         -> squared [ pprVar n % text ":" %% ppr c v | (n, v) <- Map.toList nvs ]
+         -> squared [ pprVar n %% text "=" %% ppr c v | (n, v) <- Map.toList nvs ]
 
 
 pprNameAsIdentifier :: (Int -> Char -> Bool) -> Text -> Text -> Name -> Doc

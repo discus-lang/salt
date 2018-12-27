@@ -23,24 +23,26 @@ type Eval a x y
 -- | Evaluate a term in the given environment.
 evalTerm :: Eval a (Term a) [Value a]
 
--- Pass through annotations.
+-- (ev-ann) -----------------------------------------------
 evalTerm s _a env (MAnn a' m)
  = evalTerm s a' env m
 
--- Multi value return.
-evalTerm s a env (MKey MKTerms [MGTerms ms])
+-- (ev-mmm) -----------------------------------------------
+evalTerm s a env (MTerms ms)
  = evalTerms s a env ms
 
--- Type ascription.
-evalTerm s a env (MKey MKThe [MGTypes [_], MGTerm m])
+
+-- (ev-the) -----------------------------------------------
+evalTerm s a env (MThe _ m)
  = evalTerm s a env m
 
--- Values.
-evalTerm _s _ _  (MRef (MRVal v))
+
+-- (ev-val) -----------------------------------------------
+evalTerm _s _ _  (MVal v)
  = return [v]
 
 
--- Variables
+-- (ev-var) -----------------------------------------------
 evalTerm s a env (MVar u@(Bound n))
  -- Bound in local environment.
  | Just v       <- envLookupValue n env
@@ -63,12 +65,17 @@ evalTerm s a env (MVar u@(Bound n))
  = throw $ ErrorVarUnbound a u env
 
 
--- Function abstraction.
+-- (ev-abt) -----------------------------------------------
+evalTerm _s _a env (MAbt bks mBody)
+ =      return [VClosure (Closure env (MPTypes bks) mBody)]
+
+
+-- (ev-abm) -----------------------------------------------
 evalTerm _s _a env (MAbm bts mBody)
  =      return [VClosure (Closure env (MPTerms bts) mBody)]
 
 
--- Prim-term application
+-- (ev-aps-prim) ------------------------------------------
 evalTerm s a env (MAps (MPrm nPrim) mgssArg)
  = case Map.lookup nPrim Ops.primOps of
         Just (Ops.PP _name _type step _docs)
@@ -84,14 +91,14 @@ evalTerm s a env (MAps (MPrm nPrim) mgssArg)
         Nothing -> throw $ ErrorPrimUnknown a nPrim
 
 
--- Term-term, term/type application.
+-- (ev-aps) -----------------------------------------------
 evalTerm s a env (MApp mFun mgs)
  = do   vsCloTerm <- evalTerm s a env mFun
         case vsCloTerm of
          [VClosure (Closure env' mps@(MPTerms bts) mBody)]
           -> case mgs of
                 MGTerm m
-                 -> do  let bs    = map fst bts
+                 -> do  let bs  = map fst bts
                         vsArg   <- evalTerm s a env m
                         when (not $ length vsArg == length bs)
                          $ throw $ ErrorWrongTermArity a (length bs) vsArg
@@ -125,7 +132,7 @@ evalTerm s a env (MApp mFun mgs)
          _  -> throw $ ErrorAppTermBadClosure a vsCloTerm
 
 
--- Let-binding.
+-- (ev-let) -----------------------------------------------
 evalTerm s a env (MLet bts mBind mBody)
  = do   vsBind <- evalTerm s a env mBind
         let nWanted = length bts
@@ -139,21 +146,35 @@ evalTerm s a env (MLet bts mBind mBody)
          else throw $ ErrorWrongTermArity a nWanted vsBind
 
 
--- Data constructor application.
-evalTerm s a env (MData nCon tsArg msArg)
- = do   vsArg  <- evalTerms s a env msArg
-        -- TODO: subst into types.
-        return  [VData nCon tsArg vsArg]
+-- (ev-ifs) -----------------------------------------------
+evalTerm s a env mm@(MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
+ = loop msCond msThen
+ where
+        -- Try all the conditions from top to bottom.
+        loop (mCond : msCond') (mThen : msThen')
+         = do   vCond   <- evalTerm1 s a env mCond
+                case vCond of
+                 VBool True   -> evalTerm s a env mThen
+                 VBool False  -> loop msCond' msThen'
+                 _            -> throw $ ErrorIfsScrutNotBool a vCond
+
+        -- No condition evaluated to true, so run the else branch.
+        loop [] []
+         = do   evalTerm s a env mElse
+
+        -- We have a different number of condition and branch terms.
+        loop _ _
+         = throw $ ErrorInvalidConstruct a mm
 
 
--- Record constructor application.
+-- (ev-rec) -----------------------------------------------
 evalTerm s a env (MRecord nsField msArg)
  | length nsField == length msArg
  = do   vssArg <- mapM (evalTerm s a env) msArg
         return  [VRecord $ zip nsField vssArg]
 
 
--- Record field projection.
+-- (ev-prj) -----------------------------------------------
 evalTerm s a env (MProject nField mRecord)
  = do   vRec  <- evalTerm1 s a env mRecord
         case vRec of
@@ -163,8 +184,9 @@ evalTerm s a env (MProject nField mRecord)
                 Just vs -> return vs
          _ -> throw $ ErrorProjectNotRecord a vRec nField
 
+-- TODO: add ev-vnt, and tests for variant and case.
 
--- Case matching.
+-- (ev-cse) -----------------------------------------------
 evalTerm s a env mm@(MVarCase mScrut msAlt0)
  = do   vScrut  <- evalTerm1 s a env mScrut
 
@@ -190,33 +212,14 @@ evalTerm s a env mm@(MVarCase mScrut msAlt0)
         evalTerm s a env' mBody
 
 
--- If-then-else
-evalTerm s a env mm@(MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
- = loop msCond msThen
- where
-        -- Try all the conditions from top to bottom.
-        loop (mCond : msCond') (mThen : msThen')
-         = do   vCond   <- evalTerm1 s a env mCond
-                case vCond of
-                 VBool True   -> evalTerm s a env mThen
-                 VBool False  -> loop msCond' msThen'
-                 _            -> throw $ ErrorIfsScrutNotBool a vCond
-
-        -- No condition evaluated to true, so run the else branch.
-        loop [] []
-         = do   evalTerm s a env mElse
-
-        -- We have a different number of condition and branch terms.
-        loop _ _
-         = throw $ ErrorInvalidConstruct a mm
-
-
--- Box a computation.
+-- (ev-box) -----------------------------------------------
+-- TODO: add tests for ev-box.
 evalTerm _s _a env (MBox mBody)
  =      return  [VClosure (Closure env (MPTerms []) mBody)]
 
 
--- Run a suspension
+-- (ev-run) -----------------------------------------------
+-- TODO: add tests for ev-run.
 evalTerm s a env (MRun mSusp)
  = do   vSusp <- evalTerm1 s a env mSusp
         case vSusp of
@@ -225,22 +228,41 @@ evalTerm s a env (MRun mSusp)
          _ -> throw $ ErrorRunNotSuspension a vSusp
 
 
--- List construction.
-evalTerm s a env (MKey MKList [MGTypes [t], MGTerms ms])
+-- (ev-lst) -----------------------------------------------
+evalTerm s a env (MList t ms)
+ = do   let t'  = snvApplyType upsEmpty (snvOfEnvTypes env) t
+        vs      <- evalTerms s a env ms
+        return [VList t' vs]
 
- = do   vsArg <- evalTerms s a env ms
-        let t'  = snvApplyType upsEmpty (snvOfEnvTypes env) t
-        return [VList t' vsArg]
+
+-- (ev-set) -----------------------------------------------
+evalTerm s a env (MSet t ms)
+ = do   let t'  = snvApplyType upsEmpty (snvOfEnvTypes env) t
+        vs      <- evalTerms s a env ms
+        let vs' = Set.fromList $ map stripAnnot vs
+        return [VSet t' vs']
 
 
--- Set construction.
-evalTerm s a env (MKey MKSet  [MGTypes [t], MGTerms ms])
- = do   vsArg <- evalTerms s a env ms
-        -- TODO: subst into type.
-        return [VSet t $ Set.fromList $ map stripAnnot $ vsArg]
+-- (ev-map) -----------------------------------------------
+evalTerm s a env mm@(MMap tk tv msk msv)
+ = do   let snv = snvOfEnvTypes env
+        let tk' = snvApplyType upsEmpty snv tk
+        let tv' = snvApplyType upsEmpty snv tv
+        vsElem  <- evalPairs msk msv
+        return [ VMap tk' tv' $ Map.fromList vsElem ]
 
--- TODO: map construction.
+ where
+        evalPairs (mk : msk') (mv : msv')
+         = do   vk <- evalTerm1 s a env mk
+                vv <- evalTerm1 s a env mv
+                ps <- evalPairs msk' msv'
+                return ((stripAnnot vk, vv) : ps)
 
+        evalPairs [] [] = return []
+        evalPairs _ _   = throw $ ErrorInvalidConstruct a mm
+
+
+-----------------------------------------------------------
 -- No match.
 evalTerm _s a _ mm
  =      throw $ ErrorInvalidConstruct a mm
