@@ -12,7 +12,6 @@ type syn2 [a: #Data]: #Derp = #Nat
 type syn3 [a: #Data, a: #Data]: #Data = #Nat
 
 -- Synonym is rebound.
--- TODO: check for this.
 type syn4: #Data = #Nat
 type syn4: #Data = #Nat
 

@@ -27,6 +27,8 @@ ppre _c (ErrorTypeDeclsRecursive _a _wh nDecl nas)
  = vcat [ text "Type declaration" %% squotes (pprVar nDecl) %% text "is recursive"
         , text "  though:" %% braced [pprVar n | (n, _) <- nas] ]
 
+ppre _c (ErrorTypeDeclRebound _a _wh nDecl)
+ = vcat [ text "Type" %% squotes (pprVar nDecl) %% text "declared multiple times." ]
 
 -- Structural arity ---------------------------------------
 ppre c (ErrorTermsWrongArity _a _wh ts ks)

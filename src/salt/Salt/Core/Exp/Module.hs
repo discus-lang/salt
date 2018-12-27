@@ -5,6 +5,7 @@ import Salt.Core.Exp.Term
 import Salt.Core.Exp.Name
 
 
+---------------------------------------------------------------------------------------------------
 -- | Modules.
 data Module a
         = Module
@@ -74,4 +75,32 @@ data DeclTest a
         , declTestName          :: Maybe Name
         , declTestBody          :: Term a }
         deriving Show
+
+
+---------------------------------------------------------------------------------------------------
+-- | Get the annotation of a declaration.
+annotOfDecl :: Decl a -> a
+annotOfDecl decl
+ = case decl of
+        DType (DeclType         { declAnnot }) -> declAnnot
+        DTerm (DeclTerm         { declAnnot }) -> declAnnot
+        DTest (DeclTestKind     { declAnnot }) -> declAnnot
+        DTest (DeclTestType     { declAnnot }) -> declAnnot
+        DTest (DeclTestEval     { declAnnot }) -> declAnnot
+        DTest (DeclTestExec     { declAnnot }) -> declAnnot
+        DTest (DeclTestAssert   { declAnnot }) -> declAnnot
+
+
+-- | Get the name of a declaration, if it has one.
+nameOfDecl :: Decl a -> Maybe Name
+nameOfDecl decl
+ = case decl of
+        DType (DeclType       { declName })     -> Just declName
+        DTerm (DeclTerm       { declName })     -> Just declName
+        DTest (DeclTestKind   { declTestName }) -> declTestName
+        DTest (DeclTestType   { declTestName }) -> declTestName
+        DTest (DeclTestEval   { declTestName }) -> declTestName
+        DTest (DeclTestExec   { declTestName }) -> declTestName
+        DTest (DeclTestAssert { declTestName }) -> declTestName
+
 

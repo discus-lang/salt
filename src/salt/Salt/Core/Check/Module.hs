@@ -1,21 +1,16 @@
 
 module Salt.Core.Check.Module where
-import Salt.Core.Check.Error
-import Salt.Core.Check.Where
+import Salt.Core.Check.Module.DeclType
+import Salt.Core.Check.Module.DeclTerm
+import Salt.Core.Check.Module.DeclTest
+import Salt.Core.Check.Module.Base
 import Salt.Core.Check.Type
 import Salt.Core.Check.Term
-import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Base
-import Salt.Core.Check.Type.Params
-import Salt.Core.Check.Type.Base
-import qualified Salt.Core.Analysis.Support     as Support
 
-import qualified Control.Exception              as Control
 import qualified Data.Map                       as Map
-import qualified Data.Set                       as Set
 
 
----------------------------------------------------------------------------------------------------
 -- | Check a whole module.
 ---
 --   We need to do this in stages to ensure that type synonyms are are well
@@ -47,11 +42,11 @@ checkModule a mm
                 (decls', errsSig)
                  <- checkDecls (checkDeclTypeSig a ctx) decls
 
-                -- Check type decls not recursive.
-                let errsRec = checkDeclTypeNonRec decls
+                -- Check type decls not rebound and not recursive.
+                let errsRebound   = checkDeclTypeRebound   decls
+                let errsRecursive = checkDeclTypeRecursive decls
 
-                -- TODO: check rebound type synonyms.
-                let errs    = errsSig ++ errsRec
+                let errs    = errsSig ++ errsRebound ++ errsRecursive
 
                 if not $ null errs
                  then return (ctx, mm, errs)
@@ -130,193 +125,3 @@ makeDeclTypeOfParamsResult pss0 tsResult
                 [t] -> [TForall bts t]
                 _   -> error "arity error when making decl type"
 
-
----------------------------------------------------------------------------------------------------
-type CheckDecl a
-        = Annot a => a -> Context a -> Decl a -> IO (Decl a)
-
-checkDecls
-        :: forall a. Annot a
-        => (Decl a  -> IO (Decl a))
-        -> [Decl a] -> IO ([Decl a], [Error a])
-
-checkDecls _check []
- = return ([], [])
-
-checkDecls check (d1 : ds2)
- = do   (d1', errs1)
-         <- Control.try (check d1)
-         >>= \case
-                Right d1'             -> return (d1', [])
-                Left (err :: Error a) -> return (d1, [err])
-
-        (ds2', errs2) <- checkDecls check ds2
-        return (d1' : ds2', errs1 ++ errs2)
-
-
----------------------------------------------------------------------------------------------------
--- | Check kind signatures of type declarations.
-checkDeclTypeSig :: CheckDecl a
-checkDeclTypeSig _a ctx (DType (DeclType a n tpss kResult tBody))
- = do   let wh  = [WhereTypeDecl a n]
-        tpss'    <- checkTypeParamss a wh ctx tpss
-        kResult' <- checkKind a wh ctx kResult
-
-        return  $ DType $ DeclType a n tpss' kResult' tBody
-
-checkDeclTypeSig _ _ decl
- = return decl
-
-
--- | Check bodies of type declarations.
-checkDeclType :: CheckDecl a
-checkDeclType _a ctx (DType (DeclType a n tpss kResult tBody))
- = do   let wh   = [WhereTypeDecl a n]
-        tpss'    <- checkTypeParamss a wh ctx tpss
-        kResult' <- checkKind a wh ctx kResult
-
-        let ctx' =  foldl (flip contextBindTypeParams) ctx tpss'
-        tBody'   <- checkTypeIs a wh ctx' kResult' tBody
-        return  $ DType $ DeclType a n tpss' kResult' tBody'
-
-checkDeclType _ _ decl
- = return decl
-
-
--- | Check for recursive type declarations.
-checkDeclTypeNonRec :: Annot a => [Decl a] -> [Error a]
-checkDeclTypeNonRec decls
- = concatMap checkDecl decls
- where
-        -- Check a single declaration.
-        checkDecl decl
-         = case decl of
-                DType (DeclType aDecl nDecl _ _ _)
-                  -> checkDeps aDecl nDecl Set.empty (Set.singleton nDecl)
-                _ -> []
-
-        -- Worklist algorithm to find recursive dependencies.
-        --   We track the synonym bindings we have entered into,
-        --   as well as the ones we still need to check.
-        checkDeps aDecl nDecl nsEntered nsCheck
-         = let (nsCheck1, nsRest) = Set.splitAt 1 nsCheck
-           in  case Set.toList nsCheck1 of
-                []      -> []
-                nCheck : _
-                 |  Just nsFree <- Map.lookup nCheck deps
-                 ,  nsRec <- Set.intersection nsFree nsEntered
-                 -> if not $ Set.null nsRec
-                        then [ErrorTypeDeclsRecursive aDecl
-                                [WhereTypeDecl aDecl nDecl]
-                                nDecl (concatMap nameAnnotsOfTypeDecl $ Set.toList nsRec)]
-                        else checkDeps aDecl nDecl
-                                (Set.union nsFree nsEntered)
-                                (Set.union nsRest nsFree)
-
-                 | otherwise    -> checkDeps aDecl nDecl nsEntered nsRest
-
-        -- Map of names of type decls to others they depend on.
-        deps
-         = Map.fromList
-                [ (n, Support.freeTypeNamesOf tBody)
-                | DType (DeclType _a n _ _ tBody) <- decls ]
-
-        -- Get annotations for type declarations with the given name.
-        -- This is used when reporting errors due to recursive declarations.
-        nameAnnotsOfTypeDecl n
-         = mapMaybe (nameAnnotOfTypeDecl n) decls
-
-        nameAnnotOfTypeDecl n decl
-         = case decl of
-                DType (DeclType a n' _ _ _)
-                 | n == n'      -> Just (n, a)
-                _               -> Nothing
-
-
----------------------------------------------------------------------------------------------------
--- | Check type signatures of term declarations.
-checkDeclTermSig :: CheckDecl a
-checkDeclTermSig _a ctx (DTerm (DeclTerm a n mpss tsResult mBody))
- = do   let wh  = [WhereTermDecl a n]
-        mpss'     <- checkTermParamss a wh ctx mpss
-
-        let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
-        tsResult' <- checkTypesAreAll a wh ctx' TData tsResult
-        return  $ DTerm $ DeclTerm a n mpss' tsResult' mBody
-
-checkDeclTermSig _ _ decl
- = return decl
-
-
--- | Check bodies of term declarations
-checkDeclTerm :: CheckDecl a
-checkDeclTerm _a ctx (DTerm (DeclTerm a n mpss tResult mBody))
- = do   let wh   = [WhereTermDecl a n]
-        mpss'     <- checkTermParamss a wh ctx mpss
-        let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
-        tsResult' <- checkTypesAreAll a wh ctx' TData tResult
-
-        (mBody', _tsResult, _esResult)
-         <- checkTerm a wh ctx' Synth mBody
-
-        -- TODO: result type needs to be a vector.
-        -- TODO: check against result type.
-        -- TODO: check result type.
-        -- TODO: check effects are empty.
-        return  $ DTerm $ DeclTerm a n mpss' tsResult' mBody'
-
-checkDeclTerm _ _ decl
- = return decl
-
-
----------------------------------------------------------------------------------------------------
--- | Check test declarations.
-checkDeclTest :: CheckDecl a
-
--- (t-decl-kind) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestKind a' n t))
- = do   let wh = [WhereTestKind a' n]
-        (t', _k) <- checkType a' wh ctx t
-        return  $ DTest $ DeclTestKind a' n t'
-
-
--- (t-decl-type) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestType a' n m))
- = do   let wh  = [WhereTestType a' n]
-        (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx Synth m
-        return  $ DTest $ DeclTestType a' n m'
-
-
--- (t-decl-eval) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestEval a' n m))
- = do   let wh  = [WhereTestEval a' n]
-        (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx Synth m
-
-        -- TODO: check effects are empty.
-        return  $ DTest $ DeclTestEval a' n m'
-
-
--- (t-decl-exec) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestExec a' n m))
- = do   let wh  = [WhereTestExec a' n]
-        (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx Synth m
-
-        -- TODO: check effects are empty.
-        -- TODO: check expr returns a suspension
-        return  $ DTest $ DeclTestExec a' n m'
-
-
--- (t-decl-assert) ----------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestAssert a' n m))
- = do   let wh  = [WhereTestAssert a' n]
-        (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx (Check [TBool]) m
-
-        -- TODO: check effects are empty.
-        return  $ DTest $ DeclTestAssert a' n m'
-
-checkDeclTest _a _ctx decl
- = return decl
