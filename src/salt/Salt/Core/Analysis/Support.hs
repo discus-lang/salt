@@ -11,11 +11,26 @@ import qualified Data.Set       as Set
 
 
 ---------------------------------------------------------------------------------------------------
+-- | Get the set of free type bounds in a thing.
 freeTypeBoundsOf :: HasSupport a => a -> Set Bound
 freeTypeBoundsOf x = supportFreeTypeVars $ supportOf x
 
+
+-- | Get the set of free type names (bounds at level 0) in a thing.
+freeTypeNamesOf  :: HasSupport a => a -> Set Name
+freeTypeNamesOf x
+ =      Set.fromList [n | BoundWith n 0 <- Set.toList $ freeTypeBoundsOf x]
+
+
+-- | Get the set of free term bounds in a thing.
 freeTermBoundsOf :: HasSupport a => a -> Set Bound
 freeTermBoundsOf x = supportFreeTermVars $ supportOf x
+
+
+-- | Get the set of free term names (bounds at level 0) in a thing.
+freeTermNamesOf  :: HasSupport a => a -> Set Name
+freeTermNamesOf x
+ =      Set.fromList [n | BoundWith n 0 <- Set.toList $ freeTermBoundsOf x]
 
 
 ---------------------------------------------------------------------------------------------------

@@ -195,15 +195,6 @@ checkDeclTypeNonRec decls
                   -> checkDeps aDecl nDecl Set.empty (Set.singleton nDecl)
                 _ -> []
 
-        -- Map of names of type decls to others they depend on.
-        deps    = Map.fromList
-                $ [ (n, freeTypeNamesOf tBody)
-                  | DType (DeclType _a n _ _ tBody) <- decls ]
-
-        freeTypeNamesOf t
-                = Set.fromList
-                $ [ n | BoundWith n 0 <- Set.toList $ Support.freeTypeBoundsOf t ]
-
         -- Worklist algorithm to find recursive dependencies.
         --   We track the synonym bindings we have entered into,
         --   as well as the ones we still need to check.
@@ -223,6 +214,12 @@ checkDeclTypeNonRec decls
                                 (Set.union nsRest nsFree)
 
                  | otherwise    -> checkDeps aDecl nDecl nsEntered nsRest
+
+        -- Map of names of type decls to others they depend on.
+        deps
+         = Map.fromList
+                [ (n, Support.freeTypeNamesOf tBody)
+                | DType (DeclType _a n _ _ tBody) <- decls ]
 
         -- Get annotations for type declarations with the given name.
         -- This is used when reporting errors due to recursive declarations.
