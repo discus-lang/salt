@@ -161,6 +161,8 @@ pattern MVariant l ms tResult   = MKey  (MKVariant l) [MGTerms ms,     MGTypes [
 pattern MVarCase mScrut msAlt   = MKey   MKVarCase    [MGTerm  mScrut, MGTerms msAlt]
 pattern MVarAlt  n bts mBody    = MKey  (MKVarAlt n)  [MGTerm (MAbs (MPTerms bts) mBody)]
 
+pattern MData    n ts ms        = MKey  (MKCon n)     [MGTypes ts, MGTerms ms]
+
 pattern MList tElem msElem      = MKey   MKList [MGTypes [tElem],  MGTerms msElem]
 pattern MSet  tElem msElem      = MKey   MKSet  [MGTypes [tElem],  MGTerms msElem]
 pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey, MGTerms msVal]

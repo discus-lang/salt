@@ -5,10 +5,11 @@ import Salt.Core.Eval.State
 import Salt.Core.Analysis.Support       ()
 import Salt.Core.Transform.MapAnnot
 import Control.Exception
+import Control.Monad
 import qualified Salt.Core.Prim.Ops     as Ops
 import qualified Data.Map               as Map
 import qualified Data.Set               as Set
-import qualified Text.Show.Pretty       as Text
+-- import qualified Text.Show.Pretty       as Text
 
 
 ---------------------------------------------------------------------------------------------------
@@ -32,6 +33,7 @@ evalTerm s a env (MKey MKThe [MGTypes [_], MGTerm m])
 evalTerm _s _ _  (MRef (MRVal v))
  = return [v]
 
+
 -- Variables
 evalTerm s a env (MVar u@(Bound n))
  -- Bound in local environment.
@@ -43,38 +45,23 @@ evalTerm s a env (MVar u@(Bound n))
    <- Map.lookup n (stateDeclTerms s)
  = case mps of
         []      -> evalTerm s a' envEmpty mBody
-        _
-         -> let
-                -- TODO: proper error.
-                makeClosure []
-                 = error "no params for DeclTerm"
+        mp0 : mps0
+         -> let makeClosure mp1 []
+                 = VClosure $ Closure envEmpty mp1 mBody
 
-                makeClosure (mp : [])
-                 = VClosure $ Closure envEmpty mp mBody
+                makeClosure mp1 (mp1' : mps1')
+                 = VClosure $ Closure envEmpty mp1 (MVal (makeClosure mp1' mps1'))
 
-                makeClosure (mp1 : mps')
-                 = VClosure $ Closure envEmpty mp1 (MVal (makeClosure mps'))
-
-            in   return [makeClosure mps]
+            in   return [makeClosure mp0 mps0]
 
  | otherwise
  = throw $ ErrorVarUnbound a u env
 
 
 -- Function abstraction.
---   For debugging we trim the closure environment at the point the
---   closure is produced so that the closure is easier to read in logs.
---   For a production interpreter we'd avoid the trimming.
 evalTerm _s _a env (MAbm bts mBody)
- = do   -- let nsTermFree  = freeTermVarsOf mBody
-        let Env ebs     = env
-
-        -- TODO trim env
---        let keepEnvBind (EnvValues n _) = Set.member n nsTermFree
---            keepEnvBind (EnvTypes  _ _) = True
-
-        let env'        = Env ebs -- (filter keepEnvBind ebs)
-        return [VClosure (Closure env' (MPTerms bts) mBody)]
+ = do   -- TODO: subst into types in params.
+        return [VClosure (Closure env (MPTerms bts) mBody)]
 
 
 -- Prim-term application
@@ -94,39 +81,48 @@ evalTerm s a env (MAps (MPrm nPrim) mgssArg)
 
 
 -- Term-term, term/type application.
-evalTerm s a env (MApp mFun mgsArg)
+evalTerm s a env (MApp mFun mgs)
  = do   vsCloTerm <- evalTerm s a env mFun
         case vsCloTerm of
-         [VClosure (Closure env' (MPTerms bts) mBody)]
-          | MGTerm m    <- mgsArg
-          -> do let bs    = map fst bts
-                vsArg   <- evalTerm s a env m
-                let env'' = envExtendsValue (zip bs vsArg) env'
-                vsRes   <- evalTerm s a env'' mBody
-                return vsRes
+         [VClosure (Closure env' mps@(MPTerms bts) mBody)]
+          -> case mgs of
+                MGTerm m
+                 -> do  let bs    = map fst bts
+                        vsArg   <- evalTerm s a env m
+                        when (not $ length vsArg == length bs)
+                         $ throw $ ErrorWrongTermArity a (length bs) vsArg
 
-          | MGTerms ms  <- mgsArg
-          -> do let bs  = map fst bts
-                vsArg   <- mapM (evalTerm1 s a env) ms
-                let env'' = envExtendsValue (zip bs vsArg) env'
-                vsRes   <- evalTerm s a env'' mBody
-                return vsRes
+                        let env'' = envExtendsValue (zip bs vsArg) env'
+                        evalTerm s a env'' mBody
 
-          | otherwise -> error "invalid application"
+                MGTerms ms
+                 -> do  let bs  = map fst bts
+                        vsArg   <- mapM (evalTerm1 s a env) ms
+                        when (not $ length vsArg == length bs)
+                         $ throw $ ErrorWrongTermArity a (length bs) vsArg
 
-         [VClosure (Closure env' (MPTypes bks) mBody)]
-          | MGTypes ts   <- mgsArg
-          -> do let bs  = map fst bks
-                -- TODO: drop subst into tsArg'
-                let tsArg' = ts
-                let env'' = envExtendsType (zip bs tsArg') env'
-                vsRes   <- evalTerm s a env'' mBody
-                return vsRes
+                        let env'' = envExtendsValue (zip bs vsArg) env'
+                        evalTerm s a env'' mBody
 
-          | otherwise -> error "invalid application"
+                _ -> throw $ ErrorAppTermWrongArgs a mps mgs
 
-         [] -> throw $ ErrorAppTermNotEnough a []
-         _  -> error $ Text.ppShow (a, vsCloTerm) -- throw $ ErrorAppTermTooMany   a vsCloTerm
+         [VClosure (Closure env' mps@(MPTypes bks) mBody)]
+          -> case mgs of
+                MGTypes ts
+                 -> do  let bs  = map fst bks
+
+                        -- TODO: drop subst into tsArg'
+                        -- TODO: we need type bindings in the environment.
+                        let tsArg = ts
+                        when (not $ length tsArg == length bs)
+                         $ throw $ ErrorWrongTypeArity a (length bs) tsArg
+
+                        let env'' = envExtendsType (zip bs tsArg) env'
+                        evalTerm s a env'' mBody
+
+                _ -> throw $ ErrorAppTermWrongArgs a mps mgs
+
+         _  -> throw $ ErrorAppTermBadClosure a vsCloTerm
 
 
 -- Let-binding.
@@ -140,23 +136,21 @@ evalTerm s a env (MLet bts mBind mBody)
                 let env' =  envExtendsValue (zip bs vsBind) env
                 vsResult <- evalTerm s a env' mBody
                 return vsResult
-        else if nHave < nWanted
-         then throw $ ErrorAppTermNotEnough a vsBind
-        else  throw $ ErrorAppTermTooMany   a vsBind
+         else throw $ ErrorWrongTermArity a nWanted vsBind
 
 
 -- Data constructor application.
--- TODO: get a pattern synonym for this.
-evalTerm s a env (MKey (MKCon nCon) [MGTypes ts, MGTerms msArg])
+evalTerm s a env (MData nCon tsArg msArg)
  = do   vsArg  <- evalTerms s a env msArg
-        return  [VData nCon ts vsArg]
+        -- TODO: subst into types.
+        return  [VData nCon tsArg vsArg]
 
 
 -- Record constructor application.
 evalTerm s a env (MRecord nsField msArg)
  | length nsField == length msArg
  = do   vssArg <- mapM (evalTerm s a env) msArg
-        return [VRecord $ zip nsField vssArg]
+        return  [VRecord $ zip nsField vssArg]
 
 
 -- Record field projection.
@@ -194,7 +188,6 @@ evalTerm s a env (MVarCase mScrut msAlt0)
         evalTerm s a env' mBody
 
 
-
 -- If-then-else
 -- TODO: proper errors.
 evalTerm s a env (MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
@@ -222,8 +215,8 @@ evalTerm _s _a env (MBox mBody)
 evalTerm s a env (MRun mSusp)
  = do   vSusp <- evalTerm1 s a env mSusp
         case vSusp of
-                VClosure (Closure (Env []) (MPTerms []) mBody)
-                 -> evalTerm s a env mBody
+                VClosure (Closure env' (MPTerms []) mBody)
+                 -> evalTerm s a env' mBody
 
                 _ -> error "term to run is not a suspension"
 
@@ -255,10 +248,7 @@ evalTerm1 s a env m
  = do   vs      <- evalTerm s a env m
         case vs of
          [v]    -> return v
-         []     -> throw $ ErrorAppTermNotEnough a []
-         vs'    -> error $ Text.ppShow (a, vs')
-
---          throw $ ErrorAppTermTooMany   a vs'
+         _      -> throw $ ErrorWrongTermArity a 1 vs
 
 
 -- | Evaluate a list of terms, producing a single value for each.
@@ -266,6 +256,7 @@ evalTerms
         :: Annot a
         => State a -> a -> Env a
         -> [Term a] -> IO [Value a]
+
 evalTerms s a env ms
  = mapM (evalTerm1 s a env) ms
 

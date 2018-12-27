@@ -17,6 +17,18 @@ data Error a
         , errorVarUnbound       :: Bound
         , errorEnv              :: Env a }
 
+        -- | Wrong number of types for eliminator.
+        | ErrorWrongTypeArity
+        { errorAnnot            :: a
+        , errorNumExpected      :: Int
+        , errorTypes            :: [Type a] }
+
+        -- | Wrong number of terms for eliminator.
+        | ErrorWrongTermArity
+        { errorAnnot            :: a
+        , errorNumExpected      :: Int
+        , errorValues           :: [Value a] }
+
         -- | Runtime type error in application,
         --   as the functional expression is not a closure.
         | ErrorAppTermTypeMismatch
@@ -25,15 +37,16 @@ data Error a
 
         -- | Runtime type error in application,
         --   because the function produced too many results.
-        | ErrorAppTermTooMany
+        | ErrorAppTermBadClosure
         { errorAnnot            :: a
         , errorValues           :: [Value a] }
 
-        -- | Runtine type error in application,
-        --   because the function did not produce enough results.
-        | ErrorAppTermNotEnough
+        -- | Runtime type error in application
+        --   because the sort of parameters does not match the sort of arguments.
+        | ErrorAppTermWrongArgs
         { errorAnnot            :: a
-        , errorValues           :: [Value a] }
+        , errorParams           :: TermParams a
+        , errorArgs             :: TermArgs a }
 
         -- | Runtime type error in record projection.
         | ErrorProjectTypeMismatch
