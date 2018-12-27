@@ -33,6 +33,10 @@ ppre _c (ErrorTypeDeclRebound _a _wh nDecl)
 ppre _c (ErrorTermDeclRebound _a _wh nDecl)
  = vcat [ text "Term" %% squotes (pprVar nDecl) %% text "declared multiple times." ]
 
+ppre c  (ErrorTermDeclImpure  _a _wh nDecl tEffect)
+ = vcat [ text "Impure term declaration" %% squotes (pprVar nDecl)
+        , text "  has effect:" %% ppr c tEffect ]
+
 ppre _c (ErrorTestDeclRebound _a _wh nDecl)
  = vcat [ text "Test" %% squotes (pprVar nDecl) %% text "declared multiple times." ]
 

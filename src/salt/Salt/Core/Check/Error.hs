@@ -41,6 +41,12 @@ data Error a
         , errorWhere            :: [Where a]
         , errorName             :: Name }
 
+        | ErrorTermDeclImpure
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name
+        , errorEffect           :: Type a }
+
         | ErrorTestDeclRebound
         { errorAnnot            :: a
         , errorWhere            :: [Where a]

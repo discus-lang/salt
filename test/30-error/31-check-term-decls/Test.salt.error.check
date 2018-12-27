@@ -4,3 +4,9 @@ test/30-error/31-check-term-decls/Test.salt:6:20
 
   1:1    In term declaration "term1"
 
+test/30-error/31-check-term-decls/Test.salt:9:1
+  Impure term declaration 'term2'
+    has effect: #Console
+
+  9:1    In term declaration "term2"
+

@@ -6,7 +6,6 @@
 term term1: #Nat = #true
 
 -- Term declaration causes an unboxed effect.
--- TODO: check term decls are pure
 term term2: #Nat
  = do { #console'print "hello"
       ; 5 }

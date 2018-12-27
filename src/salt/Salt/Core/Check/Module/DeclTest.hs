@@ -41,7 +41,6 @@ checkDeclTest _a ctx (DTest (DeclTestExec a' n m))
         (m', _tResult, _esResult)
          <- checkTerm a' wh ctx Synth m
 
-        -- TODO: check effects are empty.
         -- TODO: check expr returns a suspension
         return  $ DTest $ DeclTestExec a' n m'
 
