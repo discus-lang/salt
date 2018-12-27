@@ -1,4 +1,7 @@
 
+-- Trigger all the errors that can be produced by
+-- 'goTypeSigs' when checking the top-level module structure.
+
 -- Malformed kind annotation on type synonym parameter.
 type syn1 [a: #Derp]: #Data = #Nat
 
@@ -13,3 +16,9 @@ type syn3 [a: #Data, a: #Data]: #Data = #Nat
 type syn4: #Data = #Nat
 type syn4: #Data = #Nat
 
+-- Synonym is directly recursive.
+type syn5: #Data = syn5
+
+-- Synonym is indirectly recursive.
+type syn6: #Data = syn7
+type syn7: #Data = [x: syn6, y: #Nat]

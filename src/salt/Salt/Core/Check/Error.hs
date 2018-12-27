@@ -24,6 +24,13 @@ data Error a
         , errorWhere            :: [Where a]
         , errorTerm             :: Term a }
 
+        -- Module level problems ----------------
+        | ErrorTypeDeclsRecursive
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name
+        , errorLoop             :: [(Name, a)] }
+
         -- Structural arity ---------------------
         | ErrorTermsWrongArity
         { errorAnnot            :: a

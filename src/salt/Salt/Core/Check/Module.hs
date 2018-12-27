@@ -8,8 +8,11 @@ import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Type.Params
 import Salt.Core.Check.Type.Base
-import qualified Control.Exception      as Control
-import qualified Data.Map               as Map
+import qualified Salt.Core.Analysis.Support     as Support
+
+import qualified Control.Exception              as Control
+import qualified Data.Map                       as Map
+import qualified Data.Set                       as Set
 
 
 ---------------------------------------------------------------------------------------------------
@@ -39,21 +42,29 @@ checkModule a mm
 
         -- Check kind signatures on types, before adding them to the context.
         goTypeSigs  ctx decls
-         = do   (decls', errs)
+         = do
+                -- Check kind signatures on type decls.
+                (decls', errsSig)
                  <- checkDecls (checkDeclTypeSig a ctx) decls
 
-                let nktsDeclType
-                         = [ ( n
-                             , ( makeDeclKindOfParamsResult pss kResult
-                               , makeTAbsOfParams pss tBody))
-                           | DType (DeclType _a n pss kResult tBody) <- decls' ]
+                -- Check type decls not recursive.
+                let errsRec = checkDeclTypeNonRec decls
 
-                let ctx' = ctx { contextModuleType = Map.fromList nktsDeclType }
-                if null errs
-                 then goTypeDecls ctx' decls'
-                 else return (ctx, mm, errs)
+                -- TODO: check rebound type synonyms.
+                let errs    = errsSig ++ errsRec
 
-        -- Check type declarations.
+                if not $ null errs
+                 then return (ctx, mm, errs)
+                 else do
+                        let nktsDeclType
+                                = [ ( n
+                                  , ( makeDeclKindOfParamsResult pss kResult
+                                    , makeTAbsOfParams pss tBody))
+                                  | DType (DeclType _a n pss kResult tBody) <- decls' ]
+                        let ctx' = ctx { contextModuleType = Map.fromList nktsDeclType }
+                        goTypeDecls ctx' decls'
+
+        -- Check individual type declarations.
         goTypeDecls ctx decls
          = do   (decls', errs)
                  <- checkDecls (checkDeclType a ctx) decls
@@ -76,7 +87,7 @@ checkModule a mm
                  then goTermDecls ctx' decls'
                  else return (ctx, mm, errs)
 
-        -- Check term declarations.
+        -- Check individual term declarations.
         goTermDecls ctx decls
          = do   (decls', errs)
                  <- checkDecls (checkDeclTerm a ctx) decls
@@ -85,7 +96,7 @@ checkModule a mm
                  then goTestDecls ctx decls'
                  else return (ctx, mm, errs)
 
-        -- Check test declarations.
+        -- Check individual test declarations.
         goTestDecls ctx decls
          = do   (decls', errs)
                  <- checkDecls (checkDeclTest a ctx) decls
@@ -150,6 +161,7 @@ checkDeclTypeSig _a ctx (DType (DeclType a n tpss kResult tBody))
  = do   let wh  = [WhereTypeDecl a n]
         tpss'    <- checkTypeParamss a wh ctx tpss
         kResult' <- checkKind a wh ctx kResult
+
         return  $ DType $ DeclType a n tpss' kResult' tBody
 
 checkDeclTypeSig _ _ decl
@@ -169,6 +181,59 @@ checkDeclType _a ctx (DType (DeclType a n tpss kResult tBody))
 
 checkDeclType _ _ decl
  = return decl
+
+
+-- | Check for recursive type declarations.
+checkDeclTypeNonRec :: Annot a => [Decl a] -> [Error a]
+checkDeclTypeNonRec decls
+ = concatMap checkDecl decls
+ where
+        -- Check a single declaration.
+        checkDecl decl
+         = case decl of
+                DType (DeclType aDecl nDecl _ _ _)
+                  -> checkDeps aDecl nDecl Set.empty (Set.singleton nDecl)
+                _ -> []
+
+        -- Map of names of type decls to others they depend on.
+        deps    = Map.fromList
+                $ [ (n, freeTypeNamesOf tBody)
+                  | DType (DeclType _a n _ _ tBody) <- decls ]
+
+        freeTypeNamesOf t
+                = Set.fromList
+                $ [ n | BoundWith n 0 <- Set.toList $ Support.freeTypeBoundsOf t ]
+
+        -- Worklist algorithm to find recursive dependencies.
+        --   We track the synonym bindings we have entered into,
+        --   as well as the ones we still need to check.
+        checkDeps aDecl nDecl nsEntered nsCheck
+         = let (nsCheck1, nsRest) = Set.splitAt 1 nsCheck
+           in  case Set.toList nsCheck1 of
+                []      -> []
+                nCheck : _
+                 |  Just nsFree <- Map.lookup nCheck deps
+                 ,  nsRec <- Set.intersection nsFree nsEntered
+                 -> if not $ Set.null nsRec
+                        then [ErrorTypeDeclsRecursive aDecl
+                                [WhereTypeDecl aDecl nDecl]
+                                nDecl (concatMap nameAnnotsOfTypeDecl $ Set.toList nsRec)]
+                        else checkDeps aDecl nDecl
+                                (Set.union nsFree nsEntered)
+                                (Set.union nsRest nsFree)
+
+                 | otherwise    -> checkDeps aDecl nDecl nsEntered nsRest
+
+        -- Get annotations for type declarations with the given name.
+        -- This is used when reporting errors due to recursive declarations.
+        nameAnnotsOfTypeDecl n
+         = mapMaybe (nameAnnotOfTypeDecl n) decls
+
+        nameAnnotOfTypeDecl n decl
+         = case decl of
+                DType (DeclType a n' _ _ _)
+                 | n == n'      -> Just (n, a)
+                _               -> Nothing
 
 
 ---------------------------------------------------------------------------------------------------

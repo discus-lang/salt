@@ -21,6 +21,13 @@ ppre _c (ErrorTypeMalformed _a _wh _t)
 ppre _c (ErrorTermMalformed _a _wc _m)
  = vcat [ text "Malformed term." ]
 
+
+-- Module level problems ----------------------------------
+ppre _c (ErrorTypeDeclsRecursive _a _wh nDecl nas)
+ = vcat [ text "Type declaration" %% squotes (pprVar nDecl) %% text "is recursive"
+        , text "  though:" %% braced [pprVar n | (n, _) <- nas] ]
+
+
 -- Structural arity ---------------------------------------
 ppre c (ErrorTermsWrongArity _a _wh ts ks)
  = let  reason = if length ts >= length ks then "Too many" else "Not enough"
