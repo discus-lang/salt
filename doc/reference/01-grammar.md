@@ -149,8 +149,9 @@ Term
   |   mrec n Lblⁿ Termⁿ             (∏ '[' (Lbl '=' Term),* ']')
   |   mprj   Term Lbl               (Term '.' Lbl)
 
-  |   mvnt   Lbl  Term Type         ('the' Type 'of' '`' Lbl Term)
-  |   mcse n Term Lblⁿ Typeⁿ Termⁿ  ('case' Term 'of' '{' (Lbl '[' Var ':' Type ']' → Term);+ '}')
+  |   mvnt   Lbl  Term Type         ('the' Type  'of' '`' Lbl Term)
+  |   mcse n Term Lblⁿ Typeⁿ Termⁿ  ('case' Term 'of'
+                                        '{' (Lbl '[' (Var ':' Type),* ']' → Term);+ '}')
 
   |   mlst n Type Termⁿ             ('[list' Type '|' Term,* ']')
   |   mset n Type Termⁿ             ('[set'  Type '|' Term,* ']')
