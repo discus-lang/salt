@@ -1,5 +1,5 @@
 
--- Test out all the cases in the evaluator.
+-- Exercise all the cases in the evaluator.
 
 -- (ev-mmm) -----------------------------------------------
 test eval eval'mmm'multi = [5, 5]
@@ -37,6 +37,10 @@ test eval eval'aps'term'terms
 
 test eval eval'aps'term'type
  = (λ@[a: #Data] → λ[x: a] → x) @#Nat
+
+-- TODO: eval with bumps doesn't work.
+-- test eval eval'aps'bump1
+--  = (λ[x: #Nat] → λ[x: #Nat] → x^1) 2 3
 
 
 -- (ev-let) -----------------------------------------------
@@ -79,3 +83,4 @@ term someMap  @[tk: #Data, tv: #Data] [k: tk, v: tv]: #Map [tk, tv]
 
 test eval eval'map
  = someMap @[#Nat, #Symbol] [5, 'Derp]
+

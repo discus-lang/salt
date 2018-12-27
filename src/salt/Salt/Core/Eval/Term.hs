@@ -43,6 +43,7 @@ evalTerm _s _ _  (MVal v)
 
 
 -- (ev-var) -----------------------------------------------
+-- TODO: make this work with bump counters.
 evalTerm s a env (MVar u@(Bound n))
  -- Bound in local environment.
  | Just v       <- envLookupValue n env
@@ -103,6 +104,9 @@ evalTerm s a env (MApp mFun mgs)
                         when (not $ length vsArg == length bs)
                          $ throw $ ErrorWrongTermArity a (length bs) vsArg
 
+                        -- TODO: add tests to ensure evaluation with bumped vars
+                        -- works out. The env needs to be extended, and substitution
+                        -- build from the env the right way around.
                         let env'' = envExtendsValue (zip bs vsArg) env'
                         evalTerm s a env'' mBody
 
@@ -252,6 +256,9 @@ evalTerm s a env mm@(MMap tk tv msk msv)
         return [ VMap tk' tv' $ Map.fromList vsElem ]
 
  where
+        -- Evaluate terms for pairs of keys and values in lockstep so that any
+        -- effects are caused side by side instead of all the keys and then
+        -- all the values.
         evalPairs (mk : msk') (mv : msv')
          = do   vk <- evalTerm1 s a env mk
                 vv <- evalTerm1 s a env mv
@@ -259,6 +266,8 @@ evalTerm s a env mm@(MMap tk tv msk msv)
                 return ((stripAnnot vk, vv) : ps)
 
         evalPairs [] [] = return []
+
+        -- We were expecting the same number of keys as values.
         evalPairs _ _   = throw $ ErrorInvalidConstruct a mm
 
 

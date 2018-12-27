@@ -24,6 +24,10 @@ type CheckTypeEq a x
 -- | Check that two types are equal.
 --   If the types are not equal we give the inner-most annotation from both sides.
 --
+--   TODO: This is really too verbose. Try to pack it down.
+--   reduceType already unfolds synonyms, so we don't need to do it again
+--   in resolveLevelKind.
+--
 checkTypeEq :: CheckTypeEq a (Type a)
 checkTypeEq ctx aL psL tL aR psR tR
  = goAnn
@@ -91,10 +95,8 @@ checkTypeEq ctx aL psL tL aR psR tR
          , rL == rR
          = return $ Nothing
 
-         | TAbs pL tBodyL <- tL
-         , TAbs pR tBodyR <- tR
-         , TPTypes bksL   <- pL
-         , TPTypes bksR   <- pR
+         | TAbs pL@(TPTypes bksL) tBodyL <- tL
+         , TAbs pR@(TPTypes bksR) tBodyR <- tR
          = altsM [ checkTypeEqs ctx aL [] (map snd bksL) aR [] (map snd bksR)
                  , checkTypeEq  ctx aL (pL : psL) tBodyL aR (pR : psR) tBodyR ]
 
@@ -161,16 +163,12 @@ resolveLevelKind ctx ps0 (BoundWith n d0)
  where
         -- Look through the parameters.
         goParams level d ups (TPTypes bks : tpss)
-         = case lookup (BindName n) bks of
-            Nothing
-             -> let ups' = upsCombine ups (upsOfBinds $ map fst bks)
-                in  goParams (level + 1) d ups' tpss
-
+         = let ups' = upsCombine ups (upsOfBinds $ map fst bks) in
+           case lookup (BindName n) bks of
+            Nothing      -> goParams (level + 1) d ups' tpss
             Just k
              | d == 0    -> return $ Just $ Right (level, k)
-             | otherwise
-             -> let ups' = upsCombine ups (upsOfBinds $ map fst bks)
-                in  goParams (level + 1) (d - 1) ups' tpss
+             | otherwise -> goParams (level + 1) (d - 1) ups' tpss
 
         goParams level d ups []
          = goLocal level d ups (contextLocal ctx)
@@ -179,16 +177,12 @@ resolveLevelKind ctx ps0 (BoundWith n d0)
         goLocal level d ups (ElemTypes nks : tpss)
          | d < 0        = return Nothing
          | otherwise
-         = case Map.lookup n nks of
-            Nothing
-             -> let ups' = upsCombine ups (upsOfNames $ Map.keys nks)
-                in  goLocal level d ups' tpss
-
+         = let ups' = upsCombine ups (upsOfNames $ Map.keys nks) in
+           case Map.lookup n nks of
+            Nothing      -> goLocal level d ups' tpss
             Just k
              | d == 0    -> return $ Just $ Right (level, k)
-             | otherwise
-             -> let ups' = upsCombine ups (upsOfNames $ Map.keys nks)
-                in  goLocal  (level + 1) (d - 1) ups' tpss
+             | otherwise -> goLocal  (level + 1) (d - 1) ups' tpss
 
         goLocal level d ups (ElemTerms{} : tpss)
          = goLocal level d ups tpss
