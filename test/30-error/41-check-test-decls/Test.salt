@@ -1,0 +1,17 @@
+
+-- Trigger all the errors that can be produced by
+-- 'goTestDecls' when checking the top-level module structure.
+
+-- Error: term to evaluate is not pure.
+test eval test1 = #console'print "hello"
+
+-- Error: term that produces the suspension to execute is not pure.
+test eval test2
+ = do   { #console'print "hello"
+        ; box #console'print "world" }
+
+-- Error: term to assert is not pure
+test assert test3
+ = do   { #console'print "hello"
+        ; #true }
+

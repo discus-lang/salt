@@ -2,10 +2,10 @@
 -- Trigger all the errors that can be produced by
 -- 'goTermDecls' when checking the top-level module structure.
 
--- Term declaration body does not have same type as result annotation.
+-- Error: Term declaration body does not have same type as result annotation.
 term term1: #Nat = #true
 
--- Term declaration causes an unboxed effect.
+-- Error: Term declaration causes an unboxed effect.
 term term2: #Nat
  = do { #console'print "hello"
       ; 5 }

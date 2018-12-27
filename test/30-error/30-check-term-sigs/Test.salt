@@ -2,20 +2,20 @@
 -- Trigger all the errors that can be produced by
 -- 'goTermSigs' when checking the top-level module structure.
 
--- Malformed type annotations on term declaration.
+-- Error: Malformed type annotations on term declaration.
 term term1 [x: #Derp]: #Nat = 5
 
--- Malformed result type.
+-- Error: Malformed result type.
 term term2 [x: #Nat]: #Derp = 5
 
--- Term declaration has duplicate parameters.
+-- Error: Term declaration has duplicate parameters.
 term term3 [x: #Nat, x: #Nat]: #Nat = x
 
--- Term declaration is rebound
+-- Error: Term declaration is rebound
 term term4: #Nat = 1
 term term4: #Nat = 2
 
--- Term declaration does not produce a value.
+-- Error: Term declaration does not produce a value.
 term term5 @[a: #Data]: [] = []
 test type term5 = term5
 

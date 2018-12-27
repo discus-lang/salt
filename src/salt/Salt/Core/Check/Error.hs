@@ -52,6 +52,12 @@ data Error a
         , errorWhere            :: [Where a]
         , errorName             :: Name }
 
+        | ErrorTestDeclImpure
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorNameMaybe        :: Maybe Name
+        , errorEffect           :: Type a }
+
         -- Structural arity ---------------------
         | ErrorTermsWrongArity
         { errorAnnot            :: a

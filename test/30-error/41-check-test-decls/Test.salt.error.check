@@ -1,0 +1,18 @@
+test/30-error/41-check-test-decls/Test.salt:1:1
+  Impure test declaration 'test1'
+    has effect: #Console
+
+  1:1    In test "test1"
+
+test/30-error/41-check-test-decls/Test.salt:9:1
+  Impure test declaration 'test2'
+    has effect: #Console
+
+  9:1    In test "test2"
+
+test/30-error/41-check-test-decls/Test.salt:14:1
+  Impure test declaration 'test3'
+    has effect: #Console
+
+  14:1   In test "test3"
+

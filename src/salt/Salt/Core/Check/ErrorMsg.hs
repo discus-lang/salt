@@ -40,6 +40,10 @@ ppre c  (ErrorTermDeclImpure  _a _wh nDecl tEffect)
 ppre _c (ErrorTestDeclRebound _a _wh nDecl)
  = vcat [ text "Test" %% squotes (pprVar nDecl) %% text "declared multiple times." ]
 
+ppre c  (ErrorTestDeclImpure  _a _wh mnDecl tEffect)
+ = vcat [ text "Impure test declaration" %% maybe empty (squotes . pprVar) mnDecl
+        , text "  has effect:" %% ppr c tEffect ]
+
 
 -- Structural arity ---------------------------------------
 ppre c (ErrorTermsWrongArity _a _wh ts ks)

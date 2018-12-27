@@ -2,22 +2,22 @@
 -- Trigger all the errors that can be produced by
 -- 'goTypeSigs' when checking the top-level module structure.
 
--- Malformed kind annotation on type synonym parameter.
+-- Error: Malformed kind annotation on type synonym parameter.
 type decl1 [a: #Derp]: #Data = #Nat
 
--- Malformed kind annotation on type synonym result.
+-- Error: Malformed kind annotation on type synonym result.
 type decl2 [a: #Data]: #Derp = #Nat
 
--- Type synonym has duplicate parameters.
+-- Error: Type synonym has duplicate parameters.
 type decl3 [a: #Data, a: #Data]: #Data = #Nat
 
--- Synonym is rebound.
+-- Error: Synonym is rebound.
 type decl4: #Data = #Nat
 type decl4: #Data = #Nat
 
--- Synonym is directly recursive.
+-- Error: Synonym is directly recursive.
 type decl5: #Data = decl5
 
--- Synonym is indirectly recursive.
+-- Error: Synonym is indirectly recursive.
 type decl6: #Data = decl7
 type decl7: #Data = [x: decl6, y: #Nat]

@@ -26,33 +26,52 @@ checkDeclTest _a ctx (DTest (DeclTestType a' n m))
 
 
 -- (t-decl-eval) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestEval a' n m))
- = do   let wh  = [WhereTestDecl a' n]
-        (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx Synth m
+checkDeclTest _a ctx (DTest (DeclTestEval a nDecl mBody))
+ = do   let wh  = [WhereTestDecl a nDecl]
 
-        -- TODO: check effects are empty.
-        return  $ DTest $ DeclTestEval a' n m'
+        -- Check the body term.
+        (mBody', _tResult, esResult)
+         <- checkTerm a wh ctx Synth mBody
+
+        -- The body must be pure.
+        eBody_red <- simplType a wh ctx (TSum esResult)
+        when (not $ isTPure eBody_red)
+         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_red
+
+        return  $ DTest $ DeclTestEval a nDecl mBody'
 
 
 -- (t-decl-exec) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestExec a' n m))
- = do   let wh  = [WhereTestDecl a' n]
-        (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx Synth m
+checkDeclTest _a ctx (DTest (DeclTestExec a nDecl mBody))
+ = do   let wh  = [WhereTestDecl a nDecl]
+
+        -- Check the body term.
+        (mBody', _tResult, esResult)
+         <- checkTerm a wh ctx Synth mBody
+
+        -- The body must be pure.
+        eBody_red <- simplType a wh ctx (TSum esResult)
+        when (not $ isTPure eBody_red)
+         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_red
 
         -- TODO: check expr returns a suspension
-        return  $ DTest $ DeclTestExec a' n m'
+        return  $ DTest $ DeclTestExec a nDecl mBody'
 
 
 -- (t-decl-assert) ----------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestAssert a' n m))
- = do   let wh  = [WhereTestDecl a' n]
-        (m', _tResult, _esResult)
-         <- checkTerm a' wh ctx (Check [TBool]) m
+checkDeclTest _a ctx (DTest (DeclTestAssert a nDecl mBody))
+ = do   let wh  = [WhereTestDecl a nDecl]
 
-        -- TODO: check effects are empty.
-        return  $ DTest $ DeclTestAssert a' n m'
+        -- Check the body term.
+        (mBody', _tResult, esResult)
+         <- checkTerm a wh ctx (Check [TBool]) mBody
+
+        -- The body must be pure.
+        eBody_red <- simplType a wh ctx (TSum esResult)
+        when (not $ isTPure eBody_red)
+         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_red
+
+        return  $ DTest $ DeclTestAssert a nDecl mBody'
 
 checkDeclTest _a _ctx decl
  = return decl
