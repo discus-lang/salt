@@ -20,6 +20,8 @@ import qualified Data.Either    as Either
 --   applications that were actually ill-kinded. We also prefer to see errors
 --   in the term declaratoins before dealing with errors in test declarations.
 --
+--   TODO: change result type to Either [Error a] (Module a, Context a)
+--
 checkModule
         :: Annot a
         => a -> Module a

@@ -3,6 +3,7 @@ module Salt.Core.Eval.Term where
 import Salt.Core.Eval.Error
 import Salt.Core.Eval.State
 import Salt.Core.Analysis.Support       ()
+import Salt.Core.Transform.Snv
 import Salt.Core.Transform.MapAnnot
 import Control.Exception
 import Control.Monad
@@ -46,27 +47,25 @@ evalTerm s a env (MVar u@(Bound n))
  = return [v]
 
  -- Bound in top-level environment.
- | Just (DeclTerm a' _n mps _tr mBody)
-   <- Map.lookup n (stateDeclTerms s)
- = case mps of
-        []      -> evalTerm s a' envEmpty mBody
-        mp0 : mps0
-         -> let makeClosure mp1 []
-                 = VClosure $ Closure envEmpty mp1 mBody
+ | Just (DeclTerm a' _n mpss _tr mBody)
+                <- Map.lookup n (stateDeclTerms s)
+ = case mpss of
+        -- Even if the term has no parameters it gets re-evaluated every time.
+        [] -> evalTerm s a' envEmpty mBody
 
-                makeClosure mp1 (mp1' : mps1')
-                 = VClosure $ Closure envEmpty mp1 (MVal (makeClosure mp1' mps1'))
+        -- For terms with parameters, build a closure with an empty environment.
+        mps1 : mpssRest
+           -> return [ VClosure $ Closure envEmpty mps1
+                                $ foldr MAbs mBody mpssRest ]
 
-            in   return [makeClosure mp0 mps0]
-
+ -- Variable is not bound.
  | otherwise
  = throw $ ErrorVarUnbound a u env
 
 
 -- Function abstraction.
 evalTerm _s _a env (MAbm bts mBody)
- = do   -- TODO: subst into types in params.
-        return [VClosure (Closure env (MPTerms bts) mBody)]
+ =      return [VClosure (Closure env (MPTerms bts) mBody)]
 
 
 -- Prim-term application
@@ -115,14 +114,10 @@ evalTerm s a env (MApp mFun mgs)
           -> case mgs of
                 MGTypes ts
                  -> do  let bs  = map fst bks
+                        when (not $ length ts == length bs)
+                         $ throw $ ErrorWrongTypeArity a (length bs) ts
 
-                        -- TODO: drop subst into tsArg'
-                        -- TODO: we need type bindings in the environment.
-                        let tsArg = ts
-                        when (not $ length tsArg == length bs)
-                         $ throw $ ErrorWrongTypeArity a (length bs) tsArg
-
-                        let env'' = envExtendsType (zip bs tsArg) env'
+                        let env'' = envExtendsType (zip bs ts) env'
                         evalTerm s a env'' mBody
 
                 _ -> throw $ ErrorAppTermWrongArgs a mps mgs
@@ -232,15 +227,19 @@ evalTerm s a env (MRun mSusp)
 
 -- List construction.
 evalTerm s a env (MKey MKList [MGTypes [t], MGTerms ms])
+
  = do   vsArg <- evalTerms s a env ms
-        return [VList t vsArg]
+        let t'  = snvApplyType upsEmpty (snvOfEnvTypes env) t
+        return [VList t' vsArg]
 
 
 -- Set construction.
 evalTerm s a env (MKey MKSet  [MGTypes [t], MGTerms ms])
  = do   vsArg <- evalTerms s a env ms
+        -- TODO: subst into type.
         return [VSet t $ Set.fromList $ map stripAnnot $ vsArg]
 
+-- TODO: map construction.
 
 -- No match.
 evalTerm _s a _ mm

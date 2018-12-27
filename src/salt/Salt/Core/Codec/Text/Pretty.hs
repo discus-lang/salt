@@ -277,48 +277,51 @@ instance Pretty c (Value a) where
                 True    -> text "#true"
                 False   -> text "#false"
 
-        VNat  i         -> string $ show i
+        VNat    i       -> string $ show i
 
-        VInt  i         -> string $ show i
-        VInt8  i        -> string $ show i
+        VInt    i       -> string $ show i
+        VInt8   i       -> string $ show i
         VInt16  i       -> string $ show i
         VInt32  i       -> string $ show i
         VInt64  i       -> string $ show i
 
-        VWord  i        -> string $ show i
+        VWord   i       -> string $ show i
         VWord8  i       -> string $ show i
-        VWord16  i      -> string $ show i
-        VWord32  i      -> string $ show i
-        VWord64  i      -> string $ show i
+        VWord16 i       -> string $ show i
+        VWord32 i       -> string $ show i
+        VWord64 i       -> string $ show i
 
-        VData n ts vs   -> parens $ pprCon n
-                                %% squared (map (ppr c) ts)
-                                %% squared (map (ppr c) vs)
+        VData n ts vs
+         -> parens $ pprCon n
+                %% squared (map (ppr c) ts)
+                %% squared (map (ppr c) vs)
 
         VRecord nvs
-         -> bracketed [ pprLbl n %% text "=" %% ppr c v | (n, v) <- nvs ]
+         -> bracketed
+                [ pprLbl n %% text "=" %% ppr c v | (n, v) <- nvs ]
 
         VVariant n t vs
-         -> parens $  text "`" % pprLbl n
-                   %% squared (punctuate (text ", ") (map (ppr c) vs))
-                   %% text "as" %% pprTArg c t
+         -> parens
+                $  text "`" % pprLbl n
+                %% squared (punctuate (text ", ") (map (ppr c) vs))
+                %% text "as" %% pprTArg c t
 
         VList t vs
          -> brackets
-         $  hcat ( text "list" : ppr c t : text "|"
-                 : punctuate (text ", ") (map (ppr c) vs))
+                $  text "list" %% pprTArg c t % text "|"
+                %  hcat (punctuate (text ", ") (map (ppr c) vs))
 
         VSet  t vs
          -> brackets
-         $  hcat ( text "set"  : ppr c t : text "|"
-                 : punctuate (text ", ") (map (ppr c) $ Set.toList vs))
+                $  text "set"  %% pprTArg c t % text "|"
+                %  hcat (punctuate (text ", ") (map (ppr c) $ Set.toList vs))
 
         VMap  tk tv kvs
          -> brackets
-         $  hcat (text "map"   : ppr c tk : ppr c tv : text "|"
-                 : punctuate (text ", ")
-                        [ ppr c vk %% text ":=" %% ppr c vv
-                        | (vk, vv) <- Map.toList kvs ])
+                $  text "map"  %% pprTArg c tk %% pprTArg c tv % text "|"
+                %  hcat (punctuate (text ", ")
+                               [ ppr c vk %% text ":=" %% ppr c vv
+                               | (vk, vv) <- Map.toList kvs ])
 
         VClosure clo    -> ppr c clo
 

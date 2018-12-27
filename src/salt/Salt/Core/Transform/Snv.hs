@@ -3,6 +3,7 @@ module Salt.Core.Transform.Snv where
 import Salt.Core.Transform.Ups
 import Salt.Core.Exp.Snv
 import Salt.Core.Exp
+import qualified Data.Map       as Map
 
 
 -- | Apply a type substitution to a type.
@@ -41,4 +42,15 @@ snvApplyType ups snv tt
 snvApplyTypeArgs :: Ups -> Snv (Type a) -> TypeArgs a -> TypeArgs a
 snvApplyTypeArgs ups snv (TGTypes ts)
  = TGTypes $ map (snvApplyType ups snv) ts
+
+
+snvOfEnvTypes :: Env a -> Snv (Type a)
+snvOfEnvTypes (Env bs)
+ = Snv $ concatMap takeBinds bs
+ where
+        takeBinds (EnvTypes mp)
+         = [ ((n, 0), t) | (n, t) <- Map.toList mp ]
+
+        takeBinds (EnvValues{})
+         = []
 

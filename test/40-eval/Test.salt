@@ -1,0 +1,8 @@
+
+-- term oneList @[a: #Data] [x: a]: #List a
+--  = #list'one @a x
+
+term oneList @[a: #Data] [x: a]: #List a
+ = [list a| x]
+
+test eval list = oneList @#Nat 5
