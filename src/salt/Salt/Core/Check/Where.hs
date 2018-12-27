@@ -17,23 +17,7 @@ data Where a
         , whereDeclName         :: Name }
 
         -- test decls -------------------------------------
-        | WhereTestKind
-        { whereAnnot            :: a
-        , whereTestName         :: Maybe Name }
-
-        | WhereTestType
-        { whereAnnot            :: a
-        , whereTestName         :: Maybe Name }
-
-        | WhereTestEval
-        { whereAnnot            :: a
-        , whereTestName         :: Maybe Name }
-
-        | WhereTestExec
-        { whereAnnot            :: a
-        , whereTestName         :: Maybe Name }
-
-        | WhereTestAssert
+        | WhereTestDecl
         { whereAnnot            :: a
         , whereTestName         :: Maybe Name }
 

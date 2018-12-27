@@ -30,6 +30,13 @@ ppre _c (ErrorTypeDeclsRecursive _a _wh nDecl nas)
 ppre _c (ErrorTypeDeclRebound _a _wh nDecl)
  = vcat [ text "Type" %% squotes (pprVar nDecl) %% text "declared multiple times." ]
 
+ppre _c (ErrorTermDeclRebound _a _wh nDecl)
+ = vcat [ text "Term" %% squotes (pprVar nDecl) %% text "declared multiple times." ]
+
+ppre _c (ErrorTestDeclRebound _a _wh nDecl)
+ = vcat [ text "Test" %% squotes (pprVar nDecl) %% text "declared multiple times." ]
+
+
 -- Structural arity ---------------------------------------
 ppre c (ErrorTermsWrongArity _a _wh ts ks)
  = let  reason = if length ts >= length ks then "Too many" else "Not enough"

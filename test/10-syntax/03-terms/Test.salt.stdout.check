@@ -8,7 +8,7 @@
 * symbol: #Symbol
 * symbol2: #Symbol
 * vec: [#Nat,#Nat,#Nat]
-* none: []
+* none1: []
 * the'nat: #Nat
 * the'things: [#Nat,#Bool]
 * the'nat's: #Nat
@@ -71,8 +71,8 @@
 * variant2: ∑[foo: [#Nat, #Nat]]
 * case0: [∑[none: #Unit, some: #Nat]] → [#Nat]
 * case1: [∑[none: [], one: #Nat, two: [#Nat, #Nat]]] → [#Nat]
-* none: #Option [#Nat]
-* some: #Option [#Nat]
+* option'none: #Option [#Nat]
+* option'som: #Option [#Nat]
 * list'empty: #List [#Nat]
 * list'some: #List [#Nat]
 * list'head: #Option [#Nat]

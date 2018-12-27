@@ -17,7 +17,7 @@ test type symbol2       = 'Bar1234
 
 -- Term vector ----------------------------------------------------------------
 test type vec           = [1, 2, 3]
-test type none          = []
+test type none1         = []
 
 
 -- Type ascription ------------------------------------------------------------
@@ -164,8 +164,8 @@ test type case1
 
 
 -- Option-----------------------------------------------------------------------
-test type none          = #None @#Nat []
-test type some          = #Some @#Nat 4
+test type option'none   = #None @#Nat []
+test type option'som    = #Some @#Nat 4
 
 
 -- List ------------------------------------------------------------------------

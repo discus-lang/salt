@@ -29,7 +29,7 @@ test type equiv'bump
 -- Type mentions a variable bound by a term level abstraction.
 --   The context for type equivalence checking must extend the context of the
 --   term it appears in.
-test type equiv'alpha'local
+test type equiv'alpha'bump
  =      λ@[ a: #Data] →
          λ[ f: ∀[b: #Data]. ∀[b: #Data]. [a, b^1] → [a, b^1, b]
           , g: ∀[c: #Data]. ∀[d: #Data]. [a, c]   → [a, c,   d]

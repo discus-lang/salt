@@ -36,6 +36,16 @@ data Error a
         , errorWhere            :: [Where a]
         , errorName             :: Name }
 
+        | ErrorTermDeclRebound
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name }
+
+        | ErrorTestDeclRebound
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name }
+
         -- Structural arity ---------------------
         | ErrorTermsWrongArity
         { errorAnnot            :: a

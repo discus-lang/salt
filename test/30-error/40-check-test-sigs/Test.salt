@@ -1,0 +1,7 @@
+
+-- Trigger all the errors that can be produced by
+-- 'goTestSigs' when checking the top-level module structure.
+
+-- Test declaration is rebound
+test type test1 = 1
+test type test1 = 2

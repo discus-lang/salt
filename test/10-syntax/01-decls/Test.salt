@@ -2,7 +2,7 @@
 
 -- Type decls -----------------------------------------------------------------
 -- Simple type decls with no parameters.
-type nat: #Data = #Nat
+type nat1: #Data = #Nat
 
 -- Higher kinded type decls with no parameters.
 type some: #Data ⇒ #Data = λ[a: #Data] ⇒ [x: a, y: a]
@@ -21,12 +21,12 @@ term fac [x: #Nat]: #Nat
 -- Test decls -----------------------------------------------------------------
 -- Test kind decls.
 test kind #Nat
-test kind nat = #Nat
+test kind nat2 = #Nat
 
 
 -- Test type decls.
 test type 5
-test type nat = 5
+test type nat3 = 5
 
 
 -- Test eval decls.

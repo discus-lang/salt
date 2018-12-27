@@ -1,7 +1,7 @@
 * #Data
-* nat: #Data
+* nat2: #Data
 * #Nat
-* nat: #Nat
+* nat3: #Nat
 * [720]
 * fac05: [120]
 print: hello

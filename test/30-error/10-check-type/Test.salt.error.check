@@ -1,171 +1,171 @@
 test/30-error/10-check-type/Test.salt:1:1
   Unknown type primitive '#derp'.
 
-  1:1    In kind test
+  1:1    In test
 
 test/30-error/10-check-type/Test.salt:11:1
   Type variable 'a' is not in scope.
 
-  11:1   In kind test
+  11:1   In test
 
 test/30-error/10-check-type/Test.salt:16:1
   Unknown kind constructor 'Derp'.
 
-  16:1   In kind test
+  16:1   In test
 
 test/30-error/10-check-type/Test.salt:19:1
   Duplicate type binders at same level
    with names {a}
 
-  19:1   In kind test
+  19:1   In test
 
 test/30-error/10-check-type/Test.salt:22:1
   Unexpected type: #Effect
         expecting: #Data
 
-  22:1   In kind test
+  22:1   In test
 
 test/30-error/10-check-type/Test.salt:27:1
   Unknown kind constructor 'Derp'.
 
-  27:1   In kind test
+  27:1   In test
 
 test/30-error/10-check-type/Test.salt:30:1
   Unknown type primitive '#Derp'.
 
-  30:1   In kind test
+  30:1   In test
 
 test/30-error/10-check-type/Test.salt:33:1
   Unexpected type: #Data
         expecting: #Effect
 
-  33:1   In kind test
+  33:1   In test
 
 test/30-error/10-check-type/Test.salt:36:1
   Not enough arguments in type application.
    parameter types: [#Data, #Data]
 
-  36:1   In kind test
+  36:1   In test
 
 test/30-error/10-check-type/Test.salt:39:1
   Too many arguments in type application.
    parameter types: [#Data, #Data]
 
-  39:1   In kind test
+  39:1   In test
 
 test/30-error/10-check-type/Test.salt:42:1
   Too many arguments in type application.
    parameter types: [#Data, #Data]
 
-  42:1   In kind test
+  42:1   In test
 
 test/30-error/10-check-type/Test.salt:47:1
   Unknown kind constructor 'Derp'.
 
-  47:1   In kind test
+  47:1   In test
 
 test/30-error/10-check-type/Test.salt:50:1
   Duplicate type binders at same level
    with names {a}
 
-  50:1   In kind test
+  50:1   In test
 
 test/30-error/10-check-type/Test.salt:53:1
   Unexpected type: #Effect
         expecting: #Data
 
-  53:1   In kind test
+  53:1   In test
 
 test/30-error/10-check-type/Test.salt:58:1
   Unknown kind constructor 'Derp'.
 
-  58:1   In kind test
+  58:1   In test
 
 test/30-error/10-check-type/Test.salt:61:1
   Duplicate type binders at same level
    with names {a}
 
-  61:1   In kind test
+  61:1   In test
 
 test/30-error/10-check-type/Test.salt:64:1
   Unexpected type: #Effect
         expecting: #Data
 
-  64:1   In kind test
+  64:1   In test
 
 test/30-error/10-check-type/Test.salt:69:1
   Unknown type primitive '#Derp'.
 
-  69:1   In kind test
+  69:1   In test
 
 test/30-error/10-check-type/Test.salt:72:1
   Unexpected type: #Effect
         expecting: #Data
 
-  72:1   In kind test
+  72:1   In test
 
 test/30-error/10-check-type/Test.salt:75:1
   Unknown type primitive '#Derp'.
 
-  75:1   In kind test
+  75:1   In test
 
 test/30-error/10-check-type/Test.salt:78:1
   Unexpected type: #Effect
         expecting: #Data
 
-  78:1   In kind test
+  78:1   In test
 
 test/30-error/10-check-type/Test.salt:83:1
   Unexpected type: #Effect
         expecting: #Data
 
-  83:1   In kind test
+  83:1   In test
 
 test/30-error/10-check-type/Test.salt:86:1
   Unexpected type: #Effect
         expecting: #Data
 
-  86:1   In kind test
+  86:1   In test
 
 test/30-error/10-check-type/Test.salt:89:1
   Duplicate fields in record type
     fields: {x}
 
-  89:1   In kind test
+  89:1   In test
 
 test/30-error/10-check-type/Test.salt:94:1
   Unexpected type: #Effect
         expecting: #Data
 
-  94:1   In kind test
+  94:1   In test
 
 test/30-error/10-check-type/Test.salt:97:1
   Unexpected type: #Effect
         expecting: #Data
 
-  97:1   In kind test
+  97:1   In test
 
 test/30-error/10-check-type/Test.salt:100:1
   Duplicate alternatives in variant type
     alternatives: {x}
 
-  100:1  In kind test
+  100:1  In test
 
 test/30-error/10-check-type/Test.salt:105:1
   Unexpected type: #Effect
         expecting: #Data
 
-  105:1  In kind test
+  105:1  In test
 
 test/30-error/10-check-type/Test.salt:108:1
   Unexpected type: #Data
         expecting: #Effect
 
-  108:1  In kind test
+  108:1  In test
 
 test/30-error/10-check-type/Test.salt:113:1
   Unexpected type: #Data
         expecting: #Effect
 
-  113:1  In kind test
+  113:1  In test
 

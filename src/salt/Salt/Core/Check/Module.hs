@@ -46,8 +46,7 @@ checkModule a mm
                 let errsRebound   = checkDeclTypeRebound   decls
                 let errsRecursive = checkDeclTypeRecursive decls
 
-                let errs    = errsSig ++ errsRebound ++ errsRecursive
-
+                let errs = errsSig ++ errsRebound ++ errsRecursive
                 if not $ null errs
                  then return (ctx, mm, errs)
                  else do
@@ -70,17 +69,24 @@ checkModule a mm
 
         -- Check type signatures on terms, before adding them to the context.
         goTermSigs ctx decls
-         = do   (decls', errs)
+         = do
+                -- Check type signatures on term decls.
+                (decls', errsSig)
                  <- checkDecls (checkDeclTermSig a ctx) decls
 
-                let ntsDeclTerm
-                         = [ (n, makeDeclTypeOfParamsResult pss tsResult)
-                           | DTerm (DeclTerm _a n pss tsResult _mBody) <- decls' ]
+                -- Check term decls are not rebound,
+                --  though they are permitted to be recursive.
+                let errsRebound = checkDeclTermRebound decls
 
-                let ctx' = ctx { contextModuleTerm = Map.fromList ntsDeclTerm }
-                if null errs
-                 then goTermDecls ctx' decls'
-                 else return (ctx, mm, errs)
+                let errs = errsSig ++ errsRebound
+                if not $ null errs
+                 then return (ctx, mm, errs)
+                 else do
+                        let ntsDeclTerm
+                                = [ (n, makeDeclTypeOfParamsResult pss tsResult)
+                                  | DTerm (DeclTerm _a n pss tsResult _mBody) <- decls' ]
+                        let ctx' = ctx { contextModuleTerm = Map.fromList ntsDeclTerm }
+                        goTermDecls ctx' decls'
 
         -- Check individual term declarations.
         goTermDecls ctx decls
@@ -88,8 +94,15 @@ checkModule a mm
                  <- checkDecls (checkDeclTerm a ctx) decls
 
                 if null errs
-                 then goTestDecls ctx decls'
+                 then goTestSigs ctx decls'
                  else return (ctx, mm, errs)
+
+        -- Check test signatures.
+        goTestSigs ctx decls
+         = do   let errs        = checkDeclTestRebound decls
+                if not $ null errs
+                 then return (ctx, mm, errs)
+                 else goTestDecls ctx decls
 
         -- Check individual test declarations.
         goTestDecls ctx decls

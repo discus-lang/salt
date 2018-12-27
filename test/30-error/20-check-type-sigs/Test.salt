@@ -3,21 +3,21 @@
 -- 'goTypeSigs' when checking the top-level module structure.
 
 -- Malformed kind annotation on type synonym parameter.
-type syn1 [a: #Derp]: #Data = #Nat
+type decl1 [a: #Derp]: #Data = #Nat
 
 -- Malformed kind annotation on type synonym result.
-type syn2 [a: #Data]: #Derp = #Nat
+type decl2 [a: #Data]: #Derp = #Nat
 
 -- Type synonym has duplicate parameters.
-type syn3 [a: #Data, a: #Data]: #Data = #Nat
+type decl3 [a: #Data, a: #Data]: #Data = #Nat
 
 -- Synonym is rebound.
-type syn4: #Data = #Nat
-type syn4: #Data = #Nat
+type decl4: #Data = #Nat
+type decl4: #Data = #Nat
 
 -- Synonym is directly recursive.
-type syn5: #Data = syn5
+type decl5: #Data = decl5
 
 -- Synonym is indirectly recursive.
-type syn6: #Data = syn7
-type syn7: #Data = [x: syn6, y: #Nat]
+type decl6: #Data = decl7
+type decl7: #Data = [x: decl6, y: #Nat]

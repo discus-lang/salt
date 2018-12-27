@@ -4,6 +4,8 @@ import Salt.Core.Check.Module.Base
 import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Type.Base
+import qualified Salt.Data.List as List
+import qualified Data.Set       as Set
 
 
 -- | Check type signatures of term declarations.
@@ -39,5 +41,19 @@ checkDeclTerm _a ctx (DTerm (DeclTerm a n mpss tResult mBody))
 
 checkDeclTerm _ _ decl
  = return decl
+
+
+-- | Check for rebound term declarations.
+checkDeclTermRebound :: Annot a => [Decl a] -> [Error a]
+checkDeclTermRebound decls
+ = let  nsDeclTerm = catMaybes [nameOfDecl d | d@DTerm{} <- decls]
+        nsDup      = Set.fromList $ List.duplicates nsDeclTerm
+
+        check (DTerm (DeclTerm aDecl nDecl _ _ _))
+         | Set.member nDecl nsDup
+         = Just $ ErrorTermDeclRebound aDecl [WhereTermDecl aDecl nDecl] nDecl
+        check _ = Nothing
+
+   in   mapMaybe check decls
 
 

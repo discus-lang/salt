@@ -1,44 +1,44 @@
 test/30-error/20-check-type-sigs/Test.salt:1:1
   Unknown kind constructor 'Derp'.
 
-  1:1    In type declaration "syn1"
+  1:1    In type declaration "decl1"
 
 test/30-error/20-check-type-sigs/Test.salt:9:1
   Unknown kind constructor 'Derp'.
 
-  9:1    In type declaration "syn2"
+  9:1    In type declaration "decl2"
 
 test/30-error/20-check-type-sigs/Test.salt:12:1
   Duplicate type binders at same level
    with names {a}
 
-  12:1   In type declaration "syn3"
+  12:1   In type declaration "decl3"
 
 test/30-error/20-check-type-sigs/Test.salt:15:1
-  Type 'syn4' declared multiple times.
+  Type 'decl4' declared multiple times.
 
-  15:1   In type declaration "syn4"
+  15:1   In type declaration "decl4"
 
 test/30-error/20-check-type-sigs/Test.salt:16:1
-  Type 'syn4' declared multiple times.
+  Type 'decl4' declared multiple times.
 
-  16:1   In type declaration "syn4"
+  16:1   In type declaration "decl4"
 
 test/30-error/20-check-type-sigs/Test.salt:19:1
-  Type declaration 'syn5' is recursive
-    though: {syn5}
+  Type declaration 'decl5' is recursive
+    though: {decl5}
 
-  19:1   In type declaration "syn5"
+  19:1   In type declaration "decl5"
 
 test/30-error/20-check-type-sigs/Test.salt:22:1
-  Type declaration 'syn6' is recursive
-    though: {syn7}
+  Type declaration 'decl6' is recursive
+    though: {decl7}
 
-  22:1   In type declaration "syn6"
+  22:1   In type declaration "decl6"
 
 test/30-error/20-check-type-sigs/Test.salt:23:1
-  Type declaration 'syn7' is recursive
-    though: {syn6}
+  Type declaration 'decl7' is recursive
+    though: {decl6}
 
-  23:1   In type declaration "syn7"
+  23:1   In type declaration "decl7"
 
