@@ -82,7 +82,7 @@ checkValue a wh ctx v
                  <- checkTerm a wh ctx2 Synth mBody
 
                 -- The body must be pure.
-                eBody_red <- simplType a wh ctx2 (TSum esBody)
+                eBody_red <- simplType a ctx2 (TSum esBody)
                 when (not $ isTPure eBody_red)
                  $ throw $ ErrorAbsTermImpure a wh eBody_red
 

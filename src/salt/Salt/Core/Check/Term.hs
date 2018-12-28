@@ -52,7 +52,7 @@ checkTermWith a wh ctx Synth (MRun m)
 
         -- The body must produce a suspension.
         -- When we run it it causes the effects in its annotations.
-        tsSusp_red' <- simplTypes a wh ctx tsSusp'
+        tsSusp_red' <- simplTypes a ctx tsSusp'
         case tsSusp_red' of
          [TSusp tsResult' e']
             -> return (MRun m', tsResult', es ++ [e'])
@@ -103,7 +103,7 @@ checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
 
 -- (t-var) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MVar u)
- =   contextResolveTermBound u ctx
+ =   contextResolveTermBound ctx u
  >>= \case
          Just t  -> return (m, [t], [])
          Nothing -> throw $ ErrorUnknownTermBound a wh u
@@ -121,7 +121,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTypes{} m)
 
         -- The body must be pure.
         -- TODO: ensure types like (pure + pure) are reduced to pure,
-        eBody_red   <- simplType a wh ctx' (TSum es)
+        eBody_red   <- simplType a ctx' (TSum es)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsTypeImpure a wh eBody_red
 
@@ -140,7 +140,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTerms{} m)
 
         -- The body must be pure.
         -- TODO: ensure types like (pure + pure) are reduced to pure,
-        eBody_red    <- simplType a wh ctx' (TSum es)
+        eBody_red    <- simplType a ctx' (TSum es)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsTermImpure a wh eBody_red
 
@@ -260,7 +260,7 @@ checkTermWith a wh ctx Synth (MLet bts mBind mBody)
 -- (t-rec) ------------------------------------------------
 checkTermWith a wh ctx mode mm@(MRecord ns ms)
  = do
-        mode'   <- simplMode a wh ctx mode
+        mode'   <- simplMode a ctx mode
         case mode' of
          -- If we have an expected type for all the fields then check the fields
          -- separately. This gives better error messages as we don't need to report
@@ -316,7 +316,7 @@ checkTermWith a wh ctx Synth (MProject nLabel mRecord)
 
         -- The body needs to have record type with the field that we were expecting.
         (ns, tgs, tRecord')
-         <- simplType a wh ctx tRecord
+         <- simplType a ctx tRecord
          >>= \case
                 t@(TRecord ns tgs) -> return (ns, tgs, t)
                 tThing  -> throw $ ErrorRecordProjectIsNot a wh tThing nLabel
@@ -339,7 +339,7 @@ checkTermWith a wh ctx Synth (MVariant nLabel msValues tVariant)
 
         -- The annotation tells us what type to expect for the body.
         (ns, tgs, tVariant')
-         <- simplType a wh ctx tVariant
+         <- simplType a ctx tVariant
          >>= \case
                 t@(TVariant ns tgs) -> return (ns, tgs, t)
                 tThing -> throw $ ErrorVariantAnnotIsNot a wh tThing
@@ -367,7 +367,7 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
 
         -- The scrutinee needs to be a variant.
         (nsScrut, mgsScrut)
-         <- simplType a wh ctx tScrut
+         <- simplType a ctx tScrut
          >>= \case
                 TVariant ns mgs -> return (ns, mgs)
                 _ -> throw $ ErrorCaseScrutNotVariant a wh tScrut

@@ -1,6 +1,5 @@
 
 module Salt.Core.Check.Reduce where
-import Salt.Core.Check.Where
 import Salt.Core.Check.Context
 import Salt.Core.Transform.Snv
 import Salt.Core.Exp
@@ -10,17 +9,17 @@ import Salt.Core.Exp
 -- | Reduce a type to weak head normal form.
 --   If the head is also an effect type then normalize it.
 reduceType
-        :: Annot a => a -> [Where a] -> Context a
+        :: Annot a => a -> Context a
         -> Type a -> IO (Maybe (Type a))
 
-reduceType a wh ctx (TAnn _a t)
- = reduceType a wh ctx t
+reduceType a ctx (TAnn _a t)
+ = reduceType a ctx t
 
-reduceType a wh ctx tt@(TVar u)
- = contextResolveTypeBound u ctx
+reduceType a ctx tt@(TVar u)
+ = contextResolveTypeBound ctx u
  >>= \case
        Just (_k, Just tSyn)
-         ->  reduceType a wh ctx tSyn
+         ->  reduceType a ctx tSyn
          >>= \case
                Just tRed  -> return $ Just tRed
                Nothing    -> return $ Just tSyn
@@ -28,25 +27,25 @@ reduceType a wh ctx tt@(TVar u)
        _ -> return $ Just tt
 
 -- TODO: flattenType should report whether it's done anything.
-reduceType _a _wh _ctx tt@(TSum{})
+reduceType _a _ctx tt@(TSum{})
  = return $ Just $ flattenType tt
 
-reduceType a wh ctx (TApt tFun tsArgs)
- = simplType a wh ctx tFun
+reduceType a ctx (TApt tFun tsArgs)
+ = simplType a ctx tFun
  >>= \case
         TAbs (TPTypes bks) tBody
          | length bks == length tsArgs
          -> do  let ns     = [n | BindName n <- map fst bks]
                 let snv    = snvOfBinds $ zip ns tsArgs
                 let tBody' = snvApplyType upsEmpty snv tBody
-                reduceType a wh ctx tBody'
+                reduceType a ctx tBody'
                  >>= \case
                         Just tRed -> return $ Just tRed
                         Nothing   -> return $ Just tBody'
 
         _ -> return Nothing
 
-reduceType _ _ _ _
+reduceType _ _ _
  =      return Nothing
 
 
@@ -54,11 +53,11 @@ reduceType _ _ _ _
 -- | Like `reduceType` but just return the original type if it cannot be
 --   reduced further.
 simplType
-        :: Annot a => a -> [Where a] -> Context a
+        :: Annot a => a -> Context a
         -> Type a -> IO (Type a)
 
-simplType a wh ctx tt
- = reduceType a wh ctx tt
+simplType a ctx tt
+ = reduceType a ctx tt
  >>= \case
         Nothing  -> return tt
         Just tt' -> return tt'
@@ -68,22 +67,22 @@ simplType a wh ctx tt
 --   We look through annotations, unfold synonyms and reduce type applications
 --   to reveal the head constructor.
 simplTypes
-        :: Annot a => a -> [Where a] -> Context a
+        :: Annot a => a -> Context a
         -> [Type a] -> IO [Type a]
 
-simplTypes a wh ctx ts
- = mapM (simplType a wh ctx) ts
+simplTypes a ctx ts
+ = mapM (simplType a ctx) ts
 
 
 -- | Reduce the expected types in a Mode
 simplMode
-        :: Annot a => a -> [Where a] -> Context a
+        :: Annot a => a -> Context a
         -> Mode a -> IO (Mode a)
 
-simplMode a wh ctx mode
+simplMode a ctx mode
  = case mode of
         Check ts
-         -> do  ts'     <- simplTypes a wh ctx ts
+         -> do  ts'     <- simplTypes a ctx ts
                 return  $ Check ts'
 
         _ -> return mode

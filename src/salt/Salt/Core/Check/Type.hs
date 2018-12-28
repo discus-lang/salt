@@ -31,7 +31,7 @@ checkTypeWith a wh _ctx t@(TRef (TRPrm n))
 
 -- (k-var) ------------------------------------------------
 checkTypeWith a wh ctx t@(TVar u)
- = contextResolveTypeBound u ctx
+ = contextResolveTypeBound ctx u
  >>= \case
          Just (k, _) -> return (t, k)
          Nothing     -> throw $ ErrorUnknownTypeBound a wh u

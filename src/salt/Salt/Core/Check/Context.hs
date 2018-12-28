@@ -120,8 +120,12 @@ contextBindTermParams mps ctx
 --   * If it is transparanetly bound as a synonym we get both the kind and body type,
 --   * If it is opaquely bound by an abstraction we get just the kind.
 --
-contextResolveTypeBound :: Bound -> Context a -> IO (Maybe (Kind a, Maybe (Type a)))
-contextResolveTypeBound (BoundWith n d0) ctx
+contextResolveTypeBound
+        :: Context a
+        -> Bound
+        -> IO (Maybe (Kind a, Maybe (Type a)))
+
+contextResolveTypeBound ctx (BoundWith n d0)
  = goLocal d0 upsEmpty (contextLocal ctx)
  where
         -- Look through the local context.
@@ -169,8 +173,8 @@ contextResolveTypeBound (BoundWith n d0) ctx
 --   of binders we need to bump in the resulting type, and apply it before
 --   returning the type.
 --
-contextResolveTermBound :: Bound -> Context a -> IO (Maybe (Type a))
-contextResolveTermBound (BoundWith n d0) ctx
+contextResolveTermBound :: Context a -> Bound -> IO (Maybe (Type a))
+contextResolveTermBound ctx (BoundWith n d0)
  = goLocal d0 upsEmpty (contextLocal ctx)
  where
         -- See if this local binder is the one we are looking for.

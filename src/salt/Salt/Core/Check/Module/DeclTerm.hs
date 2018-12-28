@@ -40,7 +40,7 @@ checkDeclTerm _a ctx (DTerm (DeclTerm a nDecl mpss tsResult mBody))
          <- checkTerm a wh ctx' (Check tsResult) mBody
 
         -- The body must be pure.
-        eBody_red <- simplType a wh ctx' (TSum esResult)
+        eBody_red <- simplType a ctx' (TSum esResult)
         when (not $ isTPure eBody_red)
          $ case reverse mpss of
                 MPTypes{} : _   -> throw $ ErrorAbsTypeImpure  a wh eBody_red

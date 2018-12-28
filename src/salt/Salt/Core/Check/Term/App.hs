@@ -13,7 +13,7 @@ checkTermAppTypes
 checkTermAppTypes a wh ctx tFun tsArg
  = do
         -- The funtion needs to have a forall type.
-        tFun_red <- simplType a wh ctx tFun
+        tFun_red <- simplType a ctx tFun
         (bksParam, tResult)
          <- case tFun_red of
                 TForall bksParam tResult
@@ -55,7 +55,7 @@ checkTermAppTerms
 checkTermAppTerms a wh ctx tFun msArg
  = do
         -- The function needs to have a functional type.
-        tFun_red <- simplType a wh ctx tFun
+        tFun_red <- simplType a ctx tFun
         let (tsParam, tsResult)
                 = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
                 $ takeTFun tFun_red
@@ -86,7 +86,7 @@ checkTermAppTerm
 checkTermAppTerm a wh ctx tFun mArg
  = do
         -- The function needs to have a functional type.
-        tFun_red <- simplType a wh ctx tFun
+        tFun_red <- simplType a ctx tFun
         let (tsParam, tsResult)
                 = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
                 $ takeTFun tFun_red

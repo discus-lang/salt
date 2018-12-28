@@ -35,7 +35,7 @@ checkDeclTest _a ctx (DTest (DeclTestEval a nDecl mBody))
          <- checkTerm a wh ctx Synth mBody
 
         -- The body must be pure.
-        eBody_simp <- simplType a wh ctx (TSum esResult)
+        eBody_simp <- simplType a ctx (TSum esResult)
         when (not $ isTPure eBody_simp)
          $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
 
@@ -51,12 +51,12 @@ checkDeclTest _a ctx (DTest (DeclTestExec a nDecl mBody))
          <- checkTerm a wh ctx Synth mBody
 
         -- The body must be pure.
-        eBody_simp <- simplType a wh ctx (TSum esResult)
+        eBody_simp <- simplType a ctx (TSum esResult)
         when (not $ isTPure eBody_simp)
          $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
 
         -- The result must be a suspension to execute.
-        tsResult_simp <- simplTypes a wh ctx tsResult
+        tsResult_simp <- simplTypes a ctx tsResult
         case tsResult_simp of
          [t] | isTSusp t        -> return ()
          _ -> throw $ ErrorTestDeclNotSusp a wh nDecl tsResult
@@ -73,7 +73,7 @@ checkDeclTest _a ctx (DTest (DeclTestAssert a nDecl mBody))
          <- checkTerm a wh ctx (Check [TBool]) mBody
 
         -- The body must be pure.
-        eBody_simp <- simplType a wh ctx (TSum esResult)
+        eBody_simp <- simplType a ctx (TSum esResult)
         when (not $ isTPure eBody_simp)
          $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
 

@@ -72,7 +72,7 @@ checkTypeEq ctx aL psL tL aR psR tR
         -- Reduce applications of type operators.
         goReduceL
          | TApt{}       <- tL
-         = reduceType aL [] ctx tL
+         = reduceType aL ctx tL
          >>= \case
                 Just tL' -> checkTypeEq ctx aL psL tL' aR psR tR
                 Nothing  -> goReduceR
@@ -81,7 +81,7 @@ checkTypeEq ctx aL psL tL aR psR tR
 
         goReduceR
          | TApt{}       <- tR
-         = reduceType aR [] ctx tR
+         = reduceType aR ctx tR
          >>= \case
                 Just tR' -> checkTypeEq ctx aL psL tL aR psR tR'
                 Nothing  -> goRest
