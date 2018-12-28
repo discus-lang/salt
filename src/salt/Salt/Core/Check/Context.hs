@@ -122,31 +122,40 @@ contextBindTermParams mps ctx
 --
 contextResolveTypeBound
         :: Context a
+        -> [TypeParams a]
         -> Bound
-        -> IO (Maybe (Kind a, Maybe (Type a)))
+        -> IO (Maybe (TypeDef a))
 
-contextResolveTypeBound ctx (BoundWith n d0)
- = goLocal d0 upsEmpty (contextLocal ctx)
+contextResolveTypeBound ctx ps0 (BoundWith n d0)
+ = goParams 0 d0 upsEmpty ps0
  where
-        -- Look through the local context.
-        goLocal d ups (ElemTypes nks : rest)
-         | d < 0        = return Nothing
-         | otherwise
-         = case Map.lookup n nks of
-            Nothing
-             -> let ups' = upsCombine ups (upsOfNames $ Map.keys nks)
-                in  goLocal d ups' rest
-
+        -- Look through parameters
+        goParams level d ups (TPTypes bks : tpss)
+         = let ups' = upsCombine ups (upsOfBinds $ map fst bks) in
+           case lookup (BindName n) bks of
+            Nothing      -> goParams (level + 1) d ups' tpss
             Just k
-             | d == 0       -> return $ Just (k, Nothing)
-             | otherwise
-             -> let ups' = upsCombine ups (upsOfNames $ Map.keys nks)
-                in  goLocal (d - 1) ups' rest
+             | d == 0    -> return $ Just $ TypeParam k level
+             | otherwise -> goParams (level + 1) (d - 1) ups' tpss
 
-        goLocal d ups (ElemTerms{} : rest)
-         = goLocal d ups rest
+        goParams level d ups []
+         = goLocal level d ups (contextLocal ctx)
 
-        goLocal d ups []
+        -- Look through the local context.
+        goLocal level d ups (ElemTypes nks : rest)
+         | d < 0    = return Nothing
+         | otherwise
+         = let ups' = upsCombine ups (upsOfNames $ Map.keys nks) in
+           case Map.lookup n nks of
+            Nothing      -> goLocal (level + 1) d ups' rest
+            Just k
+             | d == 0    -> return $ Just $ TypeLocal k level
+             | otherwise -> goLocal (level + 1) (d - 1) ups' rest
+
+        goLocal level d ups (ElemTerms{} : rest)
+         = goLocal level d ups rest
+
+        goLocal _level d ups []
          | d == 0       = goGlobal ups
          | otherwise    = return Nothing
 
@@ -154,9 +163,25 @@ contextResolveTypeBound ctx (BoundWith n d0)
         goGlobal ups
          = case Map.lookup n (contextModuleType ctx) of
             Nothing     -> return $ Nothing
-            Just (k, t) -> return $ Just (k, Just $ upsApplyType ups t)
+            Just (k, t) -> return $ Just $ TypeDecl k (upsApplyType ups t)
 
 
+-- | The definition mode of a resolved type.
+data TypeDef a
+        -- | Type was defined as a global declaration.
+        = TypeDecl   (Kind a) (Type a)
+
+        -- | Type was defined in the local context,
+        --   at the given level.
+        | TypeLocal  (Kind a) Int
+
+        -- | Type was defined in a local parameter at the given level,
+        --   and is subject to alpha-conversion.
+        | TypeParam  (Kind a) Int
+        deriving Show
+
+
+---------------------------------------------------------------------------------------------------
 -- | Lookup a bound term variable from the context.
 ---
 --   If the there are type binders between the point where a type is used

@@ -31,10 +31,11 @@ checkTypeWith a wh _ctx t@(TRef (TRPrm n))
 
 -- (k-var) ------------------------------------------------
 checkTypeWith a wh ctx t@(TVar u)
- = contextResolveTypeBound ctx u
+ = contextResolveTypeBound ctx [] u
  >>= \case
-         Just (k, _) -> return (t, k)
-         Nothing     -> throw $ ErrorUnknownTypeBound a wh u
+         Just (TypeDecl  k _) -> return (t, k)
+         Just (TypeLocal k _) -> return (t, k)
+         _ -> throw $ ErrorUnknownTypeBound a wh u
 
 
 -- (k-abs) ------------------------------------------------

@@ -16,9 +16,9 @@ reduceType a ctx (TAnn _a t)
  = reduceType a ctx t
 
 reduceType a ctx tt@(TVar u)
- = contextResolveTypeBound ctx u
+ = contextResolveTypeBound ctx [] u
  >>= \case
-       Just (_k, Just tSyn)
+       Just (TypeDecl _k tSyn)
          ->  reduceType a ctx tSyn
          >>= \case
                Just tRed  -> return $ Just tRed

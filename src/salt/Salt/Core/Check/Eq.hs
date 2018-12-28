@@ -2,9 +2,7 @@
 module Salt.Core.Check.Eq where
 import Salt.Core.Check.Reduce
 import Salt.Core.Check.Context
-import Salt.Core.Transform.Ups
 import Salt.Core.Exp
-import qualified Data.Map       as Map
 
 
 ---------------------------------------------------------------------------------------------------
@@ -23,11 +21,6 @@ type CheckTypeEq a x
 ---------------------------------------------------------------------------------------------------
 -- | Check that two types are equal.
 --   If the types are not equal we give the inner-most annotation from both sides.
---
---   TODO: This is really too verbose. Try to pack it down.
---   reduceType already unfolds synonyms, so we don't need to do it again
---   in resolveLevelKind.
---
 checkTypeEq :: CheckTypeEq a (Type a)
 checkTypeEq ctx aL psL tL aR psR tR
  = goAnn
@@ -42,21 +35,23 @@ checkTypeEq ctx aL psL tL aR psR tR
         --   If it's a synonym then we unfold it in-place.
         goSynL
          | TVar uL <- tL
-         = resolveLevelKind ctx psL uL
+         = contextResolveTypeBound ctx psL uL
          >>= \case
-                Just (Left tL')  -> checkTypeEq ctx aL psL tL' aR psR tR
-                Just (Right lkL) -> goSynR (Just lkL)
-                Nothing          -> goSynR  Nothing
+                Just (TypeDecl  _ tL') -> checkTypeEq ctx aL psL tL' aR psR tR
+                Just (TypeParam kL lL) -> goSynR (Just (lL, kL))
+                Just (TypeLocal kL lL) -> goSynR (Just (lL, kL))
+                Nothing -> goSynR  Nothing
 
          | otherwise = goSynR Nothing
 
         goSynR mlkL
          | TVar uR <- tR
-         = resolveLevelKind ctx psR uR
+         = contextResolveTypeBound ctx psR uR
          >>= \case
-                Just (Left tR')  -> checkTypeEq ctx aL psL tL  aR psR tR'
-                Just (Right lkR) -> goBound mlkL (Just lkR)
-                Nothing          -> goBound mlkL Nothing
+                Just (TypeDecl  _ tR') -> checkTypeEq ctx aL psL tL  aR psR tR'
+                Just (TypeParam kR lR) -> goBound mlkL (Just (lR, kR))
+                Just (TypeLocal kR lR) -> goBound mlkL (Just (lR, kR))
+                Nothing -> goBound mlkL Nothing
 
          | otherwise = goBound mlkL Nothing
 
@@ -137,65 +132,6 @@ checkTypeArgsEqs :: Type a -> Type a -> CheckTypeEq a [TypeArgs a]
 checkTypeArgsEqs tBlame1 tBlame2 ctx a1 ps1 gs1 a2 ps2 gs2
  = altsM [ checkTypeArgsEq tBlame1 tBlame2 ctx a1 ps1 g1 a2 ps2 g2
          | g1 <- gs1 | g2 <- gs2 ]
-
-
----------------------------------------------------------------------------------------------------
--- | Resolve a bound type variable.
---
---    We take the top level context which contains definitions of
---    type synonyms, along with the stack of parameters we've descended
---    into so far.
---
---    If the variable is bound to a synonym we get Left the definition,
---    where any variables in the type have been lifted over the binders
---    in the stack of parameters.
---
---    If the variable is bound via a parameter we get the binding level,
---    counting outwards from the current position, and the kind of the
---    binding.
---
-resolveLevelKind
-        :: Context a -> [TypeParams a] -> Bound
-        -> IO (Maybe (Either (Type a) (Int, Kind a)))
-
-resolveLevelKind ctx ps0 (BoundWith n d0)
- = goParams 0 d0 upsEmpty ps0
- where
-        -- Look through the parameters.
-        goParams level d ups (TPTypes bks : tpss)
-         = let ups' = upsCombine ups (upsOfBinds $ map fst bks) in
-           case lookup (BindName n) bks of
-            Nothing      -> goParams (level + 1) d ups' tpss
-            Just k
-             | d == 0    -> return $ Just $ Right (level, k)
-             | otherwise -> goParams (level + 1) (d - 1) ups' tpss
-
-        goParams level d ups []
-         = goLocal level d ups (contextLocal ctx)
-
-        -- Look through local bindings in the context.
-        goLocal level d ups (ElemTypes nks : tpss)
-         | d < 0        = return Nothing
-         | otherwise
-         = let ups' = upsCombine ups (upsOfNames $ Map.keys nks) in
-           case Map.lookup n nks of
-            Nothing      -> goLocal level d ups' tpss
-            Just k
-             | d == 0    -> return $ Just $ Right (level, k)
-             | otherwise -> goLocal  (level + 1) (d - 1) ups' tpss
-
-        goLocal level d ups (ElemTerms{} : tpss)
-         = goLocal level d ups tpss
-
-        goLocal _level d ups []
-         | d == 0       = goGlobal ups
-         | otherwise    = return $ Nothing
-
-        -- Look for synonyms in the global context.
-        goGlobal ups
-         = case Map.lookup n (contextModuleType ctx) of
-            Nothing      -> return Nothing
-            Just (_k, t) -> return $ Just $ Left $ upsApplyType ups t
 
 
 ---------------------------------------------------------------------------------------------------
