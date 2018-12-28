@@ -106,7 +106,7 @@ checkValueIs
 checkValueIs a wh ctx tExpected v
  = do   tActual <- checkValue a wh ctx v
 
-        checkTypeEqs ctx a [] [tExpected] a [] [tActual]
+        checkTypeEquivs ctx a [] [tExpected] a [] [tActual]
          >>= \case
                 Nothing -> return ()
                 Just ((_a1, t1Err), (_a2, t2Err))

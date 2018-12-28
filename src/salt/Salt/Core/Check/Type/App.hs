@@ -22,7 +22,7 @@ checkTypeAppTypes a wh ctx kFun tsArg
                 goCheckParams ksParam kResult tsArg' ksArg
 
         goCheckParams ksParam kResult tsArg' ksArg
-         = checkTypeEqs ctx a [] ksParam a [] ksArg
+         = checkTypeEquivs ctx a [] ksParam a [] ksArg
          >>= \case
                 Nothing -> return (tsArg', kResult)
                 Just ((_aErr1', kErr1), (_aErr2, kErr2))

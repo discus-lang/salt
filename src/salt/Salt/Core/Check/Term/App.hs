@@ -29,7 +29,7 @@ checkTermAppTypes a wh ctx tFun tsArg
          $ throw $ ErrorAppTermTypeWrongArity a wh bksParam tsArg
 
         -- Check the parameter and argument kinds match.
-        (checkTypeEqs ctx a [] (map snd bksParam) a [] ksArg
+        (checkTypeEquivs ctx a [] (map snd bksParam) a [] ksArg
          >>= \case
                 Nothing -> return ()
                 Just ((_aErr1', tErr1), (_aErr2', tErr2))
@@ -69,7 +69,7 @@ checkTermAppTerms a wh ctx tFun msArg
          <- checkTerms a wh ctx (Check tsParam) msArg
 
         -- Check the parameter and argument types match.
-        checkTypeEqs ctx a [] tsParam a [] tsArg
+        checkTypeEquivs ctx a [] tsParam a [] tsArg
          >>= \case
                 Nothing -> return  (msArg', tsResult, esArgs)
                 Just ((_aErr1', tErr1), (_aErr2', tErr2))
@@ -100,7 +100,7 @@ checkTermAppTerm a wh ctx tFun mArg
          $ throw $ ErrorAppTermTermWrongArity a wh tsParam tsArg
 
         -- Check the parameter and argument tpyes match.
-        checkTypeEqs ctx a [] tsParam a [] tsArg
+        checkTypeEquivs ctx a [] tsParam a [] tsArg
          >>= \case
                 Nothing -> return (mArg', tsResult, esArg)
                 Just ((_aErr1', tErr1), (_aErr2', tErr2))

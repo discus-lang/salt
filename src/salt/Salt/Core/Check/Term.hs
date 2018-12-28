@@ -238,7 +238,7 @@ checkTermWith a wh ctx Synth (MLet bts mBind mBody)
              = return tBind
 
              | otherwise
-             = checkTypeEq ctx a [] tAnnot a [] tBind
+             = checkTypeEquiv ctx a [] tAnnot a [] tBind
              >>= \case
                 Nothing -> return tBind
                 Just ((_a1, tErr1), (_a2, tErr2))

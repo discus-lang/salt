@@ -1,7 +1,7 @@
 
 module Salt.Core.Check.Term.Base
         ( module Salt.Core.Check.Context
-        , module Salt.Core.Check.Eq
+        , module Salt.Core.Check.Equiv
         , module Salt.Core.Check.Error
         , module Salt.Core.Check.Where
         , module Salt.Core.Check.Reduce
@@ -19,7 +19,7 @@ module Salt.Core.Check.Term.Base
         , checkTermsAreAll)
 where
 import Salt.Core.Check.Context
-import Salt.Core.Check.Eq
+import Salt.Core.Check.Equiv
 import Salt.Core.Check.Error
 import Salt.Core.Check.Where
 import Salt.Core.Check.Reduce
@@ -70,7 +70,7 @@ checkTermIs a wh ctx tsExpected m
         when (length tsActual /= length tsExpected)
          $ throw $ ErrorTermsWrongArity a wh tsActual tsExpected
 
-        checkTypeEqs ctx a [] tsExpected a [] tsActual
+        checkTypeEquivs ctx a [] tsExpected a [] tsActual
          >>= \case
                 Nothing -> return (m', tsActual, esActual)
                 Just ((_a1, t1Err), (_a2, t2Err))

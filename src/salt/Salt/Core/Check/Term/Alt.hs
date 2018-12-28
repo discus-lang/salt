@@ -40,7 +40,7 @@ checkAlts a wh ctx mCase tScrut nmgsScrut alts
          $ throw $ ErrorCaseAltPatBindConflict a wh nPat nsPatDup
 
         -- Check that the pattern field types match the fields of the scrutinee.
-        (checkTypeEqs ctx a [] tsPat a [] tsField
+        (checkTypeEquivs ctx a [] tsPat a [] tsField
          >>= \case
               Nothing -> return ()
               Just ((_a1, t1), (_a2, t2))

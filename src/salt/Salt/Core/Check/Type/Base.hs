@@ -1,7 +1,7 @@
 
 module Salt.Core.Check.Type.Base
         ( module Salt.Core.Check.Context
-        , module Salt.Core.Check.Eq
+        , module Salt.Core.Check.Equiv
         , module Salt.Core.Check.Kind
         , module Salt.Core.Check.Where
         , module Salt.Core.Check.Error
@@ -20,7 +20,7 @@ module Salt.Core.Check.Type.Base
         , checkTypeArgsAreAll)
 where
 import Salt.Core.Check.Context
-import Salt.Core.Check.Eq
+import Salt.Core.Check.Equiv
 import Salt.Core.Check.Kind
 import Salt.Core.Check.Where
 import Salt.Core.Check.Error
@@ -68,7 +68,7 @@ checkTypesAre a wh ctx ksExpected ts
         when (not $ length ts' == length ksActual)
          $ throw $ ErrorAppTypeTypeWrongArity a wh ksExpected ksActual
 
-        checkTypeEqs ctx a [] ksExpected a [] ksActual
+        checkTypeEquivs ctx a [] ksExpected a [] ksActual
          >>= \case
                 Nothing -> return ts'
                 Just ((_aErr1', kErr1), (_aErr2, kErr2))
