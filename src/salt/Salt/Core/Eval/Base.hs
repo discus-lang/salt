@@ -1,5 +1,5 @@
 
-module Salt.Core.Eval.State
+module Salt.Core.Eval.Base
         ( module Salt.Core.Exp
         , module Data.Typeable
         , module Data.Function
@@ -8,7 +8,9 @@ module Salt.Core.Eval.State
         , Set, Map
 
         , State(..)
-        , Config(..), configDefault)
+        , Config(..), configDefault
+        , EvalType
+        , EvalTerm)
 where
 import Salt.Core.Exp
 import Data.Function
@@ -40,4 +42,13 @@ configDefault
         = Config
         { configThing   = False }
 
+
+-- | The usual shape of term evaluation functions.
+type EvalType a x y
+        = Annot a => State a -> a -> TypeEnv a -> x -> IO y
+
+
+-- | The usual shape of type evaluation functions.
+type EvalTerm a x y
+        = Annot a => State a -> a -> TermEnv a -> x -> IO y
 

@@ -44,13 +44,13 @@ snvApplyTypeArgs ups snv (TGTypes ts)
  = TGTypes $ map (snvApplyType ups snv) ts
 
 
-snvOfEnvTypes :: Env a -> Snv (Type a)
-snvOfEnvTypes (Env bs)
+snvOfTermEnvTypes :: TermEnv a -> Snv (Type a)
+snvOfTermEnvTypes (TermEnv bs)
  = Snv $ concatMap takeBinds bs
  where
-        takeBinds (EnvTypes mp)
+        takeBinds (TermEnvTypes mp)
          = [ ((n, 0), t) | (n, t) <- Map.toList mp ]
 
-        takeBinds (EnvValues{})
+        takeBinds (TermEnvValues{})
          = []
 

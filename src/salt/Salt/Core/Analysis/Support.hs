@@ -122,7 +122,16 @@ instance HasSupport (Type a) where
         TKey tk ts      -> mconcat (supportOf tk : map supportOf ts)
 
 
-instance HasSupport TypeRef where
+instance HasSupport (TypeRef a) where
+ supportOf tr
+  = case tr of
+        TRPrm{}         -> mempty
+        TRCon{}         -> mempty
+        TRClo clo       -> supportOf clo
+
+
+instance HasSupport (TypeClosure a) where
+ -- TODO: get real support of closures.
  supportOf _    = mempty
 
 
@@ -155,6 +164,7 @@ instance HasSupport (Term a) where
 
 
 instance HasSupport (TermRef a) where
+ -- TODO: get real support of closures.
  supportOf _    = mempty
 
 

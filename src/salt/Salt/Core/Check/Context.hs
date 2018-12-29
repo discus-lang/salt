@@ -124,7 +124,7 @@ contextResolveTypeBound
         :: Context a
         -> [TypeParams a]
         -> Bound
-        -> IO (Maybe (TypeDef a))
+        -> IO (Maybe (TypeBind a))
 
 contextResolveTypeBound ctx ps0 (BoundWith n d0)
  = goParams 0 d0 upsEmpty ps0
@@ -164,6 +164,22 @@ contextResolveTypeBound ctx ps0 (BoundWith n d0)
          = case Map.lookup n (contextModuleType ctx) of
             Nothing     -> return $ Nothing
             Just (k, t) -> return $ Just $ TypeDecl k (upsApplyType ups t)
+
+
+-- | The definition mode of a resolved type.
+data TypeBind a
+        -- | Type was defined as a global declaration.
+        = TypeDecl   (Kind a) (Type a)
+
+        -- | Type was defined in the local context,
+        --   at the given level.
+        | TypeLocal  (Kind a) Int
+
+        -- | Type was defined in a local parameter at the given level,
+        --   and is subject to alpha-conversion.
+        | TypeParam  (Kind a) Int
+        deriving Show
+
 
 
 ---------------------------------------------------------------------------------------------------

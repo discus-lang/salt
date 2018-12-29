@@ -65,10 +65,18 @@ instance MapAnnot Type where
  mapAnnot f tt
   = case tt of
         TAnn a t        -> TAnn (f a) (mapAnnot f t)
-        TRef r          -> TRef r
+        TRef r          -> TRef (mapAnnot f r)
         TVar u          -> TVar u
         TAbs p t        -> TAbs (mapAnnot f p) (mapAnnot f t)
         TKey k ms       -> TKey k (map (mapAnnot f) ms)
+
+
+instance MapAnnot TypeRef where
+ mapAnnot f tr
+  = case tr of
+        TRPrm n         -> TRPrm n
+        TRCon n         -> TRCon n
+        TRClo clo       -> TRClo (mapAnnot f clo)
 
 
 instance MapAnnot TypeParams where
@@ -81,6 +89,22 @@ instance MapAnnot TypeArgs where
  mapAnnot f gg
   = case gg of
         TGTypes ts      -> TGTypes (map (mapAnnot f) ts)
+
+
+instance MapAnnot TypeClosure where
+ mapAnnot f (TypeClosure env mps m)
+  = TypeClosure (mapAnnot f env) (mapAnnot f mps) (mapAnnot f m)
+
+
+instance MapAnnot TypeEnv where
+ mapAnnot f (TypeEnv bs)
+  = TypeEnv (map (mapAnnot f) bs)
+
+
+instance MapAnnot TypeEnvBinds where
+ mapAnnot f eb
+  = case eb of
+        TypeEnvTypes  ts    -> TypeEnvTypes  (Map.map (mapAnnot f) ts)
 
 
 ---------------------------------------------------------------------------------------------------
@@ -100,7 +124,6 @@ instance MapAnnot TermRef where
         MRVal v         -> MRVal (mapAnnot f v)
         MRPrm n         -> MRPrm n
         MRCon n         -> MRCon n
-        MRTop ns u      -> MRTop ns u
 
 
 instance MapAnnot TermParams where
@@ -145,19 +168,19 @@ instance MapAnnot Value where
         VClosure clo    -> VClosure   (mapAnnot f clo)
 
 
-instance MapAnnot Closure where
- mapAnnot f (Closure env mps m)
-  = Closure (mapAnnot f env) (mapAnnot f mps) (mapAnnot f m)
+instance MapAnnot TermClosure where
+ mapAnnot f (TermClosure env mps m)
+  = TermClosure (mapAnnot f env) (mapAnnot f mps) (mapAnnot f m)
 
 
-instance MapAnnot Env where
- mapAnnot f (Env bs)
-  = Env (map (mapAnnot f) bs)
+instance MapAnnot TermEnv where
+ mapAnnot f (TermEnv bs)
+  = TermEnv (map (mapAnnot f) bs)
 
 
-instance MapAnnot EnvBinds where
+instance MapAnnot TermEnvBinds where
  mapAnnot f eb
   = case eb of
-        EnvTypes  ts    -> EnvTypes  (Map.map (mapAnnot f) ts)
-        EnvValues vs    -> EnvValues (Map.map (mapAnnot f) vs)
+        TermEnvTypes  ts    -> TermEnvTypes  (Map.map (mapAnnot f) ts)
+        TermEnvValues vs    -> TermEnvValues (Map.map (mapAnnot f) vs)
 

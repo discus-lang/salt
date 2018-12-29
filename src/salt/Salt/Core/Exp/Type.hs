@@ -1,6 +1,7 @@
 
 module Salt.Core.Exp.Type where
 import Salt.Core.Exp.Name
+import Data.Map                 (Map)
 import qualified Data.Text      as T
 
 
@@ -8,7 +9,7 @@ import qualified Data.Text      as T
 -- | Annotated Type.
 data Type a
         = TAnn !a !(Type a)              -- ^ Annotated type.
-        | TRef !TypeRef                  -- ^ Type reference.
+        | TRef !(TypeRef a)              -- ^ Type reference.
         | TVar !Bound                    -- ^ Type variable.
         | TAbs !(TypeParams a) !(Type a) -- ^ Type abstraction.
         | TKey !TypeKey ![TypeArgs a]    -- ^ Type keyword application.
@@ -24,9 +25,10 @@ type Effect a = Type a
 
 
 -- | Type Reference.
-data TypeRef
+data TypeRef a
         = TRPrm !Name                   -- ^ Primitive type constructor.
         | TRCon !Name                   -- ^ User defined type synonym or constructor.
+        | TRClo (TypeClosure a)         -- ^ Type closure.
         deriving (Show, Eq, Ord)
 
 
@@ -56,6 +58,24 @@ data TypeKey
         | TKSync                        -- ^ Top of the effect lattice.
         | TKPure                        -- ^ Bot of the effect lattice.
         | TKSum                         -- ^ Effect sum.
+        deriving (Show, Eq, Ord)
+
+
+-- | Type Closure.
+data TypeClosure a
+        = TypeClosure !(TypeEnv a) !(TypeParams a) !(Type a)
+        deriving (Show, Eq, Ord)
+
+
+-- | Environments captured in type closures.
+data TypeEnv a
+        = TypeEnv [TypeEnvBinds a]
+        deriving (Show, Eq, Ord)
+
+
+-- | Bindings in environments.
+data TypeEnvBinds a
+        = TypeEnvTypes (Map Name (Type a))
         deriving (Show, Eq, Ord)
 
 

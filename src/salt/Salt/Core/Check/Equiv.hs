@@ -44,8 +44,15 @@ checkTypeEquiv ctx aL psL tL aR psR tR
          -- References.
          | Right (_aL', TRef rL) <- etL
          , Right (_aR', TRef rR) <- etR
-         , rL == rR
-         = return Nothing
+         = case (rL, rR) of
+                (TRPrm nL, TRPrm nR)
+                 | nL == nR     -> return Nothing
+
+                (TRCon nL, TRCon nR)
+                 | nL == nR     -> return Nothing
+
+                -- No part of the system currently needs to compare type closures.
+                _ -> return $ Just ((aL, tL), (aR, tR))
 
          -- Abstractions.
          | Right (aL', TAbs pL@(TPTypes bksL) tBodyL) <- etL

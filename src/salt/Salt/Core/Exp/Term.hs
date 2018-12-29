@@ -21,10 +21,9 @@ data Term a
 
 -- | Term Reference.
 data TermRef a
-        = MRVal     !(Value a)                  -- ^ Value reference.
-        | MRPrm     !Name                       -- ^ Primitive reference.
+        = MRPrm     !Name                       -- ^ Primitive reference.
         | MRCon     !Name                       -- ^ Data constructor reference.
-        | MRTop     ![Name] !Bound              -- ^ Reference to a top-level binding in a module.
+        | MRVal     !(Value a)                  -- ^ Value reference.
         deriving (Show, Eq, Ord)
 
 
@@ -112,13 +111,26 @@ data Value a
         | VSet      !(Type a) !(Set (Value ())) -- ^ Set value.
         | VMap      !(Type a) !(Type a) !(Map (Value ()) (Value a))
                                                 -- ^ Map value.
-        | VClosure  !(Closure a)                -- ^ Closure.
+        | VClosure  !(TermClosure a)            -- ^ Closure.
         deriving (Show, Eq, Ord)
 
 
 -- | Closure value.
-data Closure a
-        = Closure !(Env a) !(TermParams a) !(Term a)
+data TermClosure a
+        = TermClosure !(TermEnv a) !(TermParams a) !(Term a)
+        deriving (Show, Eq, Ord)
+
+
+-- | Environments captured in term closures.
+data TermEnv a
+        = TermEnv [TermEnvBinds a]
+        deriving (Show, Eq, Ord)
+
+
+-- | Bindings in environments.
+data TermEnvBinds a
+        = TermEnvTypes  (Map Name (Type a))
+        | TermEnvValues (Map Name (Value a))
         deriving (Show, Eq, Ord)
 
 
@@ -127,19 +139,6 @@ data Closure a
 data TermNormals a
         = NTs ![Type a]
         | NVs ![Value a]
-        deriving (Show, Eq, Ord)
-
-
--- | Environments captured in closures.
-data Env a
-        = Env [EnvBinds a]
-        deriving (Show, Eq, Ord)
-
-
--- | Bindings in environments.
-data EnvBinds a
-        = EnvTypes  (Map Name (Type a))
-        | EnvValues (Map Name (Value a))
         deriving (Show, Eq, Ord)
 
 
@@ -237,7 +236,7 @@ takeMGTypesPrefix mgs
 
 
 -- | Unpack a Just wrapped closure, if this is one.
-takeVMaybeClosure :: Value a -> Maybe (Maybe (Closure a))
+takeVMaybeClosure :: Value a -> Maybe (Maybe (TermClosure a))
 takeVMaybeClosure vv
  = case vv of
         VSome _ (VClosure c) -> Just $ Just  c
@@ -246,7 +245,7 @@ takeVMaybeClosure vv
 
 
 -- | Take a closure from a value, if this is one.
-takeVClosure :: Value a -> Maybe (Closure a)
+takeVClosure :: Value a -> Maybe (TermClosure a)
 takeVClosure (VClosure c) = Just c
 takeVClosure _            = Nothing
 

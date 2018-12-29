@@ -144,40 +144,40 @@ upsApplyValue upsT upsM vv
                                         , upsApplyValue upsT upsM ve)
                                       | (vk, ve) <- Map.toList kvs ])
 
-        VClosure (Closure env (MPTypes bks) mBody)
-         -> let env'    = upsApplyEnv upsT upsM env
+        VClosure (TermClosure env (MPTypes bks) mBody)
+         -> let env'    = upsApplyTermEnv upsT upsM env
                 nsBind  = [ n | (BindName n, _) <- bks ]
                 bks'    = [ (b, upsApplyType upsT k) | (b, k) <- bks ]
                 upsT'   = upsBumpNames nsBind upsT
                 mBody'  = upsApplyTerm upsT' upsM mBody
-            in  VClosure $ Closure env' (MPTypes bks') mBody'
+            in  VClosure $ TermClosure env' (MPTypes bks') mBody'
 
-        VClosure (Closure env (MPTerms bts) mBody)
-         -> let env'    = upsApplyEnv upsT upsM env
+        VClosure (TermClosure env (MPTerms bts) mBody)
+         -> let env'    = upsApplyTermEnv upsT upsM env
                 nsBind  = [ n | (BindName n, _) <- bts ]
                 bts'    = [ (b, upsApplyType upsT t) | (b, t) <- bts ]
                 upsM'   = upsBumpNames nsBind upsM
                 mBody'  = upsApplyTerm upsT upsM' mBody
-            in  VClosure $ Closure env' (MPTerms bts') mBody'
+            in  VClosure $ TermClosure env' (MPTerms bts') mBody'
 
 
 -- | Apply type and term `Ups` to an `Env`
-upsApplyEnv :: Ups -> Ups -> Env a -> Env a
-upsApplyEnv upsT upsM (Env bs)
- = Env $ map (upsApplyEnvBinds upsT upsM) bs
+upsApplyTermEnv :: Ups -> Ups -> TermEnv a -> TermEnv a
+upsApplyTermEnv upsT upsM (TermEnv bs)
+ = TermEnv $ map (upsApplyTermEnvBinds upsT upsM) bs
 
 
 -- | Apply type and term `Ups` to some `EnvBinds`
-upsApplyEnvBinds :: Ups -> Ups -> EnvBinds a -> EnvBinds a
-upsApplyEnvBinds upsT upsM eb
+upsApplyTermEnvBinds :: Ups -> Ups -> TermEnvBinds a -> TermEnvBinds a
+upsApplyTermEnvBinds upsT upsM eb
  = case eb of
-        EnvTypes nts
-         -> EnvTypes  $ Map.fromList
+        TermEnvTypes nts
+         -> TermEnvTypes  $ Map.fromList
                 [ (n, upsApplyType upsT t)
                 | (n, t) <- Map.toList nts ]
 
-        EnvValues nvs
-         -> EnvValues $ Map.fromList
+        TermEnvValues nvs
+         -> TermEnvValues $ Map.fromList
                 [ (n, upsApplyValue upsT upsM v)
                 | (n, v) <- Map.toList nvs ]
 

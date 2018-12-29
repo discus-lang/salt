@@ -65,9 +65,9 @@ checkValue a wh ctx v
                 checkValuesAreAll a wh ctx tv $ Map.elems vsMap
                 return $ TMap tk tv
 
-        VClosure (Closure env mps mBody)
+        VClosure (TermClosure env mps mBody)
          -> do  -- Build a context with just the closure environment.
-                ctx1    <- contextBindEnv a wh env
+                ctx1    <- contextBindTermEnv a wh env
                         $  ctx
                         {  contextModuleTerm = contextModuleTerm ctx
                         ,  contextLocal      = []}
@@ -114,22 +114,22 @@ checkValueIs a wh ctx tExpected v
 
 
 -- | Check an environment binding and add it to the context.
-contextBindEnv
+contextBindTermEnv
         :: Annot a
-        => a -> [Where a] -> Env a
+        => a -> [Where a] -> TermEnv a
         -> Context a -> IO (Context a)
 
-contextBindEnv a wh (Env bs0) ctx0
+contextBindTermEnv a wh (TermEnv bs0) ctx0
  = go ctx0 (reverse bs0)
  where
-        go ctx (EnvTypes nts : bs)
+        go ctx (TermEnvTypes nts : bs)
          = do   let (ns, ts) = unzip $ Map.toList nts
                 ks'     <- fmap (map snd)
                         $  mapM (checkType a wh ctx) ts
                 let nks' = zip ns ks'
                 go (contextBindTypes nks' ctx) bs
 
-        go ctx (EnvValues nvs : bs)
+        go ctx (TermEnvValues nvs : bs)
          = do   let (ns, vs) = unzip $ Map.toList nvs
                 ts'     <- fmap (map (\(_, t, _) -> t))
                         $  mapM (\v -> checkTerm1 a wh ctx Synth (MVal v)) vs

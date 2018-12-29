@@ -24,11 +24,17 @@ data Error a
         , errorValues           :: [Value a] }
 
         -- Varaibles --------------------------------------
-        -- | Variable binding is not in the environment.
-        | ErrorVarUnbound
+        -- | Type variable binding is not in the environment.
+        | ErrorTypeVarUnbound
         { errorAnnot            :: a
         , errorVarUnbound       :: Bound
-        , errorEnv              :: Env a }
+        , errorTypeEnv          :: TypeEnv a }
+
+        -- | Term variable binding is not in the environment.
+        | ErrorTermVarUnbound
+        { errorAnnot            :: a
+        , errorVarUnbound       :: Bound
+        , errorTermEnv          :: TermEnv a }
 
         -- Applications -----------------------------------
         -- | Runtime type error in application,

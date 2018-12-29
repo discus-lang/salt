@@ -225,7 +225,7 @@ runTestEval mm mnTest mTest
                 { Eval.stateConfig      = Eval.configDefault
                 , Eval.stateModule      = mm }
 
-        vResult <- Eval.evalTerm state a (Env []) mTest
+        vResult <- Eval.evalTerm state a (TermEnv []) mTest
         putStrLn $ P.render $ P.ppr () vResult
 
 
@@ -250,11 +250,11 @@ runTestExec mm mnTest mTest
                 { Eval.stateConfig      = Eval.configDefault
                 , Eval.stateModule      = mm }
 
-        vsSusp <- Eval.evalTerm state a (Env []) mTest
+        vsSusp <- Eval.evalTerm state a (TermEnv []) mTest
 
         case vsSusp of
-                [VClosure (Closure (Env []) (MPTerms []) mBody)]
-                 -> do  vsResult <- Eval.evalTerm state a (Env []) mBody
+                [VClosure (TermClosure (TermEnv []) (MPTerms []) mBody)]
+                 -> do  vsResult <- Eval.evalTerm state a (TermEnv []) mBody
                         case vsResult of
                          [] -> return ()
                          _  -> putStrLn $ P.render $ P.ppr () vsResult
@@ -284,7 +284,7 @@ runTestAssert mm mnTest mTest
                 { Eval.stateConfig      = Eval.configDefault
                 , Eval.stateModule      = mm }
 
-        vResult <- Eval.evalTerm state a (Env []) mTest
+        vResult <- Eval.evalTerm state a (TermEnv []) mTest
         case vResult of
          [VTrue]        -> putStrLn "ok"
          [VFalse]       -> putStrLn "failed"

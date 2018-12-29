@@ -128,24 +128,24 @@ testNamesOfModule mm
 ---------------------------------------------------------------------------------------------------
 -- | Lookup a term from a module and local environment.
 resolveTermBound
-        :: Module a -> Env a -> Bound
+        :: Module a -> TermEnv a -> Bound
         -> IO (Maybe (TermDef a))
 
-resolveTermBound mm (Env bs0) (BoundWith n d0)
+resolveTermBound mm (TermEnv bs0) (BoundWith n d0)
  = goEnv d0 upsEmpty upsEmpty bs0
  where
         -- Look through the local environment.
-        goEnv d upsT upsM (EnvValues nvs : rest)
+        goEnv d upsT upsM (TermEnvValues nvs : rest)
          | d < 0        = return Nothing
          | otherwise
          = let upsM' = upsCombine upsM (upsOfNames $ Map.keys nvs) in
            case Map.lookup n nvs of
                 Nothing         -> goEnv d upsT upsM' rest
                 Just v
-                 | d == 0       -> return $ Just $ TermLocal (upsApplyValue upsT upsM' v)
+                 | d == 0       -> return $ Just $ TermDefLocal (upsApplyValue upsT upsM' v)
                  | otherwise    -> goEnv (d - 1) upsT upsM' rest
 
-        goEnv d upsT upsM (EnvTypes nts : rest)
+        goEnv d upsT upsM (TermEnvTypes nts : rest)
          = let  upsT' = upsCombine upsT (upsOfNames $ Map.keys nts)
            in   goEnv d upsT' upsM rest
 
@@ -168,7 +168,7 @@ resolveTermBound mm (Env bs0) (BoundWith n d0)
 
            in case psms of
                 [(mpss, tResult, mBody)]
-                  -> return $ Just $ TermDecl
+                  -> return $ Just $ TermDefDecl
                             $ upsApplyTerm upsT' upsM'
                             $ foldr MAbs (MThe tResult mBody) mpss
 
@@ -177,23 +177,60 @@ resolveTermBound mm (Env bs0) (BoundWith n d0)
 
 -- | The definition mode of a resolved term.
 data TermDef a
-        = TermDecl   (Term  a)
-        | TermLocal  (Value a)
+        = TermDefDecl   (Term  a)
+        | TermDefLocal  (Value a)
         deriving Show
 
 
 ---------------------------------------------------------------------------------------------------
--- | The definition mode of a resolved type.
+-- Lookup a type from a module and local environment.
+resolveTypeBound
+        :: Module a -> TypeEnv a -> Bound
+        -> IO (Maybe (TypeDef a))
+
+resolveTypeBound mm (TypeEnv bs0) (BoundWith n d0)
+ = goEnv d0 upsEmpty bs0
+ where
+        -- Look through the local environment.
+        goEnv d upsT (TypeEnvTypes nts : rest)
+         | d < 0        = return Nothing
+         | otherwise
+         = let upsT' = upsCombine upsT (upsOfNames $ Map.keys nts) in
+           case Map.lookup n nts of
+                Nothing         -> goEnv d upsT' rest
+                Just t
+                 | d == 0       -> return $ Just $ TypeDefLocal (upsApplyType upsT' t)
+                 | otherwise    -> goEnv (d - 1) upsT' rest
+
+        goEnv d upsT []
+         | d == 0    = goGlobal upsT
+         | otherwise = return Nothing
+
+        -- Look for declarations in the global context.
+        goGlobal upsT
+         = let  decls  = moduleDecls mm
+                psms   = [ (ps, kResult, tBody)
+                         | DType (DeclType _a n' ps kResult tBody) <- decls
+                         , n' == n ]
+
+                -- We effectively have a recursive substitution at top level,
+                -- so need to push our ups under it before applying the ups
+                -- to the term we got from the binding.
+                upsT'  = flip upsBumpNames upsT $ typeNamesOfModule mm
+
+           in case psms of
+                [(tpss, _tResult, tBody)]
+                  -> return $ Just $ TypeDefDecl
+                            $ upsApplyType upsT'
+                            $ foldr TAbs tBody tpss
+
+                _ -> return Nothing
+
+
+-- | The definition mode of a resolved term.
 data TypeDef a
-        -- | Type was defined as a global declaration.
-        = TypeDecl   (Kind a) (Type a)
-
-        -- | Type was defined in the local context,
-        --   at the given level.
-        | TypeLocal  (Kind a) Int
-
-        -- | Type was defined in a local parameter at the given level,
-        --   and is subject to alpha-conversion.
-        | TypeParam  (Kind a) Int
+        = TypeDefDecl   (Type a)
+        | TypeDefLocal  (Type a)
         deriving Show
+
 

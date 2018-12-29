@@ -125,11 +125,36 @@ pprTArg c tt
         _        -> parens $ ppr c tt
 
 
-instance Pretty c TypeRef where
- ppr _ tr
+instance Pretty c (TypeRef a) where
+ ppr c tr
   = case tr of
-        TRPrm n -> pprPrm n
-        TRCon n -> pprCon n
+        TRPrm n   -> pprPrm n
+        TRCon n   -> pprCon n
+        TRClo clo -> ppr c clo
+
+
+instance Pretty c (TypeClosure a) where
+ ppr c (TypeClosure (TypeEnv []) ps m)
+  = bracketed' "tclo_"
+        [ text "λ" % ppr c ps %% text "→" %% ppr c m ]
+
+ ppr c (TypeClosure env ps m)
+  = bracketed' "tclo"
+        [ ppr c env
+        , text "λ" % ppr c ps %% text "→" %% ppr c m ]
+
+
+instance Pretty c (TypeEnv a) where
+ ppr c (TypeEnv ebs)
+  = bracketed' "tenv" (punctuate (text " ")
+        $ map (ppr c) ebs)
+
+
+instance Pretty c (TypeEnvBinds a) where
+ ppr c eb
+  = case eb of
+        TypeEnvTypes  nts
+         -> squared [ pprVar n %% text "=" %% ppr c t | (n, t) <- Map.toList nts ]
 
 
 instance Pretty c (TypeArgs a) where
@@ -216,9 +241,6 @@ instance Pretty c (TermRef a) where
         MRPrm n -> pprPrm n
         MRCon n -> text "%" % pprCon n
 
-        MRTop ns n
-         -> (hcat $ punctuate (text ".") (map pprCon ns))
-                  % text "." % ppr c n
 
 instance Pretty c (TermArgs a) where
  ppr c ma
@@ -323,30 +345,31 @@ instance Pretty c (Value a) where
         VClosure clo    -> ppr c clo
 
 
-instance Pretty c (Closure a) where
- ppr c (Closure (Env []) ps m)
-  = bracketed' "clo"
+instance Pretty c (TermClosure a) where
+ ppr c (TermClosure (TermEnv []) ps m)
+  = bracketed' "mclo_"
         [ text "λ" % ppr c ps %% text "→" %% ppr c m ]
 
- ppr c (Closure env ps m)
-  = bracketed' "clo"
+ ppr c (TermClosure env ps m)
+  = bracketed' "mclo"
         [ ppr c env
         , text "λ" % ppr c ps %% text "→" %% ppr c m ]
 
 
-instance Pretty c (Env a) where
- ppr c (Env ebs)
-  = bracketed' "env"  (punctuate (text " ") $ map (ppr c) ebs)
+instance Pretty c (TermEnv a) where
+ ppr c (TermEnv ebs)
+  = bracketed' "menv" (punctuate (text " ")
+        $ map (ppr c) ebs)
 
 
-instance Pretty c (EnvBinds a) where
+instance Pretty c (TermEnvBinds a) where
  ppr c eb
   = case eb of
-        EnvTypes  nts
+        TermEnvTypes  nts
          -> text "@"
          %  squared [ pprVar n %% text "=" %% ppr c t | (n, t) <- Map.toList nts ]
 
-        EnvValues nvs
+        TermEnvValues nvs
          -> squared [ pprVar n %% text "=" %% ppr c v | (n, v) <- Map.toList nvs ]
 
 
