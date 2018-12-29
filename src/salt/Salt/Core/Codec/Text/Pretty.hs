@@ -46,11 +46,8 @@ instance Pretty c (Type a) where
         TRef r   -> ppr c r
         TVar u   -> ppr c u
 
-        TAbs p t
-         -> text "λ" %% ppr c p %% text "⇒" %% ppr c t
+        TAbs p t -> text "λ" %% ppr c p %% text "⇒" %% ppr c t
 
-
-        -- Keyed expressions
         THole    -> text "∙"
 
         TArr tsParam tResult
@@ -98,31 +95,38 @@ instance Pretty c (Type a) where
         TSusp tsv te
          -> squared (map (ppr c) tsv) % text "!" % pprTArg c te
 
-        TSync   -> text "sync"
-        TPure   -> text "pure"
+        TSync     -> text "sync"
+        TPure     -> text "pure"
 
-        TSum ts -> hcat $ punctuate (text " + ") $ map (pprTArg c) ts
+        TSum ts   -> hcat $ punctuate (text " + ") $ map (pprTArg c) ts
 
-        TKey k ts
-         ->  ppr c k %% (hsep $ map (ppr c) ts)
+        TKey k ts -> ppr c k %% (hsep $ map (ppr c) ts)
 
 
 pprTFun c tt
  = case tt of
-        TAnn _ t -> ppr c t
-        TRef{}   -> ppr c tt
-        TVar{}   -> ppr c tt
-        TApp{}   -> ppr c tt
-        _        -> parens $ ppr c tt
+        TAnn _ t        -> ppr c t
+        TRef{}          -> ppr c tt
+        TVar{}          -> ppr c tt
+        TApp{}          -> ppr c tt
+        TRecord{}       -> ppr c tt
+        TVariant{}      -> ppr c tt
+        TSync{}         -> ppr c tt
+        TPure{}         -> ppr c tt
+        _               -> parens $ ppr c tt
 
 
 pprTArg c tt
  = case tt of
-        TAnn _ t -> ppr c t
-        TRef{}   -> ppr c tt
-        TPrm{}   -> ppr c tt
-        TVar{}   -> ppr c tt
-        _        -> parens $ ppr c tt
+        TAnn _ t        -> ppr c t
+        TRef{}          -> ppr c tt
+        TPrm{}          -> ppr c tt
+        TVar{}          -> ppr c tt
+        TRecord{}       -> ppr c tt
+        TVariant{}      -> ppr c tt
+        TSync{}         -> ppr c tt
+        TPure{}         -> ppr c tt
+        _               -> parens $ ppr c tt
 
 
 instance Pretty c (TypeRef a) where
@@ -284,7 +288,6 @@ instance Pretty c TermKey where
         MKRun           -> text "##run"
 
 
-
 -- Value ------------------------------------------------------------------------------------------
 instance Pretty c (Value a) where
  ppr c
@@ -327,18 +330,18 @@ instance Pretty c (Value a) where
 
         VList t vs
          -> brackets
-                $  text "list" %% pprTArg c t % text "|"
-                %  hcat (punctuate (text ", ") (map (ppr c) vs))
+                $ text "list" %% pprTArg c t % text "|"
+                % hcat (punctuate (text ", ") (map (ppr c) vs))
 
         VSet  t vs
          -> brackets
-                $  text "set"  %% pprTArg c t % text "|"
-                %  hcat (punctuate (text ", ") (map (ppr c) $ Set.toList vs))
+                $ text "set"  %% pprTArg c t % text "|"
+                % hcat (punctuate (text ", ") (map (ppr c) $ Set.toList vs))
 
         VMap  tk tv kvs
          -> brackets
-                $  text "map"  %% pprTArg c tk %% pprTArg c tv % text "|"
-                %  hcat (punctuate (text ", ")
+                $ text "map"  %% pprTArg c tk %% pprTArg c tv % text "|"
+                % hcat (punctuate (text ", ")
                                [ ppr c vk %% text ":=" %% ppr c vv
                                | (vk, vv) <- Map.toList kvs ])
 

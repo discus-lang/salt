@@ -79,7 +79,8 @@ TypeParams
  ::=  '[' (Var ':' Type),+ ']'
 
 Prm
- :+=  '#Data' | '#Region'
+ :+=  '#Type'
+  |   '#Data' | '#Region'
   |   '#Unit' | '#Bool' | '#Nat' | '#Int' | '#Text' | '#Symbol'
   |   '#List' | '#Set'  | '#Map' | '#Option'
 ```
@@ -100,7 +101,7 @@ Prm
 
 - `tsum` is used to combine effect types.
 
-- `Prm` gives the list of baked-in primitive types which are needed to classify type and term level constructs that are described in the language definition. The implementation may also provide other machine level types, but they are listed separately. `#Data` and `#Region` are the kinds of data and region types. The others are standard type constructors.
+- `Prm` gives the list of baked-in primitive types which are needed to classify type and term level constructs that are described in the language definition. The implementation may also provide other machine level types, but they are listed separately. `#Type` (at level 3) classifies well formed kinds. `#Data` and `#Region` (at level 2) are the kinds of data and region types. The others (at level 1) are standard type constructors.
 
 
 ### Type Sugar

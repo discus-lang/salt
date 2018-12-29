@@ -1,85 +1,85 @@
 
--- Exercise all the cases in the evaluator.
+-- Exercise all the cases in the term evaluator.
 
 -- (evm-mmm) ----------------------------------------------
-test eval eval'mmm'multi = [5, 5]
+test eval evm'mmm'multi = [5, 5]
 
 
 -- (evm-var-clo) ------------------------------------------
 term thing @[a: #Data] [x: a]: a
  = x
 
-test eval eval'var'clo
+test eval evm'var'clo
  = thing @#Nat
 
 
 -- (evm-abt) ----------------------------------------------
-test eval eval'abs'type
+test eval evm'abs'type
  = (λ@[a: #Data] [y: a] → y) @#Nat
 
 
 -- (evm-abm) ----------------------------------------------
-test eval eval'abs'term
+test eval evm'abs'term
  = (λ[x: #Nat] [y: #Nat]  → x) [5]
 
 
 -- (evm-aps-prim) -----------------------------------------
-test eval eval'aps'prim
+test eval evm'aps'prim
  = #nat'add [2, 3]
 
 
 -- (evm-aps) ----------------------------------------------
-test eval eval'aps'term'term
+test eval evm'aps'term'term
  = (λ[x: #Nat] → #nat'add [x, x]) 5
 
-test eval eval'aps'term'terms
+test eval evm'aps'term'terms
  = (λ[x: #Nat, y: #Nat] → #nat'add [x, y]) [2, 3]
 
-test eval eval'aps'term'type
+test eval evm'aps'term'type
  = (λ@[a: #Data] → λ[x: a] → x) @#Nat
 
-test eval eval'aps'bump1
+test eval evm'aps'bump1
  = (λ[x: #Nat] → λ[x: #Nat] → x^1) 2 3
 
 
 -- (evm-let) ----------------------------------------------
-test eval eval'let
+test eval evm'let
  = let [x, y] = [2, 3];
    #nat'add [x, y]
 
 
 -- (evm-rec) ----------------------------------------------
-test eval eval'rec
+test eval evm'rec
  = [ x = [#nat'add [2, 3], 5]
    , y = [#nat'add [4, 5], 9] ]
 
 
 -- (evm-prj) ----------------------------------------------
-test eval eval'prj
+test eval evm'prj
  = [ x = [#nat'add [2, 3], 5]
    , y = 23].x
 
 
 -- (evm'vnt) ----------------------------------------------
-test eval eval'vnt
+test eval evm'vnt
  = the <foo: [#Nat, #Bool]> of `foo [2, #true]
 
 
 -- (evm'cse) ----------------------------------------------
 type vnt: #Data = <foo: [#Nat, #Nat]>
 term vnt: vnt = the vnt of `foo [2, 3]
-test eval eval'case
+test eval evm'case
  = case vnt of { foo [x: #Nat, y: #Nat] → #nat'add [x, y] }
 
 
 -- (evm-box) ----------------------------------------------
 -- TODO: finish pretty printer so this comes out right.
-test eval eval'box
+test eval evm'box
  = box #console'print "hello"
 
 
 -- (evm-run) ----------------------------------------------
-test eval eval'run
+test eval evm'run
  = run (box 5)
 
 
@@ -87,7 +87,7 @@ test eval eval'run
 term someList @[a: #Data] [x: a]: #List a
  = [list a| x, x]
 
-test eval eval'list
+test eval evm'list
  = someList @#Nat 5
 
 
@@ -95,7 +95,7 @@ test eval eval'list
 term someSet  @[a: #Data] [x: a, y: a]: #Set a
  = [set a| x, y]
 
-test eval eval'set
+test eval evm'set
  = someSet @#Nat [5, 6]
 
 
@@ -103,6 +103,6 @@ test eval eval'set
 term someMap  @[tk: #Data, tv: #Data] [k: tk, v: tv]: #Map [tk, tv]
  = [map tk tv| k := v ]
 
-test eval eval'map
+test eval evm'map
  = someMap @[#Nat, #Symbol] [5, 'Derp]
 

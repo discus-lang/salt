@@ -48,6 +48,13 @@ checkTypeWith a wh ctx (TAbs ps tBody)
                 , TArr ksParam kResult)
 
 
+-- (k-arr) ------------------------------------------------
+checkTypeWith a wh ctx (TArr ks1 k2)
+ = do   ks1'    <- mapM (checkKind a wh ctx) ks1
+        k2'     <- checkKind a wh ctx k2
+        return  (TArr ks1' k2', TType)
+
+
 -- (k-app) ------------------------------------------------
 checkTypeWith a wh ctx (TApt tFun tsArg)
  = do   (tFun',  kFun)    <- checkType a wh ctx tFun

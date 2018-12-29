@@ -103,6 +103,7 @@ pattern (:->) ts1 ts2   = TFun    ts1 ts2
 pattern (:*>) tps t     = TForall tps t
 
 -- Primitive types.
+pattern TType           = TPrm "Type"
 pattern TData           = TPrm "Data"
 pattern TRegion         = TPrm "Region"
 pattern TEffect         = TPrm "Effect"

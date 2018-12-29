@@ -60,11 +60,17 @@ data DeclTest a
         , declTestName          :: Maybe Name
         , declTestTerm          :: Term a }
 
-        -- Evaluate a term and print the result
-        | DeclTestEval
+        -- Evaluate a type and print the result
+        | DeclTestEvalType
         { declAnnot             :: a
         , declTestName          :: Maybe Name
-        , declTestBody          :: Term a }
+        , declTestType          :: Type a }
+
+        -- Evaluate a term and print the result
+        | DeclTestEvalTerm
+        { declAnnot             :: a
+        , declTestName          :: Maybe Name
+        , declTestTerm          :: Term a }
 
         -- Execute an effectful term.
         | DeclTestExec
@@ -89,7 +95,8 @@ annotOfDecl decl
         DTerm (DeclTerm         { declAnnot }) -> declAnnot
         DTest (DeclTestKind     { declAnnot }) -> declAnnot
         DTest (DeclTestType     { declAnnot }) -> declAnnot
-        DTest (DeclTestEval     { declAnnot }) -> declAnnot
+        DTest (DeclTestEvalType { declAnnot }) -> declAnnot
+        DTest (DeclTestEvalTerm { declAnnot }) -> declAnnot
         DTest (DeclTestExec     { declAnnot }) -> declAnnot
         DTest (DeclTestAssert   { declAnnot }) -> declAnnot
 
@@ -98,13 +105,14 @@ annotOfDecl decl
 nameOfDecl :: Decl a -> Maybe Name
 nameOfDecl decl
  = case decl of
-        DType (DeclType       { declName })     -> Just declName
-        DTerm (DeclTerm       { declName })     -> Just declName
-        DTest (DeclTestKind   { declTestName }) -> declTestName
-        DTest (DeclTestType   { declTestName }) -> declTestName
-        DTest (DeclTestEval   { declTestName }) -> declTestName
-        DTest (DeclTestExec   { declTestName }) -> declTestName
-        DTest (DeclTestAssert { declTestName }) -> declTestName
+        DType (DeclType         { declName })     -> Just declName
+        DTerm (DeclTerm         { declName })     -> Just declName
+        DTest (DeclTestKind     { declTestName }) -> declTestName
+        DTest (DeclTestType     { declTestName }) -> declTestName
+        DTest (DeclTestEvalType { declTestName }) -> declTestName
+        DTest (DeclTestEvalTerm { declTestName }) -> declTestName
+        DTest (DeclTestExec     { declTestName }) -> declTestName
+        DTest (DeclTestAssert   { declTestName }) -> declTestName
 
 
 -- | Get the names of type declarations in a module.

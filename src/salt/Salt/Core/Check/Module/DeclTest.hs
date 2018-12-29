@@ -26,8 +26,15 @@ checkDeclTest _a ctx (DTest (DeclTestType a' n m))
         return  $ DTest $ DeclTestType a' n m'
 
 
--- (t-decl-eval) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestEval a nDecl mBody))
+-- (t-decl-eval-type) -------------------------------------
+checkDeclTest _a ctx (DTest (DeclTestEvalType a nDecl t))
+ = do   let wh  = [WhereTestDecl a nDecl]
+        (t', _k) <- checkType a wh ctx t
+        return  $ DTest $ DeclTestEvalType a nDecl t'
+
+
+-- (t-decl-eval-term) -------------------------------------
+checkDeclTest _a ctx (DTest (DeclTestEvalTerm a nDecl mBody))
  = do   let wh  = [WhereTestDecl a nDecl]
 
         -- Check the body term.
@@ -39,7 +46,7 @@ checkDeclTest _a ctx (DTest (DeclTestEval a nDecl mBody))
         when (not $ isTPure eBody_simp)
          $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
 
-        return  $ DTest $ DeclTestEval a nDecl mBody'
+        return  $ DTest $ DeclTestEvalTerm a nDecl mBody'
 
 
 -- (t-decl-exec) ------------------------------------------

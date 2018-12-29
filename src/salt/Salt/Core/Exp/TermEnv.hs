@@ -42,3 +42,16 @@ menvExtendValues bvs1 (TermEnv bs2)
    in   TermEnv (TermEnvValues nvs : bs2)
 
 
+-- | Slice out the type portion of a `TermEnv` to produce a `TypeEnv`
+menvSliceTypeEnv :: TermEnv a -> TypeEnv a
+menvSliceTypeEnv (TermEnv evs)
+ = TypeEnv $ goSlice evs
+ where
+        goSlice (TermEnvTypes nts : rest)
+         = TypeEnvTypes nts : goSlice rest
+
+        goSlice (TermEnvValues{}  : rest)
+         = goSlice rest
+
+        goSlice [] = []
+

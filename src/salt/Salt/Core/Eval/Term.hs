@@ -1,9 +1,9 @@
 
 module Salt.Core.Eval.Term where
+import Salt.Core.Eval.Type
 import Salt.Core.Eval.Error
 import Salt.Core.Eval.Base
 import Salt.Core.Analysis.Support       ()
-import Salt.Core.Transform.Snv
 import Salt.Core.Transform.MapAnnot
 import Control.Exception
 import Control.Monad
@@ -22,9 +22,6 @@ import qualified Data.Set               as Set
 --   expressions that have bumped variables, which requires deep traversal to
 --   apply `Ups` variable lifting maps when the expressions are carried under
 --   binders. A fast, production interpreter would be written differently.
---
---   TODO: do straight type reduction instead of substitution,
---   as substitution won't reduce type operator apps for the defs of our primops.
 --
 evalTerm :: EvalTerm a (Term a) [Value a]
 
@@ -55,11 +52,13 @@ evalTerm s a env (MVar u)
 
 
 -- (evm-abt) -----------------------------------------------
+-- The environment scopes over the parameter kinds, so we don't need to evaluate them.
 evalTerm _s _a env (MAbt bks mBody)
  =      return [VClosure (TermClosure env (MPTypes bks) mBody)]
 
 
 -- (evm-abm) -----------------------------------------------
+-- The environment scopes over the parameter types, so we don't need to evaluate them.
 evalTerm _s _a env (MAbm bts mBody)
  =      return [VClosure (TermClosure env (MPTerms bts) mBody)]
 
@@ -79,13 +78,11 @@ evalTerm s a env (MAps (MPrm nPrim) mgssArg)
  = case Map.lookup nPrim Ops.primOps of
         Just (Ops.PP _name _type step _docs)
          -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
-                let vsResult = step nssArg
-                return vsResult
+                return $ step nssArg
 
         Just (Ops.PO _name _type _effs exec _docs)
          -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
-                vsResult <- exec nssArg
-                return vsResult
+                exec nssArg
 
         Nothing -> throw $ ErrorPrimUnknown a nPrim
 
@@ -119,11 +116,13 @@ evalTerm s a env (MApp mFun mgs)
          [VClosure (TermClosure env' mps@(MPTypes bks) mBody)]
           -> case mgs of
                 MGTypes ts
-                 -> do  let bs  = map fst bks
-                        when (not $ length ts == length bs)
-                         $ throw $ ErrorWrongTypeArity a (length bs) ts
+                 -> do  let bs   = map fst bks
+                        let tenv = menvSliceTypeEnv env
+                        tsArg   <- mapM (evalType s a tenv) ts
+                        when (not $ length tsArg == length bs)
+                         $ throw $ ErrorWrongTypeArity a (length bs) tsArg
 
-                        let env'' = menvExtendTypes (zip bs ts) env'
+                        let env'' = menvExtendTypes (zip bs tsArg) env'
                         evalTerm s a env'' mBody
 
                 _ -> throw $ ErrorAppTermWrongArgs a mps mgs
@@ -186,9 +185,9 @@ evalTerm s a env (MProject nField mRecord)
 
 -- (evm-vnt) -----------------------------------------------
 evalTerm s a env (MVariant l m t)
- = do   let snv = snvOfTermEnvTypes env
-        let t'  = snvApplyType upsEmpty snv t
-        vsField <- evalTerm s a env m
+ = do   let tenv = menvSliceTypeEnv env
+        t'      <- evalType s a tenv t
+        vsField <- evalTerm s a env  m
         return [VVariant l t' vsField]
 
 
@@ -234,26 +233,26 @@ evalTerm s a env (MRun mSusp)
 
 -- (evm-lst) -----------------------------------------------
 evalTerm s a env (MList t ms)
- = do   let snv = snvOfTermEnvTypes env
-        let t'  = snvApplyType upsEmpty snv t
-        vs      <- evalTerms s a env ms
+ = do   let tenv = menvSliceTypeEnv env
+        t'      <- evalType  s a tenv t
+        vs      <- evalTerms s a env  ms
         return [VList t' vs]
 
 
 -- (evm-set) -----------------------------------------------
 evalTerm s a env (MSet t ms)
- = do   let snv = snvOfTermEnvTypes env
-        let t'  = snvApplyType upsEmpty snv t
-        vs      <- evalTerms s a env ms
+ = do   let tenv = menvSliceTypeEnv env
+        t'      <- evalType  s a tenv t
+        vs      <- evalTerms s a env  ms
         let vs' = Set.fromList $ map stripAnnot vs
         return [VSet t' vs']
 
 
 -- (evm-map) -----------------------------------------------
 evalTerm s a env mm@(MMap tk tv msk msv)
- = do   let snv = snvOfTermEnvTypes env
-        let tk' = snvApplyType upsEmpty snv tk
-        let tv' = snvApplyType upsEmpty snv tv
+ = do   let tenv = menvSliceTypeEnv env
+        tk'     <- evalType s a tenv tk
+        tv'     <- evalType s a tenv tv
         vsElem  <- evalPairs msk msv
         return [ VMap tk' tv' $ Map.fromList vsElem ]
 

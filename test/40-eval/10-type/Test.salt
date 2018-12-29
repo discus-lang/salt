@@ -1,0 +1,58 @@
+
+-- Exercise all the cases in the type evaluator.
+
+-- (evt-var-decl) -----------------------------------------
+type nat: #Data = #Nat
+test eval'type evt'decl = nat
+
+-- (evt-abs) ----------------------------------------------
+test eval'type evt'abs
+ = λ[a: #Data] ⇒ a
+
+-- (evt-arr) ----------------------------------------------
+test eval'type evt'arr
+ = #Data ⇒ #Data
+
+-- (evt-app) ----------------------------------------------
+type op [a: #Data]: #Data = #List a
+test eval'type evt'app
+ = op [#Nat]
+
+-- (evt-fun) ----------------------------------------------
+test eval'type evt'fun
+ = [nat, nat] → nat
+
+-- (evt-all) ----------------------------------------------
+test eval'type evt'all
+ = ∀[a: #Data]. [a] → nat
+
+-- (evt-ext) ----------------------------------------------
+test eval'type evt'ext
+ = ∃[a: #Data]. [a] → nat
+
+-- (evt-rec) ----------------------------------------------
+test eval'type evt'rec
+ = [x: nat, y: [nat, nat]]
+
+-- (evt-vnt) ----------------------------------------------
+test eval'type evt'vnt
+ = <x: nat, y: [nat, nat]>
+
+-- (evt-susp) ---------------------------------------------
+test eval'type evt'susp
+ = [nat] ! #Console
+
+-- (evt-pure) ---------------------------------------------
+test eval'type evt'pure
+ = pure
+
+-- (evt-sync) ---------------------------------------------
+test eval'type evt'sync
+ = sync
+
+-- (evt-sum) ----------------------------------------------
+type eff: #Effect = #Console
+test eval'type evt'sym
+ = eff + pure
+
+

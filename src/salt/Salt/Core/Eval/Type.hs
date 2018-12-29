@@ -54,6 +54,21 @@ evalType s a env (TArr ks1 k2)
 evalType s a env (TApp tFun tgs)
  = do   tCloType <- evalType s a env tFun
         case tCloType of
+         -- Reduce applications of primitive types to head normal form.
+         TRef TRPrm{}
+          -> case tgs of
+                TGTypes ts
+                 -> do  tsArg   <- mapM (evalType s a env) ts
+                        return  $ TApp tFun (TGTypes tsArg)
+
+         -- Reduce applications of type constructors to head normal form.
+         TRef TRCon{}
+          -> case tgs of
+                TGTypes ts
+                 -> do  tsArg   <- mapM (evalType s a env) ts
+                        return  $ TApp tFun (TGTypes tsArg)
+
+         -- Apply type closures.
          TRef (TRClo (TypeClosure env' (TPTypes bks) tBody))
           -> case tgs of
                 TGTypes ts
@@ -86,13 +101,13 @@ evalType s a env (TForall bks t)
 
 
 -- (evt-ext) ----------------------------------------------
-evalType s a env (TForall bks t)
+evalType s a env (TExists bks t)
  = do   let (bs, ks) = unzip bks
         ks'      <- mapM (evalType s a env) ks
         let bks' = zip bs ks'
         let env' = tenvExtendTypes bks' env
         t'       <- evalType s a env' t
-        return  $ TForall bks' t'
+        return  $ TExists bks' t'
 
 
 -- (evt-rec) ----------------------------------------------

@@ -61,7 +61,11 @@ pDecl
 
         nMode   <- P.choice
                 [ do    n <- pVar
-                        (guard $ elem n ["kind", "type", "eval", "exec", "assert"])
+                        unless (elem n  [ "kind",      "type"
+                                        , "eval'type", "eval'term", "eval"
+                                        , "exec",      "assert"])
+                         $ P.unexpected "test mode"
+
                         return n
 
                 , do    -- 'type' is both a test specifier and a keyword,
@@ -89,12 +93,19 @@ pDecl
                         , declTestName  = mName
                         , declTestTerm  = mTerm }
 
-         , do   guard $ nMode == "eval"
-                mBody   <- pTerm
-                return  $ DTest $ DeclTestEval
+         , do   guard $ (nMode == "eval'type")
+                tBody   <- pType
+                return  $ DTest $ DeclTestEvalType
                         { declAnnot     = loc
                         , declTestName  = mName
-                        , declTestBody  = mBody }
+                        , declTestType  = tBody }
+
+         , do   guard $ (nMode == "eval'term") || (nMode == "eval")
+                mBody   <- pTerm
+                return  $ DTest $ DeclTestEvalTerm
+                        { declAnnot     = loc
+                        , declTestName  = mName
+                        , declTestTerm  = mBody }
 
          , do   guard $ nMode == "exec"
                 mBody   <- pTerm

@@ -154,11 +154,12 @@ runTest :: Check.Context IW.Location  -> Module IW.Location
         -> DeclTest IW.Location -> IO ()
 runTest ctx mm tt
  = case tt of
-        DeclTestKind    _ n t   -> runTestKind   ctx mm n t
-        DeclTestType    _ n m   -> runTestType   ctx mm n m
-        DeclTestEval    _ n m   -> runTestEval   mm n m
-        DeclTestExec    _ n m   -> runTestExec   mm n m
-        DeclTestAssert  _ n m   -> runTestAssert mm n m
+        DeclTestKind     _ n t   -> runTestKind     ctx mm n t
+        DeclTestType     _ n m   -> runTestType     ctx mm n m
+        DeclTestEvalType _ n t   -> runTestEvalType mm n t
+        DeclTestEvalTerm _ n m   -> runTestEvalTerm mm n m
+        DeclTestExec     _ n m   -> runTestExec     mm n m
+        DeclTestAssert   _ n m   -> runTestAssert   mm n m
 
 
 -- TestKind ---------------------------------------------------------------------------------------
@@ -204,14 +205,37 @@ runTestType ctx _mm mnTest mTest
          _      -> putStrLn $ P.render $ P.ppr () tsResult
 
 
--- TestEval ---------------------------------------------------------------------------------------
--- | Run a eval test.
---   We evaluate the term and print the result value.
-runTestEval
+-- TestEvalType -----------------------------------------------------------------------------------
+-- | Run a type eval test.
+runTestEvalType
+        :: Module IW.Location
+        -> Maybe Name -> Type IW.Location -> IO ()
+
+runTestEvalType mm mnTest tTest
+ = do
+        let a   = IW.Location 0 0
+        putStr  $ "* "
+                ++ (case mnTest of
+                        Nothing -> ""
+                        Just (Name tx) -> T.unpack tx % ": ")
+        System.hFlush System.stdout
+
+        let state
+                = Eval.State
+                { Eval.stateConfig      = Eval.configDefault
+                , Eval.stateModule      = mm }
+
+        tResult <- Eval.evalType state a (TypeEnv []) tTest
+        putStrLn $ P.render $ P.ppr () tResult
+
+
+-- TestEvalTerm -----------------------------------------------------------------------------------
+-- | Run a term eval test.
+runTestEvalTerm
         :: Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
 
-runTestEval mm mnTest mTest
+runTestEvalTerm mm mnTest mTest
  = do
         let a   = IW.Location 0 0
         putStr  $ "* "
