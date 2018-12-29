@@ -27,6 +27,9 @@ test eval evm'abs'term
 test eval evm'aps'prim
  = #nat'add [2, 3]
 
+type nat: #Data = #Nat
+test eval evm'aps'prim2
+ = #list'empty @nat
 
 -- (evm-aps) ----------------------------------------------
 test eval evm'aps'term'term

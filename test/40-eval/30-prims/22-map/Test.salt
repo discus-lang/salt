@@ -1,0 +1,23 @@
+
+test eval map'empty     = #map'empty   @[#Nat, #Symbol]
+test eval map'isEmpty   = #map'isEmpty @[#Nat, #Symbol] [map #Nat #Symbol|]
+
+test eval map'size
+ = #map'size @[#Nat, #Symbol]
+        [map #Nat #Symbol| 4 := 'four, 3 := 'five]
+
+test eval map'insert
+ = #map'insert @[#Nat, #Symbol]
+        [ 3
+        , 'three
+        , [map #Nat #Symbol| 2 := 'two, 4 := 'four]]
+
+test eval map'delete
+ = #map'delete @[#Nat, #Symbol]
+        [ 3
+        , [map #Nat #Symbol| 2 := 'two, 3 := 'three, 4 := 'four]]
+
+test eval map'lookup
+ = #map'lookup @[#Nat, #Symbol]
+        [ 3
+        , [map #Nat #Symbol| 2 := 'two, 3 := 'three, 4 := 'four] ]

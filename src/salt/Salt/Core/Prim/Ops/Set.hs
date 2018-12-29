@@ -3,17 +3,18 @@ module Salt.Core.Prim.Ops.Set where
 import Salt.Core.Prim.Ops.Base
 import qualified Data.Set       as Set
 
+-- TODO: fix assoc of :*> and :-> to kill parens
 primOpsSet
  = [ PP { name  = "set'empty"
-        , tsig  = [("a", TData)] :*> ([] :-> [TSet "a"])
-        , step  = \[NTs [t], NVs []]
-                        -> [VSet t $ Set.empty]
+        , tsig  = [("a", TData)] :*> TSet "a"
+        , step  = \[NTs [t]]
+                -> [VSet t $ Set.empty]
         , docs  = "Construct an empty set." }
 
    , PP { name  = "set'fromList"
-        , tsig  = [("a", TData)] :*> (["a"] :-> [TList "a"])
+        , tsig  = [("a", TData)] :*> ([TList "a"] :-> [TSet "a"])
         , step  = \[NTs [t], NVs [VList _ vs]]
-                        -> [VSet t $ Set.fromList $ map stripAnnot vs]
+                -> [VSet t $ Set.fromList $ map stripAnnot vs]
         , docs  = "Construct a set from a list of values." }
 
    , PP { name  = "set'isEmpty"

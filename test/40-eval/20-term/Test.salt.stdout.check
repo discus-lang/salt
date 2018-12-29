@@ -3,6 +3,7 @@
 * evm'abs'type: [[mclo|[menv|@[a = #Nat]], λ[y: a] → y]]
 * evm'abs'term: [[mclo|[menv|[x = 5]], λ[y: #Nat] → x]]
 * evm'aps'prim: [5]
+* evm'aps'prim2: [[list #Nat|]]
 * evm'aps'term'term: [10]
 * evm'aps'term'terms: [5]
 * evm'aps'term'type: [[mclo|[menv|@[a = #Nat]], λ[x: a] → x]]

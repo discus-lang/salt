@@ -1,0 +1,13 @@
+
+test eval list'empty    = #list'empty @#Nat
+test eval list'nil      = #list'nil @#Nat
+test eval list'one      = #list'one @#Nat 5
+test eval list'cons     = #list'cons @#Nat [2, #list'one @#Nat 3]
+test eval list'isEmpty  = #list'isEmpty @#Nat (#list'empty @#Nat)
+test eval list'size     = #list'size @#Nat [list #Nat| 2, 3, 4]
+
+-- TODO: result isn't pretty printed right.
+test eval list'head     = #list'head @#Nat [list #Nat| 2, 3, 4]
+test eval list'tail     = #list'tail @#Nat [list #Nat| 2, 3, 4]
+
+test eval list'case     = #list'case @#Nat [list #Nat| 2, 3, 4]

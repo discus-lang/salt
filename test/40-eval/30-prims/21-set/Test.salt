@@ -1,0 +1,8 @@
+
+test eval set'empty     = #set'empty    @#Nat
+test eval set'fromList  = #set'fromList @#Nat [list #Nat| 3, 4, 4, 5, 5, 5]
+test eval set'isEmpty   = #set'isEmpty  @#Nat [set #Nat|]
+test eval set'size      = #set'size     @#Nat [set #Nat| 3, 4, 4, 5, 6]
+test eval set'hasElem   = #set'hasElem  @#Nat [5, [set #Nat| 3, 4, 5, 6]]
+test eval set'insert    = #set'insert   @#Nat [4, [set #Nat| 2, 5]]
+test eval set'delete    = #set'delete   @#Nat [4, [set #Nat| 3, 4, 5]]

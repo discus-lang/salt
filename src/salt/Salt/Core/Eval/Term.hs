@@ -299,15 +299,15 @@ evalTermArgs :: EvalTerm a (TermArgs a) (TermNormals a)
 evalTermArgs s a env mgs
  = case mgs of
         MGTerm  m
-         -> do  vs <- evalTerm s a env m
+         -> do  vs  <- evalTerm s a env m
                 return $ NVs vs
 
         MGTerms ms
-         -> do  vs <- mapM (evalTerm1 s a env) ms
+         -> do  vs  <- mapM (evalTerm1 s a env) ms
                 return $ NVs vs
 
         MGTypes ts
-         -> do  -- TODO: drop env as subst. into type.
-                -- the collection primops need normal form types.
-                return $ NTs ts
+         -> do  let tenv = menvSliceTypeEnv env
+                ts' <- mapM (evalType s a tenv) ts
+                return $ NTs ts'
 
