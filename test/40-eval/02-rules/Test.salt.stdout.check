@@ -6,6 +6,7 @@
 * eval'aps'term'term: [10]
 * eval'aps'term'terms: [5]
 * eval'aps'term'type: [[clo|[env|@[a = #Nat]], λ[x: a] → x]]
+* eval'aps'bump1: [2]
 * eval'let: [5]
 * eval'rec: [[x = [5,5], y = [9,9]]]
 * eval'prj: [5,5]

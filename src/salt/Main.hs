@@ -12,13 +12,14 @@ import qualified Salt.Core.Codec.Text.Lexer     as Lexer
 import qualified Salt.Core.Codec.Text.Token     as Token
 import qualified Salt.Core.Codec.Text.Parser    as Parser
 import qualified Salt.Data.Pretty               as P
+
+import qualified Text.Lexer.Inchworm.Char       as IW
+
 import qualified System.Environment             as System
 import qualified System.Exit                    as System
 import qualified System.IO                      as System
-import qualified Text.Lexer.Inchworm.Char       as IW
 import qualified Text.Show.Pretty               as Show
 import qualified Data.Text                      as T
-import qualified Data.Map.Strict                as Map
 
 
 -- Main -------------------------------------------------------------------------------------------
@@ -166,6 +167,7 @@ runTest ctx mm tt
 runTestKind
         :: Check.Context IW.Location -> Module IW.Location
         -> Maybe Name -> Type IW.Location -> IO ()
+
 runTestKind ctx _mm mnTest tTest
  = do
         let a   = IW.Location 0 0
@@ -185,6 +187,7 @@ runTestKind ctx _mm mnTest tTest
 runTestType
         :: Check.Context IW.Location -> Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
+
 runTestType ctx _mm mnTest mTest
  = do
         let a   = IW.Location 0 0
@@ -207,6 +210,7 @@ runTestType ctx _mm mnTest mTest
 runTestEval
         :: Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
+
 runTestEval mm mnTest mTest
  = do
         let a   = IW.Location 0 0
@@ -216,14 +220,10 @@ runTestEval mm mnTest mTest
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        let declTerms
-                = Map.fromList
-                [ (n, d) | DTerm d@(DeclTerm _ n _ _ _) <- moduleDecls mm ]
-
         let state
                 = Eval.State
                 { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateDeclTerms   = declTerms }
+                , Eval.stateModule      = mm }
 
         vResult <- Eval.evalTerm state a (Env []) mTest
         putStrLn $ P.render $ P.ppr () vResult
@@ -235,6 +235,7 @@ runTestEval mm mnTest mTest
 runTestExec
         :: Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
+
 runTestExec mm mnTest mTest
  = do
         let a   = IW.Location 0 0
@@ -244,14 +245,10 @@ runTestExec mm mnTest mTest
                         putStr $ T.unpack tx % ": "
                         System.hFlush System.stdout)
 
-        let declTerms
-                = Map.fromList
-                [ (n, d) | DTerm d@(DeclTerm _ n _ _ _) <- moduleDecls mm ]
-
         let state
                 = Eval.State
                 { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateDeclTerms   = declTerms }
+                , Eval.stateModule      = mm }
 
         vsSusp <- Eval.evalTerm state a (Env []) mTest
 
@@ -272,6 +269,7 @@ runTestExec mm mnTest mTest
 runTestAssert
         :: Module IW.Location
         -> Maybe Name -> Term IW.Location -> IO ()
+
 runTestAssert mm mnTest mTest
  = do
         let a   = IW.Location 0 0
@@ -281,14 +279,10 @@ runTestAssert mm mnTest mTest
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        let declTerms
-                = Map.fromList
-                [ (n, d) | DTerm d@(DeclTerm _ n _ _ _) <- moduleDecls mm ]
-
         let state
                 = Eval.State
                 { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateDeclTerms   = declTerms }
+                , Eval.stateModule      = mm }
 
         vResult <- Eval.evalTerm state a (Env []) mTest
         case vResult of

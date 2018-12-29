@@ -22,8 +22,8 @@ import Data.Typeable
 -- | State of the entire machine.
 data State a
         = State
-        { stateConfig           :: !Config
-        , stateDeclTerms        :: !(Map Name (DeclTerm a)) }
+        { stateConfig   :: !Config
+        , stateModule   :: !(Module a) }
         deriving Show
 
 

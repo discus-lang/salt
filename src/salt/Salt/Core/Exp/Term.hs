@@ -70,30 +70,41 @@ data TermKey
         | MKMap                                 -- ^ Map constructor.
         deriving (Show, Eq, Ord)
 
+
 -- | Term Value.
+--
+--   These are really "term normal forms" rather than "values" as type
+--   expressions and the bodies of closures may include variable names
+--   that refer to top-level things. These names need to be bumped when
+--   carrying values under binders.
+--
 data Value a
         -- Values that are also literals in the source program.
         = VUnit                                 -- ^ Unit value.
         | VBool     !Bool                       -- ^ Boolean value.
         | VNat      !Integer                    -- ^ Natural value.
+
         | VInt      !Integer                    -- ^ Integer value.
         | VInt8     !Int.Int8                   -- ^ 8 bit Integer value.
         | VInt16    !Int.Int16                  -- ^ 16 bit Integer value.
         | VInt32    !Int.Int32                  -- ^ 32 bit Integer value.
         | VInt64    !Int.Int64                  -- ^ 64 bit Integer value.
+
         | VWord     !Word.Word                  -- ^ Word value.
         | VWord8    !Word.Word8                 -- ^ 8 bit Word value.
         | VWord16   !Word.Word16                -- ^ 16 bit Word value.
         | VWord32   !Word.Word32                -- ^ 32 bit Word value.
         | VWord64   !Word.Word64                -- ^ 64 bit Word value.
+
         | VText     !Text                       -- ^ Text value.
         | VSymbol   !Name                       -- ^ Symbol value.
 
         -- Values that are only used at runtime.
-        --  At runtime they are introduced by evaluating constructions,
-        --  and do not appear as literals in the source program.
-        --  The annotation on map and set elements is forced to () so that the order
-        --  of values in the collection does not depend on the annotation.
+        --   At runtime they are introduced by evaluating constructions,
+        --   and do not appear as literals in the source program.
+        --   The annotation on map and set elements is forced to () so that
+        --   the order of values in the collection does not depend on the
+        --   annotation.
         | VData     !Name ![Type a] ![Value a]  -- ^ Constructed data.
         | VRecord   ![(Name, [Value a])]        -- ^ Record value.
         | VVariant  !Name !(Type a) ![Value a]  -- ^ Variant value.

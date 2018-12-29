@@ -39,7 +39,7 @@ upsIsEmpty (Ups bs)
         _       -> False
 
 
--- | Bump an Ups due to pushing it under an absraction with the given names.
+-- | Bump an Ups due to pushing it under an abstraction with the given names.
 upsBumpNames :: [Name] -> Ups -> Ups
 upsBumpNames ns0 (Ups bs)
  = Ups $ mapMaybe (upsBump1 ns0) bs

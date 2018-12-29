@@ -1,0 +1,26 @@
+
+
+-- Use bumps to refer to vars in the environment.
+term add [x: #Nat] [x: #Nat]: #Nat
+  = #nat'add [x^0, x^1]
+test eval add = add 2 3
+
+
+-- Use bumps to refer to vars at top level, recursively.
+term derp [derp: #Nat]: #Nat
+ = if #nat'eq [derp, 0]
+        then 0
+        else derp^1 (#nat'sub [derp, 1])
+
+test eval derp = derp 4
+
+
+-- Ack function with even more ack.
+--  There's an ack at every level..
+term ack [ack: #Nat] [ack: #Nat]: #Nat
+ = if   { #nat'eq [ack^1, 0] → #nat'add [ack^0, 1]
+        ; #nat'eq [ack^0, 0] → ack^2 (#nat'sub [ack^1, 1]) 1
+        ; otherwise          → ack^2 (#nat'sub [ack^1, 1])
+                                     (ack^2 ack^1 (#nat'sub [ack^0, 1])) }
+
+test eval ack'2'3 = ack 2 3

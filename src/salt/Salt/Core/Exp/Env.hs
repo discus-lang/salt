@@ -19,10 +19,12 @@ envExtendType bb t env@(Env evs)
         BindNone        -> env
 
 
--- | Extend an environment with some new types.
-envExtendsType :: [(Bind, Type a)] -> Env a -> Env a
-envExtendsType bts1 (Env bs2)
- = Env (EnvTypes (Map.fromList [ (n, t) | (BindName n, t) <- bts1]) : bs2)
+-- | Extend an environment with some new types,
+--   binding them all at the same level.
+envExtendTypes :: [(Bind, Type a)] -> Env a -> Env a
+envExtendTypes bts1 (Env bs2)
+ = let  nts     = Map.fromList [ (n, t) | (BindName n, t) <- bts1]
+   in   Env (EnvTypes nts : bs2)
 
 
 -- | Lookup a named type from an environment.
@@ -46,19 +48,9 @@ envExtendValue bb v env@(Env evs)
 
 
 -- | Extend an environment with some new values.
-envExtendsValue :: [(Bind, Value a)] -> Env a -> Env a
-envExtendsValue bvs1 (Env bs2)
- = Env (EnvValues (Map.fromList [ (n, v) | (BindName n, v) <- bvs1]) : bs2)
+envExtendValues :: [(Bind, Value a)] -> Env a -> Env a
+envExtendValues bvs1 (Env bs2)
+ = let  nvs     = Map.fromList [ (n, v) | (BindName n, v) <- bvs1]
+   in   Env (EnvValues nvs : bs2)
 
-
--- | Lookup a named value from an environment.
-envLookupValue :: Name -> Env a -> Maybe (Value a)
-envLookupValue n (Env bs0)
- = loop bs0
- where  loop []                 = Nothing
-        loop (EnvTypes{} : bs)  = loop bs
-        loop (EnvValues nvs : bs)
-         = case Map.lookup n nvs of
-                Nothing         -> loop bs
-                Just t          -> Just t
 

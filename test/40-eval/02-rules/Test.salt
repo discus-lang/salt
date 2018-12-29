@@ -38,9 +38,8 @@ test eval eval'aps'term'terms
 test eval eval'aps'term'type
  = (λ@[a: #Data] → λ[x: a] → x) @#Nat
 
--- TODO: eval with bumps doesn't work.
--- test eval eval'aps'bump1
---  = (λ[x: #Nat] → λ[x: #Nat] → x^1) 2 3
+test eval eval'aps'bump1
+ = (λ[x: #Nat] → λ[x: #Nat] → x^1) 2 3
 
 
 -- (ev-let) -----------------------------------------------

@@ -166,21 +166,6 @@ contextResolveTypeBound ctx ps0 (BoundWith n d0)
             Just (k, t) -> return $ Just $ TypeDecl k (upsApplyType ups t)
 
 
--- | The definition mode of a resolved type.
-data TypeDef a
-        -- | Type was defined as a global declaration.
-        = TypeDecl   (Kind a) (Type a)
-
-        -- | Type was defined in the local context,
-        --   at the given level.
-        | TypeLocal  (Kind a) Int
-
-        -- | Type was defined in a local parameter at the given level,
-        --   and is subject to alpha-conversion.
-        | TypeParam  (Kind a) Int
-        deriving Show
-
-
 ---------------------------------------------------------------------------------------------------
 -- | Lookup a bound term variable from the context.
 ---

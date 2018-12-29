@@ -10,7 +10,6 @@ import Control.Monad
 import qualified Salt.Core.Prim.Ops     as Ops
 import qualified Data.Map               as Map
 import qualified Data.Set               as Set
--- import qualified Text.Show.Pretty       as Text
 
 
 ---------------------------------------------------------------------------------------------------
@@ -21,6 +20,15 @@ type Eval a x y
 
 ---------------------------------------------------------------------------------------------------
 -- | Evaluate a term in the given environment.
+--
+--   This is a definitional interpreter that evaluates types as well as terms
+--   in the input expression. We re-evaluate top-level CAFs. We explicitly check
+--   for ill-formed terms, such as when we don't have the same number of field
+--   names as field terms in a record construction. We also directly evaluate
+--   expressions that have bumped variables, which requires deep traversal to
+--   apply `Ups` variable lifting maps when the expressions are carried under
+--   binders. A fast, production interpreter would be written differently.
+--
 evalTerm :: Eval a (Term a) [Value a]
 
 -- (ev-ann) -----------------------------------------------
@@ -43,27 +51,18 @@ evalTerm _s _ _  (MVal v)
 
 
 -- (ev-var) -----------------------------------------------
--- TODO: make this work with bump counters.
-evalTerm s a env (MVar u@(Bound n))
- -- Bound in local environment.
- | Just v       <- envLookupValue n env
- = return [v]
+evalTerm s a env (MVar u)
+ = resolveTermBound (stateModule s) env u
+ >>= \case
+        -- Value is bound in the local environment.
+        Just (TermLocal v) -> return [v]
 
- -- Bound in top-level environment.
- | Just (DeclTerm a' _n mpss _tr mBody)
-                <- Map.lookup n (stateDeclTerms s)
- = case mpss of
-        -- Even if the term has no parameters it gets re-evaluated every time.
-        [] -> evalTerm s a' envEmpty mBody
+        -- Term is bound at top level.
+        --   We allow terms to be bound at top level which are not already
+        --   in normal form, so we need to evaluate them here.
+        Just (TermDecl m)  -> evalTerm s a envEmpty m
 
-        -- For terms with parameters, build a closure with an empty environment.
-        mps1 : mpssRest
-           -> return [ VClosure $ Closure envEmpty mps1
-                                $ foldr MAbs mBody mpssRest ]
-
- -- Variable is not bound.
- | otherwise
- = throw $ ErrorVarUnbound a u env
+        Nothing -> throw $ ErrorVarUnbound a u env
 
 
 -- (ev-abt) -----------------------------------------------
@@ -107,7 +106,7 @@ evalTerm s a env (MApp mFun mgs)
                         -- TODO: add tests to ensure evaluation with bumped vars
                         -- works out. The env needs to be extended, and substitution
                         -- build from the env the right way around.
-                        let env'' = envExtendsValue (zip bs vsArg) env'
+                        let env'' = envExtendValues (zip bs vsArg) env'
                         evalTerm s a env'' mBody
 
                 MGTerms ms
@@ -116,7 +115,7 @@ evalTerm s a env (MApp mFun mgs)
                         when (not $ length vsArg == length bs)
                          $ throw $ ErrorWrongTermArity a (length bs) vsArg
 
-                        let env'' = envExtendsValue (zip bs vsArg) env'
+                        let env'' = envExtendValues (zip bs vsArg) env'
                         evalTerm s a env'' mBody
 
                 _ -> throw $ ErrorAppTermWrongArgs a mps mgs
@@ -128,7 +127,7 @@ evalTerm s a env (MApp mFun mgs)
                         when (not $ length ts == length bs)
                          $ throw $ ErrorWrongTypeArity a (length bs) ts
 
-                        let env'' = envExtendsType (zip bs ts) env'
+                        let env'' = envExtendTypes (zip bs ts) env'
                         evalTerm s a env'' mBody
 
                 _ -> throw $ ErrorAppTermWrongArgs a mps mgs
@@ -144,7 +143,7 @@ evalTerm s a env (MLet bts mBind mBody)
         if  nWanted == nHave
          then do
                 let bs = map fst bts
-                let env' =  envExtendsValue (zip bs vsBind) env
+                let env' =  envExtendValues (zip bs vsBind) env
                 vsResult <- evalTerm s a env' mBody
                 return vsResult
          else throw $ ErrorWrongTermArity a nWanted vsBind
@@ -211,7 +210,7 @@ evalTerm s a env mm@(MVarCase mScrut msAlt0)
          $ throw $ ErrorWrongTermArity a (length btsPat) vsData
 
         let bs   = map fst btsPat
-        let env' = envExtendsValue (zip bs vsData) env
+        let env' = envExtendValues (zip bs vsData) env
 
         evalTerm s a env' mBody
 
