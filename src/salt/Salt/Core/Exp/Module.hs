@@ -125,6 +125,74 @@ testNamesOfModule mm
         = catMaybes [ nameOfDecl d | d@DTest{} <- moduleDecls mm ]
 
 
+-- | Lookup a `DeclType` from a module.
+--
+--   If the declaration is multiply bound then `Nothing`.
+lookupDeclTypeOfModule :: Name -> Module a -> Maybe (DeclType a)
+lookupDeclTypeOfModule n mm
+ = case [d | DType d@(DeclType _ n' _ _ _) <- moduleDecls mm
+           , n == n']
+   of   d : _   -> Just d
+        _       -> Nothing
+
+
+-- | Lookup a `DeclTerm` from a module.
+--
+--   If the declaration is multiply bound then `Nothing`.
+lookupDeclTermOfModule :: Name -> Module a -> Maybe (DeclTerm a)
+lookupDeclTermOfModule n mm
+ = case [d | DTerm d@(DeclTerm _ n' _ _ _) <- moduleDecls mm
+           , n == n']
+   of   d : _   -> Just d
+        _       -> Nothing
+
+
+---------------------------------------------------------------------------------------------------
+-- Lookup a type from a module and local environment.
+resolveTypeBound
+        :: Module a -> TypeEnv a -> Bound
+        -> IO (Maybe (TypeDef a))
+
+resolveTypeBound mm (TypeEnv bs0) (BoundWith n d0)
+ = goEnv d0 upsEmpty bs0
+ where
+        -- Look through the local environment.
+        goEnv d upsT (TypeEnvTypes nts : rest)
+         | d < 0        = return Nothing
+         | otherwise
+         = let upsT' = upsCombine upsT (upsOfNames $ Map.keys nts) in
+           case Map.lookup n nts of
+                Nothing         -> goEnv d upsT' rest
+                Just t
+                 | d == 0       -> return $ Just $ TypeDefLocal (upsApplyType upsT' t)
+                 | otherwise    -> goEnv (d - 1) upsT' rest
+
+        goEnv d upsT []
+         | d == 0    = goGlobal upsT
+         | otherwise = return Nothing
+
+        -- Look for declarations in the global context.
+        --   We effectively have a recursive substitution at top level,
+        --   so need to push our ups under it before applying the ups
+        --   to the term we got from the binding.
+        goGlobal upsT
+         = let upsT'  = flip upsBumpNames upsT $ typeNamesOfModule mm
+           in case lookupDeclTypeOfModule n mm of
+                Just (DeclType _a _n tpss _kResult tBody)
+                  -> return $ Just $ TypeDefDecl
+                            $ upsApplyType upsT'
+                            $ foldr TAbs tBody tpss
+
+                _ -> return Nothing
+
+
+-- | The definition mode of a resolved term.
+data TypeDef a
+        = TypeDefDecl   (Type a)
+        | TypeDefLocal  (Type a)
+        deriving Show
+
+
 ---------------------------------------------------------------------------------------------------
 -- | Lookup a term from a module and local environment.
 resolveTermBound
@@ -154,20 +222,14 @@ resolveTermBound mm (TermEnv bs0) (BoundWith n d0)
          | otherwise = return Nothing
 
         -- Look for declarations in the global context.
+        --   We effectively have a recursive substitution at top level,
+        --   so need to push our ups under it before applying the ups
+        --   to the term we got from the binding.
         goGlobal upsT upsM
-         = let  decls  = moduleDecls mm
-                psms   = [ (ps, tResult, mBody)
-                         | DTerm (DeclTerm _a n' ps tResult mBody) <- decls
-                         , n' == n ]
-
-                -- We effectively have a recursive substitution at top level,
-                -- so need to push our ups under it before applying the ups
-                -- to the term we got from the binding.
-                upsT'  = flip upsBumpNames upsT $ typeNamesOfModule mm
+         = let  upsT'  = flip upsBumpNames upsT $ typeNamesOfModule mm
                 upsM'  = flip upsBumpNames upsM $ termNamesOfModule mm
-
-           in case psms of
-                [(mpss, tResult, mBody)]
+           in case lookupDeclTermOfModule n mm of
+                Just (DeclTerm _a _n mpss tResult mBody)
                   -> return $ Just $ TermDefDecl
                             $ upsApplyTerm upsT' upsM'
                             $ foldr MAbs (MThe tResult mBody) mpss
@@ -179,58 +241,6 @@ resolveTermBound mm (TermEnv bs0) (BoundWith n d0)
 data TermDef a
         = TermDefDecl   (Term  a)
         | TermDefLocal  (Value a)
-        deriving Show
-
-
----------------------------------------------------------------------------------------------------
--- Lookup a type from a module and local environment.
-resolveTypeBound
-        :: Module a -> TypeEnv a -> Bound
-        -> IO (Maybe (TypeDef a))
-
-resolveTypeBound mm (TypeEnv bs0) (BoundWith n d0)
- = goEnv d0 upsEmpty bs0
- where
-        -- Look through the local environment.
-        goEnv d upsT (TypeEnvTypes nts : rest)
-         | d < 0        = return Nothing
-         | otherwise
-         = let upsT' = upsCombine upsT (upsOfNames $ Map.keys nts) in
-           case Map.lookup n nts of
-                Nothing         -> goEnv d upsT' rest
-                Just t
-                 | d == 0       -> return $ Just $ TypeDefLocal (upsApplyType upsT' t)
-                 | otherwise    -> goEnv (d - 1) upsT' rest
-
-        goEnv d upsT []
-         | d == 0    = goGlobal upsT
-         | otherwise = return Nothing
-
-        -- Look for declarations in the global context.
-        goGlobal upsT
-         = let  decls  = moduleDecls mm
-                psms   = [ (ps, kResult, tBody)
-                         | DType (DeclType _a n' ps kResult tBody) <- decls
-                         , n' == n ]
-
-                -- We effectively have a recursive substitution at top level,
-                -- so need to push our ups under it before applying the ups
-                -- to the term we got from the binding.
-                upsT'  = flip upsBumpNames upsT $ typeNamesOfModule mm
-
-           in case psms of
-                [(tpss, _tResult, tBody)]
-                  -> return $ Just $ TypeDefDecl
-                            $ upsApplyType upsT'
-                            $ foldr TAbs tBody tpss
-
-                _ -> return Nothing
-
-
--- | The definition mode of a resolved term.
-data TypeDef a
-        = TypeDefDecl   (Type a)
-        | TypeDefLocal  (Type a)
         deriving Show
 
 
