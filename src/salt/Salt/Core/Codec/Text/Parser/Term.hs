@@ -39,11 +39,11 @@ pTerm_
         P.choice
          [ do   pTok KBacktick
                 l       <- pLbl
-                ms      <- P.choice
-                                [ do   pSquared $ flip P.sepEndBy (pTok KComma) pTerm
-                                , do   m <- pTermArg; return [m]]
+                m       <- P.choice
+                                [ do   fmap MTerms $ pSquared $ flip P.sepEndBy (pTok KComma) pTerm
+                                , do   m <- pTermArg; return m]
                 case ts of
-                 [t] -> return $ MVariant l ms t
+                 [t] -> return $ MVariant l m t
                  _   -> P.unexpected "type vector"
 
          , do   m <- pTerm

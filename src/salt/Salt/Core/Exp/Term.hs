@@ -168,7 +168,7 @@ pattern MIf  mCond mThen mElse  = MKey   MKIf   [MGTerms mCond,  MGTerms mThen, 
 pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]
 pattern MProject l  m           = MKey  (MKProject l) [MGTerms [m]]
 
-pattern MVariant l ms tResult   = MKey  (MKVariant l) [MGTerms ms,     MGTypes [tResult]]
+pattern MVariant l m tResult    = MKey  (MKVariant l) [MGTerm  m,      MGTypes [tResult]]
 pattern MVarCase mScrut msAlt   = MKey   MKVarCase    [MGTerm  mScrut, MGTerms msAlt]
 pattern MVarAlt  n bts mBody    = MKey  (MKVarAlt n)  [MGTerm (MAbs (MPTerms bts) mBody)]
 

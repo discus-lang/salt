@@ -60,6 +60,23 @@ test eval eval'prj
    , y = 23].x
 
 
+-- (ev'vnt) -----------------------------------------------
+test eval eval'vnt
+ = the <foo: [#Nat, #Bool]> of `foo [2, #true]
+
+-- TODO: tests for 'case'
+
+-- (ev-box) -----------------------------------------------
+-- TODO: finish pretty printer so this comes out right.
+test eval eval'box
+ = box #console'print "hello"
+
+
+-- (ev-run) -----------------------------------------------
+test eval eval'run
+ = run (box 5)
+
+
 -- (ev-lst) -----------------------------------------------
 term someList @[a: #Data] [x: a]: #List a
  = [list a| x, x]

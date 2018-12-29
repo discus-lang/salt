@@ -332,7 +332,7 @@ checkTermWith a wh ctx Synth (MProject nLabel mRecord)
 
 
 -- (t-vnt) ------------------------------------------------
-checkTermWith a wh ctx Synth (MVariant nLabel msValues tVariant)
+checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
  = do
         -- Check annotation is well kinded.
         checkType a wh ctx tVariant
@@ -351,10 +351,10 @@ checkTermWith a wh ctx Synth (MVariant nLabel msValues tVariant)
                 _ -> throw $ ErrorVariantAnnotAltMissing a wh tVariant' nLabel
 
         -- Check the body against the type from the annotation.
-        (msValues', _tsValues, esValues)
-         <- checkTerms a wh ctx (Check tsExpected') msValues
+        (mValues', _tsValues, esValues)
+         <- checkTerm a wh ctx (Check tsExpected') mValues
 
-        return  ( MVariant nLabel msValues' tVariant
+        return  ( MVariant nLabel mValues' tVariant
                 , [tVariant], esValues)
 
 

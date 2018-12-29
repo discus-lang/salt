@@ -32,9 +32,6 @@ bracketed ds
 bracketed' name ds
  = brackets  $ hcat (text name : text "|" : punctuate (text ", ") ds)
 
-angled ds
- = text "⟨" % (hcat $ punctuate (text ", ") ds) % text "⟩"
-
 squared ds
  = text "[" % (hcat $ punctuate (text ", ") ds) % text "]"
 
@@ -303,10 +300,8 @@ instance Pretty c (Value a) where
                 [ pprLbl n %% text "=" %% ppr c v | (n, v) <- nvs ]
 
         VVariant n t vs
-         -> parens
-                $  text "`" % pprLbl n
-                %% squared (punctuate (text ", ") (map (ppr c) vs))
-                %% text "as" %% pprTArg c t
+         -> text "the" %% ppr c t
+         %% text "of"  %% text "`" % pprLbl n %% squared (map (ppr c) vs)
 
         VList t vs
          -> brackets

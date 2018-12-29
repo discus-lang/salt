@@ -29,6 +29,9 @@ type Eval a x y
 --   apply `Ups` variable lifting maps when the expressions are carried under
 --   binders. A fast, production interpreter would be written differently.
 --
+--   TODO: do straight type reduction instead of substitution,
+--   as substitution won't reduce type operator apps for the defs of our primops.
+--
 evalTerm :: Eval a (Term a) [Value a]
 
 -- (ev-ann) -----------------------------------------------
@@ -184,7 +187,13 @@ evalTerm s a env (MProject nField mRecord)
                 Just vs -> return vs
          _ -> throw $ ErrorProjectNotRecord a vRec nField
 
--- TODO: add ev-vnt, and tests for variant and case.
+
+-- (ev-vnt) -----------------------------------------------
+evalTerm s a env (MVariant l m t)
+ = do   let t'  = snvApplyType upsEmpty (snvOfEnvTypes env) t
+        vsField <- evalTerm s a env m
+        return [VVariant l t' vsField]
+
 
 -- (ev-cse) -----------------------------------------------
 evalTerm s a env mm@(MVarCase mScrut msAlt0)
@@ -213,13 +222,11 @@ evalTerm s a env mm@(MVarCase mScrut msAlt0)
 
 
 -- (ev-box) -----------------------------------------------
--- TODO: add tests for ev-box.
 evalTerm _s _a env (MBox mBody)
  =      return  [VClosure (Closure env (MPTerms []) mBody)]
 
 
 -- (ev-run) -----------------------------------------------
--- TODO: add tests for ev-run.
 evalTerm s a env (MRun mSusp)
  = do   vSusp <- evalTerm1 s a env mSusp
         case vSusp of
@@ -303,5 +310,6 @@ evalTermArgs s a env mgs
 
         MGTypes ts
          -> do  -- TODO: drop env as subst. into type.
+                -- the collection primops need normal form types.
                 return $ NTs ts
 
