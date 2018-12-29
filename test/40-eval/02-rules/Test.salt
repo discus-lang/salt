@@ -64,7 +64,13 @@ test eval eval'prj
 test eval eval'vnt
  = the <foo: [#Nat, #Bool]> of `foo [2, #true]
 
--- TODO: tests for 'case'
+
+-- (ev'cse) -----------------------------------------------
+type vnt: #Data = <foo: [#Nat, #Nat]>
+term vnt: vnt = the vnt of `foo [2, 3]
+test eval eval'case
+ = case vnt of { foo [x: #Nat, y: #Nat] → #nat'add [x, y] }
+
 
 -- (ev-box) -----------------------------------------------
 -- TODO: finish pretty printer so this comes out right.

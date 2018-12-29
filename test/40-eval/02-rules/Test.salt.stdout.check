@@ -11,6 +11,7 @@
 * eval'rec: [[x = [5,5], y = [9,9]]]
 * eval'prj: [5,5]
 * eval'vnt: [the ∑[foo: [#Nat, #Bool]] of `foo [2, #true]]
+* eval'case: [5]
 * eval'box: [[clo|λ[] → ##app (#console'print) ("hello")]]
 * eval'run: [5]
 * eval'list: [[list #Nat|5, 5]]
