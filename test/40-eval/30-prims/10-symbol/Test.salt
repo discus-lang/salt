@@ -1,0 +1,4 @@
+
+-- Symbol primitives
+test assert symbol'eq1  = #symbol'eq ['foo, 'foo]
+test assert symbol'eq2  = #bool'not  [#symbol'eq ['foo, 'bar]]

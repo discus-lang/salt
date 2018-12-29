@@ -1,0 +1,14 @@
+
+test assert nat'eq1     = #nat'eq   [1, 1]
+test assert nat'eq2     = #bool'not [#nat'eq [1, 2]]
+test assert nat'neq     = #nat'neq  [1, 2]
+test assert nat'add     = #nat'eq   [3, #nat'add [1, 2]]
+test assert nat'sub     = #nat'eq   [3, #nat'sub [7, 4]]
+test assert nat'mul     = #nat'eq   [8, #nat'mul [2, 4]]
+test assert nat'lt1     = #nat'lt   [4, 5]
+test assert nat'lt2     = #bool'not [#nat'lt [4, 4]]
+test assert nat'le      = #nat'le   [4,  4]
+test assert nat'gt1     = #nat'gt   [10, 8]
+test assert nat'gt2     = #bool'not [#nat'gt [4, 4]]
+test assert nat'ge      = #nat'ge   [4, 4]
+

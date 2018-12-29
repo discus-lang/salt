@@ -1,0 +1,12 @@
+* nat'eq1: ok
+* nat'eq2: ok
+* nat'neq: ok
+* nat'add: ok
+* nat'sub: ok
+* nat'mul: ok
+* nat'lt1: ok
+* nat'lt2: ok
+* nat'le: ok
+* nat'gt1: ok
+* nat'gt2: ok
+* nat'ge: ok

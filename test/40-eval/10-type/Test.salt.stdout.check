@@ -1,0 +1,13 @@
+* evt'decl: #Nat
+* evt'abs: [tclo_|λ[a: #Data] → a]
+* evt'arr: [#Data] ⇒ #Data
+* evt'app: #List [#Nat]
+* evt'fun: [#Nat, #Nat] → [#Nat]
+* evt'all: ∀[a: #Data]. [#Data] → [#Nat]
+* evt'ext: ∃[a: #Data]. [#Data] → [#Nat]
+* evt'rec: ∏[x: #Nat, y: [#Nat, #Nat]]
+* evt'vnt: ∑[x: #Nat, y: [#Nat, #Nat]]
+* evt'susp: [#Nat]!#Console
+* evt'pure: pure
+* evt'sync: sync
+* evt'sym: #Console + pure
