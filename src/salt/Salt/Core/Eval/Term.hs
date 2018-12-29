@@ -32,15 +32,6 @@ evalTerm :: EvalTerm a (Term a) [Value a]
 evalTerm s _a env (MAnn a' m)
  = evalTerm s a' env m
 
--- (evm-mmm) -----------------------------------------------
-evalTerm s a env (MTerms ms)
- = evalTerms s a env ms
-
-
--- (evm-the) -----------------------------------------------
-evalTerm s a env (MThe _ m)
- = evalTerm s a env m
-
 
 -- (evm-val) -----------------------------------------------
 evalTerm _s _ _  (MVal v)
@@ -71,6 +62,16 @@ evalTerm _s _a env (MAbt bks mBody)
 -- (evm-abm) -----------------------------------------------
 evalTerm _s _a env (MAbm bts mBody)
  =      return [VClosure (TermClosure env (MPTerms bts) mBody)]
+
+
+-- (evm-mmm) -----------------------------------------------
+evalTerm s a env (MTerms ms)
+ = evalTerms s a env ms
+
+
+-- (evm-the) -----------------------------------------------
+evalTerm s a env (MThe _ m)
+ = evalTerm s a env m
 
 
 -- (evm-aps-prim) ------------------------------------------

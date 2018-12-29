@@ -34,8 +34,9 @@ evalType s a env (TVar u)
 
 
 -- (evt-abs) ----------------------------------------------
-evalType _s _a _env (TAbs _tps _mBody)
- = error "finish abs"
+evalType _s _a env (TAbs tps tBody)
+ =      return $ TRef $ TRClo (TypeClosure env tps tBody)
+
 
 -- (evt-key) ----------------------------------------------
 evalType _s _a _env (TKey _tk _args)
