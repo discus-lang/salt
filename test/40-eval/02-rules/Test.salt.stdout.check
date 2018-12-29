@@ -1,5 +1,5 @@
 * eval'mmm'multi: [5,5]
-* eval'var'clo: [[clo|[env|@[a = #Nat]], λ[x: a] → x]]
+* eval'var'clo: [[clo|[env|@[a = #Nat]], λ[x: a] → the [a] of x]]
 * eval'abs'type: [[clo|[env|@[a = #Nat]], λ[y: a] → y]]
 * eval'abs'term: [[clo|[env|[x = 5]], λ[y: #Nat] → x]]
 * eval'aps'prim: [5]

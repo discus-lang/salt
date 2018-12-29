@@ -103,9 +103,6 @@ evalTerm s a env (MApp mFun mgs)
                         when (not $ length vsArg == length bs)
                          $ throw $ ErrorWrongTermArity a (length bs) vsArg
 
-                        -- TODO: add tests to ensure evaluation with bumped vars
-                        -- works out. The env needs to be extended, and substitution
-                        -- build from the env the right way around.
                         let env'' = envExtendValues (zip bs vsArg) env'
                         evalTerm s a env'' mBody
 

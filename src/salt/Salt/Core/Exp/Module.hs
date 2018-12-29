@@ -156,20 +156,21 @@ resolveTermBound mm (Env bs0) (BoundWith n d0)
         -- Look for declarations in the global context.
         goGlobal upsT upsM
          = let  decls  = moduleDecls mm
-                psms   = [ (ps, m) | DTerm (DeclTerm _a n' ps _ m) <- decls
-                                 , n' == n ]
+                psms   = [ (ps, tResult, mBody)
+                         | DTerm (DeclTerm _a n' ps tResult mBody) <- decls
+                         , n' == n ]
 
                 -- We effectively have a recursive substitution at top level,
                 -- so need to push our ups under it before applying the ups
                 -- to the term we got from the binding.
                 upsT'  = flip upsBumpNames upsT $ typeNamesOfModule mm
                 upsM'  = flip upsBumpNames upsM $ termNamesOfModule mm
-           in
-           -- TODO: attach tResult type.
-           case psms of
-                [(mpss, mBody)]
+
+           in case psms of
+                [(mpss, tResult, mBody)]
                   -> return $ Just $ TermDecl
-                  $  upsApplyTerm upsT' upsM' $ foldr MAbs mBody mpss
+                            $ upsApplyTerm upsT' upsM'
+                            $ foldr MAbs (MThe tResult mBody) mpss
 
                 _ -> return Nothing
 

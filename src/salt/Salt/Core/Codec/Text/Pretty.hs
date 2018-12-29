@@ -54,8 +54,7 @@ instance Pretty c (Type a) where
 
 
         -- Keyed expressions
-        THole
-         -> text "∙"
+        THole    -> text "∙"
 
         TArr tsParam tResult
          -> squared (map (ppr c) tsParam)
@@ -179,17 +178,20 @@ instance Pretty c (Term a) where
         MAnn _ m -> ppr c m
         MRef r   -> ppr c r
 
-        MVar u
-         -> ppr c u
+        MVar u   -> ppr c u
 
         MAbs p m
          -> text "λ" %% ppr c p %% text "→" %% ppr c m
+
+        MThe t m
+         -> text "the" %% ppr c t %% text "of" %% ppr c m
 
         MLet bts mBind mBody
          -> text "let" %% (squared [ppr c b % text ":" %% ppr c t | (b, t) <- bts])
          %% text "="   %% ppr c mBind
          %% text "in"  %% ppr c mBody
 
+        -- TODO: pretty printing for rest of the term forms.
         MKey MKApp [MGTerms [mFun], MGTerms msArg]
          -> pprMFun c mFun %% squared (map (ppr c) msArg)
 
@@ -360,21 +362,27 @@ pprNameAsIdentifier match ident_class prefix (Name name)
  | otherwise
  = text ("##" <> ident_class) <> string (show name)
 
+
 pprVar :: Name -> Doc
 pprVar = pprNameAsIdentifier Lexer.matchVar "Var" ""
+
 
 -- | Labels are currently treated the same as variables in the lexer
 pprLbl :: Name -> Doc
 pprLbl = pprVar
 
+
 pprCon :: Name -> Doc
 pprCon = pprNameAsIdentifier Lexer.matchCon "Con" ""
+
 
 pprSym :: Name -> Doc
 pprSym = pprNameAsIdentifier Lexer.matchSym "Sym" "'"
 
+
 pprPrm :: Name -> Doc
 pprPrm = pprNameAsIdentifier Lexer.matchPrm "Prm" "#"
+
 
 pprNameQuoted :: Name -> Doc
 pprNameQuoted (Name name)
