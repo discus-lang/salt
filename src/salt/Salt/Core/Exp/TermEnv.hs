@@ -27,19 +27,6 @@ menvExtendTypes bts1 (TermEnv bs2)
    in   TermEnv (TermEnvTypes nts : bs2)
 
 
--- | Lookup a named type from an environment.
-menvLookupType :: Name -> TermEnv a -> Maybe (Type a)
-menvLookupType n (TermEnv bs0)
- = loop bs0
- where
-        loop [] = Nothing
-        loop (TermEnvValues{} : bs) = loop bs
-        loop (TermEnvTypes nts : bs)
-         = case Map.lookup n nts of
-                Nothing         -> loop bs
-                Just t          -> Just t
-
-
 -- | Extend an environment with a new value.
 menvExtendValue :: Bind -> Value a -> TermEnv a -> TermEnv a
 menvExtendValue bb v env@(TermEnv evs)

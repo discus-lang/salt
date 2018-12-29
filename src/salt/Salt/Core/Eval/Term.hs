@@ -163,7 +163,7 @@ evalTerm s a env mm@(MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
 
         -- We have a different number of condition and branch terms.
         loop _ _
-         = throw $ ErrorInvalidConstruct a mm
+         = throw $ ErrorInvalidTerm a mm
 
 
 -- (evm-rec) -----------------------------------------------
@@ -205,7 +205,7 @@ evalTerm s a env mm@(MVarCase mScrut msAlt0)
                 |  nAlt == nScrut = (btsPat, mBody)
                 |  otherwise      = go msAlt
             go [] = throw $ ErrorCaseNoMatch a vScrut
-            go _  = throw $ ErrorInvalidConstruct a mm
+            go _  = throw $ ErrorInvalidTerm a mm
 
         let (btsPat, mBody) = go msAlt0
 
@@ -270,13 +270,13 @@ evalTerm s a env mm@(MMap tk tv msk msv)
         evalPairs [] [] = return []
 
         -- We were expecting the same number of keys as values.
-        evalPairs _ _   = throw $ ErrorInvalidConstruct a mm
+        evalPairs _ _   = throw $ ErrorInvalidTerm a mm
 
 
 -----------------------------------------------------------
 -- No match.
-evalTerm _s a _ mm
- =      throw $ ErrorInvalidConstruct a mm
+evalTerm _s a _env mm
+ =      throw $ ErrorInvalidTerm a mm
 
 
 ---------------------------------------------------------------------------------------------------

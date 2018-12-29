@@ -158,14 +158,14 @@ resolveTypeBound mm (TypeEnv bs0) (BoundWith n d0)
  where
         -- Look through the local environment.
         goEnv d upsT (TypeEnvTypes nts : rest)
-         | d < 0        = return Nothing
+         | d < 0     = return Nothing
          | otherwise
          = let upsT' = upsCombine upsT (upsOfNames $ Map.keys nts) in
            case Map.lookup n nts of
-                Nothing         -> goEnv d upsT' rest
+                Nothing      -> goEnv d upsT' rest
                 Just t
-                 | d == 0       -> return $ Just $ TypeDefLocal (upsApplyType upsT' t)
-                 | otherwise    -> goEnv (d - 1) upsT' rest
+                 | d == 0    -> return $ Just $ TypeDefLocal (upsApplyType upsT' t)
+                 | otherwise -> goEnv (d - 1) upsT' rest
 
         goEnv d upsT []
          | d == 0    = goGlobal upsT
@@ -176,7 +176,7 @@ resolveTypeBound mm (TypeEnv bs0) (BoundWith n d0)
         --   so need to push our ups under it before applying the ups
         --   to the term we got from the binding.
         goGlobal upsT
-         = let upsT'  = flip upsBumpNames upsT $ typeNamesOfModule mm
+         = let upsT' = flip upsBumpNames upsT $ typeNamesOfModule mm
            in case lookupDeclTypeOfModule n mm of
                 Just (DeclType _a _n tpss _kResult tBody)
                   -> return $ Just $ TypeDefDecl
@@ -204,14 +204,14 @@ resolveTermBound mm (TermEnv bs0) (BoundWith n d0)
  where
         -- Look through the local environment.
         goEnv d upsT upsM (TermEnvValues nvs : rest)
-         | d < 0        = return Nothing
+         | d < 0     = return Nothing
          | otherwise
          = let upsM' = upsCombine upsM (upsOfNames $ Map.keys nvs) in
            case Map.lookup n nvs of
-                Nothing         -> goEnv d upsT upsM' rest
+                Nothing      -> goEnv d upsT upsM' rest
                 Just v
-                 | d == 0       -> return $ Just $ TermDefLocal (upsApplyValue upsT upsM' v)
-                 | otherwise    -> goEnv (d - 1) upsT upsM' rest
+                 | d == 0    -> return $ Just $ TermDefLocal (upsApplyValue upsT upsM' v)
+                 | otherwise -> goEnv (d - 1) upsT upsM' rest
 
         goEnv d upsT upsM (TermEnvTypes nts : rest)
          = let  upsT' = upsCombine upsT (upsOfNames $ Map.keys nts)
@@ -226,8 +226,8 @@ resolveTermBound mm (TermEnv bs0) (BoundWith n d0)
         --   so need to push our ups under it before applying the ups
         --   to the term we got from the binding.
         goGlobal upsT upsM
-         = let  upsT'  = flip upsBumpNames upsT $ typeNamesOfModule mm
-                upsM'  = flip upsBumpNames upsM $ termNamesOfModule mm
+         = let  upsT' = flip upsBumpNames upsT $ typeNamesOfModule mm
+                upsM' = flip upsBumpNames upsM $ termNamesOfModule mm
            in case lookupDeclTermOfModule n mm of
                 Just (DeclTerm _a _n mpss tResult mBody)
                   -> return $ Just $ TermDefDecl

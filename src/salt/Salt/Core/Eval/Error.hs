@@ -6,10 +6,15 @@ import Control.Exception
 
 
 data Error a
-        -- | Generic error when we don't know how to handle a construct.
-        = ErrorInvalidConstruct
+        -- | Generic error when we don't know how to handle a type construct.
+        = ErrorInvalidTerm
         { errorAnnot            :: a
         , errorTerm             :: Term a }
+
+        -- | Generic error when we don't know how to handle a term construct.
+        | ErrorInvalidType
+        { errorAnnot            :: a
+        , errorType             :: Type a }
 
         -- | Wrong number of types for eliminator.
         | ErrorWrongTypeArity
@@ -37,6 +42,12 @@ data Error a
         , errorTermEnv          :: TermEnv a }
 
         -- Applications -----------------------------------
+        -- | Runtime errors in type/type application,
+        --   because the type operator to be applied is not a closure.
+        | ErrorAppTypeBadClosure
+        { errorAnnot            :: a
+        , errorType             :: Type a }
+
         -- | Runtime type error in application,
         --   as the functional expression is not a closure.
         | ErrorAppTermTypeMismatch
