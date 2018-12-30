@@ -20,12 +20,10 @@ import qualified Data.Either    as Either
 --   applications that were actually ill-kinded. We also prefer to see errors
 --   in the term declaratoins before dealing with errors in test declarations.
 --
---   TODO: change result type to Either [Error a] (Module a, Context a)
---
 checkModule
         :: Annot a
         => a -> Module a
-        -> IO (Context a, Module a, [Error a])
+        -> IO (Either [Error a] (Module a, Context a))
 
 checkModule a mm
  = goTypeSigs ctxStart (moduleDecls mm)
@@ -51,7 +49,7 @@ checkModule a mm
 
                 let errs = errsSig ++ errsRebound ++ errsRecursive
                 if not $ null errs
-                 then return (ctx, mm, errs)
+                 then return $ Left errs
                  else do
                         let nktsDeclType
                                 = [ ( n
@@ -66,9 +64,9 @@ checkModule a mm
          = do   (decls', errs)
                  <- checkDecls (checkDeclType a ctx) decls
 
-                if null errs
-                 then goTermSigs  ctx decls'
-                 else return (ctx, mm, errs)
+                if not $ null errs
+                 then return $ Left errs
+                 else goTermSigs  ctx decls'
 
         -- Check type signatures on terms, before adding them to the context.
         goTermSigs ctx decls
@@ -88,7 +86,7 @@ checkModule a mm
                 let ntsDeclTerm = concat ntssDeclTerm
 
                 if not $ null errs
-                 then return (ctx, mm, errs)
+                 then return $ Left errs
                  else do
                         let ctx' = ctx { contextModuleTerm = Map.fromList ntsDeclTerm }
                         goTermDecls ctx' decls'
@@ -98,15 +96,15 @@ checkModule a mm
          = do   (decls', errs)
                  <- checkDecls (checkDeclTerm a ctx) decls
 
-                if null errs
-                 then goTestSigs ctx decls'
-                 else return (ctx, mm, errs)
+                if not $ null errs
+                 then return $ Left errs
+                 else goTestSigs ctx decls'
 
         -- Check test signatures.
         goTestSigs ctx decls
          = do   let errs        = checkDeclTestRebound decls
                 if not $ null errs
-                 then return (ctx, mm, errs)
+                 then return $ Left errs
                  else goTestDecls ctx decls
 
         -- Check individual test declarations.
@@ -114,7 +112,7 @@ checkModule a mm
          = do   (decls', errs)
                  <- checkDecls (checkDeclTest a ctx) decls
 
-                if null errs
-                 then return (ctx, mm { moduleDecls = decls' }, errs)
-                 else return (ctx, mm, errs)
+                if not $ null errs
+                 then return $ Left errs
+                 else return $ Right (mm { moduleDecls = decls' }, ctx)
 

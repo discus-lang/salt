@@ -100,12 +100,12 @@ runCheck :: FilePath -> Module IW.Location
          -> IO (Check.Context IW.Location)
 runCheck filePath mm
  = do   let a = IW.Location 0 0
-        (ctx, _mm', errs) <- Check.checkModule a mm
-        case errs of
-         [] -> return ctx
-         _  -> do
-                mapM_ (printError filePath) errs
-                System.exitFailure
+        Check.checkModule a mm
+         >>= \case
+                Right (_mm', ctx) -> return ctx
+                Left errs
+                 -> do  mapM_ (printError filePath) errs
+                        System.exitFailure
 
 printError filePath err
  = do   let (IW.Location nLine nCol) = Error.errorAnnot err
