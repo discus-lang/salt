@@ -131,7 +131,6 @@ instance HasSupport (TypeRef a) where
 
 
 instance HasSupport (TypeClosure a) where
- -- TODO: get real support of closures.
  supportOf _    = mempty
 
 
@@ -164,7 +163,6 @@ instance HasSupport (Term a) where
 
 
 instance HasSupport (TermRef a) where
- -- TODO: get real support of closures.
  supportOf _    = mempty
 
 
