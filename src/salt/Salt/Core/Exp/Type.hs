@@ -98,9 +98,16 @@ pattern TSusp   tsv te  = TKey TKSusp         [TGTypes tsv, TGTypes [te]]
 pattern TPure           = TKey TKPure         []
 pattern TSync           = TKey TKSync         []
 pattern TSum    ts      = TKey TKSum          [TGTypes ts]
+
 pattern (:=>) ks1 k2    = TArr    ks1 k2
+infixr 4 :=>
+
 pattern (:->) ts1 ts2   = TFun    ts1 ts2
+infixr 4 :->
+
 pattern (:*>) tps t     = TForall tps t
+infixr 3 :*>
+
 
 -- Primitive types.
 pattern TType           = TPrm "Type"

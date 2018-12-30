@@ -15,42 +15,42 @@ primOpsList
         , docs  = "Construct an empty list (same as #list'empty)." }
 
    , PP { name  = "list'one"
-        , tsig  = [("a", TData)] :*> (["a"] :-> [TList "a"])
+        , tsig  = [("a", TData)] :*> ["a"] :-> [TList "a"]
         , step  = \[NTs [t], NVs [v]] -> [VList t [v]]
         , docs  = "Construct a singleton list." }
 
    , PP { name  = "list'cons"
-        , tsig  = [("a", TData)] :*> (["a", TList "a"] :-> [TList "a"])
+        , tsig  = [("a", TData)] :*> ["a", TList "a"] :-> [TList "a"]
         , step  = \[NTs [t], NVs [v, VList _ vs]]
                 -> [VList t (v : vs)]
         , docs  = "Attach an element to the front of an existing list." }
 
    , PP { name  = "list'isEmpty"
-        , tsig  = [("a", TData)] :*> ([TList "a"] :-> [TBool])
+        , tsig  = [("a", TData)] :*> [TList "a"] :-> [TBool]
         , step  = \[NTs [_], NVs [VList _ vs]]
                 -> [VBool $ null vs]
         , docs  = "Check if the given list is empty." }
 
    , PP { name  = "list'size"
-        , tsig  = [("a", TData)] :*> ([TList "a"] :-> [TNat])
+        , tsig  = [("a", TData)] :*> [TList "a"] :-> [TNat]
         , step  = \[NTs [_], NVs [VList _ vs]]
                 -> [VNat $ fromIntegral $ length vs]
         , docs  = "Produce the size of the given list." }
 
    , PP { name  = "list'head"
-        , tsig  = [("a", TData)] :*> ([TList "a"] :-> [TOption "a"])
+        , tsig  = [("a", TData)] :*> [TList "a"] :-> [TOption "a"]
         , step  = \[NTs [t], NVs [VList _ vs]]
                 -> case vs of { [] -> [VNone t]; v : _ -> [VSome t v] }
         , docs  = "Take the head element of a list." }
 
    , PP { name  = "list'tail"
-        , tsig  = [("a", TData)] :*> ([TList "a"] :-> [TOption (TList "a")])
+        , tsig  = [("a", TData)] :*> [TList "a"] :-> [TOption (TList "a")]
         , step  = \[NTs [t], NVs [VList _ vs]]
                 -> case vs of { [] -> [VNone t]; _ : vs' -> [VSome t (VList t vs')] }
         , docs  = "Take the head element of a list." }
 
    , PP { name  = "list'case"
-        , tsig  =  [("a", TData)] :*> ([TList "a"] :-> [makeListType "a"])
+        , tsig  =  [("a", TData)] :*> [TList "a"] :-> [makeListType "a"]
         , step  = \[NTs [t], NVs [VList _ vv]]
                   -> case vv of
                       []      -> [VVariant "nil"  (makeListType t) []]
