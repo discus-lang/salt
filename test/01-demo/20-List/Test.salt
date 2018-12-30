@@ -18,7 +18,6 @@ term append @[a: #Data] [xx: #List a, yy: #List a]: #List a
         ; cons  [x: a, xs: #List a]
            → #list'cons @a [x, append @a [xs, yy]] }
 
--- TODO: pretty printing of elem type in result is wrong.
 test eval append
  = append @#Nat [[list #Nat| 10, 11, 12], [list #Nat| 13, 14, 15]]
 

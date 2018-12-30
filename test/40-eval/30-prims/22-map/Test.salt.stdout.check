@@ -3,4 +3,4 @@
 * map'size: [2]
 * map'insert: [[map #Nat #Symbol| 2 := 'two, 3 := 'three, 4 := 'four]]
 * map'delete: [[map #Nat #Symbol| 2 := 'two, 4 := 'four]]
-* map'lookup: [(Some [#Symbol] ['three])]
+* map'lookup: [Some #Symbol 'three]

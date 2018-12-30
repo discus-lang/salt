@@ -4,6 +4,6 @@
 * list'cons: [[list #Nat| 2, 3]]
 * list'isEmpty: [#true]
 * list'size: [3]
-* list'head: [(Some [#Nat] [2])]
-* list'tail: [(Some [#Nat] [[list #Nat| 3, 4]])]
+* list'head: [Some #Nat 2]
+* list'tail: [Some #Nat [list #Nat| 3, 4]]
 * list'case: [the ∑[nil: [], cons: [#Nat, #List [#Nat]]] of `cons [2, [list #Nat| 3, 4]]]

@@ -65,6 +65,9 @@ instance Pretty c (Term a) where
          -> text "case" %% ppr c mScrut %% text "of"
          %% braced (map (pprMAlt c) msAlt)
 
+        MData n ts ms
+         -> pprCon n %% hsep (map (pprTArg c) ts) %% hsep (map (pprMArg c) ms)
+
         MRun m
          -> text "run" %% ppr c m
 
@@ -238,9 +241,7 @@ instance Pretty c (Value a) where
         VWord64 i       -> string $ show i
 
         VData n ts vs
-         -> parens $ pprCon n
-                %% squared (map (ppr c) ts)
-                %% squared (map (ppr c) vs)
+         -> pprCon n %% hsep (map (pprTArg c) ts) %% hsep (map (pprVArg c) vs)
 
         VRecord nvs
          -> bracketed
@@ -268,4 +269,11 @@ instance Pretty c (Value a) where
                                | (vk, vv) <- Map.toList kvs ])
 
         VClosure clo    -> ppr c clo
+
+pprVArg c vv
+ = case vv of
+        VData{}         -> parens $ ppr c vv
+        VVariant{}      -> parens $ ppr c vv
+        _               -> ppr c vv
+
 
