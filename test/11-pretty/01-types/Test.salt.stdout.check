@@ -1,0 +1,13 @@
+* #Nat
+* [tclo_|λ[a: #Data] → a]
+* [#Data] ⇒ #Data
+* #Map [#Nat, #Symbol]
+* [#Nat, #Nat] → [#Symbol]
+* ∀[a: #Data, b: #Data]. [#Data] → [#Data, #Data]
+* ∃[a: #Data, b: #Data]. [#Data] → [#Data, #Data]
+* ∏[x: [#Nat, #Nat], y: #Symbol]
+* ∑[x: [#Nat, #Nat], y: #Symbol]
+* [#Nat]!(#Console + #Sleep)
+* sync
+* pure
+* #Console + #Sleep + pure

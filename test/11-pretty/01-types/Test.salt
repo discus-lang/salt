@@ -1,0 +1,17 @@
+-- Test pretty printing of types.
+-- Evaluating normal form types will just print them back.
+
+test eval'type #Nat
+test eval'type λ[a: #Data] ⇒ a
+test eval'type [#Data] ⇒ [#Data]
+test eval'type #Map [#Nat, #Symbol]
+test eval'type [#Nat, #Nat] → [#Symbol]
+test eval'type ∀[a: #Data, b: #Data]. [a] → [b, b]
+test eval'type ∃[a: #Data, b: #Data]. [a] → [b, b]
+test eval'type [x: [#Nat, #Nat], y: [#Symbol]]
+test eval'type <x: [#Nat, #Nat], y: [#Symbol]>
+test eval'type [#Nat] ! #Console + #Sleep
+test eval'type sync
+test eval'type pure
+test eval'type #Console + #Sleep + pure
+
