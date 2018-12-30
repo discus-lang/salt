@@ -37,7 +37,7 @@ test type equiv'alpha'bump
         → if b then f else g
 
 
--- Type equivalene where a binding shadows a synonym.
+-- Type equivalence where a binding shadows a synonym.
 type nat: #Data = #Nat
 test type equiv'syn'shadow
  =     λ[ f: ∀[a: #Data]. ∀[nat: #Data]. [a] → [nat, a, nat^1]

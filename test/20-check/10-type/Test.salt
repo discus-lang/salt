@@ -13,7 +13,7 @@ type foo: #Data = [#Nat] ! #Console + #Sleep
 test type λ[x: foo] → box run x
 
 
--- (t-apt) look through synontms in term/type  application.
+-- (t-apt) look through synonyms in term/type  application.
 type thing2thing: #Data = ∀[a: #Data]. a → a
 test type λ[f: thing2thing] → f @#Nat 3
 
@@ -41,5 +41,4 @@ test type the vntx of `foo 3
 -- (t-cse) look through synonym to see type of scrutinee.
 type vnty: #Data = <foo: #Nat, bar: #Nat>
 test type λ[x: vnty] → case x of { foo [x: #Nat] → x; bar [y: #Nat] → y }
-
 
