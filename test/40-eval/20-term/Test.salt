@@ -76,7 +76,6 @@ test eval evm'case
 
 
 -- (evm-box) ----------------------------------------------
--- TODO: finish pretty printer so this comes out right.
 test eval evm'box
  = box #console'print "hello"
 
