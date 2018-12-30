@@ -76,7 +76,7 @@ instance Pretty c (Type a) where
 
 pprTFun c tt
  = case tt of
-        TAnn _ t        -> ppr c t
+        TAnn _ t        -> pprTFun c t
         TRef{}          -> ppr c tt
         TVar{}          -> ppr c tt
         TApp{}          -> ppr c tt
@@ -89,7 +89,7 @@ pprTFun c tt
 
 pprTArg c tt
  = case tt of
-        TAnn _ t        -> ppr c t
+        TAnn _ t        -> pprTArg c t
         TRef{}          -> ppr c tt
         TPrm{}          -> ppr c tt
         TVar{}          -> ppr c tt

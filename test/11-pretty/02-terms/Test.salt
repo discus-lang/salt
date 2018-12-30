@@ -1,0 +1,32 @@
+-- Test pretty printing of terms.
+-- We can display terms with redexes by boxing them.
+
+test eval box λ[x: #Nat] → x
+
+test eval box the #Nat of 3
+test eval box the [#Nat, #Symbol] of [3, 'foo]
+
+test eval box (λ@[a: #Data] → λ[x: a] → x) @#Nat 5
+
+test eval box let x = 2; let y = 3; #nat'add [2, 3]
+
+test eval box ∏[]
+test eval box ∏[x = 1, y = 'foo]
+
+test eval box ∏[x = 1, y = 'foo].y
+
+test eval box the <foo: [#Nat, #Symbol]> of `foo [5, 'derp]
+
+test eval
+ box    λ[x: <foo: [#Nat, #Symbol], bar: [#Symbol]>] →
+        case x of
+        { foo [y: #Nat, z: #Symbol] → z
+        ; bar [z: #Symbol] → z }
+
+test eval box λ[x: [#Nat]!pure] → run x
+test eval box box #nat'add [2, 3]
+
+test eval box [list #Nat| #nat'add [2, 3], #nat'add [3, 4]]
+test eval box [set  #Nat| #nat'add [2, 3], #nat'add [3, 4]]
+test eval box [map  #Symbol #Nat| 'five := #nat'add [2, 3], 'seven := #nat'add [3, 4]]
+

@@ -165,7 +165,7 @@ pattern MLet btsBind mBind mBod = MKey   MKLet  [MGTerms [mBod, MAbs (MPTerms bt
 pattern MIf  mCond mThen mElse  = MKey   MKIf   [MGTerms mCond,  MGTerms mThen, MGTerm mElse]
 
 pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]
-pattern MProject l  m           = MKey  (MKProject l) [MGTerms [m]]
+pattern MProject l  m           = MKey  (MKProject l) [MGTerm  m]
 
 pattern MVariant l m tResult    = MKey  (MKVariant l) [MGTerm  m,      MGTypes [tResult]]
 pattern MVarCase mScrut msAlt   = MKey   MKVarCase    [MGTerm  mScrut, MGTerms msAlt]
@@ -173,12 +173,13 @@ pattern MVarAlt  n bts mBody    = MKey  (MKVarAlt n)  [MGTerm (MAbs (MPTerms bts
 
 pattern MData    n ts ms        = MKey  (MKCon n)     [MGTypes ts, MGTerms ms]
 
+pattern MRun  mBody             = MKey   MKRun  [MGTerm mBody]
+pattern MBox  mBody             = MKey   MKBox  [MGTerm mBody]
+
 pattern MList tElem msElem      = MKey   MKList [MGTypes [tElem],  MGTerms msElem]
 pattern MSet  tElem msElem      = MKey   MKSet  [MGTypes [tElem],  MGTerms msElem]
 pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey, MGTerms msVal]
 
-pattern MRun  mBody             = MKey   MKRun  [MGTerm mBody]
-pattern MBox  mBody             = MKey   MKBox  [MGTerm mBody]
 
 pattern MUnit                   = MRef  (MRVal VUnit)
 pattern MBool b                 = MRef  (MRVal (VBool b))

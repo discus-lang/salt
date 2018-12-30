@@ -17,35 +17,120 @@ instance Pretty c (Term a) where
         MVar u   -> ppr c u
 
         MAbs p m
-         -> text "λ" %% ppr c p %% text "→" %% ppr c m
+         -> text "λ" % ppr c p %% text "→" %% ppr c m
 
-        MThe t m
-         -> text "the" %% ppr c t %% text "of" %% ppr c m
+        MTerms ms
+         -> squared (map (ppr c) ms)
+
+        MThe ts m
+         -> case ts of
+                [t] -> text "the" %% ppr c t  %% text "of" %% ppr c m
+                _   -> text "the" %% squared (map (ppr c) ts )
+                                  %% text "of" %% ppr c m
+
+        MApt mFun tsArg
+         -> case tsArg of
+                [t] -> pprMFun c mFun %% text "@" % pprTArg c t
+                _   -> pprMFun c mFun %% text "@" % squared (map (pprTArg c) tsArg)
+
+        MApv mFun mArg
+         -> pprMFun c mFun %% pprMArg c mArg
+
+        MApm mFun msArg
+         -> pprMFun c mFun %% squared (map (pprMArg c) msArg)
 
         MLet bts mBind mBody
-         -> text "let" %% (squared [ppr c b % text ":" %% ppr c t | (b, t) <- bts])
-         %% text "="   %% ppr c mBind
-         %% text "in"  %% ppr c mBody
+         -> let pp (b, THole) = ppr c b
+                pp (b, t)     = ppr c b % text ":" %% ppr c t
+            in  case bts of
+                 [bt]   -> text "let" %% pp bt
+                        %% text "="   %% ppr c mBind
+                        %  text ";"   %% ppr c mBody
 
-        -- TODO: pretty printing for rest of the term forms.
-        MKey MKApp [MGTerms [mFun], MGTerms msArg]
-         -> pprMFun c mFun %% squared (map (ppr c) msArg)
+                 _      -> text "let" %% squared (map pp bts)
+                        %% text "="   %% ppr c mBind
+                        %  text ";"   %% ppr c mBody
 
-        MKey (MKProject n) [MGTerms [m]]
-         -> ppr c m % text "." % pprLbl n
+        MRecord ns ms
+         | length ns == length ms
+         -> text "∏" % squared [ pprLbl n %% text "=" %% ppr c m | n <- ns | m <- ms ]
 
-        MKey k ms
-         -> ppr c k %% (hsep $ map (ppr c) ms)
+        MProject l m
+         -> pprMArg c m % text "." % pprLbl l
+
+        MVariant l m t
+         -> text "the" %% ppr c t %% text "of" %% text "`" % pprLbl l %% pprMArg c m
+
+        MVarCase mScrut msAlt
+         -> text "case" %% ppr c mScrut %% text "of"
+         %% braced (map (pprMAlt c) msAlt)
+
+        MRun m
+         -> text "run" %% ppr c m
+
+        MBox m
+         -> text "box" %% ppr c m
+
+        MList t ms
+         -> brackets
+                $ text "list" %% pprTArg c t % text "| "
+                % hcat (punctuate (text ", ") (map (ppr c) ms))
+
+        MSet  t ms
+         -> brackets
+                $ text "set"  %% pprTArg c t % text "| "
+                % hcat (punctuate (text ", ") (map (ppr c) ms))
+
+        MMap  tk tv msKey msVal
+         -> brackets
+                $ text "map"  %% pprTArg c tk %% pprTArg c tv % text "| "
+                % hcat (punctuate (text ", ")
+                               [ ppr c mk %% text ":=" %% ppr c mv
+                               | mk <- msKey | mv <- msVal ])
+        MKey k mgs
+         -> ppr c k %% (hsep $ map (ppr c) mgs)
 
 
 pprMFun c mm
  = case mm of
-        MAnn _ m -> ppr c m
-        MRef{}   -> ppr c mm
-        MVar{}   -> ppr c mm
-        MAbs{}   -> parens $ ppr c mm
-        MApp{}   -> ppr c mm
-        MKey{}   -> parens $ ppr c mm
+        MAnn _ m        -> pprMFun c m
+        MRef{}          -> ppr c mm
+        MVar{}          -> ppr c mm
+        MApp{}          -> ppr c mm
+        MAbs{}          -> parens $ ppr c mm
+        MTerms{}        -> ppr c mm
+        MRecord{}       -> ppr c mm
+        MProject{}      -> ppr c mm
+        MList{}         -> ppr c mm
+        MSet{}          -> ppr c mm
+        MMap{}          -> ppr c mm
+        MKey{}          -> parens $ ppr c mm
+
+
+pprMArg c mm
+ = case mm of
+        MAnn _ m        -> pprMArg c m
+        MRef{}          -> ppr c mm
+        MVar{}          -> ppr c mm
+        MAbs{}          -> parens $ ppr c mm
+        MTerms{}        -> ppr c mm
+        MRecord{}       -> ppr c mm
+        MProject{}      -> ppr c mm
+        MList{}         -> ppr c mm
+        MSet{}          -> ppr c mm
+        MMap{}          -> ppr c mm
+        MKey{}          -> parens $ ppr c mm
+
+
+pprMAlt c mm
+ = case mm of
+        MVarAlt n bts mBody
+         -> pprLbl n
+         %% squared [ppr c b % text ":" %% ppr c t | (b, t) <- bts]
+         %% text "→"
+         %% ppr c mBody
+
+        _ -> parens (ppr c mm)
 
 
 instance Pretty c (TermRef a) where
@@ -167,17 +252,17 @@ instance Pretty c (Value a) where
 
         VList t vs
          -> brackets
-                $ text "list" %% pprTArg c t % text "|"
+                $ text "list" %% pprTArg c t % text "| "
                 % hcat (punctuate (text ", ") (map (ppr c) vs))
 
         VSet  t vs
          -> brackets
-                $ text "set"  %% pprTArg c t % text "|"
+                $ text "set"  %% pprTArg c t % text "| "
                 % hcat (punctuate (text ", ") (map (ppr c) $ Set.toList vs))
 
         VMap  tk tv kvs
          -> brackets
-                $ text "map"  %% pprTArg c tk %% pprTArg c tv % text "|"
+                $ text "map"  %% pprTArg c tk %% pprTArg c tv % text "| "
                 % hcat (punctuate (text ", ")
                                [ ppr c vk %% text ":=" %% ppr c vv
                                | (vk, vv) <- Map.toList kvs ])
