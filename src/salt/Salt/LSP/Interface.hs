@@ -26,8 +26,6 @@ lspRead state
         let Just txLength   = T.stripSuffix "\r" txLength1
         let lenChunk        = read (T.unpack txLength)
 
---        lspLog state $ "chunk length: " ++ show (lenChunk :: Integer)
-
         "\r" <- T.hGetLine S.stdin
         txChunk  <- lspReadChunk state lenChunk
 
@@ -35,19 +33,17 @@ lspRead state
          J.Error str 
           -> do lspLog state $ "  error: " ++ show str
                 lspRead state
-
+        
+        -- TODO: check sequence number.        
          J.Ok js 
-          -> do lspLog state $ "* Received Message ---------------------------------"
-                lspLog state $ T.ppShow js
-                
-                -- TODO: check sequence number.
-                case unpack js of
-                 Nothing  
-                  -> do lspLog state $ " error: jsonrpc malformed"
+          -> case unpack js of
+                Nothing  
+                 -> do  lspLog state $ " error: jsonrpc malformed"
+                        lspLog state $ T.ppShow js
                         lspRead state
 
-                 Just (req :: Request a )
-                  -> do -- TODO: trace on flag.
+                Just (req :: Request a )
+                 -> do  -- TODO: trace on flag.
                         -- lspLog state $ T.ppShow req
                         return req
 

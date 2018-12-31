@@ -18,8 +18,8 @@ module Salt.LSP.Protocol.Base
         , flattenJSValue
 
         -- * Primitive getters.
-        , getObject 
-        , getField
+        , getObject, getField
+        , getArray
         , getString,  getStringNull
         , getInteger, getIntegerNull)
 where
@@ -154,6 +154,14 @@ getField :: JSValue -> String -> Maybe JSValue
 getField js name
  = case js of
         JSObject obj    -> lookup name $ fromJSObject obj
+        _               -> Nothing
+
+
+-- | Get the elements of an array from a `JSValue`.
+getArray  :: JSValue -> Maybe [JSValue]
+getArray js
+ = case js of
+        JSArray jss     -> Just jss
         _               -> Nothing
 
 

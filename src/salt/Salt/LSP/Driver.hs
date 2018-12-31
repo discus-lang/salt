@@ -9,37 +9,44 @@ import qualified System.IO                as System
 import qualified System.Posix.Process     as Process
 import qualified Text.Show.Pretty         as T
 
+
 ---------------------------------------------------------------------------------------------------
--- | Become a language server plugin,
---   listening to requests on stdin and sending responses to stdout.
+-- | Become a language server plugin.
+--   We listen to requests on stdin and send responses to stdout.
 --   We take an optional path for server side logging.
+--
 runLSP :: Maybe FilePath -> IO ()
 runLSP mFileLog
- = do  state  <- lspStartup mFileLog
+ = do  state  <- lspBegin mFileLog
        lspLoop state
 
 
 ---------------------------------------------------------------------------------------------------
+-- | The main event loop for the language server.
+-- 
+--   We do a blocking read of stdin to get a request, 
+--   then dispatch it to the appropriat
 lspLoop :: State -> IO ()
 lspLoop state
  = case statePhase state of
         PhaseStartup
          -> do  msg <- lspRead state
-                lspInitialize state msg
+                lspStartup state msg
 
         PhaseInitialized
          -> do  msg <- lspRead state
-                lspHandle state msg
+                lspInitialized state msg
 
         _ -> do
                 lspLog state "not done yet"
                 lspLoop state
 
+
 ---------------------------------------------------------------------------------------------------
--- | Startup the language server plugin.
+-- | Begin the language server plugin.
 --   We open our local file and initialize the state.
-lspStartup :: Maybe FilePath -> IO State
-lspStartup mFileLog
+lspBegin :: Maybe FilePath -> IO State
+lspBegin mFileLog
  = do
        pid <- Process.getProcessID 
        mLogDebug
@@ -59,30 +66,33 @@ lspStartup mFileLog
 
 
 ---------------------------------------------------------------------------------------------------
--- | Handle the initialization request sent from the client.
-lspInitialize :: State -> Request JSValue -> IO ()
-lspInitialize state req
+-- | Handle startup phase where we wait for the
+--   initializatino request sent from the client.
+lspStartup :: State -> Request JSValue -> IO ()
+lspStartup state req
 
  -- Client sends us 'inititialize' with the set of its capabilities.
  -- We reply with our own capabilities.
  | "initialize" <- reqMethod req
  , Just (params :: InitializeParams) 
       <- join $ fmap unpack $ reqParams req
- = do  
-       lspLog state "* Initialize"
-       lspLog state $ T.ppShow params
+ = do
+        lspLog state "* Initialize"
 
-       lspSend state 
-        $ pack $ ResponseResult (reqId req)
-        $ O [ ( "capabilities"
-              , O [ ( "textDocumentSync"
-                    , O [ ("openClose",  F $ pack True)        -- send us open/close notif to server.
-                        , ("change",     F $ pack (3 :: Int))  -- send us incremental changes
-                        , ("willSave",   F $ pack True)        -- send us will-save notif.
-                        , ("save",       F $ pack True)        -- send us save notif.
-                        ])])]
+        -- TODO: check server can actually do things.
+        -- help make this work with other than VSCode.
+        lspLog state $ T.ppShow params
 
-       lspLoop state
+        lspSend state 
+         $ pack $ ResponseResult (reqId req)
+         $ O [ ( "capabilities"
+               , O [ ( "textDocumentSync"
+                     , O [ ("openClose",  F $ pack True)        -- send us open/close notif to server.
+                         , ("change",     F $ pack (1 :: Int))  -- send us full file changes.
+                         , ("save",       F $ pack True)        -- send us save notif.
+                         ])])]
+
+        lspLoop state
 
  -- Cient sends us 'initialized' if it it is happy with the 
  -- capabilities that we sent.
@@ -97,8 +107,80 @@ lspInitialize state req
 
 
 ---------------------------------------------------------------------------------------------------
-lspHandle :: State -> Request JSValue -> IO ()
-lspHandle state req
+-- | Main event handler of the server.
+--
+--   Once initialized we receive the main requests and update our state.
+--
+lspInitialized :: State -> Request JSValue -> IO ()
+lspInitialized state req
+
+ -- On startup VSCode sends us a didChangeConfiguration,
+ --   but we don't have any settings define, so the payload is empty.
+ --   Just drop it on the floor.
+ | "workspace/didChangeConfiguration" <- reqMethod req
+ , Just jParams         <- reqParams req
+ , Just jSettings       <- getField jParams   "settings"
+ , Just jSettingsSalt   <- getField jSettings "salt"
+ = do   
+        lspLog state "* DidChangeConfiguration (salt)"
+        lspLog state $ "  jSettings:    " ++ show jSettingsSalt
+        lspLoop state
+
+ -- A file was opened.
+ | "textDocument/didOpen" <- reqMethod req
+ , Just jParams         <- reqParams req
+ , Just jDoc            <- getField jParams "textDocument"
+ , Just sUri            <- getString  =<< getField jDoc "uri"
+ , Just sLanguageId     <- getString  =<< getField jDoc "languageId"
+ , Just iVersion        <- getInteger =<< getField jDoc "version"
+ , Just sText           <- getString  =<< getField jDoc "text"
+ = do
+        lspLog state "* DidOpen"
+        lspLog state $ "  sUri:         " ++ show sUri
+        lspLog state $ "  sLanguageId:  " ++ show sLanguageId
+        lspLog state $ "  iVersion:     " ++ show iVersion
+        lspLog state $ "  sText:        " ++ show sText
+        lspLoop state 
+
+ -- A file was closed.
+ | "textDocument/didClose" <- reqMethod req
+ , Just jParams         <- reqParams req
+ , Just jDoc            <- getField jParams "textDocument"
+ , Just sUri            <- getString =<< getField jDoc "uri"
+ = do
+        lspLog state "* DidClose"
+        lspLog state $ "  sUri:         " ++ show sUri
+        lspLoop state 
+      
+ -- A file was saved.
+ | "textDocument/didSave" <- reqMethod req
+ , Just jParams         <- reqParams req
+ , Just jDoc            <- getField jParams "textDocument"
+ , Just sUri            <- getString  =<< getField jDoc "uri"
+ , Just iVersion        <- getInteger =<< getField jDoc "version"
+ = do
+        lspLog state "* DidSave"
+        lspLog state $ "  sUri:         " ++ show sUri
+        lspLog state $ "  iVersion:     " ++ show iVersion
+        lspLoop state 
+
+ -- A file was changed.
+ | "textDocument/didChange" <- reqMethod req
+ , Just jParams         <- reqParams req
+ , Just jDoc            <- getField jParams "textDocument"
+ , Just sUri            <- getString  =<< getField jDoc "uri"
+ , Just iVersion        <- getInteger =<< getField jDoc "version"
+ , Just [jChange]       <- getArray   =<< getField jParams "contentChanges"
+ , Just sText           <- getString  =<< getField jChange "text"
+ = do
+        lspLog state "* DidChange"
+        lspLog state $ "  sUri:         " ++ show sUri
+        lspLog state $ "  iVersion:     " ++ show iVersion
+        lspLog state $ "  sText:        " ++ show sText
+        lspLoop state
+
+ -- Some other request that we don't handle.
+ | otherwise
  = do
         lspLog  state "* Request"
         lspLog  state (T.ppShow req)
