@@ -10,7 +10,6 @@ term length @[a: #Data] [xx: #List a]: #Nat
 test eval length5
  = length @#Nat [list #Nat| 10, 11, 12, 13, 14]
 
-derp
 
 -- Append
 term append @[a: #Data] [xx: #List a, yy: #List a]: #List a
