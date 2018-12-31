@@ -13,7 +13,10 @@ SALT_PACKAGES := \
         -package filepath \
         -package inchworm \
         -package parsec \
-        -package pretty-show
+        -package json \
+        -package pretty-show \
+        -package unix
+
 
 WAR_PACKAGES := \
         -hide-all-packages \
@@ -24,7 +27,7 @@ WAR_PACKAGES := \
         -package containers \
         -package stm \
         -package process \
-        -package buildbox
+        -package buildbox 
 
 WAVES_PACKAGES := \
 	$(SALT_PACKAGES) \

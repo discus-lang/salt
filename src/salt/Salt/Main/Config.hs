@@ -12,6 +12,9 @@ data Mode
         | ModeCheck     FilePath
         | ModeTest      FilePath
         | ModeTest1     FilePath Text
+
+        | ModeLSP       
+        { modeFileLog   :: Maybe FilePath }
         deriving Show
 
 data Config
@@ -50,6 +53,14 @@ parseArgs ("-test1"  : filePath : name : rest) config
  = parseArgs rest
  $ config { configMode = Just (ModeTest1 filePath (T.pack name)) }
 
+parseArgs ("-lsp" : rest) config
+ = parseArgs rest
+ $ config { configMode = Just (ModeLSP Nothing) }
+
+parseArgs ("-lsp-debug" : fileLog : rest) config
+ = parseArgs rest
+ $ config { configMode = Just (ModeLSP (Just fileLog)) }
+
 parseArgs (filePath : []) config
  = return
  $ config { configMode = Just (ModeTest filePath) }
@@ -61,9 +72,11 @@ parseArgs _ _
 usage
  = unlines
  [ "salt FLAGS"
- , "   -lex   FILE.salt         lex a core file and print its tokens"
- , "   -parse FILE.salt         parse a core file and print its AST"
- , "   -check FILE.salt         type check a core file and print its AST"
- , "   -test  FILE.salt         run all the tests in the given module"
- , "   -test1 FILE.salt NAME    run a single test in the given module"
+ , "   -lex     FILE.salt           lex a core file and print its tokens"
+ , "   -parse   FILE.salt           parse a core file and print its AST"
+ , "   -check   FILE.salt           type check a core file and print its AST"
+ , "   -test    FILE.salt           run all the tests in the given module"
+ , "   -test1   FILE.salt NAME      run a single test in the given module"
+ , "   -lsp     FILE.salt           become a language server plugin"
+ , "   -lsp-log FILE.salt FILE.log   .. and log debug messages to a file"
  ]

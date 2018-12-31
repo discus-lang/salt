@@ -4,6 +4,7 @@ import Salt.Main.Config
 import Salt.Core.Exp
 import Salt.Data.Pretty
 import Data.Function
+import qualified Salt.LSP.Driver                as LSP
 import qualified Salt.Core.Eval                 as Eval
 import qualified Salt.Core.Check                as Check
 import qualified Salt.Core.Check.Error          as Error
@@ -27,11 +28,12 @@ main
  = do   args    <- System.getArgs
         config  <- parseArgs args configDefault
         case configMode config of
-         Just (ModeLex   filePath)      -> mainLex   filePath
-         Just (ModeParse filePath)      -> mainParse filePath
-         Just (ModeCheck filePath)      -> mainCheck filePath
-         Just (ModeTest  filePath)      -> mainTests filePath
-         Just (ModeTest1 filePath name) -> mainTest  filePath name
+         Just (ModeLex   filePath)      -> mainLex    filePath
+         Just (ModeParse filePath)      -> mainParse  filePath
+         Just (ModeCheck filePath)      -> mainCheck  filePath
+         Just (ModeTest  filePath)      -> mainTests  filePath
+         Just (ModeTest1 filePath name) -> mainTest   filePath name
+         Just (ModeLSP   mFileLog)      -> LSP.runLSP mFileLog 
          _ -> do  putStr usage
                   System.exitFailure
 
