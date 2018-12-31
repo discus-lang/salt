@@ -3,8 +3,16 @@ module Salt.LSP.Protocol.Base
         ( module Text.JSON
         , module Control.Monad
 
+        -- * JsonRpcId
+        , JsonRpcId (..)
+
         -- * Unpack
         , Unpack (..)
+
+        -- * Pack
+        , Pack (..)
+        , O(..)
+        , jobj, jhas, jmby, jnull
 
         -- * Flattening
         , flattenJSValue
@@ -16,8 +24,39 @@ module Salt.LSP.Protocol.Base
         , getInteger, getIntegerNull)
 where
 import Control.Monad
+import Data.Maybe
 import Text.JSON
 import qualified Data.Ratio     as Ratio
+
+
+---------------------------------------------------------------------------------------------------
+data JsonRpcId
+        = JsonRpcIdInt    Integer
+        | JsonRpcIdString String
+        | JsonRpcIdNull
+        deriving Show
+
+
+instance Pack JsonRpcId where
+ pack = \case
+        JsonRpcIdInt i    -> pack i
+        JsonRpcIdString s -> pack s
+        JsonRpcIdNull     -> JSNull
+
+
+instance Unpack JsonRpcId where
+ unpack js
+  | Just i    <- getInteger js
+  = return $ JsonRpcIdInt i
+
+  | Just s    <- getString js
+  = return $ JsonRpcIdString s
+
+  | JSNull    <- js
+  = return $ JsonRpcIdNull
+
+  | otherwise
+  = Nothing
 
 
 ---------------------------------------------------------------------------------------------------
@@ -32,6 +71,62 @@ instance Unpack String where
 
 instance Unpack Integer where
  unpack = getInteger
+
+instance Unpack [(String, JSValue)] where
+ unpack = getObject
+
+
+---------------------------------------------------------------------------------------------------
+class Pack a where
+ pack :: a -> JSValue
+
+instance Pack JSValue where
+ pack = id
+
+instance Pack String where
+ pack   = JSString . toJSString
+
+instance Pack Integer where
+ pack i = JSRational False (fromIntegral i)
+
+instance Pack Int where
+ pack i = JSRational False (fromIntegral i)
+
+instance Pack [(String, JSValue)] where
+ pack fs = JSObject $ toJSObject fs
+
+instance Pack Bool where
+ pack b = JSBool b 
+
+
+-- Helper for constructing literal objects.
+data O  = O [(String, O)]
+        | F JSValue
+        deriving Show
+
+instance Pack O where
+ pack (O fs) = pack [ (s, pack x) | (s, x) <- fs]
+ pack (F j)  = j
+
+
+-- Helpers for constructing objects from haskell data types.
+jobj :: Pack a => [Maybe (String, a)] -> JSValue
+jobj mfs
+ = pack $ [ (s, pack x) | (s, x) <- catMaybes mfs ]
+
+
+jhas :: Pack a => String -> a -> Maybe (String, JSValue)
+jhas s x
+ = Just (s, pack x)
+
+jmby :: Pack a => String -> Maybe a -> Maybe (String, JSValue)
+jmby s m
+ = case m of
+        Nothing -> Nothing
+        Just x  -> Just (s, pack x)
+
+jnull :: JSValue
+jnull = JSNull
 
 
 ---------------------------------------------------------------------------------------------------

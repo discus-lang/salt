@@ -22,13 +22,18 @@ runLSP mFileLog
 ---------------------------------------------------------------------------------------------------
 lspLoop :: State -> IO ()
 lspLoop state
- | PhaseStartup <- statePhase state
- = do  msg <- lspRead state
-       lspInitialize state msg
-     
- | otherwise
- = error "not done yet"
+ = case statePhase state of
+        PhaseStartup
+         -> do  msg <- lspRead state
+                lspInitialize state msg
 
+        PhaseInitialized
+         -> do  msg <- lspRead state
+                lspHandle state msg
+
+        _ -> do
+                lspLog state "not done yet"
+                lspLoop state
 
 ---------------------------------------------------------------------------------------------------
 -- | Startup the language server plugin.
@@ -55,15 +60,46 @@ lspStartup mFileLog
 
 ---------------------------------------------------------------------------------------------------
 -- | Handle the initialization request sent from the client.
-lspInitialize :: State -> Request -> IO ()
+lspInitialize :: State -> Request JSValue -> IO ()
 lspInitialize state req
- | Just (params :: InitializeParams) <- unpack $ requestParams req
- = do  lspLog state "* Initialize"
+
+ -- Client sends us 'inititialize' with the set of its capabilities.
+ -- We reply with our own capabilities.
+ | "initialize" <- reqMethod req
+ , Just (params :: InitializeParams) 
+      <- join $ fmap unpack $ reqParams req
+ = do  
+       lspLog state "* Initialize"
        lspLog state $ T.ppShow params
 
+       lspSend state 
+        $ pack $ ResponseResult (reqId req)
+        $ O [ ( "capabilities"
+              , O [ ( "textDocumentSync"
+                    , O [ ("openClose",  F $ pack True)        -- send us open/close notif to server.
+                        , ("change",     F $ pack (3 :: Int))  -- send us incremental changes
+                        , ("willSave",   F $ pack True)        -- send us will-save notif.
+                        , ("save",       F $ pack True)        -- send us save notif.
+                        ])])]
+
        lspLoop state
 
+ -- Cient sends us 'initialized' if it it is happy with the 
+ -- capabilities that we sent.
+ | "initialized" <- reqMethod req
+ = do  lspLog  state "* Initialized"
+       lspLoop state { statePhase = PhaseInitialized }
+
+ -- Something wen't wrong.
  | otherwise
- = do  lspLog  state "* bad init message"
+ = do  lspLog  state "* Initialization received unexpected message."
        lspLoop state
 
+
+---------------------------------------------------------------------------------------------------
+lspHandle :: State -> Request JSValue -> IO ()
+lspHandle state req
+ = do
+        lspLog  state "* Request"
+        lspLog  state (T.ppShow req)
+        lspLoop state 

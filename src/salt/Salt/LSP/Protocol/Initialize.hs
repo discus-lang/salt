@@ -3,6 +3,7 @@ module Salt.LSP.Protocol.Initialize where
 import Salt.LSP.Protocol.Base
 import qualified Data.List      as List
 
+
 -- | Request from the client to initialize the server.
 data InitializeParams
         = InitializeParams

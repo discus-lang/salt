@@ -1,23 +1,34 @@
 
 module Salt.LSP.Protocol.Request where
-import Salt.LSP.Protocol.JsonRPC
 import Salt.LSP.Protocol.Base
 
 
+---------------------------------------------------------------------------------------------------
 -- | Client request.
-data Request
+data Request a
         = Request
-        { requestId     :: Integer
-        , requestMethod :: String
-        , requestParams :: JSValue }
+        { reqId         :: JsonRpcId
+        , reqMethod     :: String
+        , reqParams     :: Maybe a }
+
+        | Notification
+        { reqMethod     :: String
+        , reqParams     :: Maybe a }
         deriving Show
 
 
-instance Unpack Request where
+instance Unpack a => Unpack (Request a) where
  unpack js
-  = do  rpc :: JsonRPC      <- unpack js
-        guard $ jsonrpcVersion rpc == "2.0"
-        let iid         = jsonrpcId     rpc
-        let method      = jsonrpcMethod rpc
-        let params      = jsonrpcParams rpc 
-        return  $ Request iid method params
+  | Just iId       <- unpack    =<< getField js "id"
+  , Just sMethod   <- getString =<< getField js "method"
+  , Just mxParams  <- maybe Nothing (fmap Just unpack) $ getField js "params"
+  = return $ Request iId sMethod mxParams
+
+  | Just sMethod   <- getString =<< getField js "method"
+  , Just mxParams  <- maybe Nothing (fmap Just unpack) $ getField js "params"
+  = return $ Notification sMethod mxParams
+
+  | otherwise
+  = Nothing
+
+
