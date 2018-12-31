@@ -2,10 +2,12 @@
 module Salt.LSP.Driver 
        (runLSP)
 where
+import Salt.LSP.Protocol
 import Salt.LSP.Interface
 import Salt.LSP.State
-import qualified System.IO                as S
+import qualified System.IO                as System
 import qualified System.Posix.Process     as Process
+import qualified Text.Show.Pretty         as T
 
 ---------------------------------------------------------------------------------------------------
 -- | Become a language server plugin,
@@ -21,9 +23,8 @@ runLSP mFileLog
 lspLoop :: State -> IO ()
 lspLoop state
  | PhaseStartup <- statePhase state
- = do  msg    <- lspRead state
-       lspLog state (show msg)
-       lspLoop state
+ = do  msg <- lspRead state
+       lspInitialize state msg
      
  | otherwise
  = error "not done yet"
@@ -41,7 +42,7 @@ lspStartup mFileLog
               Nothing -> return Nothing
               Just filePath
                 -> do let filePathPid = filePath ++ "." ++ show pid
-                      hLogDebug <- S.openFile filePathPid S.WriteMode
+                      hLogDebug <- System.openFile filePathPid System.WriteMode
                       return  $ Just (filePathPid, hLogDebug)
        let state
                 = State
@@ -50,4 +51,19 @@ lspStartup mFileLog
 
        lspLog state "* Salt language server starting up"
        return state
+
+
+---------------------------------------------------------------------------------------------------
+-- | Handle the initialization request sent from the client.
+lspInitialize :: State -> Request -> IO ()
+lspInitialize state req
+ | Just (params :: InitializeParams) <- unpack $ requestParams req
+ = do  lspLog state "* Initialize"
+       lspLog state $ T.ppShow params
+
+       lspLoop state
+
+ | otherwise
+ = do  lspLog  state "* bad init message"
+       lspLoop state
 

@@ -1,35 +1,50 @@
 
 module Salt.LSP.Interface where
+import Salt.LSP.Protocol.Request
+import Salt.LSP.Protocol.Base
 import Salt.LSP.State
-import qualified Data.Text      as T
-import qualified Data.Text.IO   as T
-import qualified Text.JSON      as J
-import qualified System.IO      as S
-        
+import qualified Text.JSON              as J
+import qualified System.IO              as S
+import qualified Text.Show.Pretty       as T
+import qualified Data.Text              as T
+import qualified Data.Text.IO           as T
 
+
+---------------------------------------------------------------------------------------------------
 -- | Read a JsonRPC message from stdin.
-lspRead :: State -> IO T.Text
+--   TODO: only trace this stuff if flag is enabled, it's too chatty.
+lspRead :: State -> IO Request
 lspRead state
- = do   lspLog state $ ". (waiting for message)"
+ = do   lspLog state "* Waiting for message"
+
         txContentLength <- T.hGetLine S.stdin
-        lspLog state $ "> Received Message ---------------------------------"
-        lspLog state $ "  line length: " ++ show txContentLength
 
         -- TODO: handle broken messages, don't just fail with pattern match.
         let Just txLength1  = T.stripPrefix "Content-Length: " txContentLength
         let Just txLength   = T.stripSuffix "\r" txLength1
         let lenChunk        = read (T.unpack txLength)
 
-        lspLog state $ ". (waiting for newline)"
-        txEmpty         <- T.hGetLine S.stdin
-        lspLog state $ "  line empty: " ++ show txEmpty
+        "\r" <- T.hGetLine S.stdin
+        txChunk  <- lspReadChunk state lenChunk ""
+        case J.decode $ T.unpack txChunk of
+         J.Error str 
+          -> do lspLog state $ "  error: " ++ show str
+                lspRead state
 
-        lspLog state $ ". (starting chunk read)"
-        txChunk         <- lspReadChunk state lenChunk ""
+         J.Ok js 
+          -> do lspLog state $ "> Received Message ---------------------------------"
+                lspLog state $ T.ppShow js
+                
+                -- TODO: check sequence number.
+                case unpack js of
+                 Nothing  
+                  -> do lspLog state $ " error: jsonrpc malformed"
+                        lspRead state
 
-        lspLog state $ ". (read complete chunk)"
-        lspLog state $ "  chunk: " ++ show (T.unpack txChunk) ++ "\n"
-        return txChunk
+                 Just (req :: Request)
+                  -> do -- TODO: trace on flag.
+                        lspLog state $ T.ppShow req
+                        return req
 
 
 -- | Read a chunk of the given size from stdin.
@@ -37,8 +52,7 @@ lspReadChunk :: State -> Int -> T.Text -> IO T.Text
 lspReadChunk state n acc
  | T.length acc >= n = return acc
  | otherwise
- = do  lspLog state $ ". (waiting for chunk data)"
-       moar   <- T.hGetChunk S.stdin
+ = do  moar   <- T.hGetChunk S.stdin
        lspReadChunk state n (T.append acc moar)
 
 
