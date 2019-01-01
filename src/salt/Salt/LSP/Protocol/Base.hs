@@ -11,7 +11,7 @@ module Salt.LSP.Protocol.Base
 
         -- * Pack
         , Pack (..)
-        , O(..)
+        , O(..), F(..)
         , jobj, jhas, jmby, jnull
 
         -- * Flattening
@@ -100,17 +100,28 @@ instance Pack Bool where
 
 
 -- Helper for constructing literal objects.
-data O  = O [(String, O)]
-        | A [JSValue]
-        | F JSValue
+data O  = O [F]
+        | A [O]
+        | B Bool
         | S String
+        | I Integer
+        | J Int
+        | V JSValue
         deriving Show
 
+data F  = (:=) String O
+        deriving Show
+
+infixr 0 :=
+
 instance Pack O where
- pack (O fs) = pack [ (s, pack x) | (s, x) <- fs]
- pack (A js) = JSArray (map pack js)
- pack (S s)  = JSString $ toJSString s
- pack (F j)  = j
+ pack (O fs)    = pack [ (s, pack x) | s := x <- fs]
+ pack (A js)    = JSArray (map pack js)
+ pack (B b)     = JSBool b
+ pack (S s)     = JSString $ toJSString s
+ pack (I i)     = JSRational False (fromIntegral i)
+ pack (J i)     = JSRational False (fromIntegral i)
+ pack (V j)     = j
 
 
 -- Helpers for constructing objects from haskell data types.

@@ -88,13 +88,12 @@ lspStartup state req
 
         lspSend state 
          $ pack $ ResponseResult (reqId req)
-         $ O [ ( "capabilities"
-               , O [ ( "textDocumentSync"
-                     , O [ ("openClose",  F $ pack True)        -- send us open/close notif to server.
-                         , ("change",     F $ pack (1 :: Int))  -- send us full file changes.
-                         , ("save",       F $ pack True)        -- send us save notif.
-                         ])])]
-
+         $ O    [ "capabilities"
+                  := O  [ "textDocumentSync"
+                          := O  [ "openClose"   := B True       -- send us open/close notif.
+                                , "change"      := I 1          -- send us full file changes.
+                                , "save"        := B True       -- send us save notif.
+                                ]]]
         lspLoop state
 
  -- Cient sends us 'initialized' if it it is happy with the 
