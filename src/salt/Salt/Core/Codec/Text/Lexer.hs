@@ -1,6 +1,7 @@
 
 module Salt.Core.Codec.Text.Lexer
         ( IW.Location(..)
+        , lexSource, Error(..)
         , scanner
         , checkMatch
         , matchVar
@@ -9,15 +10,56 @@ module Salt.Core.Codec.Text.Lexer
         , matchSym )
 where
 import Salt.Core.Codec.Text.Token
+import Control.Monad
 import Data.Text                        (Text)
 import qualified Text.Lexer.Inchworm.Char as IW
-import qualified Data.Char                as Char
 import qualified Data.Text                as Text
+import qualified Data.Char                as Char
+import qualified Data.Either              as Either
 
 
+---------------------------------------------------------------------------------------------------
+-- | Lex a Salt source file.
+lexSource :: String -> IO (Either [Error] [At Token])
+lexSource sSource
+ = do   -- Break up the file into lines and lex each line at a time.
+        --   There aren't any tokens that span lines, and doing it this way
+        --   means we can produce multiple lexer errors at once.
+        let ls = lines sSource
+        esResult <- zipWithM lexLine [0..] ls
+        case Either.partitionEithers esResult of
+         ([], tokss)    -> return $ Right $ concat tokss
+         (errs, _)      -> return $ Left errs
+
+
+-- | Lex a single source line.
+--   We take a line offset to add to any error messages produced.
+lexLine :: Int -> String -> IO (Either Error [At Token])
+lexLine nLineOffset sSource
+ = do   
+        (toks, loc, strRest) 
+         <- IW.scanStringIO sSource scanner
+
+        let IW.Location nLine nColumn = loc
+
+        case strRest of
+         [] -> return $ Right toks
+         _  -> return $ Left  $ Error (nLineOffset + nLine) nColumn strRest
+
+
+-- | Lexer error.
+data Error 
+        = Error
+        { errorLine     :: Int
+        , errorColumn   :: Int
+        , errorRest     :: String }
+        deriving Show
+
+
+---------------------------------------------------------------------------------------------------
 -- | Scanner for Salt.
-scanner :: Monad m => FilePath -> IW.Scanner m IW.Location [Char] (At Token)
-scanner _fileName
+scanner :: Monad m => IW.Scanner m IW.Location [Char] (At Token)
+scanner
  = IW.skip Char.isSpace
  $ IW.alts
         [ fmap (stamp (KComment . Text.pack))
@@ -117,6 +159,7 @@ scanner _fileName
  where  -- Stamp a token with source location information.
         stamp k (l, t)
           = At l (k t)
+
 
 -- | Check if a Text value matches a predicate outside of the lexer.
 --   This is used by the pretty-printer to decide whether to print an identifier

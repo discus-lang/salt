@@ -2,12 +2,15 @@
 module Salt.LSP.Driver 
        (runLSP)
 where
+
 import Salt.LSP.Protocol
 import Salt.LSP.Interface
 import Salt.LSP.State
-import qualified System.IO                as System
-import qualified System.Posix.Process     as Process
-import qualified Text.Show.Pretty         as T
+import qualified Salt.LSP.Task.Diagnostics      as Task
+
+import qualified System.IO                      as System
+import qualified System.Posix.Process           as Process
+import qualified Text.Show.Pretty               as T
 
 
 ---------------------------------------------------------------------------------------------------
@@ -140,6 +143,8 @@ lspInitialized state req
         lspLog state $ "  sLanguageId:  " ++ show sLanguageId
         lspLog state $ "  iVersion:     " ++ show iVersion
         lspLog state $ "  sText:        " ++ show sText
+
+        Task.updateDiagnostics state sUri sText
         lspLoop state 
 
  -- A file was closed.
@@ -177,6 +182,8 @@ lspInitialized state req
         lspLog state $ "  sUri:         " ++ show sUri
         lspLog state $ "  iVersion:     " ++ show iVersion
         lspLog state $ "  sText:        " ++ show sText
+
+        Task.updateDiagnostics state sUri sText
         lspLoop state
 
  -- Some other request that we don't handle.

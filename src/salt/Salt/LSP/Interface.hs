@@ -5,7 +5,7 @@ import Salt.LSP.Protocol.Base
 import Salt.LSP.State
 import qualified System.IO              as S
 import qualified Text.JSON              as J
-import qualified Text.Show.Pretty       as T
+-- import qualified Text.Show.Pretty       as T
 import qualified Data.ByteString        as BS
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as T
@@ -39,12 +39,13 @@ lspRead state
           -> case unpack js of
                 Nothing  
                  -> do  lspLog state $ " error: jsonrpc malformed"
-                        lspLog state $ T.ppShow js
+                        lspLog state $ show txChunk
                         lspRead state
 
                 Just (req :: Request a )
                  -> do  -- TODO: trace on flag.
                         -- lspLog state $ T.ppShow req
+                        lspLog state $ show txChunk
                         return req
 
 

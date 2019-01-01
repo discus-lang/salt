@@ -47,7 +47,7 @@ runLex filePath
  = do   source  <- readFile filePath
 
         (toks, loc, strRest)
-         <- IW.scanStringIO source (Lexer.scanner filePath)
+         <- IW.scanStringIO source Lexer.scanner
 
         let toks'  = [ Token.At l k
                      | Token.At l k <- toks

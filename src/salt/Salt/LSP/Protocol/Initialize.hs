@@ -9,22 +9,28 @@ data InitializeParams
         = InitializeParams
         { ipProcessId                   :: Maybe Integer
         , ipRootUri                     :: Maybe String
-        , ipClientCapabilities          :: [(String, JSValue)]
+        , ipInitializationOptions       :: Maybe JSValue
+        , ipCapabilities                :: [(String, JSValue)]
         , ipTrace                       :: Maybe String
+        , ipWorkspaceFolders            :: Maybe JSValue
         }
         deriving Show
 
 
 instance Unpack InitializeParams where
  unpack js
-  = do  mProcessId      <- getIntegerNull =<< getField js "processId"
-        mRootUri        <- getStringNull  =<< getField js "rootUri"
-        capabilities    <- getField js "capabilities"
-        mTrace          <- maybe (Just Nothing) (fmap Just getString) $ getField js "trace"
+  = do  mProcessId             <- getIntegerNull =<< getField js "processId"
+        mRootUri               <- getStringNull  =<< getField js "rootUri"
+        let mInitOptions       =  getField js "initializationOptions"
+        jCapabilities          <- getField js "capabilities"
+        mTrace                 <- maybe (Just Nothing) (fmap Just getString) $ getField js "trace"
+        let mjWorkspaceFolders =  getField js "workspaceFolders"
         
         return  $ InitializeParams 
-                mProcessId   mRootUri 
+                mProcessId mRootUri 
+                mInitOptions
                 [ (List.intercalate "." fs, v) 
-                        | (fs, v) <- flattenJSValue capabilities]
+                        | (fs, v) <- flattenJSValue jCapabilities]
                 mTrace
+                mjWorkspaceFolders
 

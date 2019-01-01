@@ -101,11 +101,15 @@ instance Pack Bool where
 
 -- Helper for constructing literal objects.
 data O  = O [(String, O)]
+        | A [JSValue]
         | F JSValue
+        | S String
         deriving Show
 
 instance Pack O where
  pack (O fs) = pack [ (s, pack x) | (s, x) <- fs]
+ pack (A js) = JSArray (map pack js)
+ pack (S s)  = JSString $ toJSString s
  pack (F j)  = j
 
 

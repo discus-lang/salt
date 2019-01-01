@@ -1,3 +1,4 @@
+
 -- Test sytnax of types.
 
 -- Check kinding of primitive data constructors.
@@ -22,7 +23,6 @@ test kind map'nat       = #Map [#Nat, #Text]
 
 -- Nested application.
 test kind app'set'set   = #Set [#Set [#Nat]]
-
 
 -- Type function.
 test kind op1           = λ[a: #Data, b: #Data] ⇒ a
