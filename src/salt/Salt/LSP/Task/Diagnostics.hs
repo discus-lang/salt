@@ -12,7 +12,6 @@ import Data.Char
 import qualified Text.Parsec.Error              as Parsec
 
 
-
 ---------------------------------------------------------------------------------------------------
 updateDiagnostics :: State -> String -> String -> IO ()
 updateDiagnostics state sUri sSource 
@@ -35,11 +34,10 @@ updateDiagnostics state sUri sSource
 sendClearDiagnostics :: State -> String -> IO ()
 sendClearDiagnostics state sUri
  = do   lspLog  state "* Clearing Diagnostics"
-        lspSend state
-         $ pack $ Notification "textDocument/publishDiagnostics"
-         $ Just $ pack
-         $ O    [ "uri"         := S sUri
-                , "diagnostics" := A [] ]
+        lspSend state $ jobj
+         [ "method" := S "textDocument/publishDiagnostics"
+         , "params" := O [ "uri"         := S sUri
+                         , "diagnostics" := A [] ]]
 
 
 ---------------------------------------------------------------------------------------------------
@@ -47,11 +45,10 @@ sendClearDiagnostics state sUri
 sendLexerErrors :: State -> String -> [Lexer.LexerError] -> IO ()
 sendLexerErrors state sUri errs
  = do   lspLog  state "* Sending Lexer Errors"
-        lspSend state
-         $ pack $ Notification "textDocument/publishDiagnostics"
-         $ Just $ pack 
-         $ O    [ "uri"         := S sUri
-                , "diagnostics" := A $ map (V . packLexerError) errs ]
+        lspSend state $ jobj
+         [ "method" := S "textDocument/publishDiagnostics"
+         , "params" := O [ "uri"         := S sUri
+                         , "diagnostics" := A $ map (V . packLexerError) errs ]]
 
 
 -- | Expand and pack a lexer error into JSON.
@@ -63,8 +60,7 @@ sendLexerErrors state sUri errs
 --   
 packLexerError :: Lexer.LexerError -> JSValue
 packLexerError (Lexer.LexerError nLine nColStart csRest)
- = pack $ O
-        [ "range"       := O    [ "start" := V $ packLocation locStart
+ = jobj [ "range"       := O    [ "start" := V $ packLocation locStart
                                 , "end"   := V $ packLocation locEnd ]
         , "severity"    := I 1
         , "source"      := S "lexer"
@@ -87,19 +83,24 @@ packLexerError (Lexer.LexerError nLine nColStart csRest)
 sendParserErrors :: State -> String -> [Parser.ParseError] -> IO ()
 sendParserErrors state sUri errs
  = do   lspLog state "* Sending Parser Errors"
-        lspSend state
-         $ pack $ O
-                [ "method" := S "textDocument/publishDiagnostics"
-                , "params"      
-                  := O  [ "uri"         := S sUri
-                        , "diagnostics" := A (map (V . packParserError) errs) ]]
+        lspSend state $ jobj
+         [ "method" := S "textDocument/publishDiagnostics"
+         , "params" := O [ "uri"         := S sUri
+                         , "diagnostics" := A (map (V . packParserError) errs) ]]
 
+
+-- TODO: we want source ranges on tokens, not just starting positions.
+-- when entering a new decl the next token is usually a top level 
+-- hard keyword like 'test', 'term', 'type' etc. if we seee this as the next token then
+-- inhibit the "unexpected" part of the error message. We really have an incomplete
+-- declaration, and the next token isn't unexpected by the programmer.
+-- Set the location of the problem just after the last token, not on the 'test' token
+-- that triggered the error.
 
 packParserError :: Parser.ParseError -> JSValue
-packParserError (Parser.ParseError locStart locEnd msgs)
- = pack $ O
-        [ "range"       := O    [ "start" := V $ packLocation locStart
-                                , "end"   := V $ packLocation locEnd]
+packParserError (Parser.ParseError locStart mLocPrev msgs)
+ = jobj [ "range"       := O    [ "start" := V $ packLocation locStart
+                                , "end"   := V $ packLocation locStart]
         , "severity"    := I 1
         , "source"      := S "parser"
         , "message"     := S sMsg ]
@@ -108,7 +109,7 @@ packParserError (Parser.ParseError locStart locEnd msgs)
         sMsg     
          = case catMaybes [mUnexpected, mSysUnexpect, mExpect, mMessage] of
                 []      -> "Parse error."
-                parts   -> intercalate "\n" parts
+                parts   -> intercalate "\n" parts ++ show mLocPrev
          
         mUnexpected     = listToMaybe   [ "Unexpected " ++ s ++ "."
                                         | Parsec.UnExpect s <- msgs ]

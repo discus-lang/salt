@@ -3,7 +3,6 @@ module Salt.LSP.Protocol.Request where
 import Salt.LSP.Protocol.Base
 
 
----------------------------------------------------------------------------------------------------
 -- | Client request.
 data Request a
         = Request

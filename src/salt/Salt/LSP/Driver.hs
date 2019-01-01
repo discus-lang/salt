@@ -103,7 +103,7 @@ lspStartup state req
  = do  lspLog  state "* Initialized"
        lspLoop state { statePhase = PhaseInitialized }
 
- -- Something wen't wrong.
+ -- Something went wrong.
  | otherwise
  = do  lspLog  state "* Initialization received unexpected message."
        lspLoop state

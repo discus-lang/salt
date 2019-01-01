@@ -18,9 +18,15 @@ import qualified Text.Parsec.Error              as P
 -- | Parse error.
 data ParseError 
         = ParseError
-        { errorStart    :: Location
-        , errorEnd      :: Location
-        , errorMessages :: [P.Message] }
+        { -- | Location of the token we hit the caused the error.
+          errorNextLocation     :: Location
+
+          -- | Location of the token previous to the one that caused the error,
+          --   if there is one.
+        , errorPrevLocation     :: Maybe Location
+
+          -- | Parser messages we got from parsec.
+        , errorMessages         :: [P.Message] }
 
 
 -- | Parse a salt source file from tokens.
@@ -40,35 +46,53 @@ parseModule toks
                 "sourceName" toks'
         
    in   case eResult of
-         Left err        
-          -> Left [errorOfParseError err]
+         Left err
+          -> Left [errorOfParseError toks' err]
 
          Right (xModule, []) 
           -> Right xModule
 
+         -- TODO: real location
          Right (_, _xRest)       
-          -> Left [ParseError (Location 0 0) (Location 0 0) 
+          -> Left [ParseError (Location 0 0) Nothing
                         [P.Message "parse error at end of input"]]
 
 
 -- | Extract error information from a Parsec error message.
-errorOfParseError :: P.ParseError -> ParseError
-errorOfParseError err
+errorOfParseError :: [At Token] -> P.ParseError -> ParseError
+errorOfParseError toks err
  = let  sp      = P.errorPos err
         nLine   = P.sourceLine sp
         nCol    = P.sourceColumn sp
         msgs    = P.errorMessages err
-   in   ParseError (Location nLine nCol) (Location nLine nCol) msgs
+   in   ParseError 
+          (Location nLine nCol) 
+          (findPrevTokenLocation err toks)
+          msgs
+
+
+-- | Find the token just before the one that caused the parse error,
+--   if there is one.
+findPrevTokenLocation :: P.ParseError -> [At Token] -> Maybe Location
+findPrevTokenLocation err (Token.At loc0 _ : k1@(Token.At (Location l c) _) : ks) 
+ | sp <- P.errorPos err
+ , l' <- P.sourceLine sp
+ , c' <- P.sourceColumn sp
+ , l == l', c == c'
+ = Just loc0
+
+ | otherwise
+ = findPrevTokenLocation err (k1 : ks)
+
+findPrevTokenLocation _err _ = Nothing
 
 
 ---------------------------------------------------------------------------------------------------
-
---ppLocation locStart % text "-" % ppLocation locEnd
---  %% vcat (map ppMessage) msg
-
 ppParseError :: FilePath -> ParseError -> Doc
-ppParseError path (ParseError locStart locEnd msgs)
- = vcat ( string path % string ":" %% ppLocation locStart %% text "-" %% ppLocation locEnd
+ppParseError path (ParseError locStart _mLocPrev msgs)
+ = vcat ( string path 
+                % string ":" 
+                %% ppLocation locStart 
         : text "  parse error" 
                 % fromMaybe empty mSysUnexpect
                 % fromMaybe empty mUnexpected
