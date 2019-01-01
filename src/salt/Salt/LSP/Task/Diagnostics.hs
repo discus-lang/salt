@@ -12,8 +12,7 @@ updateDiagnostics state sUri sSource
  = goLex
  where  
         goLex 
-         = Lexer.lexSource sSource
-         >>= \case 
+         = case Lexer.lexSource sSource of
                 Right _toks -> sendClearDiagnostics state sUri
                 Left errs   -> sendLexerErrors  state sUri errs    
          
@@ -37,7 +36,7 @@ sendClearDiagnostics state sUri
 
 
 -- | Send lexer errors to the client.
-sendLexerErrors :: State -> String -> [Lexer.Error] -> IO ()
+sendLexerErrors :: State -> String -> [Lexer.LexerError] -> IO ()
 sendLexerErrors state sUri errs
  = do   lspLog  state "* Sending Diagnostics"
         lspSend state
@@ -54,8 +53,8 @@ sendLexerErrors state sUri errs
 --   to report the error location from that point until the next space
 --   character or end of line, so they're easier to read.
 --   
-packLexerError :: Lexer.Error -> JSValue
-packLexerError (Lexer.Error nLine nColStart csRest)
+packLexerError :: Lexer.LexerError -> JSValue
+packLexerError (Lexer.LexerError nLine nColStart csRest)
  = pack 
  $ O    [ ( "range",    F $ pack 
                         $ O [ ("start", O [ ("line",      F $ pack (nLine     - 1 :: Int))

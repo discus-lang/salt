@@ -1,7 +1,9 @@
 
 module Salt.Core.Codec.Text.Lexer
-        ( IW.Location(..)
-        , lexSource, Error(..)
+        ( lexSource
+        , IW.Location(..)
+        , LexerError(..)
+        
         , scanner
         , checkMatch
         , matchVar
@@ -16,13 +18,23 @@ import qualified Text.Lexer.Inchworm.Char as IW
 import qualified Data.Text                as Text
 import qualified Data.Char                as Char
 import qualified Data.Either              as Either
-
+import qualified System.IO.Unsafe         as System
 
 ---------------------------------------------------------------------------------------------------
+-- | Lexer error.
+data LexerError 
+        = LexerError
+        { errorLine     :: Int
+        , errorColumn   :: Int
+        , errorRest     :: String }
+        deriving Show
+
+
 -- | Lex a Salt source file.
-lexSource :: String -> IO (Either [Error] [At Token])
+lexSource :: String -> Either [LexerError] [At Token]
 lexSource sSource
- = do   -- Break up the file into lines and lex each line at a time.
+ = System.unsafePerformIO
+ $ do   -- Break up the file into lines and lex each line at a time.
         --   There aren't any tokens that span lines, and doing it this way
         --   means we can produce multiple lexer errors at once.
         let ls = lines sSource
@@ -34,7 +46,7 @@ lexSource sSource
 
 -- | Lex a single source line.
 --   We take a line offset to add to any error messages produced.
-lexLine :: Int -> String -> IO (Either Error [At Token])
+lexLine :: Int -> String -> IO (Either LexerError [At Token])
 lexLine nLineOffset sSource
  = do   
         (toks, loc, strRest) 
@@ -44,16 +56,7 @@ lexLine nLineOffset sSource
 
         case strRest of
          [] -> return $ Right toks
-         _  -> return $ Left  $ Error (nLineOffset + nLine) nColumn strRest
-
-
--- | Lexer error.
-data Error 
-        = Error
-        { errorLine     :: Int
-        , errorColumn   :: Int
-        , errorRest     :: String }
-        deriving Show
+         _  -> return $ Left  $ LexerError (nLineOffset + nLine) nColumn strRest
 
 
 ---------------------------------------------------------------------------------------------------

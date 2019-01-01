@@ -73,22 +73,15 @@ mainParse filePath
 runParse  :: FilePath -> IO (Module Lexer.Location)
 runParse filePath
  = do   toks       <- runLex filePath
-        let result
-                = Parser.parse Parser.pModule filePath
-                $ toks ++ [Token.At (IW.Location 0 0) Token.KEnd]
+        let result = Parser.parseModule toks
 
         case result of
-         Left  err
-          -> do print err
+         Left errs 
+          -> do putStrLn $ P.render $ vcat 
+                         $ map (Parser.ppParseError filePath) errs
                 System.exitFailure
 
-         Right (xx, [])
-          -> do return xx
-
-         Right (_, xsRest)
-          -> do putStrLn "parse error at end of input"
-                print xsRest
-                System.exitFailure
+         Right mm -> return mm
 
 
 -- Check ------------------------------------------------------------------------------------------

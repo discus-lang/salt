@@ -35,14 +35,20 @@ pWithRange p
 
 pTok :: Token -> Parser ()
 pTok t
- = P.token show locOfTok
+ = P.token showTokenForError locOfTok
  $ \(At _ t') -> if t == t' then Just () else Nothing
 
 
 pTokOf :: (Token -> Maybe a) -> Parser a
 pTokOf f
- = P.token show locOfTok
+ = P.token showTokenForError locOfTok
  $ \(At _ tok) -> f tok
+
+
+-- | Function to show unexpected token when constructing error messages.
+showTokenForError :: At Token -> String
+showTokenForError (At _ k)
+ = "'" ++ showTokenAsSource k ++ "'"
 
 
 locOfTok :: At Token -> P.SourcePos
