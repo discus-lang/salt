@@ -45,7 +45,8 @@ lexSource sSource
 
 
 -- | Lex a single source line.
---   We take a line offset to add to any error messages produced.
+--
+--   We take a line offset to add to any tokens and error messages produced.
 lexLine :: Int -> String -> IO (Either LexerError [At Token])
 lexLine nLineOffset sSource
  = do   
@@ -54,8 +55,11 @@ lexLine nLineOffset sSource
 
         let IW.Location nLine nColumn = loc
 
+        let bumpLoc (At (IW.Location nLine' nColumn') t)
+                = At (IW.Location (nLine' + nLineOffset) nColumn') t
+
         case strRest of
-         [] -> return $ Right toks
+         [] -> return $ Right $ map bumpLoc toks
          _  -> return $ Left  $ LexerError (nLineOffset + nLine) nColumn strRest
 
 
