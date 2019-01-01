@@ -37,8 +37,8 @@ pDecl
  , do   -- 'term' Var TermParams* (':' Type)? '=' Term
         loc <- getLocation
         pTok KTerm
-        nTerm   <- pVar
-        mps     <- P.many pTermParams
+        nTerm   <- pVar <?> "a term name"
+        mps     <- P.many (pTermParams <?> "term parameters or a result type annotation")
         pTok KColon
         tsResult <- pTypesResult
         pTok KEquals

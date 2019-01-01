@@ -5,7 +5,12 @@ import Salt.LSP.Protocol
 import Salt.LSP.Interface
 import qualified Salt.Core.Codec.Text.Parser    as Parser
 import qualified Salt.Core.Codec.Text.Lexer     as Lexer
-import qualified Data.Char as Char
+
+import Data.Maybe
+import Data.List
+import Data.Char
+import qualified Text.Parsec.Error              as Parsec
+
 
 
 ---------------------------------------------------------------------------------------------------
@@ -63,19 +68,19 @@ packLexerError (Lexer.LexerError nLine nColStart csRest)
                                 , "end"   := V $ packLocation locEnd ]
         , "severity"    := I 1
         , "source"      := S "lexer"
-        , "message"     := S "lexical error" ]
+        , "message"     := S "Lexical error." ]
 
  where  nColEnd 
          = expand nColStart csRest
  
-        locStart = Lexer.Location (nLine - 1) (nColStart - 1)
-        locEnd   = Lexer.Location (nLine - 1) (nColEnd   - 1)
+        locStart = Lexer.Location nLine nColStart
+        locEnd   = Lexer.Location nLine nColEnd
 
-        expand n []             = n
+        expand n []     = n
         expand n (c : cs)
-         | Char.isSpace c       = n
-         | c == '\n'            = n
-         | otherwise            = expand (n + 1) cs
+         | isSpace c    = n
+         | c == '\n'    = n
+         | otherwise    = expand (n + 1) cs
 
 
 ---------------------------------------------------------------------------------------------------
@@ -91,13 +96,30 @@ sendParserErrors state sUri errs
 
 
 packParserError :: Parser.ParseError -> JSValue
-packParserError (Parser.ParseError locStart locEnd _msgs)
+packParserError (Parser.ParseError locStart locEnd msgs)
  = pack $ O
         [ "range"       := O    [ "start" := V $ packLocation locStart
                                 , "end"   := V $ packLocation locEnd]
         , "severity"    := I 1
         , "source"      := S "parser"
-        , "message"     := S "parse error" ]
+        , "message"     := S sMsg ]
+
+ where  
+        sMsg     
+         = case catMaybes [mUnexpected, mSysUnexpect, mExpect, mMessage] of
+                []      -> "Parse error."
+                parts   -> intercalate "\n" parts
+         
+        mUnexpected     = listToMaybe   [ "Unexpected " ++ s ++ "."
+                                        | Parsec.UnExpect s <- msgs ]
+
+        mSysUnexpect    = listToMaybe   [ "Unexpected " ++ s ++ "."
+                                        | Parsec.SysUnExpect s <- msgs ]
+
+        mExpect         = listToMaybe   [ "Expecting " ++ s  ++ "."
+                                        | Parsec.Expect s <- msgs ]
+
+        mMessage        = listToMaybe   [ s | Parsec.Message s <- msgs ]
 
 
 packLocation :: Lexer.Location -> JSValue

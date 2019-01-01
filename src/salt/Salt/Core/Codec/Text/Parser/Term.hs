@@ -167,7 +167,6 @@ pTerm_
         mFun    <- pTermArgProj
         pTermAppArgs mFun
  ]
- <?> "a term"
 
 
 -- | Parse arguments to the given function,
@@ -179,7 +178,6 @@ pTermAppArgs mFun
         return $ foldl MApp mFun gsArgs
 
  , do   return mFun]
- <?> "a term application"
 
 
 -- | Parse arguments to the given function
@@ -191,7 +189,7 @@ pTermAppArgsSat mFun
         return  $ MAps mFun gsArgs
 
  , do   return mFun ]
- <?> "a primitive application"
+
 
 -- | Parse some term arguments.
 pTermArgs :: Parser (TermArgs Location)
@@ -219,7 +217,6 @@ pTermArgs
         ms      <- pSquared $ P.sepEndBy pTerm (pTok KComma)
         return  $ MGTerms ms
  ]
- <?> "some term arguments"
 
 
 -- | Parser for a type argument.
@@ -229,7 +226,6 @@ pTermArgType
         pTok KAt
         t       <- pTypeArg
         return t
- <?> "a type argument"
 
 
 -- | Parser for a term argument or record projection.
@@ -238,7 +234,6 @@ pTermArgProj
  = do   mTerm   <- pTermArg
         nsLabel <- P.many (do pTok KDot; pLbl)
         return  $  foldl (flip MProject) mTerm nsLabel
- <?> "a term or record projection"
 
 
 -- | Parser for a term argument.
@@ -330,7 +325,6 @@ pTermArg
         pTok KRKet
         return t
  ]
- <?> "a argument term"
 
 
 -- | Parser for some term parameters.
@@ -348,7 +342,6 @@ pTermParams
                 $  do b <- pBind; pTok KColon; t <- pType; return (b, t)
         return  $ MPTerms bts
  ]
- <?> "some term parameters"
 
 
 -- | Parser for a term binding.
@@ -359,7 +352,6 @@ pTermBind
         pTok KEquals
         mBody   <- pTerm
         return  (nBind, mBody)
- <?> "a term binder"
 
 
 ---------------------------------------------------------------------------------------------------
@@ -402,7 +394,6 @@ pTermRecord
         let (ls, ms) = unzip lms
         return $ MRecord ls ms
  ]
- <?> "a record term"
 
 
 ---------------------------------------------------------------------------------------------------
@@ -433,7 +424,6 @@ pTermStmt
         mBody   <- pTerm
         return  ([], mBody)
  ]
- <?> "a statement"
 
 
 ---------------------------------------------------------------------------------------------------
@@ -449,7 +439,6 @@ pValue
  , do   pInt    >>= return . VInt
  , do   pText   >>= return . VText
  , do   pTermValueRecord ]
- <?> "a value"
 
 
 -- | Parser for a list of values, or a single value.
@@ -463,7 +452,6 @@ pValues
         v <- pValue
         return [v]
  ]
- <?> "some values"
 
 
 -- | Parser for record value.
@@ -479,5 +467,3 @@ pTermValueRecord
                 (pTok KComma)
         pTok KSKet
         return $ VRecord lvs
- <?> "a record value"
-

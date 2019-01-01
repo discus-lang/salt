@@ -2,12 +2,13 @@
 module Salt.Core.Codec.Text.Parser.Base where
 import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Codec.Text.Token
+import Salt.Core.Codec.Text.Pretty
 import Salt.Core.Exp
+import qualified Salt.Data.Pretty               as Pretty
 
 import qualified Text.Lexer.Inchworm.Source     as IW
 import qualified Text.Parsec                    as P
 import qualified Text.Parsec.Pos                as P
-
 
 ---------------------------------------------------------------------------------------------------
 type Parser a   = P.Parsec [At Token] () a
@@ -103,4 +104,21 @@ pBind :: Parser Bind
 pBind    = P.choice
   [ BindName <$> pVar
   , const BindNone <$> pTok KHole ]
+
+
+---------------------------------------------------------------------------------------------------
+-- | Show a label name for inclusion in a parser error message.
+showLbl :: Name -> String
+showLbl n = Pretty.render $ pprLbl n
+
+
+-- | Show a variable name for inclusion in a parser error message.
+showVar :: Name -> String
+showVar n = Pretty.render $ pprVar n
+
+
+-- | Show a binder for inclusion in a parser error message.
+showBind :: Bind -> String
+showBind (BindName n)   = showVar n
+showBind BindNone       = "_"
 

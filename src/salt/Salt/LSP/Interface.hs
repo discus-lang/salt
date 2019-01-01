@@ -50,6 +50,11 @@ lspRead state
 
 
 -- | Read a chunk of the given size from stdin.
+---
+--   Careful: the Content-Length needs to be the length of the utf8
+--   encoded bytestring, not the number of unicode characters.
+--   If this is wrong then the stream will get out of sync.
+--
 lspReadChunk :: State -> Int -> IO T.Text
 lspReadChunk _state nChunk
  = loop 0 BS.empty
@@ -67,10 +72,16 @@ lspReadChunk _state nChunk
 
 -- | Send a JSON value via JsonRPC to the client.
 --   We print it to Stdout with the content-length headers.
+---
+--   Careful: the Content-Length needs to be the length of the utf8
+--   encoded bytestring, not the number of unicode characters.
+--   If this is wrong then the stream will get out of sync.
+--
 lspSend :: State -> J.JSValue -> IO ()
 lspSend _state js
- = do   let payload = J.encode js
-        S.putStr $ "Content-Length: " ++ show (length payload) ++ "\r\n"
+ = do   let str = J.encode js
+        let bs  = T.encodeUtf8 $ T.pack str
+        S.putStr $ "Content-Length: " ++ show (BS.length bs) ++ "\r\n"
         S.putStr $ "\r\n"
-        S.putStr payload
+        BS.hPut  S.stdout bs
         S.hFlush S.stdout

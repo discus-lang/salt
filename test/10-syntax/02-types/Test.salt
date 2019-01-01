@@ -47,7 +47,7 @@ test kind some1'sugar   = exists [a: #Data, b: #Data]. a → b
 
 
 -- Record types.
-test kind rec0          = ∏[]
+test kind rec0          = ∏[foo: #Symbol]
 test kind rec1          = ∏[one: #Symbol, two: #Nat]
 test kind rec2          = ∏[one: #Symbol, two: ∏[foo: #Nat]]
 

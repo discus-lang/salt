@@ -16,23 +16,41 @@ pType
  = P.choice
  [ do   -- 'λ' TypeParams '⇒' Type
         pTok KFun
-        bks     <- pTypeParams
-        pTok KArrowRightFat
-        tBody   <- pType
-        return  $  TAbs bks tBody
+        bks <- pTypeParams 
+         <?> "some parameters for the abstraction"
+
+        pTok KArrowRightFat             
+         <?> "more parameters for the abstraction, or a '⇒' to start the body"
+
+        tBody   <- pType                
+         <?> "a body type for the abstraction"
+
+        return $ TAbs bks tBody
 
  , do   -- '∀' TypeParams '.' Type
         pTok KForall
-        TPTypes bks <- pTypeParams
+        TPTypes bks <- pTypeParams 
+         <?> "some parameters for the forall type"
+
         pTok KDot
-        tBody   <- pType
+         <?> "more parameters for the forall type, or a '.' to start the body"
+
+        tBody   <- pType 
+         <?> "a body for the forall type"
+
         return  $  TForall bks tBody
 
  , do   -- '∃' TypeParams '.' Type
         pTok KExists
-        TPTypes bks <- pTypeParams
-        pTok KDot
-        tBody   <- pType
+        TPTypes bks <- pTypeParams      
+         <?> "some parameters for the exists type"
+
+        pTok KDot                       
+         <?> "more type parameters, or a '.' to start the body type"
+
+        tBody   <- pType                
+         <?> "a body for the exists type"
+
         return  $  TExists bks tBody
 
  , do   -- '∙'
@@ -47,30 +65,33 @@ pType
         TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pTok KArrowRight
-                tsResult <- pTypesResult
+                tsResult <- pTypesResult        
+                 <?> "a result for the function type"
                 return $ TFun tsHead tsResult
 
          , do   pTok KArrowRightFat
                 tsResult <- pType
+                 <?> "a result for the kind arrow"
                 return $ TArr tsHead tsResult
 
-         , do   pTok KBang
+         , do   pTok KBang      
                 tResult <- pType
+                 <?> "an effect for the suspension type"
                 return $ TSusp tsHead tResult
 
          , do   pTok KPlus
                 case tsHead of
                  [t] -> do
                         tResult <- pType
+                         <?> "a component of the sum type"
                         return  $ TSum [t, tResult]
-                 _   -> P.unexpected "type sequence"
+                 _   -> P.unexpected "type sequence used in sum type"
 
          , do   case tsHead of
                  [t]    -> return t
                  []     -> P.unexpected "empty type sequence"
                  _      -> P.unexpected "type sequence" ]
  ]
- <?> "a type"
 
 
 -- | Parser for a type that can be used in the head of a function type.
@@ -85,21 +106,21 @@ pTypesHead
         -- Take multiple TypeArgs at once to curry them together into a
         -- single application. Each occurrence of an uncurried form with
         -- square brackets is a separate application.
-        tsArgs  <- P.many
-                 $ P.choice
+        tsArgs  <- P.many $ P.choice
                  -- TypeArg+
-                 [ P.many1 pTypeArg
-                 -- '[' Type,+ ']'
-                 , pSquared $ P.sepEndBy1 pType (pTok KComma) ]
+                 [ P.many1 (pTypeArg <?> "an argument type")
 
+                 -- '[' Type,+ ']'
+                 , pTypeVector
+                 ]
+                 
         let tApp = foldl TApt tFun tsArgs
         return $ TGTypes [tApp]
 
-        -- '[' Type+ ']'
- , do   ts      <- pSquared $ P.sepEndBy pType (pTok KComma)
+        -- '[' Type,+ ']'
+ , do   ts      <- pTypeVector
         return  $ TGTypes ts
  ]
- <?> "a head type"
 
 
 -- | Parser for a type that can be used as the result in a function type.
@@ -108,15 +129,16 @@ pTypesResult
  = do   TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pTok KArrowRight
-                tsResult <- pTypesResult
+                tsResult <- pTypesResult 
+                 <?> "a result type, or type vector"
                 return [TFun tsHead tsResult]
 
          , do   pTok KBang
                 tResult <- pType
+                 <?> "an effect type"
                 return [TSusp tsHead tResult]
 
          , do   return tsHead ]
- <?> "a result type"
 
 
 -- | Parser for a type that can be used as the argument in a type-type application.
@@ -128,7 +150,8 @@ pTypeArg
         n <- pVar
         P.choice
          [ do   pTok KHat
-                b <- pNat
+                b <- pNat 
+                 <?> "the number of bump levels for variable '" ++ showVar n ++ "'"
                 return  $ TVar $ BoundWith n b
          ,      return  $ TVar $ BoundWith n 0 ]
 
@@ -141,7 +164,8 @@ pTypeArg
         -- Record Types -------------------------
  , do   -- '∏' '[' (Lbl ':' Type)* ']'
         pTok KProd
-        lts     <- pSquared pTypeFields
+        lts <- pSquared pTypeRecordFields
+         <?> "fields for the record type"
         return $ TRecord (map fst lts) (map snd lts)
 
  , do   -- '[' 'record' '|' (Lbl ':' Type)* ']'
@@ -151,7 +175,8 @@ pTypeArg
 
         pSquared $ do
                 pVar; pTok KBar
-                lts  <- pTypeFields
+                lts  <- pTypeRecordFields
+                 <?> "fields for the record type"
                 return $ TRecord (map fst lts) (map snd lts)
 
  , do   -- '[' (Lbl ':' Type)+ ']'
@@ -160,13 +185,15 @@ pTypeArg
                 pTok KSBra; pVar; pTok KColon
 
         pSquared $ do
-                lts  <- pTypeFields
+                lts  <- pTypeRecordFields
+                 <?> "fields for the record type"
                 return $ TRecord (map fst lts) (map snd lts)
 
         -- Variant Types ------------------------
  , do   -- '∑' '[' (Lbl ':' Type)* ']'
         pTok KSum
-        lts     <- pSquared pTypeFields
+        lts <- pSquared pTypeVariantFields
+         <?> "alternatives for the variant type"
         return $ TVariant (map fst lts) (map snd lts)
 
  , do   -- '[' 'variant' '|' (Lbl ':' Type)* ']'
@@ -176,12 +203,14 @@ pTypeArg
 
         pSquared $ do
                 pVar; pTok KBar
-                lts  <- pTypeFields
+                lts  <- pTypeVariantFields
+                 <?> "alternatives for the variant type"
                 return $ TVariant (map fst lts) (map snd lts)
 
  , do   -- '<' (Lbl ':' Type)+ '>'
         pAngled $ do
-                lts  <- pTypeFields
+                lts  <- pTypeVariantFields
+                 <?> "alternatives for the variant type"
                 return $ TVariant (map fst lts) (map snd lts)
 
         -- Effect Types -------------------------
@@ -195,11 +224,11 @@ pTypeArg
 
  , do   -- '(' Term ')'
         pTok KRBra
-        t       <- pType
+        t <- pType
+         <?> "a type"
         pTok KRKet
         return t
  ]
- <?> "an argument type"
 
 
 -- | Parser for some type parameters.
@@ -210,32 +239,64 @@ pTypeParams :: Parser (TypeParams Location)
 pTypeParams
  = do   bts     <- pTypeSigs
         return  $ TPTypes bts
- <?> "type parameters"
 
 
 -- | Parser for some type signatures.
 pTypeSigs :: Parser [(Bind, Type Location)]
 pTypeSigs
- = (pSquared
-        $ flip P.sepEndBy1 (pTok KComma)
-        $ do b <- pBind; pTok KColon; t <- pType; return (b, t))
- <?> "some type signatures"
+ = pSquared $ flip P.sepEndBy1 (pTok KComma)
+ $ do   b <- pBind              <?> "a binder for a type parameter"
+        pTok KColon             <?> "a ':' to specify the kind of the type parameter"
+        t <- pType              <?> "the kind of the type parameter '" ++ showBind b ++ "'"
+        return (b, t)
 
 
--- | Parser for some type fields.
-pTypeFields :: Parser [(Name, TypeArgs Location)]
-pTypeFields
- = (flip P.sepEndBy (pTok KComma)
- $ do   n       <- pLbl
-        pTok KColon
-        ts      <- P.choice
-                [ P.try $ do
-                        t  <- pType
-                        return $ TGTypes [t]
+-- | Parser for some record type fields.
+pTypeRecordFields :: Parser [(Name, TypeArgs Location)]
+pTypeRecordFields
+ = flip P.sepEndBy (pTok KComma)
+ $ do   n   <- pLbl             <?> "a record field label"
+        pTok KColon             <?> "a ':' to specify the type of the record field"
+        tgs <- pTypeArgsField   <?> "the type of the record field '" ++ showLbl n ++ "'"
+        return (n, tgs)
 
-                , do    ts <- pSquared $ P.sepEndBy pType (pTok KComma)
-                        return $ TGTypes ts
-                ]
-        return (n, ts))
- <?> "some field types"
+
+-- | Parser for some variant type fields.
+pTypeVariantFields :: Parser [(Name, TypeArgs Location)]
+pTypeVariantFields
+ = flip P.sepEndBy (pTok KComma)
+ $ do   n   <- pLbl             <?> "a variant field label"
+        pTok KColon             <?> "a ':' to specify the type of the variant field"
+        tgs <- pTypeArgsField   <?> "the type of the variant field '" ++ showLbl n ++ "'"
+        return (n, tgs)
+
+
+-- | Parser for type args specified in a record or variant field.
+pTypeArgsField :: Parser (TypeArgs Location)
+pTypeArgsField
+ = P.choice
+ [ -- We need to try this first as [record| ] etc overlaps with the first
+   -- part of the type vector syntax we try next.
+   P.try $ do
+        t <- pType
+        return $ TGTypes [t]
+         
+ , do   pTok KSBra
+        ts  <- P.sepEndBy
+                (pType <?> "a component of the type vector, or ']' to end it") 
+                (pTok KComma)        
+        pTok KSKet
+        return $ TGTypes ts
+ ]
+
+-- | Parser for a type vector.
+pTypeVector :: Parser [Type Location]
+pTypeVector 
+ = do   pTok KSBra
+        ts  <- P.sepEndBy
+                (pType <?> "a component of the type vector, or ']' to end it") 
+                (pTok KComma)        
+        pTok KSKet
+        return ts
+
 
