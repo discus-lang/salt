@@ -19,15 +19,13 @@ data Request a
 
 instance Pack a => Pack (Request a) where
  pack (Request iid sMethod mxParams)
-        = jobj
-        [ jhas "id"     $ pack iid
-        , jhas "method" $ pack sMethod
-        , jmby "params" $ mxParams ]
+  = jobj [ "id"          := V $ pack iid
+         , "method"      := S sMethod
+         , "params"      ?= fmap (V . pack) mxParams ]
 
  pack (Notification sMethod mxParams)
-        = jobj
-        [ jhas "method" $ pack sMethod
-        , jmby "params" $ mxParams ]
+  = jobj [ "method"      := S sMethod
+         , "params"      ?= fmap (V . pack) mxParams ]
 
 
 instance Unpack a => Unpack (Request a) where

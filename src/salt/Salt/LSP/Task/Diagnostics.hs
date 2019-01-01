@@ -79,7 +79,6 @@ packLexerError (Lexer.LexerError nLine nColStart csRest)
 
 
 ---------------------------------------------------------------------------------------------------
--- | Send parser errors to the client.
 sendParserErrors :: State -> String -> [Parser.ParseError] -> IO ()
 sendParserErrors state sUri errs
  = do   lspLog state "* Sending Parser Errors"
@@ -99,6 +98,7 @@ packParserError (Parser.ParseError locStart locEnd _msgs)
         , "severity"    := I 1
         , "source"      := S "parser"
         , "message"     := S "parse error" ]
+
 
 packLocation :: Lexer.Location -> JSValue
 packLocation (Lexer.Location nLine nCol)

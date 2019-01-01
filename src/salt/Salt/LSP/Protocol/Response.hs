@@ -19,18 +19,15 @@ data Response a
 
 instance Pack a => Pack (Response a) where
  pack (ResponseResult jid xResult) 
-        = jobj
-        [ jhas "id"     $ pack jid
-        , jhas "result" $ pack xResult ]
+  = jobj [ "id"          := V $ pack jid
+         , "result"      := V $ pack xResult ]
 
  pack (ResponseError jid errCode sMsg mValue)
-        = jobj
-        [ jhas "id"     $ pack jid
-        , jhas "error"
-                $ jobj
-                [ jhas "code"    $ pack errCode
-                , jhas "message" $ pack sMsg
-                , jmby "data"    $ mValue ] ]
+  = jobj [ "id"          := V $ pack jid
+         , "error"       
+           := O [ "code"        := V $ pack errCode
+                , "message"     := V $ pack sMsg
+                , "data"        ?= fmap V mValue ]]
 
 
 ---------------------------------------------------------------------------------------------------

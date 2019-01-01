@@ -10,9 +10,8 @@ module Salt.LSP.Protocol.Base
         , Unpack (..)
 
         -- * Pack
-        , Pack (..)
-        , O(..), F(..)
-        , jobj, jhas, jmby, jnull
+        , Pack (..), jobj
+        , JSPackObj(..), JSPackField(..), (?=)
 
         -- * Flattening
         , flattenJSValue
@@ -24,7 +23,6 @@ module Salt.LSP.Protocol.Base
         , getInteger, getIntegerNull)
 where
 import Control.Monad
-import Data.Maybe
 import Text.JSON
 import qualified Data.Ratio     as Ratio
 
@@ -100,8 +98,9 @@ instance Pack Bool where
 
 
 -- Helper for constructing literal objects.
-data O  = O [F]
-        | A [O]
+data JSPackObj  
+        = O [JSPackField]
+        | A [JSPackObj]
         | B Bool
         | S String
         | I Integer
@@ -109,13 +108,23 @@ data O  = O [F]
         | V JSValue
         deriving Show
 
-data F  = (:=) String O
+data JSPackField
+        = (:=) String JSPackObj
+        | FM   String (Maybe JSPackObj)
         deriving Show
 
 infixr 0 :=
 
-instance Pack O where
- pack (O fs)    = pack [ (s, pack x) | s := x <- fs]
+infixr 0 ?=
+(?=) s mo = FM s mo
+
+instance Pack JSPackObj where
+ pack (O fs)    
+  = let make (s := o)           = Just (s, o)
+        make (FM s (Just o))    = Just (s, o)
+        make (FM _ (Nothing))   = Nothing
+    in  pack [ (s, pack o) | Just (s, o) <- map make fs]
+
  pack (A js)    = JSArray (map pack js)
  pack (B b)     = JSBool b
  pack (S s)     = JSString $ toJSString s
@@ -123,25 +132,9 @@ instance Pack O where
  pack (J i)     = JSRational False (fromIntegral i)
  pack (V j)     = j
 
+jobj :: [JSPackField] -> JSValue
+jobj fs = pack $ O fs
 
--- Helpers for constructing objects from haskell data types.
-jobj :: Pack a => [Maybe (String, a)] -> JSValue
-jobj mfs
- = pack $ [ (s, pack x) | (s, x) <- catMaybes mfs ]
-
-
-jhas :: Pack a => String -> a -> Maybe (String, JSValue)
-jhas s x
- = Just (s, pack x)
-
-jmby :: Pack a => String -> Maybe a -> Maybe (String, JSValue)
-jmby s m
- = case m of
-        Nothing -> Nothing
-        Just x  -> Just (s, pack x)
-
-jnull :: JSValue
-jnull = JSNull
 
 
 ---------------------------------------------------------------------------------------------------
