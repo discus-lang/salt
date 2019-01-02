@@ -9,26 +9,11 @@ import Salt.Core.Codec.Text.Token               (Token)
 
 import Data.Function
 import Data.Maybe
--- import Data.List
 import qualified Text.Parsec                    as P
--- import qualified Text.Parsec.Pos                as P
 import qualified Text.Parsec.Error              as P
 
 
----------------------------------------------------------------------------------------------------
--- | Parse error.
-data ParseError 
-        = ParseError
-        { -- | The token we hit the caused the error.
-          errorHere     :: (Range Location, Maybe Token)
-
-          -- | The token previous to the one that caused the error, if there is one.
-        , errorPrev     :: Maybe (Range Location, Token)
-
-          -- | Parser messages we got from parsec.
-        , errorMessages :: [P.Message] }
-
-
+---------------------------------------------------------------------------------------- Parsing --
 -- | Parse a salt source file from tokens.
 parseModule :: [At Token] -> Either [ParseError] (Module Location)
 parseModule toks
@@ -59,6 +44,20 @@ parseModule toks
                         (Range (Location 0 0) (Location 0 0), Nothing)
                         Nothing
                         [P.Message "parse error at end of input"]]
+
+
+----------------------------------------------------------------------------- Error Construction --
+-- | Parse error.
+data ParseError 
+        = ParseError
+        { -- | The token we hit the caused the error.
+          errorHere     :: (Range Location, Maybe Token)
+
+          -- | The token previous to the one that caused the error, if there is one.
+        , errorPrev     :: Maybe (Range Location, Token)
+
+          -- | Parser messages we got from parsec.
+        , errorMessages :: [P.Message] }
 
 
 -- | Extract error information from a Parsec error message.
@@ -114,7 +113,8 @@ findPrevTokenRange err (Token.At range0 t0 : k1@(Token.At range1 _) : ks)
 findPrevTokenRange _err _ = Nothing
 
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------- Pretty Printing --
+-- | Pretty print a parse error for display in the console.
 ppParseError :: FilePath -> ParseError -> Doc
 ppParseError path (ParseError (range, _mTok) _mLocPrev msgs)
  = vcat ( string path 
@@ -124,32 +124,44 @@ ppParseError path (ParseError (range, _mTok) _mLocPrev msgs)
                 % fromMaybe empty mSysUnexpect
                 % fromMaybe empty mUnexpected
 
-        : catMaybes [ mExpect, mMessage])
+        : catMaybes [ mMessage, mExpect])
  
- where  mUnexpected  
-         = listToMaybe  [ text ", " % string s 
-                        | P.UnExpect   s <- msgs ]
-
+ where  
         mSysUnexpect 
          = listToMaybe  [ text ", " % text "unexpected " % string s 
                         | P.SysUnExpect s <- msgs ]
 
-        mExpect      
-         = listToMaybe  [ text "  expecting " % string s 
-                        | P.Expect s <- msgs ]
+        -- These come from points where we have called 'unexpected'
+        -- explicitly in the parser.
+        mUnexpected  
+         = listToMaybe  [ text ", " % string s 
+                        | P.UnExpect   s <- msgs ]
 
+        -- These come from points where we have called 'fail' 
+        -- explicitly in the parser.
         mMessage
          = listToMaybe  [ text "  " % string s 
                         | P.Message s <- msgs]
 
+        -- These come from where we have use <?> in the parser.
+        mExpect      
+         = listToMaybe  [ text "  expecting " % string s 
+                        | P.Expect s <- msgs ]
+
+
+-- | Pretty print a range for display in the console.
 ppRange :: Range Location -> Doc
 ppRange (Range lFirst lFinal)
  = ppLocation lFirst % text "-" % ppLocation lFinal
 
+
+-- | Pretty print a location for display in the console.
 ppLocation :: Location -> Doc
 ppLocation (Location nLine nCol)
  = int (nLine + 1) % text ":" % int (nCol + 1)
 
+
+-- | Pretty print a parse error message for display in the console.
 ppMessage :: P.Message -> Doc
 ppMessage msg
  = case msg of

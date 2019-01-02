@@ -10,47 +10,32 @@ import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
 
 
+------------------------------------------------------------------------------------------- Type --
 -- | Parser for a type expression.
 pType :: Parser (Type Location)
 pType
  = P.choice
  [ do   -- 'λ' TypeParams '⇒' Type
         pTok KFun
-        bks <- pTypeParams 
-         <?> "some parameters for the abstraction"
-
-        pTok KArrowRightFat             
-         <?> "more parameters for the abstraction, or a '⇒' to start the body"
-
-        tBody   <- pType                
-         <?> "a body type for the abstraction"
-
+        bks <- pTypeParams  <?> "some parameters for the abstraction"
+        pTok KArrowRightFat <?> "more parameters for the abstraction, or a '⇒' to start the body"
+        tBody   <- pType    <?> "a body type for the abstraction"
         return $ TAbs bks tBody
 
  , do   -- '∀' TypeParams '.' Type
         pTok KForall
         TPTypes bks <- pTypeParams 
          <?> "some parameters for the forall type"
-
-        pTok KDot
-         <?> "more parameters for the forall type, or a '.' to start the body"
-
-        tBody   <- pType 
-         <?> "a body for the forall type"
-
+        pTok KDot           <?> "more parameters for the forall type, or a '.' to start the body"
+        tBody <- pType      <?> "a body for the forall type"
         return  $  TForall bks tBody
 
  , do   -- '∃' TypeParams '.' Type
         pTok KExists
         TPTypes bks <- pTypeParams      
          <?> "some parameters for the exists type"
-
-        pTok KDot                       
-         <?> "more type parameters, or a '.' to start the body type"
-
-        tBody   <- pType                
-         <?> "a body for the exists type"
-
+        pTok KDot           <?> "more type parameters, or a '.' to start the body type"
+        tBody <- pType      <?> "a body for the exists type"
         return  $  TExists bks tBody
 
  , do   -- '∙'
@@ -65,25 +50,21 @@ pType
         TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pTok KArrowRight
-                tsResult <- pTypesResult        
-                 <?> "a result for the function type"
+                tsResult <- pTypesResult    <?> "a result for the function type"
                 return $ TFun tsHead tsResult
 
          , do   pTok KArrowRightFat
-                tsResult <- pType
-                 <?> "a result for the kind arrow"
+                tsResult <- pType           <?> "a result for the kind arrow"
                 return $ TArr tsHead tsResult
 
          , do   pTok KBang      
-                tResult <- pType
-                 <?> "an effect for the suspension type"
+                tResult <- pType            <?> "an effect for the suspension type"
                 return $ TSusp tsHead tResult
 
          , do   pTok KPlus
                 case tsHead of
                  [t] -> do
-                        tResult <- pType
-                         <?> "a component of the sum type"
+                        tResult <- pType    <?> "a component of the sum type"
                         return  $ TSum [t, tResult]
                  _   -> P.unexpected "type sequence used in sum type"
 
@@ -129,18 +110,17 @@ pTypesResult
  = do   TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pTok KArrowRight
-                tsResult <- pTypesResult 
-                 <?> "a result type, or type vector"
+                tsResult <- pTypesResult    <?> "a result type, or type vector"
                 return [TFun tsHead tsResult]
 
          , do   pTok KBang
-                tResult <- pType
-                 <?> "an effect type"
+                tResult <- pType            <?> "an effect type"
                 return [TSusp tsHead tResult]
 
          , do   return tsHead ]
 
 
+---------------------------------------------------------------------------------------- TypeArg --
 -- | Parser for a type that can be used as the argument in a type-type application.
 pTypeArg :: Parser (Type Location)
 pTypeArg
@@ -150,8 +130,7 @@ pTypeArg
         n <- pVar
         P.choice
          [ do   pTok KHat
-                b <- pNat 
-                 <?> "the number of bump levels for variable '" ++ showVar n ++ "'"
+                b <- pNat <?> "the number of bump levels for the variable"
                 return  $ TVar $ BoundWith n b
          ,      return  $ TVar $ BoundWith n 0 ]
 
@@ -175,8 +154,7 @@ pTypeArg
 
         pSquared $ do
                 pVar; pTok KBar
-                lts  <- pTypeRecordFields
-                 <?> "fields for the record type"
+                lts  <- pTypeRecordFields   <?> "fields for the record type"
                 return $ TRecord (map fst lts) (map snd lts)
 
  , do   -- '[' (Lbl ':' Type)+ ']'
@@ -185,8 +163,7 @@ pTypeArg
                 pTok KSBra; pVar; pTok KColon
 
         pSquared $ do
-                lts  <- pTypeRecordFields
-                 <?> "fields for the record type"
+                lts  <- pTypeRecordFields    <?> "fields for the record type"
                 return $ TRecord (map fst lts) (map snd lts)
 
         -- Variant Types ------------------------
@@ -231,6 +208,7 @@ pTypeArg
  ]
 
 
+------------------------------------------------------------------------------------- TypeParams --
 -- | Parser for some type parameters.
 --   There needs to be at least one parameter because types
 --   like  'λ[].T' and '∀[].T' aren't useful and we prefer not to worry
@@ -245,12 +223,13 @@ pTypeParams
 pTypeSigs :: Parser [(Bind, Type Location)]
 pTypeSigs
  = pSquared $ flip P.sepBy1 (pTok KComma)
- $ do   b <- pBind              <?> "a binder for a type parameter"
-        pTok KColon             <?> "a ':' to specify the kind of the type parameter"
-        t <- pType              <?> "the kind of the type parameter '" ++ showBind b ++ "'"
+ $ do   b <- pBind  <?> "a binder for a type parameter"
+        pTok KColon <?> "a ':' to specify the kind of the type parameter"
+        t <- pType  <?> "the kind of the type parameter '" ++ showBind b ++ "'"
         return (b, t)
 
 
+---------------------------------------------------------------------------- TypeRecord / Vector --
 -- | Parser for some record type fields.
 pTypeRecordFields :: Parser [(Name, TypeArgs Location)]
 pTypeRecordFields
@@ -298,5 +277,3 @@ pTypeVector
                 (pTok KComma)        
         pTok KSKet
         return ts
-
-

@@ -8,7 +8,8 @@ import qualified Text.Parsec.Error      as Parsec
 import Data.Maybe
 import Data.List
 
--- | A parser diagnostic to give to the client.
+
+-- | A parser diagnostic to send to the client.
 data ParserDiagnostic
         = ParserDiagnostic
         { parserDiagnosticRange         :: Range Location
@@ -33,7 +34,7 @@ diagnosticOfParseError _toks (ParseError rangeTokHere mRangeTokPrev msgs)
         tokHereIsDecl   = maybe False isDeclStartToken mTokHere
 
         sMsg     
-         = case catMaybes [mIncompleteDecl, mUnexpected, mSysUnexpect, mExpect, mMessage] 
+         = case catMaybes [mIncompleteDecl, mMessage, mUnexpected, mSysUnexpect, mExpect] 
             of  []      -> "Parse error."
                 parts   -> intercalate "\n" parts
 

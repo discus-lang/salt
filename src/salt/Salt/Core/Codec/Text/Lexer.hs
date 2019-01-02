@@ -20,6 +20,7 @@ import qualified Data.Char                as Char
 import qualified Data.Either              as Either
 import qualified System.IO.Unsafe         as System
 
+
 ---------------------------------------------------------------------------------------------------
 -- | Lexer error.
 data LexerError 
