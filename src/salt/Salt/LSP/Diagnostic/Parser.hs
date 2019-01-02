@@ -72,7 +72,8 @@ diagnosticOfParseError _toks (ParseError rangeTokHere mRangeTokPrev msgs)
          = Nothing
 
         rangeReport
-         = fromMaybe rangeHere mRangeIncompleteDecl
+         = mungeRangeForVSCode
+         $ fromMaybe rangeHere mRangeIncompleteDecl
 
 
 -- | Determine if the token that caused the error is one that starts a new
@@ -99,3 +100,21 @@ mungeRangeForVSCode range'@(Range locStart locEnd)
  = Range locStart (Location lEnd (cEnd + 1))
 
  | otherwise = range'
+
+
+-- | Find the source range of the declaration start token just before the
+--   given location.
+findDeclStartLocation :: [At Token] -> Location -> Maybe (Range Location)
+findDeclStartLocation toks loc
+ = loop $ reverse toks
+ where  
+        loop [] = Nothing
+        loop (At range@(Range lStart _lEnd) k : toksRest)
+         | lStart <= loc 
+         , isDeclStartToken k
+         = Just range
+
+         | otherwise     
+         = loop toksRest
+
+

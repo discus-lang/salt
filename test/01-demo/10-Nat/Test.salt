@@ -23,7 +23,6 @@ test eval fib'3  = fib 3
 test eval fib'15 = fib 15
 
 
-
 -- Ackermann's function.
 term ack [m: #Nat, n: #Nat]: #Nat
  = if   { #nat'eq [m, 0] → #nat'add [n, 1] 
