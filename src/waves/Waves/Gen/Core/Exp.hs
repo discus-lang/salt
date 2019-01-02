@@ -53,7 +53,7 @@ type_ = Gen.recursive Gen.choice
   -- , TAnn () <$> type_
   ]
 
-typeRef :: Gen TypeRef
+typeRef :: Gen (TypeRef ())
 typeRef = Gen.choice
   [ TRPrm <$> namePrim
   , TRCon <$> nameCon

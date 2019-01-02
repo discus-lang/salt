@@ -3,11 +3,12 @@
 module Waves.Prop.Core.Codec where
 
 import qualified Salt.Core.Codec.Text.Lexer       as Lexer
-import qualified Salt.Core.Codec.Text.Parser      as Parser
+-- import qualified Salt.Core.Codec.Text.Parser      as Parser
 import qualified Salt.Core.Codec.Text.Parser.Base as Parser.Base
 import           Salt.Core.Codec.Text.Pretty ()
 import qualified Salt.Core.Codec.Text.Token       as Token
 import qualified Salt.Core.Transform.MapAnnot as MapAnnot
+import qualified Text.Parsec                     as Parser
 
 import qualified Salt.Data.Pretty as Pretty
 
@@ -42,16 +43,14 @@ instance Eq TokensNoEq where
 
 scanner :: String -> Either (RoundtripError a) [Token.At Token.Token]
 scanner text =
- let fp = "<test>"
-     -- Is there a pure lexer?
-     (toks,_,strRest) = unsafePerformIO $ IW.scanStringIO text (Lexer.scanner fp)
+ let -- Is there a pure lexer?
+     (toks,_,strRest) = unsafePerformIO $ IW.scanStringIO text Lexer.scanner
   in case strRest of
       [] -> return toks
       _  -> Left $ ErrorLexLeftover (Tokens toks) strRest
 
 parser :: Parser.Base.Parser a -> [Token.At Token.Token] -> Either (RoundtripError a) a
-parser p toks = case Parser.parse p "<test>" toks of
-  Right (v, [])     -> return v
-  Right (v,tokRest) -> Left $ ErrorParseLeftover v (show tokRest)
-  Left pe           -> Left $ ErrorNoParse (show pe)
-
+parser p toks 
+ = case Parser.parse p "<test>" toks of
+    Right v            -> return v
+    Left  err          -> Left $ ErrorNoParse (show err)
