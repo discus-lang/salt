@@ -12,7 +12,8 @@ import Data.Char
 import qualified Text.Parsec.Error              as Parsec
 
 
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------- Update --  
+-- | Compute diagnostics for a source file, and push them to the client.
 updateDiagnostics :: State -> String -> String -> IO ()
 updateDiagnostics state sUri sSource 
  = goLex
@@ -28,7 +29,7 @@ updateDiagnostics state sUri sSource
                 Right _mm       -> sendClearDiagnostics state sUri
 
 
----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------ Clear --
 -- | Clear diagnostics for the given file.
 --   We do this when we haven't found any problems with it.
 sendClearDiagnostics :: State -> String -> IO ()
@@ -40,7 +41,7 @@ sendClearDiagnostics state sUri
                          , "diagnostics" := A [] ]]
 
 
----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------ Lexer --
 -- | Send lexer errors to the client.
 sendLexerErrors :: State -> String -> [Lexer.LexerError] -> IO ()
 sendLexerErrors state sUri errs
@@ -53,15 +54,14 @@ sendLexerErrors state sUri errs
 
 -- | Expand and pack a lexer error into JSON.
 --
---   The errors we get from the lexer only indicate the first character
---   that was not part of a valid token. In the editor window we prefer
---   to report the error location from that point until the next space
---   character or end of line, so they're easier to read.
+--   The errors we get from a lexer will only indicate the first character
+--   that was not part of a valid token. In the editor window we prefer to
+--   report the error location from that point until the next space character
+--   or end of line, so they're easier to read.
 --   
 packLexerError :: Lexer.LexerError -> JSValue
 packLexerError (Lexer.LexerError nLine nColStart csRest)
- = jobj [ "range"       := O    [ "start" := V $ packLocation locStart
-                                , "end"   := V $ packLocation locEnd ]
+ = jobj [ "range"       := V $ packRange (Lexer.Range locStart locEnd)
         , "severity"    := I 1
         , "source"      := S "lexer"
         , "message"     := S "Lexical error." ]
@@ -79,7 +79,7 @@ packLexerError (Lexer.LexerError nLine nColStart csRest)
          | otherwise    = expand (n + 1) cs
 
 
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------- Parser --
 sendParserErrors :: State -> String -> [Parser.ParseError] -> IO ()
 sendParserErrors state sUri errs
  = do   lspLog state "* Sending Parser Errors"
@@ -98,9 +98,8 @@ sendParserErrors state sUri errs
 -- that triggered the error.
 
 packParserError :: Parser.ParseError -> JSValue
-packParserError (Parser.ParseError locStart mLocPrev msgs)
- = jobj [ "range"       := O    [ "start" := V $ packLocation locStart
-                                , "end"   := V $ packLocation locStart]
+packParserError (Parser.ParseError range mLocPrev msgs)
+ = jobj [ "range"       := V $ packRange range
         , "severity"    := I 1
         , "source"      := S "parser"
         , "message"     := S sMsg ]
@@ -123,12 +122,15 @@ packParserError (Parser.ParseError locStart mLocPrev msgs)
         mMessage        = listToMaybe   [ s | Parsec.Message s <- msgs ]
 
 
+------------------------------------------------------------------------------------------- Pack --
+packRange :: Lexer.Range Lexer.Location -> JSValue
+packRange (Lexer.Range locFirst locFinal)
+ = jobj [ "start"       := V $ packLocation locFirst
+        , "end"         := V $ packLocation locFinal]
+
 packLocation :: Lexer.Location -> JSValue
 packLocation (Lexer.Location nLine nCol)
- = pack $ O
-        [ "line"        := J $ nLine - 1
-        , "character"   := J $ nCol  - 1 ]
+ = jobj [ "line"        := J nLine 
+        , "character"   := J nCol ]
 
-
-
-        
+       

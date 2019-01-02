@@ -1,7 +1,7 @@
-test/30-error/40-check-test-sigs/Test.salt:1:1
+test/30-error/40-check-test-sigs/Test.salt:2:2
   Test 'test1' declared multiple times.
 
-  1:1    In test "test1"
+  2:2    In test "test1"
 
 test/30-error/40-check-test-sigs/Test.salt:7:1
   Test 'test1' declared multiple times.

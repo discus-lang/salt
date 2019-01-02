@@ -12,7 +12,6 @@ import qualified Text.Parsec.Pos                as P
 
 ---------------------------------------------------------------------------------------------------
 type Parser a   = P.Parsec [At Token] () a
-data Range      = Range !IW.Location !IW.Location
 
 
 -- | Get the current position in the input stream,
@@ -26,7 +25,7 @@ getLocation
 
 
 -- | Parse a thing, also returning the range from the source file.
-pWithRange  :: Parser a -> Parser (Range, a)
+pWithRange  :: Parser a -> Parser (Range Location, a)
 pWithRange p
  = do   l1      <- getLocation
         x       <- p
@@ -53,7 +52,7 @@ showTokenForError (At _ k)
 
 
 locOfTok :: At Token -> P.SourcePos
-locOfTok (At (Location l c) _)
+locOfTok (At (IW.Range (Location l c) _) _)
  = P.newPos "file" l c
 
 

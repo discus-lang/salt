@@ -1,8 +1,8 @@
 
 module Salt.Core.Codec.Text.Lexer
         ( lexSource
-        , IW.Location(..)
         , LexerError(..)
+        , IW.Range (..), IW.Location(..)
         
         , scanner
         , checkMatch
@@ -55,11 +55,16 @@ lexLine nLineOffset sSource
 
         let IW.Location nLine nColumn = loc
 
-        let bumpLoc (At (IW.Location nLine' nColumn') t)
-                = At (IW.Location (nLine' + nLineOffset) nColumn') t
+        let bumpLoc   (IW.Location nLine' nColumn')
+             =        (IW.Location (nLine' + nLineOffset) nColumn')
+
+        let bumpRange (IW.Range locFirst locFinal)
+             =        (IW.Range (bumpLoc locFirst) (bumpLoc locFinal))
+
+        let bumpAt (At r t) = At (bumpRange r) t
 
         case strRest of
-         [] -> return $ Right $ map bumpLoc toks
+         [] -> return $ Right $ map bumpAt toks
          _  -> return $ Left  $ LexerError (nLineOffset + nLine) nColumn strRest
 
 
@@ -69,12 +74,15 @@ scanner :: Monad m => IW.Scanner m IW.Location [Char] (At Token)
 scanner
  = IW.skip Char.isSpace
  $ IW.alts
-        [ fmap (stamp (KComment . Text.pack))
+        [ -- Line comments.
+          fmap (stamp (KComment . Text.pack))
            $ IW.scanHaskellCommentLine
 
+          -- Block comments.
         , fmap (stamp (KComment . Text.pack))
            $ IW.scanHaskellCommentBlock
 
+          -- Compound operators.
         , fmap (stamp id)
            $ IW.munchPred Nothing (\_ix c -> elem c ['<', '-', '>', ':', '='])
            $ \case
@@ -84,6 +92,7 @@ scanner
                 ":="    -> Just KColonEquals
                 _       -> Nothing
 
+          -- Single character operators.
         , fmap (stamp id)
            $ IW.from $ \case
                 '('     -> Just KRBra
@@ -119,6 +128,7 @@ scanner
 
                 _       -> Nothing
 
+          -- Keywords.
         , fmap (stamp id)
            $ IW.munchPred Nothing (\_ix c -> isIdentChar c)
            $ \case
@@ -151,21 +161,21 @@ scanner
 
                 _               -> Nothing
 
+          -- Names.
         , fmap (stamp KVar) scanVarName
         , fmap (stamp KCon) scanConName
         , fmap (stamp KSym) scanSymName
         , fmap (stamp KPrm) scanPrmName
+        , fmap (stamp id)   scanQuotedIdent
 
-        , fmap (stamp id) scanQuotedIdent
-
+          -- Literals.
         , fmap (stamp KNat) $ scanNat
         , fmap (stamp KInt) $ IW.scanInteger
-
         , fmap (stamp (KText . Text.pack)) $ IW.scanHaskellString
         ]
  where  -- Stamp a token with source location information.
-        stamp k (l, t)
-          = At l (k t)
+        stamp k (range, t)
+          = At range (k t)
 
 
 -- | Check if a Text value matches a predicate outside of the lexer.
@@ -181,7 +191,7 @@ isIdentChar c = Char.isAlphaNum c || c == '\''
 {-# INLINE isIdentChar #-}
 
 
-scanVarName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
+scanVarName :: Monad m => IW.Scanner m loc [Char] (IW.Range loc, Text)
 scanVarName
  = IW.munchPred Nothing matchVar (Just . Text.pack)
 {-# INLINE scanVarName #-}
@@ -193,7 +203,7 @@ matchVar _ c = isIdentChar c
 {-# INLINE matchVar #-}
 
 
-scanConName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
+scanConName :: Monad m => IW.Scanner m loc [Char] (IW.Range loc, Text)
 scanConName
  = IW.munchPred Nothing matchCon (Just . Text.pack)
 {-# INLINE scanConName #-}
@@ -205,7 +215,7 @@ matchCon _ c = isIdentChar c
 {-# INLINE matchCon #-}
 
 
-scanSymName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
+scanSymName :: Monad m => IW.Scanner m loc [Char] (IW.Range loc, Text)
 scanSymName
  = IW.munchPred Nothing matchSym acceptRequireLength2
 {-# INLINE scanSymName #-}
@@ -215,6 +225,7 @@ acceptRequireLength2 :: [Char] -> Maybe Text.Text
 acceptRequireLength2 []     = Nothing
 acceptRequireLength2 [_]    = Nothing
 acceptRequireLength2 (_:cs) = Just $ Text.pack cs
+{-# INLINE acceptRequireLength2 #-}
 
 
 matchSym :: Int -> Char -> Bool
@@ -224,10 +235,11 @@ matchSym _ c = isIdentChar c
 {-# INLINE matchSym #-}
 
 
-scanPrmName :: Monad m => IW.Scanner m loc [Char] (loc, Text)
+scanPrmName :: Monad m => IW.Scanner m loc [Char] (IW.Range loc, Text)
 scanPrmName
  = IW.munchPred Nothing matchPrm acceptRequireLength2
 {-# INLINE scanPrmName #-}
+
 
 matchPrm :: Int -> Char -> Bool
 matchPrm 0 c = c == '#'
@@ -236,11 +248,11 @@ matchPrm _ c = isIdentChar c
 {-# INLINE matchPrm #-}
 
 
-scanQuotedIdent :: Monad m => IW.Scanner m loc [Char] (loc, Token)
+scanQuotedIdent :: Monad m => IW.Scanner m loc [Char] (IW.Range loc, Token)
 scanQuotedIdent
  = wrap <$> IW.accepts "##" () <*> mKlass <*> IW.scanHaskellString
  where
-  mKlass :: Monad m => IW.Scanner m loc [Char] (loc, (Text -> Token))
+  mKlass :: Monad m => IW.Scanner m loc [Char] (IW.Range loc, (Text -> Token))
   mKlass = IW.munchPred Nothing (\_ix c -> isIdentChar c) accept
   accept "Var" = Just KVar
   accept "Con" = Just KCon
@@ -248,11 +260,12 @@ scanQuotedIdent
   accept "Sym" = Just KSym
   accept _     = Nothing
 
-  wrap (loc, _) (_, klass) (_, ident) = (loc, klass $ Text.pack ident)
+  wrap (loc, _) (_, klass) (_, ident) 
+   = (loc, klass $ Text.pack ident)
 {-# INLINE scanQuotedIdent #-}
 
 
-scanNat :: Monad m => IW.Scanner m loc [Char] (loc, Integer)
+scanNat :: Monad m => IW.Scanner m loc [Char] (IW.Range loc, Integer)
 scanNat
  = IW.munchPred Nothing match accept
  where  match _ c = Char.isDigit c

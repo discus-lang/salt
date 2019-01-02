@@ -136,7 +136,6 @@ jobj :: [JSPackField] -> JSValue
 jobj fs = pack $ O fs
 
 
-
 ---------------------------------------------------------------------------------------------------
 flattenJSValue :: JSValue -> [([String], JSValue)]
 flattenJSValue js0

@@ -12,6 +12,7 @@ import Text.Parsec                              ((<?>))
 import qualified Text.Parsec                    as P
 
 
+------------------------------------------------------------------------------------------- Term --
 -- | Parse a term, and wrap the result in an source location annotation.
 pTerm  :: Parser (Term Location)
 pTerm
@@ -40,8 +41,8 @@ pTerm_
          [ do   pTok KBacktick
                 l       <- pLbl
                 m       <- P.choice
-                                [ do   fmap MTerms $ pSquared $ flip P.sepEndBy (pTok KComma) pTerm
-                                , do   m <- pTermArg; return m]
+                                [ do fmap MTerms $ pSquared $ flip P.sepEndBy (pTok KComma) pTerm
+                                , do m <- pTermArg; return m]
                 case ts of
                  [t] -> return $ MVariant l m t
                  _   -> P.unexpected "type vector"
@@ -168,7 +169,7 @@ pTerm_
         pTermAppArgs mFun
  ]
 
-
+--------------------------------------------------------------------------------------- App/Args --
 -- | Parse arguments to the given function,
 --   returning the constructed application.
 pTermAppArgs :: Term Location -> Parser (Term Location)
@@ -327,6 +328,7 @@ pTermArg
  ]
 
 
+----------------------------------------------------------------------------------------- Params --
 -- | Parser for some term parameters.
 pTermParams :: Parser (TermParams Location)
 pTermParams
@@ -354,7 +356,37 @@ pTermBind
         return  (nBind, mBody)
 
 
----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------- Stmt --
+-- | Parser for a statement.
+pTermStmt :: Parser ([Bind], Term Location)
+pTermStmt
+ = P.choice
+ [ do   -- '[' (Var : Type),* ']' = Term
+        bs      <- pSquared $ flip P.sepEndBy (pTok KComma) pBind
+        pTok KEquals
+        mBody   <- pTerm
+        return  (bs, mBody)
+
+
+ , do   -- Var '=' Term
+        -- We need the lookahead here because plain terms
+        -- in the next choice can also start with variable name.
+        P.try $ P.lookAhead $ do
+                pBind; pTok KEquals
+
+        nBind    <- pBind
+        pTok KEquals
+        mBody   <- pTerm
+        return  ([nBind], mBody)
+
+
+ , do   -- Term
+        mBody   <- pTerm
+        return  ([], mBody)
+ ]
+
+
+----------------------------------------------------------------------------------------- Record --
 -- | Parser for a record.
 pTermRecord :: Parser (Term Location)
 pTermRecord
@@ -396,37 +428,7 @@ pTermRecord
  ]
 
 
----------------------------------------------------------------------------------------------------
--- | Parser for a statement.
-pTermStmt :: Parser ([Bind], Term Location)
-pTermStmt
- = P.choice
- [ do   -- '[' (Var : Type),* ']' = Term
-        bs      <- pSquared $ flip P.sepEndBy (pTok KComma) pBind
-        pTok KEquals
-        mBody   <- pTerm
-        return  (bs, mBody)
-
-
- , do   -- Var '=' Term
-        -- We need the lookahead here because plain terms
-        -- in the next choice can also start with variable name.
-        P.try $ P.lookAhead $ do
-                pBind; pTok KEquals
-
-        nBind    <- pBind
-        pTok KEquals
-        mBody   <- pTerm
-        return  ([nBind], mBody)
-
-
- , do   -- Term
-        mBody   <- pTerm
-        return  ([], mBody)
- ]
-
-
----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------ Value --
 -- | Parser for a single value.
 pValue :: Parser (Value Location)
 pValue

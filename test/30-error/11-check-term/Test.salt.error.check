@@ -2,7 +2,7 @@ test/30-error/11-check-term/Test.salt:6:23
   Unexpected type: #Bool
         expecting: #Nat
 
-  1:1    In test
+  2:2    In test
 
 test/30-error/11-check-term/Test.salt:11:11
   Cannot run non-suspension

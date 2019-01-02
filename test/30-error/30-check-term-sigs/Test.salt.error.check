@@ -1,7 +1,7 @@
-test/30-error/30-check-term-sigs/Test.salt:1:1
+test/30-error/30-check-term-sigs/Test.salt:2:2
   Unknown type primitive '#Derp'.
 
-  1:1    In term declaration "term1"
+  2:2    In term declaration "term1"
 
 test/30-error/30-check-term-sigs/Test.salt:9:1
   Unknown type primitive '#Derp'.

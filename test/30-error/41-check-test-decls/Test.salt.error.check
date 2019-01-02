@@ -1,8 +1,8 @@
-test/30-error/41-check-test-decls/Test.salt:1:1
+test/30-error/41-check-test-decls/Test.salt:2:2
   Test 'test1' is impure
     with effect: #Console
 
-  1:1    In test "test1"
+  2:2    In test "test1"
 
 test/30-error/41-check-test-decls/Test.salt:9:1
   Test 'test2' is impure

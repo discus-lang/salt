@@ -1,6 +1,7 @@
 
 module Salt.Core.Codec.Text.Token
         ( At            (..)
+        , IW.Range      (..)
         , IW.Location   (..)
         , Token         (..)
         , showTokenAsSource)
@@ -11,7 +12,7 @@ import Data.Text        as T
 
 -- | A thing with attached location information.
 data At a
-        = At IW.Location a
+        = At (IW.Range IW.Location) a
         deriving Show
 
 

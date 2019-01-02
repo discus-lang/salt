@@ -1,7 +1,7 @@
-test/30-error/20-check-type-sigs/Test.salt:1:1
+test/30-error/20-check-type-sigs/Test.salt:2:2
   Unknown kind constructor 'Derp'.
 
-  1:1    In type declaration "decl1"
+  2:2    In type declaration "decl1"
 
 test/30-error/20-check-type-sigs/Test.salt:9:1
   Unknown kind constructor 'Derp'.

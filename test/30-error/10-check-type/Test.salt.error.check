@@ -1,7 +1,7 @@
-test/30-error/10-check-type/Test.salt:1:1
+test/30-error/10-check-type/Test.salt:2:2
   Unknown type primitive '#derp'.
 
-  1:1    In test
+  2:2    In test
 
 test/30-error/10-check-type/Test.salt:11:1
   Type variable 'a' is not in scope.

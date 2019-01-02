@@ -107,14 +107,16 @@ printError filePath err
         putStrLn
          $ P.render $ vcat
          $      [ P.padL 6 $ P.string filePath
-                        % text ":" % P.string (show nLine)
-                        % text ":" % P.string (show nCol)
+                        % text ":" % P.string (show (nLine + 1))
+                        % text ":" % P.string (show (nCol + 1))
                 , P.indent 2 $ ppr () err ]
 
          ++ [ empty]
          ++ [ let (IW.Location nLine' nCol') = Where.whereAnnot wh
                   in  P.indent 2
-                        $  P.padL 6 (P.string (show nLine') % text ":" % P.string (show nCol'))
+                        $  P.padL 6   
+                                ( P.string (show (nLine' + 1))
+                                % text ":" % (P.string (show (nCol' + 1))))
                         %% P.ppr () wh
                 | wh <- Error.errorWhere err ]
 
