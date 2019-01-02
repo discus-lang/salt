@@ -5,6 +5,7 @@ import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Exp
 import Salt.Core.Codec.Text.Token               as Token
 import Salt.Data.Pretty
+import Salt.Core.Codec.Text.Token               (Token)
 
 import Data.Function
 import Data.Maybe
@@ -18,15 +19,14 @@ import qualified Text.Parsec.Error              as P
 -- | Parse error.
 data ParseError 
         = ParseError
-        { -- | Location of the token we hit the caused the error.
-          errorNextRange :: Range Location
+        { -- | The token we hit the caused the error.
+          errorHere     :: (Range Location, Maybe Token)
 
-          -- | Location of the token previous to the one that caused the error,
-          --   if there is one.
-        , errorPrevRange :: Maybe (Range Location)
+          -- | The token previous to the one that caused the error, if there is one.
+        , errorPrev     :: Maybe (Range Location, Token)
 
           -- | Parser messages we got from parsec.
-        , errorMessages  :: [P.Message] }
+        , errorMessages :: [P.Message] }
 
 
 -- | Parse a salt source file from tokens.
@@ -56,7 +56,7 @@ parseModule toks
          -- TODO: real location
          Right (_, _xRest)       
           -> Left [ParseError 
-                        (Range (Location 0 0) (Location 0 0))
+                        (Range (Location 0 0) (Location 0 0), Nothing)
                         Nothing
                         [P.Message "parse error at end of input"]]
 
@@ -73,7 +73,8 @@ errorOfParseError toks err
         nLine   = P.sourceLine sp
         nCol    = P.sourceColumn sp
         lErr    = Location nLine nCol
-        rErr    = fromMaybe (Range lErr lErr) $ findThisTokenRange toks lErr
+        rErr    = fromMaybe (Range lErr lErr, Nothing) 
+                $ findThisTokenRange toks lErr
 
         -- Find the range of the token just before the one that caused the error.
         rPrev   = findPrevTokenRange err toks
@@ -85,23 +86,27 @@ errorOfParseError toks err
 -- | Find the full source range of the token that starts at this location.
 --   Parsec only gives us the starting location, but tokens themselves
 --   are tagged with full ranges.
-findThisTokenRange :: [At Token] -> Location -> Maybe (Range Location)
+findThisTokenRange 
+        :: [At Token] -> Location 
+        -> Maybe (Range Location, Maybe Token)
 findThisTokenRange [] _ = Nothing
-findThisTokenRange (Token.At range@(Token.Range lStart _lEnd) _ : ks) lStart'
- | lStart == lStart'    = Just range
+findThisTokenRange (Token.At range@(Token.Range lStart _lEnd) k : ks) lStart'
+ | lStart == lStart'    = Just (range, Just k)
  | otherwise            = findThisTokenRange ks lStart'
 
 
 -- | Find the token just before the one that caused the parse error,
 --   if there is one.
-findPrevTokenRange :: P.ParseError -> [At Token] -> Maybe (Range Location)
-findPrevTokenRange err (Token.At range0 _ : k1@(Token.At range1 _) : ks) 
+findPrevTokenRange 
+        :: P.ParseError -> [At Token] 
+        -> Maybe (Range Location, Token)
+findPrevTokenRange err (Token.At range0 t0 : k1@(Token.At range1 _) : ks) 
  | Token.Range (Location l c) _ <- range1
  , sp <- P.errorPos err
  , l' <- P.sourceLine sp
  , c' <- P.sourceColumn sp
  , l == l', c == c'
- = Just range0
+ = Just (range0, t0)
 
  | otherwise
  = findPrevTokenRange err (k1 : ks)
@@ -111,9 +116,9 @@ findPrevTokenRange _err _ = Nothing
 
 ---------------------------------------------------------------------------------------------------
 ppParseError :: FilePath -> ParseError -> Doc
-ppParseError path (ParseError range _mLocPrev msgs)
+ppParseError path (ParseError (range, _mTok) _mLocPrev msgs)
  = vcat ( string path 
-                % string ":" 
+                %  string ":" 
                 %% ppRange range
         : text "  parse error" 
                 % fromMaybe empty mSysUnexpect

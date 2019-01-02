@@ -1,15 +1,13 @@
 
 module Salt.LSP.Task.Diagnostics where
+import Salt.LSP.Diagnostic.Parser
 import Salt.LSP.State
 import Salt.LSP.Protocol
 import Salt.LSP.Interface
 import qualified Salt.Core.Codec.Text.Parser    as Parser
 import qualified Salt.Core.Codec.Text.Lexer     as Lexer
 
-import Data.Maybe
-import Data.List
 import Data.Char
-import qualified Text.Parsec.Error              as Parsec
 
 
 ----------------------------------------------------------------------------------------- Update --  
@@ -25,8 +23,12 @@ updateDiagnostics state sUri sSource
          
         goParse toks
          = case Parser.parseModule toks of
-                Left errs       -> sendParserErrors state sUri errs
-                Right _mm       -> sendClearDiagnostics state sUri
+                Left errs       
+                 -> sendParserDiagnostics state sUri 
+                 $  map (diagnosticOfParseError toks) errs
+
+                Right _mm
+                 -> sendClearDiagnostics state sUri
 
 
 ------------------------------------------------------------------------------------------ Clear --
@@ -80,60 +82,21 @@ packLexerError (Lexer.LexerError nLine nColStart csRest)
 
 
 ----------------------------------------------------------------------------------------- Parser --
-sendParserErrors :: State -> String -> [Parser.ParseError] -> IO ()
-sendParserErrors state sUri errs
+sendParserDiagnostics :: State -> String -> [ParserDiagnostic] -> IO ()
+sendParserDiagnostics state sUri diags
  = do   lspLog state "* Sending Parser Errors"
         lspSend state $ jobj
          [ "method" := S "textDocument/publishDiagnostics"
          , "params" := O [ "uri"         := S sUri
-                         , "diagnostics" := A (map (V . packParserError) errs) ]]
+                         , "diagnostics" := A (map (V . packParserDiagnostic) diags) ]]
 
-
--- TODO: we want source ranges on tokens, not just starting positions.
--- when entering a new decl the next token is usually a top level 
--- hard keyword like 'test', 'term', 'type' etc. if we seee this as the next token then
--- inhibit the "unexpected" part of the error message. We really have an incomplete
--- declaration, and the next token isn't unexpected by the programmer.
--- Set the location of the problem just after the last token, not on the 'test' token
--- that triggered the error.
-
-packParserError :: Parser.ParseError -> JSValue
-packParserError (Parser.ParseError range mLocPrev msgs)
- = jobj [ "range"       := V $ packRange $ mungeRange range
+packParserDiagnostic :: ParserDiagnostic -> JSValue
+packParserDiagnostic (ParserDiagnostic range sMsg)
+ = jobj [ "range"       := V $ packRange range
         , "severity"    := I 1
         , "source"      := S "parser"
         , "message"     := S sMsg ]
 
- where  
-        sMsg     
-         = case catMaybes [mUnexpected, mSysUnexpect, mExpect, mMessage] of
-                []      -> "Parse error."
-                parts   -> intercalate "\n" parts ++ show mLocPrev
-         
-        mUnexpected     
-         = listToMaybe   [ "Unexpected " ++ s ++ "." | Parsec.UnExpect s <- msgs ]
-
-        mSysUnexpect    
-         = listToMaybe   [ "Unexpected " ++ s ++ "." | Parsec.SysUnExpect s <- msgs ]
-
-        mExpect         
-         = listToMaybe   [ "Expecting " ++ s  ++ "." | Parsec.Expect s <- msgs ]
-
-        mMessage        
-         = listToMaybe   [ s | Parsec.Message s <- msgs ]
-
-        -- The ranges that Inchworm attaches to tokens are from the first character
-        -- to the last character in the token. VSCode wants from first character
-        -- to just after where to put the red wiggle.
-        mungeRange range'@(Lexer.Range locStart locEnd)
-         | Lexer.Location lStart cStart <- locStart
-         , Lexer.Location lEnd   cEnd   <- locEnd
-         , lStart == lEnd, cEnd - cStart > 1
-         = Lexer.Range locStart (Lexer.Location lEnd (cEnd + 1))
-         | otherwise = range'
-
-
-------------------------------------------------------------------------------------------- Pack --
 packRange :: Lexer.Range Lexer.Location -> JSValue
 packRange (Lexer.Range locFirst locFinal)
  = jobj [ "start"       := V $ packLocation locFirst
