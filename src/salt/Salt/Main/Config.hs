@@ -77,6 +77,6 @@ usage
  , "   -check   FILE.salt           type check a core file and print its AST"
  , "   -test    FILE.salt           run all the tests in the given module"
  , "   -test1   FILE.salt NAME      run a single test in the given module"
- , "   -lsp     FILE.salt           become a language server plugin"
- , "   -lsp-log FILE.salt FILE.log   .. and log debug messages to a file"
+ , "   -lsp                         become a language server plugin"
+ , "   -lsp-log FILE.log             .. and log debug messages to a file"
  ]

@@ -1,5 +1,9 @@
 
-module Salt.LSP.Diagnostic.Parser where
+module Salt.LSP.Task.Diagnostics.Parser where
+import Salt.LSP.Task.Diagnostics.Lexer
+import Salt.LSP.Interface
+import Salt.LSP.Protocol
+import Salt.LSP.State
 import Salt.Core.Codec.Text.Parser
 import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Codec.Text.Token
@@ -9,6 +13,7 @@ import Data.Maybe
 import Data.List
 
 
+------------------------------------------------------------------------------------------ Types -- 
 -- | A parser diagnostic to send to the client.
 data ParserDiagnostic
         = ParserDiagnostic
@@ -17,6 +22,25 @@ data ParserDiagnostic
         deriving Show
 
 
+------------------------------------------------------------------------------------------- Send -- 
+-- | Send parser diagnostics to the client.
+sendParserDiagnostics :: State -> String -> [ParserDiagnostic] -> IO ()
+sendParserDiagnostics state sUri diags
+ = do   lspLog  state "* Sending Parser Errors"
+        lspSend state $ jobj
+         [ "method" := S "textDocument/publishDiagnostics"
+         , "params" := O [ "uri"         := S sUri
+                         , "diagnostics" := A (map (V . packParserDiagnostic) diags) ]]
+
+packParserDiagnostic :: ParserDiagnostic -> JSValue
+packParserDiagnostic (ParserDiagnostic range sMsg)
+ = jobj [ "range"       := V $ packRange range
+        , "severity"    := I 1
+        , "source"      := S "parser"
+        , "message"     := S sMsg ]
+
+
+------------------------------------------------------------------------------------------ Build --
 -- | Build a diagnostic from a parse error.
 diagnosticOfParseError :: [At Token] -> ParseError -> ParserDiagnostic
 diagnosticOfParseError _toks (ParseError rangeTokHere mRangeTokPrev msgs)
