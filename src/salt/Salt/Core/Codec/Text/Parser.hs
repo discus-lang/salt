@@ -65,13 +65,31 @@ parseModule toks
 errorOfParseError :: [At Token] -> P.ParseError -> ParseError
 errorOfParseError toks err
  = let  sp      = P.errorPos err
+
+        -- Parsec only produces the single character source location
+        -- that is the first char of the token it couldn't parse.
+        -- Given this info we retrive the full range of the token from the
+        -- original list of tokens.
         nLine   = P.sourceLine sp
         nCol    = P.sourceColumn sp
+        lErr    = Location nLine nCol
+        rErr    = fromMaybe (Range lErr lErr) $ findThisTokenRange toks lErr
+
+        -- Find the range of the token just before the one that caused the error.
+        rPrev   = findPrevTokenRange err toks
+
         msgs    = P.errorMessages err
-   in   ParseError 
-          (Range (Location nLine nCol) (Location nLine nCol))
-          (findPrevTokenRange err toks)
-          msgs
+   in   ParseError rErr rPrev msgs
+
+
+-- | Find the full source range of the token that starts at this location.
+--   Parsec only gives us the starting location, but tokens themselves
+--   are tagged with full ranges.
+findThisTokenRange :: [At Token] -> Location -> Maybe (Range Location)
+findThisTokenRange [] _ = Nothing
+findThisTokenRange (Token.At range@(Token.Range lStart _lEnd) _ : ks) lStart'
+ | lStart == lStart'    = Just range
+ | otherwise            = findThisTokenRange ks lStart'
 
 
 -- | Find the token just before the one that caused the parse error,

@@ -244,7 +244,7 @@ pTypeParams
 -- | Parser for some type signatures.
 pTypeSigs :: Parser [(Bind, Type Location)]
 pTypeSigs
- = pSquared $ flip P.sepEndBy1 (pTok KComma)
+ = pSquared $ flip P.sepBy1 (pTok KComma)
  $ do   b <- pBind              <?> "a binder for a type parameter"
         pTok KColon             <?> "a ':' to specify the kind of the type parameter"
         t <- pType              <?> "the kind of the type parameter '" ++ showBind b ++ "'"
@@ -254,7 +254,7 @@ pTypeSigs
 -- | Parser for some record type fields.
 pTypeRecordFields :: Parser [(Name, TypeArgs Location)]
 pTypeRecordFields
- = flip P.sepEndBy (pTok KComma)
+ = flip P.sepBy (pTok KComma)
  $ do   n   <- pLbl             <?> "a record field label"
         pTok KColon             <?> "a ':' to specify the type of the record field"
         tgs <- pTypeArgsField   <?> "the type of the record field '" ++ showLbl n ++ "'"
@@ -264,7 +264,7 @@ pTypeRecordFields
 -- | Parser for some variant type fields.
 pTypeVariantFields :: Parser [(Name, TypeArgs Location)]
 pTypeVariantFields
- = flip P.sepEndBy (pTok KComma)
+ = flip P.sepBy (pTok KComma)
  $ do   n   <- pLbl             <?> "a variant field label"
         pTok KColon             <?> "a ':' to specify the type of the variant field"
         tgs <- pTypeArgsField   <?> "the type of the variant field '" ++ showLbl n ++ "'"
@@ -282,7 +282,7 @@ pTypeArgsField
         return $ TGTypes [t]
          
  , do   pTok KSBra
-        ts  <- P.sepEndBy
+        ts  <- P.sepBy
                 (pType <?> "a component of the type vector, or ']' to end it") 
                 (pTok KComma)        
         pTok KSKet
@@ -293,7 +293,7 @@ pTypeArgsField
 pTypeVector :: Parser [Type Location]
 pTypeVector 
  = do   pTok KSBra
-        ts  <- P.sepEndBy
+        ts  <- P.sepBy
                 (pType <?> "a component of the type vector, or ']' to end it") 
                 (pTok KComma)        
         pTok KSKet

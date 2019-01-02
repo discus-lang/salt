@@ -99,7 +99,7 @@ sendParserErrors state sUri errs
 
 packParserError :: Parser.ParseError -> JSValue
 packParserError (Parser.ParseError range mLocPrev msgs)
- = jobj [ "range"       := V $ packRange range
+ = jobj [ "range"       := V $ packRange $ mungeRange range
         , "severity"    := I 1
         , "source"      := S "parser"
         , "message"     := S sMsg ]
@@ -110,16 +110,27 @@ packParserError (Parser.ParseError range mLocPrev msgs)
                 []      -> "Parse error."
                 parts   -> intercalate "\n" parts ++ show mLocPrev
          
-        mUnexpected     = listToMaybe   [ "Unexpected " ++ s ++ "."
-                                        | Parsec.UnExpect s <- msgs ]
+        mUnexpected     
+         = listToMaybe   [ "Unexpected " ++ s ++ "." | Parsec.UnExpect s <- msgs ]
 
-        mSysUnexpect    = listToMaybe   [ "Unexpected " ++ s ++ "."
-                                        | Parsec.SysUnExpect s <- msgs ]
+        mSysUnexpect    
+         = listToMaybe   [ "Unexpected " ++ s ++ "." | Parsec.SysUnExpect s <- msgs ]
 
-        mExpect         = listToMaybe   [ "Expecting " ++ s  ++ "."
-                                        | Parsec.Expect s <- msgs ]
+        mExpect         
+         = listToMaybe   [ "Expecting " ++ s  ++ "." | Parsec.Expect s <- msgs ]
 
-        mMessage        = listToMaybe   [ s | Parsec.Message s <- msgs ]
+        mMessage        
+         = listToMaybe   [ s | Parsec.Message s <- msgs ]
+
+        -- The ranges that Inchworm attaches to tokens are from the first character
+        -- to the last character in the token. VSCode wants from first character
+        -- to just after where to put the red wiggle.
+        mungeRange range'@(Lexer.Range locStart locEnd)
+         | Lexer.Location lStart cStart <- locStart
+         , Lexer.Location lEnd   cEnd   <- locEnd
+         , lStart == lEnd, cEnd - cStart > 1
+         = Lexer.Range locStart (Lexer.Location lEnd (cEnd + 1))
+         | otherwise = range'
 
 
 ------------------------------------------------------------------------------------------- Pack --
