@@ -147,14 +147,16 @@ instance IsString (Type a) where
 isTData :: Type a -> Bool
 isTData tt
  = case tt of
-        TData   -> True
-        _       -> False
+        TAnn _ t -> isTData t
+        TData    -> True
+        _        -> False
 
 
 -- | Check if this type is the pure effect.
 isTPure :: Type a -> Bool
 isTPure tt
  = case tt of
+        TAnn _ t -> isTPure t
         TPure    -> True
         _        -> False
 
@@ -163,11 +165,20 @@ isTPure tt
 isTSusp :: Type a -> Bool
 isTSusp tt
  = case tt of
+        TAnn _ t  -> isTSusp t
         TSusp _ _ -> True
         _         -> False
 
 
 -- Compounds --------------------------------------------------------------------------------------
+-- | Take the top-level annotation from a type, if there is one.
+takeAnnotOfType :: Type a -> Maybe a
+takeAnnotOfType tt
+ = case tt of
+        TAnn a _ -> Just a
+        _        -> Nothing
+
+
 -- | Given some type parameters and a body type,
 --   if we have any parameters then build a type abstraction,
 --   otherwise return the body type with no parameters.

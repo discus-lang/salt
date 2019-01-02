@@ -26,12 +26,14 @@ data ParserDiagnostic
 -- | Send parser diagnostics to the client.
 sendParserDiagnostics :: State -> String -> [ParserDiagnostic] -> IO ()
 sendParserDiagnostics state sUri diags
- = do   lspLog  state "* Sending Parser Errors"
+ = do   lspLog  state "* Sending Parser Diagnostics"
         lspSend state $ jobj
          [ "method" := S "textDocument/publishDiagnostics"
          , "params" := O [ "uri"         := S sUri
                          , "diagnostics" := A (map (V . packParserDiagnostic) diags) ]]
 
+
+-- | Pack a `ParserDiagnostic` into JSON.
 packParserDiagnostic :: ParserDiagnostic -> JSValue
 packParserDiagnostic (ParserDiagnostic range sMsg)
  = jobj [ "range"       := V $ packRange range

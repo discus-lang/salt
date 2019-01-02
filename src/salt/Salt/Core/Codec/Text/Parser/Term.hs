@@ -16,22 +16,24 @@ import qualified Text.Parsec                    as P
 -- | Parse a term, and wrap the result in an source location annotation.
 pTerm  :: Parser (Term Location)
 pTerm
- = do   (Range l1 _, m) <- pWithRange pTerm_
+ = pMAnn
+ $ do   m <- pTermBody
         P.choice
          [ do   pTok KColon
                 TGTypes ts <- pTypesHead
                  <?> "a type to ascribe"
-                return  $ MAnn l1 (MThe ts m)
+                return  $ MThe ts m
 
          , do   P.lookAhead $ pTok KDot
                 nsLabel <- P.many (do pTok KDot; pLbl <?> "a field label")
-                return  $  foldl (flip MProject) m nsLabel
+                return  $ foldl (flip MProject) m nsLabel
 
-         , do   return  $ MAnn l1 m ]
+         , do   return  $ m ]
 
-pTerm_  :: Parser (Term Location)
-pTerm_
- = P.choice
+
+pTermBody  :: Parser (Term Location)
+pTermBody
+ = pMAnn $ P.choice
  [ do   -- 'the' Type 'of' '`' Lbl TermArg
         -- 'the' Type 'of' Term
         pTok KThe
@@ -302,7 +304,8 @@ pTermArgType
 -- | Parser for a term argument or record projection.
 pTermArgProj :: Parser (Term Location)
 pTermArgProj
- = do   mTerm   <- pTermArg
+ = pMAnn
+ $ do   mTerm   <- pTermArg
         nsLabel <- P.many 
                 $  do   pTok KDot
                         pLbl <?> "a field label"
@@ -312,7 +315,7 @@ pTermArgProj
 -- | Parser for a term argument.
 pTermArg :: Parser (Term Location)
 pTermArg
- = P.choice
+ = pMAnn $ P.choice
  [ do   -- Var
         -- Var ^ Nat
         n <- pVar
@@ -471,7 +474,7 @@ pTermStmt
 -- | Parser for a record.
 pTermRecord :: Parser (Term Location)
 pTermRecord
- = P.choice
+ = pMAnn $ P.choice
  [ do   -- '∏' '[' (Lbl '=' Term),* ']'
         pTok KProd
         lms     <- (pSquared $ flip P.sepEndBy (pTok KComma)
@@ -557,3 +560,12 @@ pTermValueRecord
                         return (l, vs)
         pTok KSKet
         return $ VRecord lvs
+
+
+------------------------------------------------------------------------------------- Annotation -- 
+pMAnn :: Parser (Term Location) -> Parser (Term Location)
+pMAnn p
+ = do   (Range l1 _, m) <- pWithRange p
+        return $ MAnn l1 m
+
+

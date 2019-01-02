@@ -217,6 +217,14 @@ isVTrue _               = False
 
 
 -- Compounds --------------------------------------------------------------------------------------
+-- | Take the top-level annotation from a type, if there is one.
+takeAnnotOfTerm :: Term a -> Maybe a
+takeAnnotOfTerm tt
+ = case tt of
+        MAnn a _ -> Just a
+        _        -> Nothing
+
+
 -- | Take the name of a primitive from a term, if this is one.
 --   We look through any annotations and type ascriptions.
 takeMPrm :: Term a -> Maybe Name

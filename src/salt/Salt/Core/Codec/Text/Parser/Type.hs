@@ -14,7 +14,7 @@ import qualified Text.Parsec            as P
 -- | Parser for a type expression.
 pType :: Parser (Type Location)
 pType
- = P.choice
+ = pTAnn $ P.choice
  [ do   -- 'λ' TypeParams '⇒' Type
         pTok KFun
         bks <- pTypeParams  <?> "some parameters for the abstraction"
@@ -124,7 +124,7 @@ pTypesResult
 -- | Parser for a type that can be used as the argument in a type-type application.
 pTypeArg :: Parser (Type Location)
 pTypeArg
- = P.choice
+ = pTAnn $ P.choice
  [ do   -- Var
         -- Var ^ Nat
         n <- pVar
@@ -277,3 +277,11 @@ pTypeVector
                 (pTok KComma)        
         pTok KSKet
         return ts
+
+
+------------------------------------------------------------------------------------- Annotation -- 
+pTAnn :: Parser (Type Location) -> Parser (Type Location)
+pTAnn p
+ = do   (Range l1 _, m) <- pWithRange p
+        return $ TAnn l1 m
+

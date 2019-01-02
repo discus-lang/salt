@@ -5,7 +5,6 @@
 -- Error: type does not match ascription.
 test type the #Nat of #true
 
-
 -- (t-run) --------------------------------------------------------------------
 -- Error: value to run is not a suspension.
 test type run #true
@@ -13,7 +12,7 @@ test type run #true
 
 -- (t-prm) --------------------------------------------------------------------
 -- Error: unknown primitive.
-test type #derp
+test type #derp x
 
 -- Error: unsaturated primitive operator.
 test type #map'insert
@@ -124,6 +123,8 @@ test type let x: #Derp = #true; #true
 test type let x = #true #true; #true
 
 -- Error: wrong arity in binding.
+-- TODO: we want the location of the binding group, not the let keyword,
+-- same problem repeats below.
 test type let [] = [#true]; #true
 
 -- Error: wrong arity in binding.
@@ -197,6 +198,8 @@ test type case 2 2 of { one [] → [] }
 test type case 2 of { one [] → [] }
 
 -- Error: alternative is not in scrutinee type.
+-- TODO: all these error locs are bad, we don't have a way to pass ranges
+-- for the individual patterns and alts.
 test type case (the <foo: #Nat> of `foo 5) of { bar [] → [] }
 
 -- Error: pattern type does not match scrutinee type.

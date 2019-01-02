@@ -10,6 +10,7 @@ module Salt.Core.Check.Type.Base
 
         , module Control.Monad
         , module Control.Exception
+        , module Data.Maybe
 
         , checkType
         , checkTypes
@@ -29,7 +30,7 @@ import Salt.Core.Exp
 
 import Control.Monad
 import Control.Exception
-
+import Data.Maybe
 
 ---------------------------------------------------------------------------------------------------
 -- | Kind check a single type.
@@ -51,6 +52,11 @@ checkTypes a wh ctx ts
 checkTypeIs
         :: Annot a => a -> [Where a]
         -> Context a -> Kind a -> Type a -> IO (Type a)
+
+checkTypeIs _a wh ctx k (TAnn a' t')
+ = do   t''  <- checkTypeIs a' wh ctx k t'
+        return $ TAnn a' t''
+
 checkTypeIs a wh ctx k t
  = do   [t']    <- checkTypesAre a wh ctx [k] [t]
         return t'

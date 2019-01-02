@@ -13,14 +13,14 @@ checkDeclTest :: CheckDecl a
 
 -- (t-decl-kind) ------------------------------------------
 checkDeclTest _a ctx (DTest (DeclTestKind a' n t))
- = do   let wh = [WhereTestDecl a' n]
+ = do   let wh    = [WhereTestDecl a' n]
         (t', _k) <- checkType a' wh ctx t
         return  $ DTest $ DeclTestKind a' n t'
 
 
 -- (t-decl-type) ------------------------------------------
 checkDeclTest _a ctx (DTest (DeclTestType a' n m))
- = do   let wh  = [WhereTestDecl a' n]
+ = do   let wh    = [WhereTestDecl a' n]
         (m', _tResult, _esResult)
          <- checkTerm a' wh ctx Synth m
         return  $ DTest $ DeclTestType a' n m'

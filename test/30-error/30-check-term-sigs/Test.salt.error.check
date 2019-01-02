@@ -1,4 +1,4 @@
-test/30-error/30-check-term-sigs/Test.salt:2:2
+test/30-error/30-check-term-sigs/Test.salt:6:16
   Unknown type primitive '#Derp'.
 
   2:2    In term declaration "term1"

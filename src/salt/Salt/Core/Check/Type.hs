@@ -14,7 +14,8 @@ checkTypeWith :: CheckType a
 
 -- (k-ann) ------------------------------------------------
 checkTypeWith _a wh ctx (TAnn a' t)
- = checkType a' wh ctx t
+ = do   (t', k) <- checkType a' wh ctx t
+        return (TAnn a' t', k)
 
 
 -- (k-hole) -----------------------------------------------

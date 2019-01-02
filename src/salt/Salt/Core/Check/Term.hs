@@ -20,7 +20,8 @@ checkTermWith :: CheckTerm a
 
 -- (t-ann) ------------------------------------------------
 checkTermWith _a wh ctx mode (MAnn a' m)
- = checkTerm a' wh ctx mode m
+ = do   (m', t, eff) <- checkTerm a' wh ctx mode m
+        return (MAnn a' m', t, eff)
 
 
 -- (t-mmm) ------------------------------------------------
@@ -121,9 +122,10 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTypes{} m)
 
         -- The body must be pure.
         -- TODO: ensure types like (pure + pure) are reduced to pure,
-        eBody_red   <- simplType a ctx' (TSum es)
+        let aBody  = fromMaybe a $ takeAnnotOfTerm m
+        eBody_red  <- simplType aBody ctx' (TSum es)
         when (not $ isTPure eBody_red)
-         $ throw $ ErrorAbsTypeImpure a wh eBody_red
+         $ throw $ ErrorAbsTypeImpure aBody wh eBody_red
 
         return  (MAbs ps' m', [TForall bts t], [])
 
@@ -140,9 +142,10 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTerms{} m)
 
         -- The body must be pure.
         -- TODO: ensure types like (pure + pure) are reduced to pure,
+        let aBody  = fromMaybe a $ takeAnnotOfTerm m
         eBody_red    <- simplType a ctx' (TSum es)
         when (not $ isTPure eBody_red)
-         $ throw $ ErrorAbsTermImpure a wh eBody_red
+         $ throw $ ErrorAbsTermImpure aBody wh eBody_red
 
         return  (MAbs ps' m', [TFun (map snd bts) ts], [])
 
@@ -338,17 +341,18 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
         checkType a wh ctx tVariant
 
         -- The annotation tells us what type to expect for the body.
+        let aAnnot = fromMaybe a $ takeAnnotOfType tVariant
         (ns, tgs, tVariant')
          <- simplType a ctx tVariant
          >>= \case
                 t@(TVariant ns tgs) -> return (ns, tgs, t)
-                tThing -> throw $ ErrorVariantAnnotIsNot a wh tThing
+                tThing -> throw $ ErrorVariantAnnotIsNot aAnnot wh tThing
 
         -- Lookup the types of the alternative.
         tsExpected'
          <- case lookup nLabel $ zip ns tgs of
                 Just (TGTypes ts) -> return ts
-                _ -> throw $ ErrorVariantAnnotAltMissing a wh tVariant' nLabel
+                _ -> throw $ ErrorVariantAnnotAltMissing aAnnot wh tVariant' nLabel
 
         -- Check the body against the type from the annotation.
         (mValues', _tsValues, esValues)
@@ -366,11 +370,12 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
          <- checkTerm1 a wh ctx Synth mScrut
 
         -- The scrutinee needs to be a variant.
+        let aScrut = fromMaybe a $ takeAnnotOfTerm mScrut
         (nsScrut, mgsScrut)
-         <- simplType a ctx tScrut
+         <- simplType aScrut ctx tScrut
          >>= \case
                 TVariant ns mgs -> return (ns, mgs)
-                _ -> throw $ ErrorCaseScrutNotVariant a wh tScrut
+                _ -> throw $ ErrorCaseScrutNotVariant aScrut wh tScrut
 
         -- Check for overlapping alternatives.
         let nsAlt    = [n | MVarAlt n _ _ <- msAlt]

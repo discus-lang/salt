@@ -35,6 +35,9 @@ test kind (λ[a: #Effect] ⇒ a) #Nat
 -- Error: not enough arguments in application.
 test kind (λ[a: #Data, b: #Data] ⇒ #Map [a, b]) [#Nat]
 
+-- Error: no arguments in application
+test kind (λ[a: #Data] ⇒ a) []
+
 -- Error: too many enough arguments in application.
 test kind (λ[a: #Data, b: #Data] ⇒ #Map [a, b]) [#Nat, #Nat, #Bool]
 
@@ -69,11 +72,15 @@ test kind (∃[a: #Effect]. a)
 test kind [#Derp] -> []
 
 -- Error: parameter type has wrong kind.
+-- TODO: errors are in the wrong place, we need to pass both annots and 
+--       expected kinds to checkTypesAre/checkTypeEquivs, not just a single one.
 test kind [#Console] -> []
 
 -- Error: result type is ill-formed.
 test kind [] -> [#Derp]
 
+-- TODO: errors are on in the wrong place.
+--       same problem as above. Same issue below.
 -- Error: result type has wrong kind.
 test kind [] -> [#Console]
 
@@ -110,5 +117,5 @@ test kind []!#Nat
 
 -- (k-sum) --------------------------------------------------------------------
 -- Error: effect sum component has wrong kind.
-test kind #Nat + #Nat
+test kind #Console + #Nat
 

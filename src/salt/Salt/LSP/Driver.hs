@@ -155,6 +155,10 @@ lspInitialized state req
  = do
         lspLog state "* DidClose"
         lspLog state $ "  sUri:         " ++ show sUri
+
+        -- Once the file is closed, clear any errors that it might still have
+        -- from the IDE.
+        Task.sendClearDiagnostics state sUri
         lspLoop state 
       
  -- A file was saved.

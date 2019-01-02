@@ -39,7 +39,6 @@ upsApplyTypeArgs ups (TGTypes ts)
  = TGTypes $ map (upsApplyType ups) ts
 
 
-
 ---------------------------------------------------------------------------------------------------
 -- | Apply type and term `Ups` to a `Term`.
 upsApplyTerm :: Ups -> Ups -> Term a -> Term a
