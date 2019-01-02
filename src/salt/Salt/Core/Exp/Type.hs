@@ -8,11 +8,11 @@ import qualified Data.Text      as T
 ---------------------------------------------------------------------------------------------------
 -- | Annotated Type.
 data Type a
-        = TAnn !a !(Type a)              -- ^ Annotated type.
-        | TRef !(TypeRef a)              -- ^ Type reference.
-        | TVar !Bound                    -- ^ Type variable.
-        | TAbs !(TypeParams a) !(Type a) -- ^ Type abstraction.
-        | TKey !TypeKey ![TypeArgs a]    -- ^ Type keyword application.
+        = TAnn !a !(Type a)                     -- ^ Annotated type.
+        | TRef !(TypeRef a)                     -- ^ Type reference.
+        | TVar !Bound                           -- ^ Type variable.
+        | TAbs !(TypeParams a) !(Type a)        -- ^ Type abstraction.
+        | TKey !TypeKey ![TypeArgs a]           -- ^ Type keyword application.
         deriving (Show, Eq, Ord)
 
 
@@ -26,38 +26,38 @@ type Effect a = Type a
 
 -- | Type Reference.
 data TypeRef a
-        = TRPrm !Name                   -- ^ Primitive type constructor.
-        | TRCon !Name                   -- ^ User defined type synonym or constructor.
-        | TRClo (TypeClosure a)         -- ^ Type closure.
+        = TRPrm !Name                           -- ^ Primitive type constructor.
+        | TRCon !Name                           -- ^ User defined type synonym or constructor.
+        | TRClo (TypeClosure a)                 -- ^ Type closure.
         deriving (Show, Eq, Ord)
 
 
 -- | Type Parameters.
 data TypeParams a
-        = TPTypes ![(Bind, Type a)]     -- ^ Type parameters.
+        = TPTypes ![(Bind, Type a)]             -- ^ Type parameters.
         deriving (Show, Eq, Ord)
 
 
 -- | Type Arguments.
 data TypeArgs a
-        = TGTypes ![Type a]             -- ^ Type arguments.
+        = TGTypes ![Type a]                     -- ^ Type arguments.
         deriving (Show, Eq, Ord)
 
 
 -- | Type Key.
 data TypeKey
-        = TKHole                        -- ^ A missing type that needs to be inferred.
-        | TKArr                         -- ^ Kind arrow.
-        | TKApp                         -- ^ Type application.
-        | TKFun                         -- ^ Function type former.
-        | TKForall                      -- ^ Forall type former.
-        | TKExists                      -- ^ Exists type former.
-        | TKRecord  ![Name]             -- ^ Record type former.
-        | TKVariant ![Name]             -- ^ Variant type former.
-        | TKSusp                        -- ^ Suspension type former.
-        | TKSync                        -- ^ Top of the effect lattice.
-        | TKPure                        -- ^ Bot of the effect lattice.
-        | TKSum                         -- ^ Effect sum.
+        = TKHole                                -- ^ A missing type that needs to be inferred.
+        | TKArr                                 -- ^ Kind arrow.
+        | TKApp                                 -- ^ Type application.
+        | TKFun                                 -- ^ Function type former.
+        | TKForall                              -- ^ Forall type former.
+        | TKExists                              -- ^ Exists type former.
+        | TKRecord  ![Name]                     -- ^ Record type former.
+        | TKVariant ![Name]                     -- ^ Variant type former.
+        | TKSusp                                -- ^ Suspension type former.
+        | TKSync                                -- ^ Top of the effect lattice.
+        | TKPure                                -- ^ Bot of the effect lattice.
+        | TKSum                                 -- ^ Effect sum.
         deriving (Show, Eq, Ord)
 
 
