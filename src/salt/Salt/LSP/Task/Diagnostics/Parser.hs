@@ -13,7 +13,7 @@ import Data.Maybe
 import Data.List
 
 
------------------------------------------------------------------------------------------- Types -- 
+------------------------------------------------------------------------------------------ Types --
 -- | A parser diagnostic to send to the client.
 data ParserDiagnostic
         = ParserDiagnostic
@@ -22,7 +22,7 @@ data ParserDiagnostic
         deriving Show
 
 
-------------------------------------------------------------------------------------------- Send -- 
+------------------------------------------------------------------------------------------- Send --
 -- | Send parser diagnostics to the client.
 sendParserDiagnostics :: State -> String -> [ParserDiagnostic] -> IO ()
 sendParserDiagnostics state sUri diags
@@ -48,42 +48,41 @@ diagnosticOfParseError :: [At Token] -> ParseError -> ParserDiagnostic
 diagnosticOfParseError _toks (ParseError rangeTokHere mRangeTokPrev msgs)
  = ParserDiagnostic rangeReport sMsg
  where
-
         -- Range and token that caused the parse error.
         rangeHere       = fst rangeTokHere
         mTokHere        = snd rangeTokHere
 
         -- Range of the previous token, if we have it.
-        mRangePrev      = fmap fst mRangeTokPrev 
+        mRangePrev      = fmap fst mRangeTokPrev
 
         -- Whether the token that caused the problem starts a declaration.
         tokHereIsDecl   = maybe False isDeclStartToken mTokHere
 
-        sMsg     
-         = case catMaybes [mIncompleteDecl, mMessage, mUnexpected, mSysUnexpect, mExpect] 
+        sMsg
+         = case catMaybes [mIncompleteDecl, mMessage, mUnexpected, mSysUnexpect, mExpect]
             of  []      -> "Parse error."
                 parts   -> intercalate "\n" parts
 
-        mIncompleteDecl 
+        mIncompleteDecl
          | isNothing mRangeIncompleteDecl = Nothing
          | otherwise = Just "Incomplete declaration."
 
-        mUnexpected     
-         = listToMaybe  [ "Unexpected " ++ s ++ "." 
-                                | Parsec.UnExpect s <- msgs 
+        mUnexpected
+         = listToMaybe  [ "Unexpected " ++ s ++ "."
+                                | Parsec.UnExpect s <- msgs
                                 , isNothing mRangeIncompleteDecl ]
-        mSysUnexpect    
-         = listToMaybe  [ "Unexpected " ++ s ++ "." 
-                                | Parsec.SysUnExpect s <- msgs 
+        mSysUnexpect
+         = listToMaybe  [ "Unexpected " ++ s ++ "."
+                                | Parsec.SysUnExpect s <- msgs
                                 , isNothing mRangeIncompleteDecl ]
-        mExpect         
+        mExpect
          = listToMaybe  [ "Expecting " ++ s  ++ "." | Parsec.Expect s <- msgs ]
 
-        mMessage        
+        mMessage
          = listToMaybe  [ s | Parsec.Message s <- msgs ]
 
         -- If we have detected an incomplete declaration,
-        -- then produce the new range to highlight, instead of the token that 
+        -- then produce the new range to highlight, instead of the token that
         -- caused the parse error.
         mRangeIncompleteDecl
          | not tokHereIsDecl
@@ -95,16 +94,16 @@ diagnosticOfParseError _toks (ParseError rangeTokHere mRangeTokPrev msgs)
                 lHighEnd   = Location nLine (nCol + 1)
            in   Just $ Range lHighFirst lHighEnd
 
-         | otherwise   
+         | otherwise
          = Nothing
 
         rangeReport
-         = mungeRangeForVSCode
-         $ fromMaybe rangeHere mRangeIncompleteDecl
+         = -- mungeRangeForVSCode
+           fromMaybe rangeHere mRangeIncompleteDecl
 
 
 -- | Determine if the token that caused the error is one that starts a new
---   declaration. If so the user has probably started typing a declaration, 
+--   declaration. If so the user has probably started typing a declaration,
 --   and is not expecting this to actually parse yet.
 isDeclStartToken :: Token -> Bool
 isDeclStartToken tok
@@ -134,14 +133,14 @@ mungeRangeForVSCode range'@(Range locStart locEnd)
 findDeclStartLocation :: [At Token] -> Location -> Maybe (Range Location)
 findDeclStartLocation toks loc
  = loop $ reverse toks
- where  
+ where
         loop [] = Nothing
         loop (At range@(Range lStart _lEnd) k : toksRest)
-         | lStart <= loc 
+         | lStart <= loc
          , isDeclStartToken k
          = Just range
 
-         | otherwise     
+         | otherwise
          = loop toksRest
 
 

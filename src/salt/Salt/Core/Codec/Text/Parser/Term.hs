@@ -6,15 +6,16 @@ import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Prim.Values
 import Salt.Core.Exp
+import qualified Salt.Data.Ranges       as R
 
 import Control.Monad
-import Text.Parsec                              ((<?>))
-import qualified Text.Parsec                    as P
+import Text.Parsec                      ((<?>))
+import qualified Text.Parsec            as P
 
 
 ------------------------------------------------------------------------------------------- Term --
 -- | Parse a term, and wrap the result in an source location annotation.
-pTerm  :: Parser (Term Location)
+pTerm  :: Parser (Term RL)
 pTerm
  = pMAnn
  $ do   m <- pTermBody
@@ -31,7 +32,7 @@ pTerm
          , do   return  $ m ]
 
 
-pTermBody  :: Parser (Term Location)
+pTermBody  :: Parser (Term RL)
 pTermBody
  = pMAnn $ P.choice
  [ do   -- 'the' Type 'of' '`' Lbl TermArg
@@ -239,7 +240,7 @@ pTermBody
 --------------------------------------------------------------------------------------- App/Args --
 -- | Parse arguments to the given function,
 --   returning the constructed application.
-pTermAppArgs :: Term Location -> Parser (Term Location)
+pTermAppArgs :: Term RL -> Parser (Term RL)
 pTermAppArgs mFun
  = P.choice
  [ do   gsArgs  <- P.many1 (pTermArgs <?> "some arguments")
@@ -250,7 +251,7 @@ pTermAppArgs mFun
 
 -- | Parse arguments to the given function
 --   returning a saturated primitive application.
-pTermAppArgsSat :: Term Location -> Parser (Term Location)
+pTermAppArgsSat :: Term RL -> Parser (Term RL)
 pTermAppArgsSat mFun
  = P.choice
  [ do   gsArgs  <- P.many1 (pTermArgs <?> "some arguments")
@@ -260,7 +261,7 @@ pTermAppArgsSat mFun
 
 
 -- | Parse some term arguments.
-pTermArgs :: Parser (TermArgs Location)
+pTermArgs :: Parser (TermArgs RL)
 pTermArgs
  = P.choice
  [ do   -- '@' '[' Type;+ ']'
@@ -293,7 +294,7 @@ pTermArgs
 
 
 -- | Parser for a type argument.
-pTermArgType :: Parser (Type Location)
+pTermArgType :: Parser (Type RL)
 pTermArgType
  = do   -- '@' Type
         pTok KAt
@@ -302,7 +303,7 @@ pTermArgType
 
 
 -- | Parser for a term argument or record projection.
-pTermArgProj :: Parser (Term Location)
+pTermArgProj :: Parser (Term RL)
 pTermArgProj
  = pMAnn
  $ do   mTerm   <- pTermArg
@@ -313,7 +314,7 @@ pTermArgProj
 
 
 -- | Parser for a term argument.
-pTermArg :: Parser (Term Location)
+pTermArg :: Parser (Term RL)
 pTermArg
  = pMAnn $ P.choice
  [ do   -- Var
@@ -409,7 +410,7 @@ pTermArg
 
 ----------------------------------------------------------------------------------------- Params --
 -- | Parser for some term parameters.
-pTermParams :: Parser (TermParams Location)
+pTermParams :: Parser (TermParams RL)
 pTermParams
  = P.choice
  [ do   -- '@' '[' (Var ':' Type)+ ']'
@@ -432,7 +433,7 @@ pTermParams
 
 
 -- | Parser for a term binding.
-pTermBind :: Parser (Bind, Term Location)
+pTermBind :: Parser (Bind, Term RL)
 pTermBind
  = do   -- Var '=' Term
         nBind   <- pBind  <?> "a binder"
@@ -443,7 +444,7 @@ pTermBind
 
 ------------------------------------------------------------------------------------------- Stmt --
 -- | Parser for a statement.
-pTermStmt :: Parser ([Bind], Term Location)
+pTermStmt :: Parser ([Bind], Term RL)
 pTermStmt
  = P.choice
  [ do   -- '[' (Var : Type),* ']' = Term
@@ -472,7 +473,7 @@ pTermStmt
 
 ----------------------------------------------------------------------------------------- Record --
 -- | Parser for a record.
-pTermRecord :: Parser (Term Location)
+pTermRecord :: Parser (Term RL)
 pTermRecord
  = pMAnn $ P.choice
  [ do   -- '∏' '[' (Lbl '=' Term),* ']'
@@ -563,9 +564,9 @@ pTermValueRecord
 
 
 ------------------------------------------------------------------------------------- Annotation --
-pMAnn :: Parser (Term Location) -> Parser (Term Location)
+pMAnn :: Parser (Term RL) -> Parser (Term RL)
 pMAnn p
- = do   (Range l1 _, m) <- pWithRange p
-        return $ MAnn l1 m
+ = do   (r, m) <- pRanged p
+        return $ MAnn (R.one r) m
 
 

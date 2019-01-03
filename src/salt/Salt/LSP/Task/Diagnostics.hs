@@ -6,6 +6,7 @@ import Salt.LSP.Task.Diagnostics.Checker
 import Salt.LSP.State
 import Salt.LSP.Protocol
 import Salt.LSP.Interface
+import qualified Salt.Data.Ranges               as R
 import qualified Salt.Core.Codec.Text.Parser    as Parser
 import qualified Salt.Core.Codec.Text.Lexer     as Lexer
 import qualified Salt.Core.Check                as Checker
@@ -13,31 +14,34 @@ import qualified Salt.Core.Check                as Checker
 
 -- | Compute diagnostics for a source file, and push them to the client.
 updateDiagnostics :: State -> String -> String -> IO ()
-updateDiagnostics state sUri sSource 
+updateDiagnostics state sUri sSource
  = goLex
- where  
-        goLex 
+ where
+        goLex
          = case Lexer.lexSource sSource of
-                Left errs       -> sendLexerErrors  state sUri errs    
+                Left errs       -> sendLexerErrors  state sUri errs
                 Right toks      -> goParse toks
-         
+
         goParse toks
          = case Parser.parseModule toks of
-                Left errs       
-                 -> sendParserDiagnostics state sUri 
+                Left errs
+                 -> sendParserDiagnostics state sUri
                  $  map (diagnosticOfParseError toks) errs
 
                 Right mm
                  -> goCheck mm
 
+        -- TODO: start with range of whole file.
         goCheck mm
-         = Checker.checkModule (Lexer.Location 0 0) mm
+         = Checker.checkModule
+                (R.range (R.Location 0 0) (R.Location 0 0))
+                mm
          >>= \case
                 Left errs
                  -> sendCheckerDiagnostics state sUri
                  $  map diagnosticOfCheckerError errs
 
-                Right (_mm', _ctx) 
+                Right (_mm', _ctx)
                  -> sendClearDiagnostics state sUri
 
 

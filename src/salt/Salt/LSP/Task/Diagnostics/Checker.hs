@@ -7,6 +7,7 @@ import Salt.LSP.Interface
 import qualified Salt.Core.Check                as Check
 import qualified Salt.Core.Codec.Text.Lexer     as Lexer
 import qualified Salt.Data.Pretty               as P
+import qualified Salt.Data.Ranges               as R
 
 
 ------------------------------------------------------------------------------------------ Types --
@@ -38,13 +39,14 @@ packCheckerDiagnostic (CheckerDiagnostic range sMsg)
         , "message"     := S sMsg ]
 
 
------------------------------------------------------------------------------------------- Build -- 
+------------------------------------------------------------------------------------------ Build --
 -- | Build a diagnostic from a type checker error.
-diagnosticOfCheckerError :: Check.Error Lexer.Location -> CheckerDiagnostic
+diagnosticOfCheckerError :: Check.Error (R.Ranges R.Location) -> CheckerDiagnostic
 diagnosticOfCheckerError err
  = CheckerDiagnostic range msg
- where 
-        loc     = Check.errorAnnot err
-        range   = Lexer.Range loc loc
+ where
+        R.Ranges lStart _ lEnd
+         = Check.errorAnnot err
+
+        range   = Lexer.Range lStart lEnd
         msg     = P.render $ P.ppr () err
-        

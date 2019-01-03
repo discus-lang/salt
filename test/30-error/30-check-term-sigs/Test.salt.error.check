@@ -1,32 +1,32 @@
-test/30-error/30-check-term-sigs/Test.salt:6:16
+test/30-error/30-check-term-sigs/Test.salt:6:6
   Unknown type primitive '#Derp'.
 
-  2:2    In term declaration "term1"
+  6:6    In term declaration "term1"
 
-test/30-error/30-check-term-sigs/Test.salt:9:1
+test/30-error/30-check-term-sigs/Test.salt:9:6
   Unknown type primitive '#Derp'.
 
-  9:1    In term declaration "term2"
+  9:6    In term declaration "term2"
 
-test/30-error/30-check-term-sigs/Test.salt:12:1
+test/30-error/30-check-term-sigs/Test.salt:12:6
   Duplicate term binders at same level
    with names {x}
 
-  12:1   In term declaration "term3"
+  12:6   In term declaration "term3"
 
-test/30-error/30-check-term-sigs/Test.salt:15:1
+test/30-error/30-check-term-sigs/Test.salt:15:6
   Term 'term4' declared multiple times.
 
-  15:1   In term declaration "term4"
+  15:6   In term declaration "term4"
 
-test/30-error/30-check-term-sigs/Test.salt:16:1
+test/30-error/30-check-term-sigs/Test.salt:16:6
   Term 'term4' declared multiple times.
 
-  16:1   In term declaration "term4"
+  16:6   In term declaration "term4"
 
-test/30-error/30-check-term-sigs/Test.salt:19:1
+test/30-error/30-check-term-sigs/Test.salt:19:6
   Polymorphic term does not produce a value
    with parameters @[a: #Data]
 
-  19:1   In term declaration "term5"
+  19:6   In term declaration "term5"
 

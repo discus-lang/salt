@@ -1,9 +1,9 @@
 
 module Salt.Core.Codec.Text.Parser.Type where
 import Salt.Core.Codec.Text.Parser.Base
-import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp
+import qualified Salt.Data.Ranges       as R
 
 import Control.Monad
 import Text.Parsec                      ((<?>))
@@ -12,60 +12,79 @@ import qualified Text.Parsec            as P
 
 ------------------------------------------------------------------------------------------- Type --
 -- | Parser for a type expression.
-pType :: Parser (Type Location)
+pType :: Parser (Type RL)
 pType
- = pTAnn $ P.choice
+ = P.choice
  [ do   -- 'λ' TypeParams '⇒' Type
+        lStart  <- locHere
         pFun
-        bks <- pTypeParams  <?> "some parameters for the abstraction"
-        pFatRight           <?> "more parameters for the abstraction, or a '⇒' to start the body"
-        tBody   <- pType    <?> "a body type for the abstraction"
-        return $ TAbs bks tBody
+        bks     <- pTypeParams  <?> "some parameters"
+        pFatRight               <?> "more parameters, or '⇒' to start the body type"
+        tBody   <- pType        <?> "a body type"
+        lEnd    <- locPrev
+        return  $ TAnn (R.range lStart lEnd)
+                $ TAbs bks tBody
 
  , do   -- '∀' TypeParams '.' Type
+        lStart  <- locHere
         pForall
         TPTypes bks <- pTypeParams
          <?> "some parameters for the forall type"
-        pTok KDot           <?> "more parameters for the forall type, or a '.' to start the body"
-        tBody <- pType      <?> "a body for the forall type"
-        return  $  TForall bks tBody
+        pTok KDot               <?> "more parameters, or '.' to start the body type"
+        tBody   <- pType        <?> "a body for the exists type"
+        lEnd    <- locPrev
+        return  $ TAnn (R.range lStart lEnd)
+                $ TForall bks tBody
 
  , do   -- '∃' TypeParams '.' Type
+        lStart  <- locHere
         pExists
         TPTypes bks <- pTypeParams
          <?> "some parameters for the exists type"
-        pTok KDot           <?> "more type parameters, or a '.' to start the body type"
-        tBody <- pType      <?> "a body for the exists type"
-        return  $  TExists bks tBody
+        pTok KDot               <?> "more parameters, or '.' to start the body type"
+        tBody   <- pType        <?> "a body for the forall type"
+        lEnd    <- locPrev
+        return  $ TAnn (R.range lStart lEnd)
+                $ TExists bks tBody
 
  , do   -- '∙'
-        pHole
-        return THole
+        (r, _)  <- pRanged pHole
+        return  $ TAnn (R.one r)
+                $ THole
 
  , do   -- TypesHead '->' TypesResult
         -- TypesHead '=>' TypesResult
         -- TypesHead '!'  Type
         -- TypesHead '+'  Type
         -- TypesHead
+        lStart  <- locHere
         TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pRight
                 tsResult <- pTypesResult    <?> "a result for the function type"
-                return $ TFun tsHead tsResult
+                lEnd     <- locPrev
+                return  $ TAnn (R.range lStart lEnd)
+                        $ TFun tsHead tsResult
 
          , do   pFatRight
                 tsResult <- pType           <?> "a result for the kind arrow"
-                return $ TArr tsHead tsResult
+                lEnd     <- locPrev
+                return  $ TAnn (R.range lStart lEnd)
+                        $ TArr tsHead tsResult
 
          , do   pTok KBang
                 tResult <- pType            <?> "an effect for the suspension type"
-                return $ TSusp tsHead tResult
+                lEnd    <- locPrev
+                return  $ TAnn (R.range lStart lEnd)
+                        $ TSusp tsHead tResult
 
          , do   pTok KPlus
                 case tsHead of
                  [t] -> do
                         tResult <- pType    <?> "a component of the sum type"
-                        return  $ TSum [t, tResult]
+                        lEnd    <- locPrev
+                        return  $ TAnn (R.range lStart lEnd)
+                                $ TSum [t, tResult]
                  _   -> P.unexpected "type sequence used in sum type"
 
          , do   case tsHead of
@@ -76,7 +95,7 @@ pType
 
 
 -- | Parser for a type that can be used in the head of a function type.
-pTypesHead :: Parser (TypeArgs Location)
+pTypesHead :: Parser (TypeArgs RL)
 pTypesHead
  = P.choice
  [ do   -- (Prm | TypeArg) ( TypeArg+ | ('[' Type,+ ']') )*
@@ -105,7 +124,7 @@ pTypesHead
 
 
 -- | Parser for a type that can be used as the result in a function type.
-pTypesResult :: Parser [Type Location]
+pTypesResult :: Parser [Type RL]
 pTypesResult
  = do   TGTypes tsHead <- pTypesHead
         P.choice
@@ -122,7 +141,7 @@ pTypesResult
 
 ---------------------------------------------------------------------------------------- TypeArg --
 -- | Parser for a type that can be used as the argument in a type-type application.
-pTypeArg :: Parser (Type Location)
+pTypeArg :: Parser (Type RL)
 pTypeArg
  = pTAnn $ P.choice
  [ do   -- Var
@@ -213,14 +232,14 @@ pTypeArg
 --   There needs to be at least one parameter because types
 --   like  'λ[].T' and '∀[].T' aren't useful and we prefer not to worry
 --   about needing to define them to be equal to 'T'.
-pTypeParams :: Parser (TypeParams Location)
+pTypeParams :: Parser (TypeParams RL)
 pTypeParams
  = do   bts     <- pTypeSigs
         return  $ TPTypes bts
 
 
 -- | Parser for some type signatures.
-pTypeSigs :: Parser [(Bind, Type Location)]
+pTypeSigs :: Parser [(Bind, Type RL)]
 pTypeSigs
  = pSquared $ flip P.sepBy1 (pTok KComma)
  $ do   b <- pBind  <?> "a binder for a type parameter"
@@ -231,7 +250,7 @@ pTypeSigs
 
 ---------------------------------------------------------------------------- TypeRecord / Vector --
 -- | Parser for some record type fields.
-pTypeRecordFields :: Parser [(Name, TypeArgs Location)]
+pTypeRecordFields :: Parser [(Name, TypeArgs RL)]
 pTypeRecordFields
  = flip P.sepBy (pTok KComma)
  $ do   n   <- pLbl             <?> "a record field label"
@@ -241,7 +260,7 @@ pTypeRecordFields
 
 
 -- | Parser for some variant type fields.
-pTypeVariantFields :: Parser [(Name, TypeArgs Location)]
+pTypeVariantFields :: Parser [(Name, TypeArgs RL)]
 pTypeVariantFields
  = flip P.sepBy (pTok KComma)
  $ do   n   <- pLbl             <?> "a variant field label"
@@ -251,7 +270,7 @@ pTypeVariantFields
 
 
 -- | Parser for type args specified in a record or variant field.
-pTypeArgsField :: Parser (TypeArgs Location)
+pTypeArgsField :: Parser (TypeArgs RL)
 pTypeArgsField
  = P.choice
  [ -- We need to try this first as [record| ] etc overlaps with the first
@@ -269,7 +288,7 @@ pTypeArgsField
  ]
 
 -- | Parser for a type vector.
-pTypeVector :: Parser [Type Location]
+pTypeVector :: Parser [Type RL]
 pTypeVector
  = do   pTok KSBra
         ts  <- P.sepBy
@@ -280,8 +299,8 @@ pTypeVector
 
 
 ------------------------------------------------------------------------------------- Annotation --
-pTAnn :: Parser (Type Location) -> Parser (Type Location)
+pTAnn :: Parser (Type RL) -> Parser (Type RL)
 pTAnn p
- = do   (Range l1 _, m) <- pWithRange p
-        return $ TAnn l1 m
+ = do   (r, m) <- pRanged p
+        return $ TAnn (R.one r) m
 

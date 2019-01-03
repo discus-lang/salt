@@ -1,24 +1,24 @@
-test/30-error/41-check-test-decls/Test.salt:2:2
+test/30-error/41-check-test-decls/Test.salt:6:19
   Test 'test1' is impure
     with effect: #Console
 
-  2:2    In test "test1"
+  6:19   In test "test1"
 
-test/30-error/41-check-test-decls/Test.salt:9:1
+test/30-error/41-check-test-decls/Test.salt:10:4
   Test 'test2' is impure
     with effect: #Console
 
-  9:1    In test "test2"
+  10:4   In test "test2"
 
-test/30-error/41-check-test-decls/Test.salt:14:1
+test/30-error/41-check-test-decls/Test.salt:14:19
   Test 'test3' does not produce a suspension to execute.
     actual types: [#Bool]
 
-  14:1   In test "test3"
+  14:19  In test "test3"
 
-test/30-error/41-check-test-decls/Test.salt:17:1
+test/30-error/41-check-test-decls/Test.salt:18:4
   Test 'test4' is impure
     with effect: #Console
 
-  17:1   In test "test4"
+  18:4   In test "test4"
 

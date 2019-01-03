@@ -1,44 +1,44 @@
-test/30-error/20-check-type-sigs/Test.salt:6:16
+test/30-error/20-check-type-sigs/Test.salt:6:6
   Unknown kind constructor 'Derp'.
 
-  2:2    In type declaration "decl1"
+  6:6    In type declaration "decl1"
 
-test/30-error/20-check-type-sigs/Test.salt:9:24
+test/30-error/20-check-type-sigs/Test.salt:9:6
   Unknown kind constructor 'Derp'.
 
-  9:1    In type declaration "decl2"
+  9:6    In type declaration "decl2"
 
-test/30-error/20-check-type-sigs/Test.salt:12:1
+test/30-error/20-check-type-sigs/Test.salt:12:6
   Duplicate type binders at same level
    with names {a}
 
-  12:1   In type declaration "decl3"
+  12:6   In type declaration "decl3"
 
-test/30-error/20-check-type-sigs/Test.salt:15:1
+test/30-error/20-check-type-sigs/Test.salt:15:6
   Type 'decl4' declared multiple times.
 
-  15:1   In type declaration "decl4"
+  15:6   In type declaration "decl4"
 
-test/30-error/20-check-type-sigs/Test.salt:16:1
+test/30-error/20-check-type-sigs/Test.salt:16:6
   Type 'decl4' declared multiple times.
 
-  16:1   In type declaration "decl4"
+  16:6   In type declaration "decl4"
 
-test/30-error/20-check-type-sigs/Test.salt:19:1
+test/30-error/20-check-type-sigs/Test.salt:19:6
   Type declaration 'decl5' is recursive
     though: {decl5}
 
-  19:1   In type declaration "decl5"
+  19:6   In type declaration "decl5"
 
-test/30-error/20-check-type-sigs/Test.salt:22:1
+test/30-error/20-check-type-sigs/Test.salt:22:6
   Type declaration 'decl6' is recursive
     though: {decl7}
 
-  22:1   In type declaration "decl6"
+  22:6   In type declaration "decl6"
 
-test/30-error/20-check-type-sigs/Test.salt:23:1
+test/30-error/20-check-type-sigs/Test.salt:23:6
   Type declaration 'decl7' is recursive
     though: {decl6}
 
-  23:1   In type declaration "decl7"
+  23:6   In type declaration "decl7"
 

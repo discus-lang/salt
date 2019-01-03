@@ -2,11 +2,11 @@ test/30-error/31-check-term-decls/Test.salt:6:20
   Unexpected type: #Bool
         expecting: #Nat
 
-  2:2    In term declaration "term1"
+  6:6    In term declaration "term1"
 
-test/30-error/31-check-term-decls/Test.salt:9:1
+test/30-error/31-check-term-decls/Test.salt:9:6
   Impure term declaration 'term2'
     has effect: #Console
 
-  9:1    In term declaration "term2"
+  9:6    In term declaration "term2"
 

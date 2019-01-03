@@ -5,6 +5,7 @@ import Salt.Core.Codec.Text.Token
 import Salt.Core.Codec.Text.Pretty
 import Salt.Core.Exp
 import qualified Salt.Data.Pretty               as Pretty
+import qualified Salt.Data.Ranges               as R
 
 import qualified Text.Lexer.Inchworm.Source     as IW
 import qualified Text.Parsec                    as P
@@ -13,8 +14,8 @@ import qualified Text.Parsec.Pos                as P
 
 ------------------------------------------------------------------------------------------ Types --
 -- | Generic type of parsers.
-type Parser a   = P.Parsec [At Token] () a
-
+type Parser a   = P.Parsec [At Token] IW.Location a
+type RL         = R.Ranges R.Location
 
 ------------------------------------------------------------------------------ Location Handling --
 -- | Get the current position in the input stream,
@@ -24,6 +25,18 @@ getLocation :: Parser IW.Location
 getLocation
  = do   sp      <- P.getPosition
         let loc =  IW.Location (P.sourceLine sp) (P.sourceColumn sp)
+        return  $ loc
+
+locHere :: Parser IW.Location
+locHere
+ = do   sp      <- P.getPosition
+        let loc =  IW.Location (P.sourceLine sp) (P.sourceColumn sp)
+        return  $ loc
+
+-- | Get the position of the end of the last token.
+locPrev :: Parser IW.Location
+locPrev
+ = do   loc     <- P.getState
         return  $ loc
 
 
@@ -37,18 +50,32 @@ locOfTok (At (IW.Range (Location l c) _) _)
 -- | Parse the given token.
 pTok :: Token -> Parser ()
 pTok t
- = P.token showTokenForError locOfTok
- $ \(At _ t') -> if t == t' then Just () else Nothing
-
+ = do   Range _ lEnd
+         <- P.token showTokenForError locOfTok
+         $ \(At r t') -> if t == t' then Just r else Nothing
+        P.putState lEnd
 
 -- | Parse a token that matches the given function.
 pTokOf :: (Token -> Maybe a) -> Parser a
 pTokOf f
- = P.token showTokenForError locOfTok
- $ \(At _ tok) -> f tok
+ = do   (Range _ lEnd, x)
+         <- P.token showTokenForError locOfTok
+         $ \(At r tok) -> case f tok of
+                                Nothing -> Nothing
+                                Just x  -> Just (r, x)
+        P.putState lEnd
+        return x
+
+pRanged     :: Parser a -> Parser (Range Location, a)
+pRanged p
+ = do   lHere   <- locHere
+        x       <- p
+        lPrev   <- locPrev
+        return  $ (Range lHere lPrev, x)
 
 
 -- | Parse a thing, also returning the range from the source file.
+--   TODO: kill this old version.
 pWithRange  :: Parser a -> Parser (Range Location, a)
 pWithRange p
  = do   l1      <- getLocation

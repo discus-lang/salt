@@ -4,8 +4,9 @@ import Salt.Core.Codec.Text.Parser.Module
 import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Exp
 import Salt.Core.Codec.Text.Token               as Token
-import Salt.Data.Pretty
 import Salt.Core.Codec.Text.Token               (Token)
+import Salt.Data.Pretty
+import qualified Salt.Data.Ranges               as R
 
 import Data.Function
 import Data.Maybe
@@ -15,7 +16,7 @@ import qualified Text.Parsec.Error              as P
 
 ---------------------------------------------------------------------------------------- Parsing --
 -- | Parse a salt source file from tokens.
-parseModule :: [At Token] -> Either [ParseError] (Module Location)
+parseModule :: [At Token] -> Either [ParseError] (Module (R.Ranges Location))
 parseModule toks
  = let  toks'   = [ Token.At l k
                   | Token.At l k <- toks
@@ -25,10 +26,11 @@ parseModule toks
                 -- TODO: fix location of end token
 
         eResult
-         = P.parse
+         = P.runParser
                 (do result <- pModule
                     rest <- P.getInput
                     return (result, rest))
+                (Location 0 0)
                 "sourceName" toks'
 
    in   case eResult of
