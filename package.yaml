@@ -1,0 +1,41 @@
+name:     salt
+version:  0.0.0.0
+
+executables:
+  salt:
+    main: Main.hs
+
+    default-extensions:
+      - LambdaCase
+      - RankNTypes
+      - BangPatterns
+      - PatternGuards
+      - NamedFieldPuns
+      - ConstraintKinds
+      - PatternSynonyms
+      - ParallelListComp
+      - FlexibleContexts
+      - FlexibleInstances
+      - OverloadedStrings
+      - StandaloneDeriving
+      - ScopedTypeVariables
+      - TypeSynonymInstances
+      - DuplicateRecordFields
+      - MultiParamTypeClasses
+      - NoMonomorphismRestriction
+
+    source-dirs:
+      - src/salt
+
+    dependencies:
+      - base
+      - text
+      - unix
+      - json
+      - parsec
+      - inchworm
+      - containers
+      - bytestring
+      - pretty-show
+
+  

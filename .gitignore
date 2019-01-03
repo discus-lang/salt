@@ -6,4 +6,6 @@ bin/*
 make/config-override.mk
 war-*
 .cabal-sandbox/
+.stack-work/
+ghcid.txt
 cabal.sandbox.config
