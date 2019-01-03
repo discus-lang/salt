@@ -17,39 +17,46 @@ data At a
 
 
 -- | A source token.
---
---   TODO: add separate forms for unicode and sugared, like "→" and "->"
---         we want to be able to print tokens as written in error messages.
---
 data Token
         -- Meta
         = KEnd                  -- signal end of input.
         | KComment Text         -- comment text
 
         -- Punctuation
-        | KRBra   | KRKet       -- round bracket   ()
-        | KCBra   | KCKet       -- curley brackets {}
-        | KSBra   | KSKet       -- square brackets []
-        | KABra   | KAKet       -- angle  brackets <>
-        | KColon  | KSemi
-        | KComma  | KDot  | KBar | KAt | KBacktick
-        | KHole   | KHat
-        | KEquals | KColonEquals
-        | KArrowLeft
-        | KArrowRight
-        | KArrowRightFat
-        | KLambda
-        | KProd   | KSum
-        | KBang   | KPlus
+        | KRBra         | KRKet       -- round bracket   ()
+        | KCBra         | KCKet       -- curley brackets {}
+        | KSBra         | KSKet       -- square brackets []
+        | KABra         | KAKet       -- angle  brackets <>
+        | KAt 
+        | KDot  
+        | KBar  
+        | KHat          
+        | KSemi
+        | KBang 
+        | KPlus
+        | KComma        
+        | KColon        
+        | KEquals       
+        | KBacktick
+        | KColonEquals
+        | KSymLeft      | KAsciiLeft
+        | KSymRight     | KAsciiRight
+        | KSymFatRight  | KAsciiFatRight
+        | KSymFun       | KAsciiFun
+        | KSymHole      | KAsciiHole
+        | KSymSum
+        | KSymProd
 
         -- Keywords
-        | KType   | KTerm   | KTest
-        | KForall | KExists | KPure | KSync
-        | KThe    | KOf
-        | KFun    | KBox    | KRun
-        | KLet    | KDo     | KWhere
-        | KIf     | KThen   | KElse
-        | KCase   | KOtherwise
+        | KType         | KTerm         | KTest
+        | KPure         | KSync
+        | KThe          | KOf
+        | KBox          | KRun
+        | KLet          | KDo           | KWhere
+        | KIf           | KThen         | KElse
+        | KCase         | KOtherwise
+        | KSymForall    | KAsciiForall
+        | KSymExists    | KAsciiExists
 
         -- Names
         | KVar  Text            -- Plain variable name, "foo"
@@ -82,37 +89,34 @@ showTokenAsSource kk
         KSKet           -> "]"
         KABra           -> "<"
         KAKet           -> ">"
-        KColon          -> ":"
-        KSemi           -> ";"
-        KComma          -> ","
+        KAt             -> "@"
         KDot            -> "."
         KBar            -> "|"
-        KAt             -> "@"
-        KBacktick       -> "`"
-        KHole           -> "∙"
         KHat            -> "^"
-        KEquals         -> "="
-        KColonEquals    -> ":="
-        KArrowLeft      -> "←"
-        KArrowRight     -> "→"
-        KArrowRightFat  -> "⇒"
-        KLambda         -> "λ"
-        KProd           -> "∏"
-        KSum            -> "∑"
+        KSemi           -> ";"
         KBang           -> "!"
         KPlus           -> "+"
+        KComma          -> ","
+        KColon          -> ":"
+        KEquals         -> "="
+        KBacktick       -> "`"
+        KColonEquals    -> ":="
+        KSymLeft        -> "←";         KAsciiLeft      -> "<-"
+        KSymRight       -> "→";         KAsciiRight     -> "->"
+        KSymFatRight    -> "⇒";         KAsciiFatRight  -> "=>"
+        KSymFun         -> "λ";         KAsciiFun       -> "fun"
+        KSymHole        -> "∙";         KAsciiHole      -> "_"
+        KSymSum         -> "∑"
+        KSymProd        -> "∏"
 
         -- Keywords
         KType           -> "type"
         KTerm           -> "term"
         KTest           -> "test"
-        KForall         -> "∀"
-        KExists         -> "∃"
         KPure           -> "pure"
         KSync           -> "sync"
         KThe            -> "the"
         KOf             -> "of"
-        KFun            -> "fun"
         KBox            -> "box"
         KRun            -> "run"
         KLet            -> "let"
@@ -123,6 +127,8 @@ showTokenAsSource kk
         KElse           -> "else"
         KCase           -> "case"
         KOtherwise      -> "otherwise"
+        KSymForall      -> "∀";         KAsciiExists    -> "exists"
+        KSymExists      -> "∃";         KAsciiForall    -> "forall"
 
         -- Names
         KVar  tx        -> T.unpack tx

@@ -87,9 +87,9 @@ scanner
         , fmap (stamp id)
            $ IW.munchPred Nothing (\_ix c -> elem c ['<', '-', '>', ':', '='])
            $ \case
-                "<-"    -> Just KArrowLeft
-                "->"    -> Just KArrowRight
-                "=>"    -> Just KArrowRightFat
+                "<-"    -> Just KAsciiLeft
+                "->"    -> Just KAsciiRight
+                "=>"    -> Just KAsciiFatRight
                 ":="    -> Just KColonEquals
                 _       -> Nothing
 
@@ -104,29 +104,26 @@ scanner
                 ']'     -> Just KSKet
                 '<'     -> Just KABra
                 '>'     -> Just KAKet
-                ':'     -> Just KColon
-                ';'     -> Just KSemi
-                ','     -> Just KComma
-                '.'     -> Just KDot
-                '^'     -> Just KHat
-                '|'     -> Just KBar
                 '@'     -> Just KAt
-                '='     -> Just KEquals
-                '`'     -> Just KBacktick
-                '_'     -> Just KHole
+                '.'     -> Just KDot
+                '|'     -> Just KBar
+                '^'     -> Just KHat
+                ';'     -> Just KSemi
                 '!'     -> Just KBang
                 '+'     -> Just KPlus
-
-                '∙'     -> Just KHole
-                '∏'     -> Just KProd
-                '∑'     -> Just KSum
-                'λ'     -> Just KFun
-                '∀'     -> Just KForall
-                '∃'     -> Just KExists
-                '←'     -> Just KArrowLeft
-                '→'     -> Just KArrowRight
-                '⇒'     -> Just KArrowRightFat
-
+                ','     -> Just KComma
+                ':'     -> Just KColon
+                '='     -> Just KEquals
+                '`'     -> Just KBacktick
+                '←'     -> Just KSymLeft
+                '→'     -> Just KSymRight
+                '⇒'     -> Just KSymFatRight
+                'λ'     -> Just KSymFun
+                '∙'     -> Just KSymHole;       '_'   -> Just KAsciiHole
+                '∑'     -> Just KSymSum
+                '∏'     -> Just KSymProd
+                '∀'     -> Just KSymForall
+                '∃'     -> Just KSymExists
                 _       -> Nothing
 
           -- Keywords.
@@ -137,15 +134,15 @@ scanner
                 "term"          -> Just KTerm
                 "test"          -> Just KTest
 
-                "forall"        -> Just KForall
-                "exists"        -> Just KExists
+                "forall"        -> Just KAsciiForall
+                "exists"        -> Just KAsciiExists
                 "pure"          -> Just KPure
                 "sync"          -> Just KSync
 
                 "the"           -> Just KThe
                 "of"            -> Just KOf
 
-                "fun"           -> Just KFun
+                "fun"           -> Just KAsciiFun
                 "box"           -> Just KBox
                 "run"           -> Just KRun
 

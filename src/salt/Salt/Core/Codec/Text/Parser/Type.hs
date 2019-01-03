@@ -16,14 +16,14 @@ pType :: Parser (Type Location)
 pType
  = pTAnn $ P.choice
  [ do   -- 'λ' TypeParams '⇒' Type
-        pTok KFun
+        pFun
         bks <- pTypeParams  <?> "some parameters for the abstraction"
-        pTok KArrowRightFat <?> "more parameters for the abstraction, or a '⇒' to start the body"
+        pFatRight           <?> "more parameters for the abstraction, or a '⇒' to start the body"
         tBody   <- pType    <?> "a body type for the abstraction"
         return $ TAbs bks tBody
 
  , do   -- '∀' TypeParams '.' Type
-        pTok KForall
+        pForall
         TPTypes bks <- pTypeParams 
          <?> "some parameters for the forall type"
         pTok KDot           <?> "more parameters for the forall type, or a '.' to start the body"
@@ -31,7 +31,7 @@ pType
         return  $  TForall bks tBody
 
  , do   -- '∃' TypeParams '.' Type
-        pTok KExists
+        pExists
         TPTypes bks <- pTypeParams      
          <?> "some parameters for the exists type"
         pTok KDot           <?> "more type parameters, or a '.' to start the body type"
@@ -39,7 +39,7 @@ pType
         return  $  TExists bks tBody
 
  , do   -- '∙'
-        pTok KHole
+        pHole
         return THole
 
  , do   -- TypesHead '->' TypesResult
@@ -49,11 +49,11 @@ pType
         -- TypesHead
         TGTypes tsHead <- pTypesHead
         P.choice
-         [ do   pTok KArrowRight
+         [ do   pRight
                 tsResult <- pTypesResult    <?> "a result for the function type"
                 return $ TFun tsHead tsResult
 
-         , do   pTok KArrowRightFat
+         , do   pFatRight
                 tsResult <- pType           <?> "a result for the kind arrow"
                 return $ TArr tsHead tsResult
 
@@ -109,7 +109,7 @@ pTypesResult :: Parser [Type Location]
 pTypesResult
  = do   TGTypes tsHead <- pTypesHead
         P.choice
-         [ do   pTok KArrowRight
+         [ do   pRight
                 tsResult <- pTypesResult    <?> "a result type, or type vector"
                 return [TFun tsHead tsResult]
 
@@ -142,7 +142,7 @@ pTypeArg
 
         -- Record Types -------------------------
  , do   -- '∏' '[' (Lbl ':' Type)* ']'
-        pTok KProd
+        pTok KSymProd
         lts <- pSquared pTypeRecordFields
          <?> "fields for the record type"
         return $ TRecord (map fst lts) (map snd lts)
@@ -168,7 +168,7 @@ pTypeArg
 
         -- Variant Types ------------------------
  , do   -- '∑' '[' (Lbl ':' Type)* ']'
-        pTok KSum
+        pTok KSymSum
         lts <- pSquared pTypeVariantFields
          <?> "alternatives for the variant type"
         return $ TVariant (map fst lts) (map snd lts)

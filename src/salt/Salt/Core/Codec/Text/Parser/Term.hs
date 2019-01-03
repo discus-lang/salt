@@ -91,10 +91,10 @@ pTermBody
 
 
  , do   -- 'λ' TermParams+ '->' Term
-        pTok KFun
+        pFun
         mps  <- P.many1 $ (pTermParams 
              <?> "some parameters, or a '→' to start the body")
-        pTok KArrowRight <?> "more paramaters, or a '→' to start the body"
+        pRight           <?> "more paramaters, or a '→' to start the body"
         mBody <- pTerm   <?> "a body for the function"
         return  $ foldr MAbs mBody mps
 
@@ -166,13 +166,13 @@ pTermBody
                  <- fmap unzip $ P.many 
                  $  do  mCond <- pTerm   
                          <?> "a term for a condition, or 'otherwise' for the final branch"
-                        pTok KArrowRight <?> "a completed term, or '→' to start the body"
-                        mThen <- pTerm   <?> "the body of the branch"
-                        pTok KSemi       <?> "a completed term, or ';' to end the branch"
+                        pRight            <?> "a completed term, or '→' to start the body"
+                        mThen <- pTerm    <?> "the body of the branch"
+                        pTok KSemi        <?> "a completed term, or ';' to end the branch"
                         return (mCond, mThen)
 
                 pTok KOtherwise     <?> "an 'otherwise' to start the default branch"
-                pTok KArrowRight    <?> "a '→' to start the body"
+                pRight              <?> "a '→' to start the body"
                 mDefault <- pTerm   <?> "the body of the branch"
 
                 -- Allow a stray ';' after the otherwise,
@@ -209,7 +209,7 @@ pTermBody
                                 return (b, t))
                         <?> "binders for the payload of the variant"
 
-                pTok KArrowRight <?> "a '→' to start the body"
+                pRight           <?> "a '→' to start the body"
                 mBody <- pTerm   <?> "the body of the alternative"
                 return $ MVarAlt lAlt btsPat mBody
         pTok KCKet               <?> "a completed term, or '}' to end the alternatives"
@@ -476,7 +476,7 @@ pTermRecord :: Parser (Term Location)
 pTermRecord
  = pMAnn $ P.choice
  [ do   -- '∏' '[' (Lbl '=' Term),* ']'
-        pTok KProd
+        pTok KSymProd
         lms     <- (pSquared $ flip P.sepEndBy (pTok KComma)
                 $  do   l   <- pLbl  <?> "a label for the record field"
                         pTok KEquals <?> "a '=' to start the field"

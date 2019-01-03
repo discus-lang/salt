@@ -81,7 +81,34 @@ pAngled p
 pBind :: Parser Bind
 pBind    = P.choice
   [ BindName <$> pVar
-  , const BindNone <$> pTok KHole ]
+  , const BindNone <$> pHole ]
+
+
+------------------------------------------------------------------------------ Dual Form Parsers --
+-- Parsers for logical tokens that have both unicode and ascii forms.
+--  We treat them the same when parsing, but print the tokens back 
+--  in the original form in error messages.
+
+pLeft :: Parser ()
+pLeft   = P.choice [ pTok KSymLeft,     pTok KAsciiLeft ]
+
+pRight :: Parser ()
+pRight  = P.choice [ pTok KSymRight,    pTok KAsciiRight ]
+
+pFatRight :: Parser ()
+pFatRight = P.choice [ pTok KSymFatRight, pTok KAsciiFatRight ]
+
+pFun :: Parser ()
+pFun    = P.choice [ pTok KSymFun,      pTok KAsciiFun ]
+
+pHole :: Parser ()
+pHole   = P.choice [ pTok KSymHole,     pTok KAsciiHole]
+
+pForall :: Parser ()
+pForall = P.choice [ pTok KSymForall,   pTok KAsciiForall]
+
+pExists :: Parser ()
+pExists = P.choice [ pTok KSymExists,   pTok KAsciiExists]
 
 
 ----------------------------------------------------------------------------------- Name Parsers --
