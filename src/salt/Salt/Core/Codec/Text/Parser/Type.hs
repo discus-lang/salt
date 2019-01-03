@@ -24,7 +24,7 @@ pType
 
  , do   -- '∀' TypeParams '.' Type
         pForall
-        TPTypes bks <- pTypeParams 
+        TPTypes bks <- pTypeParams
          <?> "some parameters for the forall type"
         pTok KDot           <?> "more parameters for the forall type, or a '.' to start the body"
         tBody <- pType      <?> "a body for the forall type"
@@ -32,7 +32,7 @@ pType
 
  , do   -- '∃' TypeParams '.' Type
         pExists
-        TPTypes bks <- pTypeParams      
+        TPTypes bks <- pTypeParams
          <?> "some parameters for the exists type"
         pTok KDot           <?> "more type parameters, or a '.' to start the body type"
         tBody <- pType      <?> "a body for the exists type"
@@ -57,7 +57,7 @@ pType
                 tsResult <- pType           <?> "a result for the kind arrow"
                 return $ TArr tsHead tsResult
 
-         , do   pTok KBang      
+         , do   pTok KBang
                 tResult <- pType            <?> "an effect for the suspension type"
                 return $ TSusp tsHead tResult
 
@@ -94,7 +94,7 @@ pTypesHead
                  -- '[' Type,+ ']'
                  , pTypeVector
                  ]
-                 
+
         let tApp = foldl TApt tFun tsArgs
         return $ TGTypes [tApp]
 
@@ -259,27 +259,27 @@ pTypeArgsField
    P.try $ do
         t <- pType
         return $ TGTypes [t]
-         
+
  , do   pTok KSBra
         ts  <- P.sepBy
-                (pType <?> "a component of the type vector, or ']' to end it") 
-                (pTok KComma)        
+                (pType <?> "a component of the type vector, or ']' to end it")
+                (pTok KComma)
         pTok KSKet
         return $ TGTypes ts
  ]
 
 -- | Parser for a type vector.
 pTypeVector :: Parser [Type Location]
-pTypeVector 
+pTypeVector
  = do   pTok KSBra
         ts  <- P.sepBy
-                (pType <?> "a component of the type vector, or ']' to end it") 
-                (pTok KComma)        
+                (pType <?> "a component of the type vector, or ']' to end it")
+                (pTok KComma)
         pTok KSKet
         return ts
 
 
-------------------------------------------------------------------------------------- Annotation -- 
+------------------------------------------------------------------------------------- Annotation --
 pTAnn :: Parser (Type Location) -> Parser (Type Location)
 pTAnn p
  = do   (Range l1 _, m) <- pWithRange p

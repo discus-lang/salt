@@ -27,16 +27,16 @@ data Token
         | KCBra         | KCKet       -- curley brackets {}
         | KSBra         | KSKet       -- square brackets []
         | KABra         | KAKet       -- angle  brackets <>
-        | KAt 
-        | KDot  
-        | KBar  
-        | KHat          
+        | KAt
+        | KDot
+        | KBar
+        | KHat
         | KSemi
-        | KBang 
+        | KBang
         | KPlus
-        | KComma        
-        | KColon        
-        | KEquals       
+        | KComma
+        | KColon
+        | KEquals
         | KBacktick
         | KColonEquals
         | KSymLeft      | KAsciiLeft

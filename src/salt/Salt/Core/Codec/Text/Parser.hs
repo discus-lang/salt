@@ -30,17 +30,17 @@ parseModule toks
                     rest <- P.getInput
                     return (result, rest))
                 "sourceName" toks'
-        
+
    in   case eResult of
          Left err
           -> Left [errorOfParseError toks' err]
 
-         Right (xModule, []) 
+         Right (xModule, [])
           -> Right xModule
 
          -- TODO: real location
-         Right (_, _xRest)       
-          -> Left [ParseError 
+         Right (_, _xRest)
+          -> Left [ParseError
                         (Range (Location 0 0) (Location 0 0), Nothing)
                         Nothing
                         [P.Message "parse error at end of input"]]
@@ -48,7 +48,7 @@ parseModule toks
 
 ----------------------------------------------------------------------------- Error Construction --
 -- | Parse error.
-data ParseError 
+data ParseError
         = ParseError
         { -- | The token we hit the caused the error.
           errorHere     :: (Range Location, Maybe Token)
@@ -72,7 +72,7 @@ errorOfParseError toks err
         nLine   = P.sourceLine sp
         nCol    = P.sourceColumn sp
         lErr    = Location nLine nCol
-        rErr    = fromMaybe (Range lErr lErr, Nothing) 
+        rErr    = fromMaybe (Range lErr lErr, Nothing)
                 $ findThisTokenRange toks lErr
 
         -- Find the range of the token just before the one that caused the error.
@@ -85,8 +85,8 @@ errorOfParseError toks err
 -- | Find the full source range of the token that starts at this location.
 --   Parsec only gives us the starting location, but tokens themselves
 --   are tagged with full ranges.
-findThisTokenRange 
-        :: [At Token] -> Location 
+findThisTokenRange
+        :: [At Token] -> Location
         -> Maybe (Range Location, Maybe Token)
 findThisTokenRange [] _ = Nothing
 findThisTokenRange (Token.At range@(Token.Range lStart _lEnd) k : ks) lStart'
@@ -96,10 +96,10 @@ findThisTokenRange (Token.At range@(Token.Range lStart _lEnd) k : ks) lStart'
 
 -- | Find the token just before the one that caused the parse error,
 --   if there is one.
-findPrevTokenRange 
-        :: P.ParseError -> [At Token] 
+findPrevTokenRange
+        :: P.ParseError -> [At Token]
         -> Maybe (Range Location, Token)
-findPrevTokenRange err (Token.At range0 t0 : k1@(Token.At range1 _) : ks) 
+findPrevTokenRange err (Token.At range0 t0 : k1@(Token.At range1 _) : ks)
  | Token.Range (Location l c) _ <- range1
  , sp <- P.errorPos err
  , l' <- P.sourceLine sp
@@ -117,35 +117,35 @@ findPrevTokenRange _err _ = Nothing
 -- | Pretty print a parse error for display in the console.
 ppParseError :: FilePath -> ParseError -> Doc
 ppParseError path (ParseError (range, _mTok) _mLocPrev msgs)
- = vcat ( string path 
-                %  string ":" 
+ = vcat ( string path
+                %  string ":"
                 %% ppRange range
-        : text "  parse error" 
+        : text "  parse error"
                 % fromMaybe empty mSysUnexpect
                 % fromMaybe empty mUnexpected
 
         : catMaybes [ mMessage, mExpect])
- 
- where  
-        mSysUnexpect 
-         = listToMaybe  [ text ", " % text "unexpected " % string s 
+
+ where
+        mSysUnexpect
+         = listToMaybe  [ text ", " % text "unexpected " % string s
                         | P.SysUnExpect s <- msgs ]
 
         -- These come from points where we have called 'unexpected'
         -- explicitly in the parser.
-        mUnexpected  
-         = listToMaybe  [ text ", " % string s 
+        mUnexpected
+         = listToMaybe  [ text ", " % string s
                         | P.UnExpect   s <- msgs ]
 
-        -- These come from points where we have called 'fail' 
+        -- These come from points where we have called 'fail'
         -- explicitly in the parser.
         mMessage
-         = listToMaybe  [ text "  " % string s 
+         = listToMaybe  [ text "  " % string s
                         | P.Message s <- msgs]
 
         -- These come from where we have use <?> in the parser.
-        mExpect      
-         = listToMaybe  [ text "  expecting " % string s 
+        mExpect
+         = listToMaybe  [ text "  expecting " % string s
                         | P.Expect s <- msgs ]
 
 

@@ -76,7 +76,7 @@ pAngled p
  = do   pTok KABra; x <- p; pTok KAKet; return x
 
 
---------------------------------------------------------------------------------- Shared Parsers -- 
+--------------------------------------------------------------------------------- Shared Parsers --
 -- | Parser for a binder.
 pBind :: Parser Bind
 pBind    = P.choice
@@ -86,7 +86,7 @@ pBind    = P.choice
 
 ------------------------------------------------------------------------------ Dual Form Parsers --
 -- Parsers for logical tokens that have both unicode and ascii forms.
---  We treat them the same when parsing, but print the tokens back 
+--  We treat them the same when parsing, but print the tokens back
 --  in the original form in error messages.
 
 pLeft :: Parser ()

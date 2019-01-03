@@ -21,7 +21,7 @@ pDecl
         loc <- getLocation
         pTok KType
         nType <- pVar           <?> "a name for the type"
-        tps   <- P.many 
+        tps   <- P.many
                 (pTypeParams    <?> "some parameters, or a ':' to give the result kind")
         pTok KColon             <?> "more parameters, or a ':' to give the result kind"
         kResult <- pType        <?> "the result kind"
@@ -39,7 +39,7 @@ pDecl
         loc <- getLocation
         pTok KTerm
         nTerm   <- pVar          <?> "a name for the term"
-        mps     <- P.many 
+        mps     <- P.many
                 (pTermParams     <?> "some parameters, or a result type annotation")
         pTok KColon              <?> "more parameters, or a ':' to start the result type"
         tsResult <- pTypesResult <?> "some result types"
@@ -61,16 +61,16 @@ pDecl
         loc <- getLocation
         pTok KTest
 
-        -- Lookahead to get the test mode. 
+        -- Lookahead to get the test mode.
         --  If we don't recognize it then we want the error to be on this token,
         --  not the one after.
-        nMode   
-         <- P.lookAhead 
+        nMode
+         <- P.lookAhead
                 (P.choice [ pVar, do pTok KType; return "type"])
          <?> "the test mode"
 
         -- Check this is a valid test mode.
-        unless (elem nMode  
+        unless (elem nMode
                 [ "kind",      "type"
                 , "eval'type", "eval'term", "eval"
                 , "exec",      "assert"])
@@ -91,7 +91,7 @@ pDecl
         -- What we parse next depends on the test mode.
         P.choice
          [ do   guard $ nMode == "kind"
-                tType   <-  pType 
+                tType   <-  pType
                         <?> if isJust mName
                                 then "the type to take the kind of"
                                 else "a test name, or the type to take the kind of"
@@ -100,9 +100,9 @@ pDecl
                         , declTestName  = mName
                         , declTestType  = tType }
 
-         , do   guard $ nMode == "type" 
-                mTerm   <- pTerm 
-                        <?> if isJust mName     
+         , do   guard $ nMode == "type"
+                mTerm   <- pTerm
+                        <?> if isJust mName
                                 then "the term to take the type of"
                                 else "a test name, or the term to take the type of"
                 return  $ DTest $ DeclTestType
@@ -111,8 +111,8 @@ pDecl
                         , declTestTerm  = mTerm }
 
          , do   guard $ (nMode == "eval'type")
-                tBody   <- pType 
-                        <?> if isJust mName 
+                tBody   <- pType
+                        <?> if isJust mName
                                 then "the type to evaluate"
                                 else "a test name, or the type to evaluate"
                 return  $ DTest $ DeclTestEvalType
@@ -121,7 +121,7 @@ pDecl
                         , declTestType  = tBody }
 
          , do   guard $ (nMode == "eval'term") || (nMode == "eval")
-                mBody   <- pTerm 
+                mBody   <- pTerm
                         <?> if isJust mName
                                 then "the term to evaluate"
                                 else "a test name, or the term to evaluate"
@@ -131,7 +131,7 @@ pDecl
                         , declTestTerm  = mBody }
 
          , do   guard $ nMode == "exec"
-                mBody   <- pTerm 
+                mBody   <- pTerm
                         <?> if isJust mName
                                 then "the term to execute"
                                 else "a test name, or the term to execute"
@@ -141,7 +141,7 @@ pDecl
                         , declTestBody  = mBody }
 
          , do   guard $ nMode == "assert"
-                mBody   <- pTerm 
+                mBody   <- pTerm
                         <?> if isJust mName
                                 then "the term you hope is true"
                                 else "a test name, or the term you hope is true"

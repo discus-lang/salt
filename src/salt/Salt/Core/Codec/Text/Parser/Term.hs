@@ -41,10 +41,10 @@ pTermBody
          <?> "a type to ascribe"
 
         -- For the variant case we can only attach a single type to the term
-        -- AST. If we're going to get more than one then look ahead to see 
+        -- AST. If we're going to get more than one then look ahead to see
         -- the problem so we can report the 'of' as the location of the error,
         -- rather than deeper in the variant syntax.
-        bIsVariant 
+        bIsVariant
          <- P.lookAhead $ do
                 pTok KOf <?> "'of' to start the body"
                 P.choice [ do pTok KBacktick; return True
@@ -63,8 +63,8 @@ pTermBody
                         _   -> fail "type vector in variant annotation"
                 l <- pLbl <?> "a variant label"
                 m <- P.choice
-                        [ do    fmap MTerms 
-                                $ pSquared $ flip P.sepBy (pTok KComma) 
+                        [ do    fmap MTerms
+                                $ pSquared $ flip P.sepBy (pTok KComma)
                                         (pTerm <?> "an argument in the vector")
                         , do    m <- pTermArg
                                 return m
@@ -73,7 +73,7 @@ pTermBody
                 return $ MVariant l m t
 
          , do   m <- pTerm  <?> "a body term"
-                return $ MThe ts m 
+                return $ MThe ts m
          ]
          <?> "a body term"
 
@@ -85,14 +85,14 @@ pTermBody
 
 
  , do   -- 'run' Term
-        pTok KRun 
+        pTok KRun
         m  <- pTerm <?> "a term to run"
         return  $ MRun m
 
 
  , do   -- 'λ' TermParams+ '->' Term
         pFun
-        mps  <- P.many1 $ (pTermParams 
+        mps  <- P.many1 $ (pTermParams
              <?> "some parameters, or a '→' to start the body")
         pRight           <?> "more paramaters, or a '→' to start the body"
         mBody <- pTerm   <?> "a body for the function"
@@ -163,8 +163,8 @@ pTermBody
         P.choice
          [ do   pTok KCBra          <?> "a '{' to start the list of branches"
                 (msCond, msThen)
-                 <- fmap unzip $ P.many 
-                 $  do  mCond <- pTerm   
+                 <- fmap unzip $ P.many
+                 $  do  mCond <- pTerm
                          <?> "a term for a condition, or 'otherwise' for the final branch"
                         pRight            <?> "a completed term, or '→' to start the body"
                         mThen <- pTerm    <?> "the body of the branch"
@@ -201,7 +201,7 @@ pTermBody
          <- flip P.sepEndBy1 (pTok KSemi)
          $  do  lAlt    <- pLbl <?> " a variant label"
 
-                btsPat  <- (pSquared 
+                btsPat  <- (pSquared
                         $  flip P.sepBy (pTok KComma)
                         $  do   b <- pBind  <?> "a binder for a variant field"
                                 pTok KColon <?> "a ':' to specify the type of the field"
@@ -267,7 +267,7 @@ pTermArgs
         -- '@' TypeArg
         pTok KAt
         P.choice
-         [ do   ts <- pSquared 
+         [ do   ts <- pSquared
                     $ flip P.sepBy1 (pTok KComma)
                         (pType  <?> "a type for the argument")
                 return $ MGTypes ts
@@ -285,8 +285,8 @@ pTermArgs
         return  $ MGTerm m
 
  , do   -- '[' Term;+ ']'
-        ms <- pSquared 
-           $  flip P.sepBy (pTok KComma) 
+        ms <- pSquared
+           $  flip P.sepBy (pTok KComma)
                 (pTerm <?> "an argument")
         return  $ MGTerms ms
  ]
@@ -306,7 +306,7 @@ pTermArgProj :: Parser (Term Location)
 pTermArgProj
  = pMAnn
  $ do   mTerm   <- pTermArg
-        nsLabel <- P.many 
+        nsLabel <- P.many
                 $  do   pTok KDot
                         pLbl <?> "a field label"
         return  $  foldl (flip MProject) mTerm nsLabel
@@ -320,7 +320,7 @@ pTermArg
         -- Var ^ Nat
         n <- pVar
         P.choice
-         [ do   pTok KHat 
+         [ do   pTok KHat
                 b <- pNat <?> "the number of bump levels for the variable"
                 return $ MVar $ BoundWith n b
          , do   return $ MVar $ BoundWith n 0 ]
@@ -447,7 +447,7 @@ pTermStmt :: Parser ([Bind], Term Location)
 pTermStmt
  = P.choice
  [ do   -- '[' (Var : Type),* ']' = Term
-        bs      <- pSquared $ flip P.sepEndBy (pTok KComma) 
+        bs      <- pSquared $ flip P.sepEndBy (pTok KComma)
                         (pBind <?> "a binder")
         pTok KEquals     <?> "an '=' to start the body"
         mBody   <- pTerm <?> "the body of the statement"
@@ -539,7 +539,7 @@ pValues :: Parser [Value Location]
 pValues
  = P.choice
  [ do   -- '[' Value,* ']'
-        pSquared $ flip P.sepEndBy (pTok KComma) 
+        pSquared $ flip P.sepEndBy (pTok KComma)
                  $ (pValue <?> "a value")
 
  , do   -- Value
@@ -562,7 +562,7 @@ pTermValueRecord
         return $ VRecord lvs
 
 
-------------------------------------------------------------------------------------- Annotation -- 
+------------------------------------------------------------------------------------- Annotation --
 pMAnn :: Parser (Term Location) -> Parser (Term Location)
 pMAnn p
  = do   (Range l1 _, m) <- pWithRange p

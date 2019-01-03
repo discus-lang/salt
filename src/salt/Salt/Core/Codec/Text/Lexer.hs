@@ -3,7 +3,7 @@ module Salt.Core.Codec.Text.Lexer
         ( lexSource
         , LexerError(..)
         , IW.Range (..), IW.Location(..)
-        
+
         , scanner
         , checkMatch
         , matchVar
@@ -23,7 +23,7 @@ import qualified System.IO.Unsafe         as System
 
 ---------------------------------------------------------------------------------------------------
 -- | Lexer error.
-data LexerError 
+data LexerError
         = LexerError
         { errorLine     :: Int
         , errorColumn   :: Int
@@ -50,8 +50,8 @@ lexSource sSource
 --   We take a line offset to add to any tokens and error messages produced.
 lexLine :: Int -> String -> IO (Either LexerError [At Token])
 lexLine nLineOffset sSource
- = do   
-        (toks, loc, strRest) 
+ = do
+        (toks, loc, strRest)
          <- IW.scanStringIO sSource scanner
 
         let IW.Location nLine nColumn = loc
@@ -258,7 +258,7 @@ scanQuotedIdent
   accept "Sym" = Just KSym
   accept _     = Nothing
 
-  wrap (loc, _) (_, klass) (_, ident) 
+  wrap (loc, _) (_, klass) (_, ident)
    = (loc, klass $ Text.pack ident)
 {-# INLINE scanQuotedIdent #-}
 
