@@ -1,9 +1,9 @@
-test/30-error/30-check-term-sigs/Test.salt:6:6
+test/30-error/30-check-term-sigs/Test.salt:6:16
   Unknown type primitive '#Derp'.
 
   6:6    In term declaration "term1"
 
-test/30-error/30-check-term-sigs/Test.salt:9:6
+test/30-error/30-check-term-sigs/Test.salt:9:23
   Unknown type primitive '#Derp'.
 
   9:6    In term declaration "term2"

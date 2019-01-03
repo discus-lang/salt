@@ -1,9 +1,9 @@
-test/30-error/20-check-type-sigs/Test.salt:6:6
+test/30-error/20-check-type-sigs/Test.salt:6:16
   Unknown kind constructor 'Derp'.
 
   6:6    In type declaration "decl1"
 
-test/30-error/20-check-type-sigs/Test.salt:9:6
+test/30-error/20-check-type-sigs/Test.salt:9:24
   Unknown kind constructor 'Derp'.
 
   9:6    In type declaration "decl2"

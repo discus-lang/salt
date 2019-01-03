@@ -37,7 +37,7 @@ test/30-error/11-check-term/Test.salt:31:11
 
   31:11  In test
 
-test/30-error/11-check-term/Test.salt:36:12
+test/30-error/11-check-term/Test.salt:36:18
   Unknown kind constructor 'Nat'.
 
   36:11  In test
@@ -66,7 +66,7 @@ test/30-error/11-check-term/Test.salt:48:12
 
   48:11  In test
 
-test/30-error/11-check-term/Test.salt:53:12
+test/30-error/11-check-term/Test.salt:53:17
   Unknown type primitive '#Data'.
 
   53:11  In test
@@ -192,7 +192,7 @@ test/30-error/11-check-term/Test.salt:115:11
 
   115:11 In test
 
-test/30-error/11-check-term/Test.salt:120:11
+test/30-error/11-check-term/Test.salt:120:18
   Unknown type primitive '#Derp'.
 
   120:11 In test
@@ -298,7 +298,7 @@ test/30-error/11-check-term/Test.salt:178:11
 
   178:11 In test
 
-test/30-error/11-check-term/Test.salt:181:11
+test/30-error/11-check-term/Test.salt:181:15
   Variant annotation does not have variant type
     type: #Nat
 
@@ -410,7 +410,7 @@ test/30-error/11-check-term/Test.salt:246:17
 
   246:11 In test
 
-test/30-error/11-check-term/Test.salt:249:11
+test/30-error/11-check-term/Test.salt:249:17
   Unexpected type: #Effect
         expecting: #Data
 
@@ -434,7 +434,7 @@ test/30-error/11-check-term/Test.salt:260:16
 
   260:11 In test
 
-test/30-error/11-check-term/Test.salt:263:11
+test/30-error/11-check-term/Test.salt:263:16
   Unexpected type: #Effect
         expecting: #Data
 

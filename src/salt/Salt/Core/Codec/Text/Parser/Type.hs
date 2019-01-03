@@ -100,7 +100,9 @@ pTypesHead
  = P.choice
  [ do   -- (Prm | TypeArg) ( TypeArg+ | ('[' Type,+ ']') )*
         tFun    <- P.choice
-                [  do   pPrm >>= return . TPrm
+                [  pTAnn
+                $  do   p       <- pPrm
+                        return $ TPrm p
                 ,  do   pTypeArg ]
 
         -- Take multiple TypeArgs at once to curry them together into a

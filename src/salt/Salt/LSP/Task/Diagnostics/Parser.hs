@@ -1,6 +1,7 @@
 
 module Salt.LSP.Task.Diagnostics.Parser where
 import Salt.LSP.Task.Diagnostics.Lexer
+import Salt.LSP.Task.Diagnostics.Base
 import Salt.LSP.Interface
 import Salt.LSP.Protocol
 import Salt.LSP.State
@@ -98,8 +99,8 @@ diagnosticOfParseError _toks (ParseError rangeTokHere mRangeTokPrev msgs)
          = Nothing
 
         rangeReport
-         = -- mungeRangeForVSCode
-           fromMaybe rangeHere mRangeIncompleteDecl
+         = mungeRangeForVSCode
+         $ fromMaybe rangeHere mRangeIncompleteDecl
 
 
 -- | Determine if the token that caused the error is one that starts a new
@@ -112,20 +113,6 @@ isDeclStartToken tok
         KType   -> True
         KTest   -> True
         _       -> False
-
-
--- | Munge a range to work with VSCode
---   The ranges that Inchworm attaches to tokens are from the first character
---   to the last character in the token. VSCode wants from first character
---   to just after where to put the red wiggle.
-mungeRangeForVSCode :: Range Location -> Range Location
-mungeRangeForVSCode range'@(Range locStart locEnd)
- | Location lStart cStart <- locStart
- , Location lEnd   cEnd   <- locEnd
- , lStart == lEnd, cEnd - cStart > 1
- = Range locStart (Location lEnd (cEnd + 1))
-
- | otherwise = range'
 
 
 -- | Find the source range of the declaration start token just before the

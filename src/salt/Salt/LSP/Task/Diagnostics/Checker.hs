@@ -1,6 +1,7 @@
 
 module Salt.LSP.Task.Diagnostics.Checker where
 import Salt.LSP.Task.Diagnostics.Lexer
+import Salt.LSP.Task.Diagnostics.Base
 import Salt.LSP.State
 import Salt.LSP.Protocol
 import Salt.LSP.Interface
@@ -43,10 +44,11 @@ packCheckerDiagnostic (CheckerDiagnostic range sMsg)
 -- | Build a diagnostic from a type checker error.
 diagnosticOfCheckerError :: Check.Error (R.Ranges R.Location) -> CheckerDiagnostic
 diagnosticOfCheckerError err
- = CheckerDiagnostic range msg
+ = CheckerDiagnostic range' msg
  where
         R.Ranges lStart _ lEnd
          = Check.errorAnnot err
 
         range   = Lexer.Range lStart lEnd
+        range'  = mungeRangeForVSCode range
         msg     = P.render $ P.ppr () err
