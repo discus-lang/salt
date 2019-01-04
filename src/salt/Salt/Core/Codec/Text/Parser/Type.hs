@@ -3,7 +3,6 @@ module Salt.Core.Codec.Text.Parser.Type where
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp
-import qualified Salt.Data.Ranges       as R
 
 import Control.Monad
 import Text.Parsec                      ((<?>))
@@ -14,77 +13,58 @@ import qualified Text.Parsec            as P
 -- | Parser for a type expression.
 pType :: Parser (Type RL)
 pType
- = P.choice
+ = pTAnn $ P.choice
  [ do   -- 'λ' TypeParams '⇒' Type
-        lStart  <- locHere
         pFun
-        bks     <- pTypeParams  <?> "some parameters"
+        tps     <- pTypeParams  <?> "some parameters"
         pFatRight               <?> "more parameters, or '⇒' to start the body type"
         tBody   <- pType        <?> "a body type"
-        lEnd    <- locPrev
-        return  $ TAnn (R.range lStart lEnd)
-                $ TAbs bks tBody
+        return  $ TAbs tps tBody
 
  , do   -- '∀' TypeParams '.' Type
-        lStart  <- locHere
         pForall
-        TPTypes bks <- pTypeParams
-         <?> "some parameters for the forall type"
+        tps     <- pTypeParams  <?> "some parameters for the forall type"
+        let TPTypes bks = tps
         pTok KDot               <?> "more parameters, or '.' to start the body type"
         tBody   <- pType        <?> "a body for the exists type"
-        lEnd    <- locPrev
-        return  $ TAnn (R.range lStart lEnd)
-                $ TForall bks tBody
+        return  $ TForall bks tBody
 
  , do   -- '∃' TypeParams '.' Type
-        lStart  <- locHere
         pExists
-        TPTypes bks <- pTypeParams
-         <?> "some parameters for the exists type"
+        tps     <- pTypeParams  <?> "some parameters for the exists type"
+        let TPTypes bks = tps
         pTok KDot               <?> "more parameters, or '.' to start the body type"
         tBody   <- pType        <?> "a body for the forall type"
-        lEnd    <- locPrev
-        return  $ TAnn (R.range lStart lEnd)
-                $ TExists bks tBody
+        return  $ TExists bks tBody
 
  , do   -- '∙'
-        (r, _)  <- pRanged pHole
-        return  $ TAnn (R.one r)
-                $ THole
+        pHole
+        return  $ THole
 
  , do   -- TypesHead '->' TypesResult
         -- TypesHead '=>' TypesResult
         -- TypesHead '!'  Type
         -- TypesHead '+'  Type
         -- TypesHead
-        lStart  <- locHere
         TGTypes tsHead <- pTypesHead
         P.choice
          [ do   pRight
                 tsResult <- pTypesResult    <?> "a result for the function type"
-                lEnd     <- locPrev
-                return  $ TAnn (R.range lStart lEnd)
-                        $ TFun tsHead tsResult
+                return  $ TFun tsHead tsResult
 
          , do   pFatRight
                 tsResult <- pType           <?> "a result for the kind arrow"
-                lEnd     <- locPrev
-                return  $ TAnn (R.range lStart lEnd)
-                        $ TArr tsHead tsResult
+                return  $ TArr tsHead tsResult
 
          , do   pTok KBang
                 tResult <- pType            <?> "an effect for the suspension type"
-                lEnd    <- locPrev
-                return  $ TAnn (R.range lStart lEnd)
-                        $ TSusp tsHead tResult
+                return  $ TSusp tsHead tResult
 
          , do   pTok KPlus
                 case tsHead of
                  [t] -> do
                         tResult <- pType    <?> "a component of the sum type"
-                        lEnd    <- locPrev
-                        return  $ TAnn (R.range lStart lEnd)
-                                $ TSum [t, tResult]
+                        return  $ TSum [t, tResult]
                  _   -> P.unexpected "type sequence used in sum type"
 
          , do   case tsHead of
@@ -304,5 +284,5 @@ pTypeVector
 pTAnn :: Parser (Type RL) -> Parser (Type RL)
 pTAnn p
  = do   (r, m) <- pRanged p
-        return $ TAnn (R.one r) m
+        return $ TAnn r m
 

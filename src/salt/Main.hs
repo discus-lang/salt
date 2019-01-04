@@ -3,7 +3,7 @@ module Main where
 import Salt.Main.Config
 import Salt.Core.Exp
 import Salt.Data.Pretty
-import Data.Function
+import Salt.Data.Location
 import qualified Salt.LSP.Driver                as LSP
 import qualified Salt.Core.Eval                 as Eval
 import qualified Salt.Core.Check                as Check
@@ -13,10 +13,10 @@ import qualified Salt.Core.Codec.Text.Lexer     as Lexer
 import qualified Salt.Core.Codec.Text.Token     as Token
 import qualified Salt.Core.Codec.Text.Parser    as Parser
 import qualified Salt.Data.Pretty               as P
-import qualified Salt.Data.Ranges               as R
 
 import qualified Text.Lexer.Inchworm.Char       as IW
 
+import Data.Function
 import qualified System.Environment             as System
 import qualified System.Exit                    as System
 import qualified System.IO                      as System
@@ -38,8 +38,8 @@ main
          _ -> do  putStr usage
                   System.exitFailure
 
-type RL = R.Ranges R.Location
-rlNone  = R.range  (R.Location 0 0) (R.Location 0 0)
+type RL = Range Location
+rlNone  = Range (Location 0 0) (Location 0 0)
 
 
 -- Lex --------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ runCheck filePath mm
                         System.exitFailure
 
 printError filePath err
- = do   let (R.Ranges (R.Location nLine nCol) _ _)
+ = do   let (Range (Location nLine nCol) _)
                 = Error.errorAnnot err
         putStrLn
          $ P.render $ vcat
@@ -115,7 +115,7 @@ printError filePath err
                 , P.indent 2 $ ppr () err ]
 
          ++ [ empty]
-         ++ [ let (R.Ranges (R.Location nLine' nCol') _ _)
+         ++ [ let (Range (Location nLine' nCol') _)
                     = Where.whereAnnot wh
               in  P.indent 2
                         $  P.padL 6

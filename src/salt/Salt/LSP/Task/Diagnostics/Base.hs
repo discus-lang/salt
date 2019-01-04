@@ -1,6 +1,7 @@
 
 module Salt.LSP.Task.Diagnostics.Base where
-import Salt.Data.Ranges
+import Salt.Data.Location
+
 
 -- | Munge a range to work with VSCode
 --   The ranges that Inchworm attaches to tokens are from the first character

@@ -6,7 +6,6 @@ import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Prim.Values
 import Salt.Core.Exp
-import qualified Salt.Data.Ranges       as R
 
 import Control.Monad
 import Text.Parsec                      ((<?>))
@@ -567,6 +566,6 @@ pTermValueRecord
 pMAnn :: Parser (Term RL) -> Parser (Term RL)
 pMAnn p
  = do   (r, m) <- pRanged p
-        return $ MAnn (R.one r) m
+        return $ MAnn r m
 
 

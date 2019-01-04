@@ -50,7 +50,7 @@ scanner text =
       _  -> Left $ ErrorLexLeftover (Tokens toks) strRest
 
 parser :: Parser.Base.Parser a -> [Token.At Token.Token] -> Either (RoundtripError a) a
-parser p toks 
+parser p toks
  = case Parser.parse p "<test>" toks of
-    Right v            -> return v
-    Left  err          -> Left $ ErrorNoParse (show err)
+    Right v     -> return v
+    Left  err   -> Left $ ErrorNoParse (show err)

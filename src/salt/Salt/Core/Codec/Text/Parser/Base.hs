@@ -5,7 +5,6 @@ import Salt.Core.Codec.Text.Token
 import Salt.Core.Codec.Text.Pretty
 import Salt.Core.Exp
 import qualified Salt.Data.Pretty               as Pretty
-import qualified Salt.Data.Ranges               as R
 
 import qualified Text.Lexer.Inchworm.Source     as IW
 import qualified Text.Parsec                    as P
@@ -15,7 +14,8 @@ import qualified Text.Parsec.Pos                as P
 ------------------------------------------------------------------------------------------ Types --
 -- | Generic type of parsers.
 type Parser a   = P.Parsec [At Token] IW.Location a
-type RL         = R.Ranges R.Location
+type RL         = IW.Range IW.Location
+
 
 ------------------------------------------------------------------------------ Location Handling --
 -- | Get the current position in the input stream,

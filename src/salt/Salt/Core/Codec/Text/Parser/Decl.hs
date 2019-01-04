@@ -5,7 +5,6 @@ import Salt.Core.Codec.Text.Parser.Term
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp
-import qualified Salt.Data.Ranges       as R
 
 import Control.Monad
 import Text.Parsec                              ((<?>))
@@ -14,22 +13,22 @@ import qualified Text.Parsec                    as P
 
 
 -- | Parser for a top-level declaration.
-pDecl :: Parser (Decl (R.Ranges R.Location))
+pDecl :: Parser (Decl RL)
 pDecl
  = P.choice
  [ do   -- 'type' Var TypeParams* ':' Type '=' Type
         pTok KType
-        lStart          <- locHere
-        (rName, nName)  <- pRanged pVar <?> "a name for the type"
-        tps             <- P.many
-                           (pTypeParams <?> "some parameters, or a ':' to give the result kind")
-        pTok KColon                     <?> "more parameters, or a ':' to give the result kind"
-        kResult         <- pType        <?> "the result kind"
-        pTok KEquals                    <?> "a '=' to start the body"
-        tBody           <- pType        <?> "the body"
-        lEnd            <- locPrev
+        lStart  <- locHere
+        nName   <- pVar <?> "a name for the type"
+        tps     <- P.many (pTypeParams
+                                <?> "some parameters, or a ':' to give the result kind")
+        pTok KColon             <?> "more parameters, or a ':' to give the result kind"
+        kResult <- pType        <?> "the result kind"
+        pTok KEquals            <?> "a '=' to start the body"
+        tBody   <- pType        <?> "the body"
+        lEnd    <- locPrev
         return  $ DType $ DeclType
-                { declAnnot       = R.ranges lStart [R.one rName] lEnd
+                { declAnnot       = Range lStart lEnd
                 , declName        = nName
                 , declParams      = tps
                 , declKindResult  = kResult
@@ -38,20 +37,20 @@ pDecl
 
  , do   -- 'term' Var TermParams* (':' Type)? '=' Term
         pTok KTerm
-        lStart          <- locHere
-        (rName, nName)  <- pRanged pVar <?> "a name for the term"
-        mps             <- P.many
-                           (pTermParams <?> "some parameters, or a result type annotation")
-        pTok KColon                     <?> "more parameters, or a ':' to start the result type"
-        tsResult        <- pTypesResult <?> "some result types"
-        pTok KEquals                    <?> "a '=' to start the body"
-        mBody           <- pTerm        <?> "the body"
-        lEnd            <- locPrev
+        lStart  <- locHere
+        nName   <- pVar         <?> "a name for the term"
+        mps     <- P.many (pTermParams
+                                <?> "some parameters, or a result type annotation")
+        pTok KColon             <?> "more parameters, or a ':' to start the result type"
+        tsRes   <- pTypesResult <?> "some result types"
+        pTok KEquals            <?> "a '=' to start the body"
+        mBody   <- pTerm        <?> "the body"
+        lEnd    <- locPrev
         return  $  DTerm $ DeclTerm
-                { declAnnot       = R.ranges lStart [R.one rName] lEnd
+                { declAnnot       = Range lStart lEnd
                 , declName        = nName
                 , declParams      = mps
-                , declTypesResult = tsResult
+                , declTypesResult = tsRes
                 , declBody        = mBody }
 
 
@@ -66,8 +65,7 @@ pDecl
         --  If we don't recognize it then we want the error to be on this token,
         --  not the one after.
         nMode
-         <- P.lookAhead
-                (P.choice [ pVar, do pTok KType; return "type"])
+         <- P.lookAhead (P.choice [ pVar, do pTok KType; return "type"])
          <?> "the test mode"
 
         -- Check this is a valid test mode.
@@ -99,7 +97,7 @@ pDecl
                                 else "a test name, or the type to take the kind of"
                 lEnd    <- locPrev
                 return  $ DTest $ DeclTestKind
-                        { declAnnot     = R.range lStart lEnd
+                        { declAnnot     = Range lStart lEnd
                         , declTestName  = mName
                         , declTestType  = tType }
 
@@ -110,7 +108,7 @@ pDecl
                                 else "a test name, or the term to take the type of"
                 lEnd    <- locPrev
                 return  $ DTest $ DeclTestType
-                        { declAnnot     = R.range lStart lEnd
+                        { declAnnot     = Range lStart lEnd
                         , declTestName  = mName
                         , declTestTerm  = mTerm }
 
@@ -121,7 +119,7 @@ pDecl
                                 else "a test name, or the type to evaluate"
                 lEnd    <- locPrev
                 return  $ DTest $ DeclTestEvalType
-                        { declAnnot     = R.range lStart lEnd
+                        { declAnnot     = Range lStart lEnd
                         , declTestName  = mName
                         , declTestType  = tBody }
 
@@ -132,7 +130,7 @@ pDecl
                                 else "a test name, or the term to evaluate"
                 lEnd    <- locPrev
                 return  $ DTest $ DeclTestEvalTerm
-                        { declAnnot     = R.range lStart lEnd
+                        { declAnnot     = Range lStart lEnd
                         , declTestName  = mName
                         , declTestTerm  = mBody }
 
@@ -143,7 +141,7 @@ pDecl
                                 else "a test name, or the term to execute"
                 lEnd    <- locPrev
                 return  $ DTest $ DeclTestExec
-                        { declAnnot     = R.range lStart lEnd
+                        { declAnnot     = Range lStart lEnd
                         , declTestName  = mName
                         , declTestBody  = mBody }
 
@@ -154,7 +152,7 @@ pDecl
                                 else "a test name, or the term you hope is true"
                 lEnd    <- locPrev
                 return  $ DTest $ DeclTestAssert
-                        { declAnnot     = R.range lStart lEnd
+                        { declAnnot     = Range lStart lEnd
                         , declTestName  = mName
                         , declTestBody  = mBody }
          ]

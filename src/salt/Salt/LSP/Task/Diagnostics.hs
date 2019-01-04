@@ -6,7 +6,7 @@ import Salt.LSP.Task.Diagnostics.Checker
 import Salt.LSP.State
 import Salt.LSP.Protocol
 import Salt.LSP.Interface
-import qualified Salt.Data.Ranges               as R
+import Salt.Data.Location
 import qualified Salt.Core.Codec.Text.Parser    as Parser
 import qualified Salt.Core.Codec.Text.Lexer     as Lexer
 import qualified Salt.Core.Check                as Checker
@@ -34,7 +34,7 @@ updateDiagnostics state sUri sSource
         -- TODO: start with range of whole file.
         goCheck mm
          = Checker.checkModule
-                (R.range (R.Location 0 0) (R.Location 0 0))
+                (Range (Location 0 0) (Location 0 0))
                 mm
          >>= \case
                 Left errs

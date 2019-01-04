@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f1252041e5b540b6ef544b0d75572a964d78866725b285dac2a92bf7c6e8460d
+-- hash: 50f3e04ec5326afe3abc648d350daeb0cc3f895d99f390c82fff04c46a9abb51
 
 name:           salt
 version:        0.0.0.0
@@ -93,7 +93,6 @@ executable salt
       Salt.Data.List
       Salt.Data.Pretty
       Salt.Data.PrettyPrint
-      Salt.Data.Ranges
       Salt.Data.Textual
       Salt.LSP.Driver
       Salt.LSP.Interface
@@ -104,6 +103,7 @@ executable salt
       Salt.LSP.Protocol.Response
       Salt.LSP.State
       Salt.LSP.Task.Diagnostics
+      Salt.LSP.Task.Diagnostics.Base
       Salt.LSP.Task.Diagnostics.Checker
       Salt.LSP.Task.Diagnostics.Lexer
       Salt.LSP.Task.Diagnostics.Parser

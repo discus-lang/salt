@@ -41,8 +41,9 @@ checkTypeWith a wh ctx t@(TVar u)
 
 -- (k-abs) ------------------------------------------------
 checkTypeWith a wh ctx (TAbs ps tBody)
- = do   ps'@(TPTypes bks)  <- checkTypeParams a wh ctx ps
-        let ctx'     = contextBindTypeParams ps' ctx
+ = do
+        ps'@(TPTypes bks)  <- checkTypeParams a wh ctx ps
+        let ctx' = contextBindTypeParams ps' ctx
         (tBody', kResult)  <- checkType a wh ctx' tBody
         let ksParam  = map snd bks
         return  ( TAbs ps' tBody'
