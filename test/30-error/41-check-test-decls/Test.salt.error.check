@@ -1,24 +1,24 @@
 test/30-error/41-check-test-decls/Test.salt:6:19
-  Test 'test1' is impure
-    with effect: #Console
+  Impure test declaration 'test1'
+   has effect '#Console'
 
   6:19   In test "test1"
 
 test/30-error/41-check-test-decls/Test.salt:10:4
-  Test 'test2' is impure
-    with effect: #Console
+  Impure test declaration 'test2'
+   has effect '#Console'
 
   10:4   In test "test2"
 
 test/30-error/41-check-test-decls/Test.salt:14:19
   Test 'test3' does not produce a suspension to execute.
-    actual types: [#Bool]
+   Actual types [#Bool]
 
   14:19  In test "test3"
 
 test/30-error/41-check-test-decls/Test.salt:18:4
-  Test 'test4' is impure
-    with effect: #Console
+  Impure test declaration 'test4'
+   has effect '#Console'
 
   18:4   In test "test4"
 

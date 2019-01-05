@@ -2,12 +2,12 @@
 -- Trigger all the errors that can be produced by checkType.
 
 -- (k-prm) --------------------------------------------------------------------
--- Error: unknown primitive.
+-- Error: unknown type primitive.
 test kind #derp
 
 
 -- (k-var) --------------------------------------------------------------------
--- Error: variable out of scope.
+-- Error: unknown type name.
 test kind a
 
 
@@ -15,7 +15,7 @@ test kind a
 -- Error: parameter kind is ill-formed.
 test kind (λ[a: #Derp] ⇒ a)
 
--- Error: duplicate in binder names.
+-- Error: duplicate type parameters
 test kind (λ[a: #Data, a: #Data] ⇒ #List a)
 
 -- Error: body type is ill-kinded.

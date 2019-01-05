@@ -91,7 +91,7 @@ ppre c (ErrorAbsTypeImpure _a _wh eActual)
         , text " causes effect" %% ppr c eActual ]
 
 ppre _ (ErrorAbsTypeBindConflict _a _wh ns)
- = vcat [ text "Duplicate type parameters"
+ = vcat [ text "Conflicting type binders"
                 %% squotes (hsep $ punctuate (text ",") $ map pprVar ns) ]
 
 -- term
@@ -100,7 +100,7 @@ ppre c (ErrorAbsTermImpure _a _wh eActual)
         , text " causes effect" %% ppr c eActual ]
 
 ppre _ (ErrorAbsTermBindConflict _a _wh ns)
- = vcat [ text "Duplicate term parameters" %% squared (map pprVar ns) ]
+ = vcat [ text "Conflicting term binders" %% squared (map pprVar ns) ]
 
 ppre c (ErrorAbsTermNoValueForForall _a _wh ps)
  = vcat [ text "Polymorphic term abstraction does not produce a value."

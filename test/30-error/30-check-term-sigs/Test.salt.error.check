@@ -1,32 +1,31 @@
 test/30-error/30-check-term-sigs/Test.salt:6:16
-  Unknown type primitive '#Derp'.
+  Unknown type primitive '#Derp'
 
   6:6    In term declaration "term1"
 
 test/30-error/30-check-term-sigs/Test.salt:9:23
-  Unknown type primitive '#Derp'.
+  Unknown type primitive '#Derp'
 
   9:6    In term declaration "term2"
 
 test/30-error/30-check-term-sigs/Test.salt:12:6
-  Duplicate term binders at same level
-   with names {x}
+  Conflicting term binders [x]
 
   12:6   In term declaration "term3"
 
 test/30-error/30-check-term-sigs/Test.salt:15:6
-  Term 'term4' declared multiple times.
+  Rebound term name 'term4'
 
   15:6   In term declaration "term4"
 
 test/30-error/30-check-term-sigs/Test.salt:16:6
-  Term 'term4' declared multiple times.
+  Rebound term name 'term4'
 
   16:6   In term declaration "term4"
 
 test/30-error/30-check-term-sigs/Test.salt:19:6
-  Polymorphic term does not produce a value
-   with parameters @[a: #Data]
+  Polymorphic term abstraction does not produce a value.
+   Parameters @[a: #Data]
 
   19:6   In term declaration "term5"
 

@@ -1,44 +1,43 @@
 test/30-error/20-check-type-sigs/Test.salt:6:16
-  Unknown kind constructor 'Derp'.
+  Unknown kind constructor '#Derp'
 
   6:6    In type declaration "decl1"
 
 test/30-error/20-check-type-sigs/Test.salt:9:24
-  Unknown kind constructor 'Derp'.
+  Unknown kind constructor '#Derp'
 
   9:6    In type declaration "decl2"
 
 test/30-error/20-check-type-sigs/Test.salt:12:12
-  Duplicate type binders at same level
-   with names {a}
+  Conflicting type binders 'a'
 
   12:6   In type declaration "decl3"
 
 test/30-error/20-check-type-sigs/Test.salt:15:6
-  Type 'decl4' declared multiple times.
+  Rebound type name 'decl4'
 
   15:6   In type declaration "decl4"
 
 test/30-error/20-check-type-sigs/Test.salt:16:6
-  Type 'decl4' declared multiple times.
+  Rebound type name 'decl4'
 
   16:6   In type declaration "decl4"
 
 test/30-error/20-check-type-sigs/Test.salt:19:6
-  Type declaration 'decl5' is recursive
-    though: {decl5}
+  Recursive type declaration 'decl5'
+   Involving [decl5]
 
   19:6   In type declaration "decl5"
 
 test/30-error/20-check-type-sigs/Test.salt:22:6
-  Type declaration 'decl6' is recursive
-    though: {decl7}
+  Recursive type declaration 'decl6'
+   Involving [decl7]
 
   22:6   In type declaration "decl6"
 
 test/30-error/20-check-type-sigs/Test.salt:23:6
-  Type declaration 'decl7' is recursive
-    though: {decl6}
+  Recursive type declaration 'decl7'
+   Involving [decl6]
 
   23:6   In type declaration "decl7"
 

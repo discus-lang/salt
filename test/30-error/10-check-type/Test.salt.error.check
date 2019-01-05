@@ -1,177 +1,187 @@
 test/30-error/10-check-type/Test.salt:6:11
-  Unknown type primitive '#derp'.
+  Unknown type primitive '#derp'
 
   6:11   In test
 
 test/30-error/10-check-type/Test.salt:11:11
-  Type variable 'a' is not in scope.
+  Unknown type name 'a'
 
   11:11  In test
 
 test/30-error/10-check-type/Test.salt:16:17
-  Unknown kind constructor 'Derp'.
+  Unknown kind constructor '#Derp'
 
   16:11  In test
 
 test/30-error/10-check-type/Test.salt:19:13
-  Duplicate type binders at same level
-   with names {a}
+  Conflicting type binders 'a'
 
   19:11  In test
 
-test/30-error/10-check-type/Test.salt:22:34
-  Unexpected type: #Data
-        expecting: #Effect
+test/30-error/10-check-type/Test.salt:23:34
+  Actual type '#Data'
+   does not match
+   expected type '#Effect'
 
-  22:11  In test
+  23:11  In test
 
-test/30-error/10-check-type/Test.salt:27:17
-  Unknown kind constructor 'Derp'.
+test/30-error/10-check-type/Test.salt:28:17
+  Unknown kind constructor '#Derp'
 
-  27:11  In test
+  28:11  In test
 
-test/30-error/10-check-type/Test.salt:30:29
-  Unknown type primitive '#Derp'.
+test/30-error/10-check-type/Test.salt:31:29
+  Unknown type primitive '#Derp'
 
-  30:11  In test
+  31:11  In test
 
-test/30-error/10-check-type/Test.salt:33:31
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:34:31
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  33:11  In test
+  34:11  In test
 
-test/30-error/10-check-type/Test.salt:36:49
+test/30-error/10-check-type/Test.salt:37:49
   Not enough arguments in type application.
-   parameter types: [#Data, #Data]
+   Parameter types [#Data, #Data]
 
-  36:11  In test
+  37:11  In test
 
-test/30-error/10-check-type/Test.salt:39:29
+test/30-error/10-check-type/Test.salt:40:29
   Not enough arguments in type application.
-   parameter types: [#Data]
+   Parameter types [#Data]
 
-  39:11  In test
+  40:11  In test
 
-test/30-error/10-check-type/Test.salt:42:49
+test/30-error/10-check-type/Test.salt:43:49
   Too many arguments in type application.
-   parameter types: [#Data, #Data]
+   Parameter types [#Data, #Data]
 
-  42:11  In test
+  43:11  In test
 
-test/30-error/10-check-type/Test.salt:45:41
+test/30-error/10-check-type/Test.salt:46:41
   Too many arguments in type application.
-   parameter types: [#Data, #Data]
+   Parameter types [#Data, #Data]
 
-  45:11  In test
+  46:11  In test
 
-test/30-error/10-check-type/Test.salt:50:17
-  Unknown kind constructor 'Derp'.
+test/30-error/10-check-type/Test.salt:51:17
+  Unknown kind constructor '#Derp'
 
-  50:11  In test
+  51:11  In test
 
-test/30-error/10-check-type/Test.salt:53:13
-  Duplicate type binders at same level
-   with names {a}
+test/30-error/10-check-type/Test.salt:54:13
+  Conflicting type binders 'a'
 
-  53:11  In test
+  54:11  In test
 
-test/30-error/10-check-type/Test.salt:56:27
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:57:27
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  56:11  In test
+  57:11  In test
 
-test/30-error/10-check-type/Test.salt:61:17
-  Unknown kind constructor 'Derp'.
+test/30-error/10-check-type/Test.salt:62:17
+  Unknown kind constructor '#Derp'
 
-  61:11  In test
+  62:11  In test
 
-test/30-error/10-check-type/Test.salt:64:13
-  Duplicate type binders at same level
-   with names {a}
+test/30-error/10-check-type/Test.salt:65:13
+  Conflicting type binders 'a'
 
-  64:11  In test
+  65:11  In test
 
-test/30-error/10-check-type/Test.salt:67:27
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:68:27
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  67:11  In test
+  68:11  In test
 
-test/30-error/10-check-type/Test.salt:72:12
-  Unknown type primitive '#Derp'.
+test/30-error/10-check-type/Test.salt:73:12
+  Unknown type primitive '#Derp'
 
-  72:11  In test
+  73:11  In test
 
-test/30-error/10-check-type/Test.salt:77:11
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:78:11
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  77:11  In test
+  78:11  In test
 
-test/30-error/10-check-type/Test.salt:80:18
-  Unknown type primitive '#Derp'.
+test/30-error/10-check-type/Test.salt:81:18
+  Unknown type primitive '#Derp'
 
-  80:11  In test
+  81:11  In test
 
-test/30-error/10-check-type/Test.salt:85:11
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:86:11
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  85:11  In test
+  86:11  In test
 
-test/30-error/10-check-type/Test.salt:90:11
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:91:11
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  90:11  In test
+  91:11  In test
 
-test/30-error/10-check-type/Test.salt:93:11
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:94:11
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  93:11  In test
+  94:11  In test
 
-test/30-error/10-check-type/Test.salt:96:11
+test/30-error/10-check-type/Test.salt:97:11
   Duplicate fields in record type
-    fields: {x}
+   [x]
 
-  96:11  In test
+  97:11  In test
 
-test/30-error/10-check-type/Test.salt:101:11
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:102:11
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  101:11 In test
+  102:11 In test
 
-test/30-error/10-check-type/Test.salt:104:11
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:105:11
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  104:11 In test
+  105:11 In test
 
-test/30-error/10-check-type/Test.salt:107:11
+test/30-error/10-check-type/Test.salt:108:11
   Duplicate alternatives in variant type
-    alternatives: {x}
+   {x}
 
-  107:11 In test
+  108:11 In test
 
-test/30-error/10-check-type/Test.salt:112:11
-  Unexpected type: #Effect
-        expecting: #Data
+test/30-error/10-check-type/Test.salt:113:11
+  Actual type '#Effect'
+   does not match
+   expected type '#Data'
 
-  112:11 In test
+  113:11 In test
 
-test/30-error/10-check-type/Test.salt:115:16
-  Unexpected type: #Data
-        expecting: #Effect
+test/30-error/10-check-type/Test.salt:116:16
+  Actual type '#Data'
+   does not match
+   expected type '#Effect'
 
-  115:11 In test
+  116:11 In test
 
-test/30-error/10-check-type/Test.salt:120:11
-  Unexpected type: #Data
-        expecting: #Effect
+test/30-error/10-check-type/Test.salt:121:11
+  Actual type '#Data'
+   does not match
+   expected type '#Effect'
 
-  120:11 In test
+  121:11 In test
 

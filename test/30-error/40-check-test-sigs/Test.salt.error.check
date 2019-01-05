@@ -1,10 +1,10 @@
 test/30-error/40-check-test-sigs/Test.salt:6:19
-  Test 'test1' declared multiple times.
+  Rebound test 'test1'
 
   6:19   In test "test1"
 
 test/30-error/40-check-test-sigs/Test.salt:7:19
-  Test 'test1' declared multiple times.
+  Rebound test 'test1'
 
   7:19   In test "test1"
 
