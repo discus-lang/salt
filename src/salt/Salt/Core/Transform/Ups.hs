@@ -35,8 +35,10 @@ upsApplyType ups tt
 
 -- | Apply an `Ups` to some type arguments.
 upsApplyTypeArgs :: Ups -> TypeArgs a -> TypeArgs a
-upsApplyTypeArgs ups (TGTypes ts)
- = TGTypes $ map (upsApplyType ups) ts
+upsApplyTypeArgs ups tgs
+ = case tgs of
+        TGAnn _a tgs'   -> upsApplyTypeArgs ups tgs'
+        TGTypes ts      -> TGTypes $ map (upsApplyType ups) ts
 
 
 ---------------------------------------------------------------------------------------------------

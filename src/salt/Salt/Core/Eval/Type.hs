@@ -56,30 +56,27 @@ evalType s a env (TApp tFun tgs)
         case tCloType of
          -- Reduce applications of primitive types to head normal form.
          TRef TRPrm{}
-          -> case tgs of
-                TGTypes ts
-                 -> do  tsArg   <- mapM (evalType s a env) ts
-                        return  $ TApp tFun (TGTypes tsArg)
+          | ts <- takeTGTypes tgs
+          -> do tsArg   <- mapM (evalType s a env) ts
+                return  $ TApp tFun (TGTypes tsArg)
 
          -- Reduce applications of type constructors to head normal form.
          TRef TRCon{}
-          -> case tgs of
-                TGTypes ts
-                 -> do  tsArg   <- mapM (evalType s a env) ts
-                        return  $ TApp tFun (TGTypes tsArg)
+          | ts <- takeTGTypes tgs
+          -> do tsArg   <- mapM (evalType s a env) ts
+                return  $ TApp tFun (TGTypes tsArg)
 
          -- Apply type closures.
          TRef (TRClo (TypeClosure env' tps tBody))
           | bks <- takeTPTypes tps
-          -> case tgs of
-                TGTypes ts
-                 -> do  let bs  = map fst bks
-                        tsArg   <- mapM (evalType s a env) ts
-                        when (not $ length tsArg == length bs)
-                         $ throw $ ErrorWrongTypeArity a (length bs) tsArg
+          , ts  <- takeTGTypes tgs
+          -> do let bs  = map fst bks
+                tsArg   <- mapM (evalType s a env) ts
+                when (not $ length tsArg == length bs)
+                 $ throw $ ErrorWrongTypeArity a (length bs) tsArg
 
-                        let env'' = tenvExtendTypes (zip bs tsArg) env'
-                        evalType s a env'' tBody
+                let env'' = tenvExtendTypes (zip bs tsArg) env'
+                evalType s a env'' tBody
 
          _ -> throw $ ErrorAppTypeBadClosure a tCloType
 
@@ -154,6 +151,9 @@ evalType _s a _env tt
 
 ---------------------------------------------------------------------------------------------------
 evalTypeArgs :: EvalType a (TypeArgs a) (TypeArgs a)
+evalTypeArgs s a env (TGAnn _ tgs')
+ = evalTypeArgs s a env tgs'
+
 evalTypeArgs s a env (TGTypes ts)
  = do   ts'     <- mapM (evalType s a env) ts
         return  $ TGTypes ts'

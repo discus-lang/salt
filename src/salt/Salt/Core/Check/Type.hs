@@ -58,10 +58,10 @@ checkTypeWith a wh ctx (TArr ks1 k2)
 
 
 -- (k-app) ------------------------------------------------
-checkTypeWith a wh ctx (TApt tFun tsArg)
- = do   (tFun',  kFun)    <- checkType a wh ctx tFun
-        (tsArg', kResult) <- checkTypeAppTypes a wh ctx kFun tsArg
-        return  (TApt tFun' tsArg', kResult)
+checkTypeWith a wh ctx (TApp tFun tgsArg)
+ = do   (tFun',  kFun)     <- checkType a wh ctx tFun
+        (tgsArg', kResult) <- checkTypeAppTypes a wh ctx kFun tgsArg
+        return  (TApp tFun' tgsArg', kResult)
 
 
 -- (k-all) ------------------------------------------------

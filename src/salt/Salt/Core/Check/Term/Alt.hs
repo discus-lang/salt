@@ -25,8 +25,8 @@ checkAlts a wh ctx mCase tScrut nmgsScrut alts
         -- The type of the scrutinee must cover this alternative.
         tsField
          <- case lookup nPat nmgsScrut of
-              Just (TGTypes ts) -> return ts
-              Nothing -> throw $ ErrorCaseAltNotInVariant a wh nPat tScrut
+              Just tgs -> return $ takeTGTypes tgs
+              Nothing  -> throw  $ ErrorCaseAltNotInVariant a wh nPat tScrut
 
         -- Check we have the same number of pattern binders as fields.
         let tsPat = map snd btsPat

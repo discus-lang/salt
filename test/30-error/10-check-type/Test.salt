@@ -72,7 +72,7 @@ test kind (∃[a: #Effect]. a)
 test kind [#Derp] -> []
 
 -- Error: parameter type has wrong kind.
--- TODO: errors are in the wrong place, we need to pass both annots and 
+-- TODO: errors are in the wrong place, we need to pass both annots and
 --       expected kinds to checkTypesAre/checkTypeEquivs, not just a single one.
 test kind [#Console] -> []
 
@@ -112,7 +112,7 @@ test kind <x: #Nat, x: #Nat, y: #Nat>
 test kind #Console ! pure
 
 -- Error: effect type has wrong kind
-test kind []!#Nat
+test kind [] ! #Nat
 
 
 -- (k-sum) --------------------------------------------------------------------

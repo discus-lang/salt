@@ -281,8 +281,9 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
                 -- When we do this we set the 'where' to the specific field we
                 -- are checking, which makes the error messages easier to read.
                 (ms', tss', ess')
-                  <- fmap unzip3 $ forM nmtgs $ \(n, m, (TGTypes ts))
-                  -> do let wh' = WhereRecordField a n (Just ts) : wh
+                  <- fmap unzip3 $ forM nmtgs $ \(n, m, tgs)
+                  -> do let ts  = takeTGTypes tgs
+                        let wh' = WhereRecordField a n (Just ts) : wh
                         checkTerm a wh' ctx (Check ts) m
 
                 return  ( MRecord ns ms'
@@ -318,17 +319,17 @@ checkTermWith a wh ctx Synth (MProject nLabel mRecord)
          <- checkTerm1 a wh ctx Synth mRecord
 
         -- The body needs to have record type with the field that we were expecting.
-        (ns, tgs, tRecord')
+        (ns, tgss, tRecord')
          <- simplType a ctx tRecord
          >>= \case
-                t@(TRecord ns tgs) -> return (ns, tgs, t)
+                t@(TRecord ns tgss) -> return (ns, tgss, t)
                 tThing  -> throw $ ErrorRecordProjectIsNot a wh tThing nLabel
 
         -- Lookup the types of the field.
         tsField
-         <- case lookup nLabel $ zip ns tgs of
-                Just (TGTypes tsField) -> return tsField
-                Nothing -> throw $ ErrorRecordProjectNoField a wh tRecord' nLabel
+         <- case lookup nLabel $ zip ns tgss of
+                Just tgs -> return $ takeTGTypes tgs
+                Nothing  -> throw $ ErrorRecordProjectNoField a wh tRecord' nLabel
 
         return  ( MProject nLabel mRecord'
                 , tsField, esRecord)
@@ -342,16 +343,16 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
 
         -- The annotation tells us what type to expect for the body.
         let aAnnot = fromMaybe a $ takeAnnotOfType tVariant
-        (ns, tgs, tVariant')
+        (ns, tgss, tVariant')
          <- simplType a ctx tVariant
          >>= \case
-                t@(TVariant ns tgs) -> return (ns, tgs, t)
+                t@(TVariant ns tgss) -> return (ns, tgss, t)
                 tThing -> throw $ ErrorVariantAnnotIsNot aAnnot wh tThing
 
         -- Lookup the types of the alternative.
         tsExpected'
-         <- case lookup nLabel $ zip ns tgs of
-                Just (TGTypes ts) -> return ts
+         <- case lookup nLabel $ zip ns tgss of
+                Just tgs -> return $ takeTGTypes tgs
                 _ -> throw $ ErrorVariantAnnotAltMissing aAnnot wh tVariant' nLabel
 
         -- Check the body against the type from the annotation.

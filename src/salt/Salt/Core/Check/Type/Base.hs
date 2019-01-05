@@ -96,12 +96,13 @@ checkTypeArgsAreAll
         :: Annot a => a -> [Where a]
         -> Context a -> Kind a -> TypeArgs a ->  IO (TypeArgs a)
 
-checkTypeArgsAreAll a wh ctx kExpected tgs
- = case tgs of
-        TGTypes ts
-         -> do  ts' <- checkTypesAre a wh ctx
+checkTypeArgsAreAll a wh ctx kExpected (TGAnn _ tgs')
+ = checkTypeArgsAreAll a wh ctx kExpected tgs'
+
+checkTypeArgsAreAll a wh ctx kExpected (TGTypes ts)
+ = do   ts' <- checkTypesAre a wh ctx
                         (replicate (length ts) kExpected)
                         ts
 
-                return $ TGTypes ts'
+        return $ TGTypes ts'
 

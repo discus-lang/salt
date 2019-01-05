@@ -41,7 +41,8 @@ data TypeParams a
 
 -- | Type Arguments.
 data TypeArgs a
-        = TGTypes ![Type a]                     -- ^ Type arguments.
+        = TGAnn a (TypeArgs a)
+        | TGTypes ![Type a]                     -- ^ Type arguments.
         deriving (Show, Eq, Ord)
 
 
@@ -93,8 +94,8 @@ pattern TApt    tF  ts2 = TKey TKApp          [TGTypes [tF], TGTypes ts2]
 pattern TFun    ts1 ts2 = TKey TKFun          [TGTypes ts1,  TGTypes ts2]
 pattern TForall tps t   = TKey TKForall       [TGTypes [TAbs tps t]]
 pattern TExists tps t   = TKey TKExists       [TGTypes [TAbs tps t]]
-pattern TRecord  ns mgs = TKey (TKRecord  ns) mgs
-pattern TVariant ns mgs = TKey (TKVariant ns) mgs
+pattern TRecord  ns tgs = TKey (TKRecord  ns) tgs
+pattern TVariant ns tgs = TKey (TKVariant ns) tgs
 pattern TSusp   tsv te  = TKey TKSusp         [TGTypes tsv, TGTypes [te]]
 pattern TPure           = TKey TKPure         []
 pattern TSync           = TKey TKSync         []
@@ -197,6 +198,13 @@ takeTPTypes tps
         TPAnn _ tps'    -> takeTPTypes tps'
         TPTypes bks     -> bks
 
+
+-- | Take the arguments from a TGTypes.
+takeTGTypes :: TypeArgs a -> [Type a]
+takeTGTypes tgs
+ = case tgs of
+        TGAnn _ tgs'    -> takeTGTypes tgs'
+        TGTypes ts      -> ts
 
 
 -- | If this is a `forall` type then split off the parameters and body.

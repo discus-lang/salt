@@ -139,8 +139,9 @@ instance HasSupport TypeKey where
 
 
 instance HasSupport (TypeArgs a) where
- supportOf tg
-  = case tg of
+ supportOf tgs
+  = case tgs of
+        TGAnn _ tgs'    -> supportOf tgs'
         TGTypes ts      -> mconcat $ map supportOf ts
 
 

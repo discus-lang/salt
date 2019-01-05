@@ -40,8 +40,10 @@ snvApplyType ups snv tt
 
 -- | Apply a type substitution to some type arguments.
 snvApplyTypeArgs :: Ups -> Snv (Type a) -> TypeArgs a -> TypeArgs a
-snvApplyTypeArgs ups snv (TGTypes ts)
- = TGTypes $ map (snvApplyType ups snv) ts
+snvApplyTypeArgs ups snv tgs
+ = case tgs of
+        TGAnn a tgs'    -> TGAnn a (snvApplyTypeArgs ups snv tgs')
+        TGTypes ts      -> TGTypes $ map (snvApplyType ups snv) ts
 
 
 snvOfTermEnvTypes :: TermEnv a -> Snv (Type a)

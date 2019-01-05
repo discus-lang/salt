@@ -33,13 +33,14 @@ reduceType a ctx tt@(TVar u)
 reduceType _a _ctx tt@(TSum{})
  = return $ Just $ flattenType tt
 
-reduceType a ctx (TApt tFun tsArgs)
+reduceType a ctx (TApp tFun tgsArgs)
  = simplType a ctx tFun
  >>= \case
-        TAbs tps tBody
-         | bks <- takeTPTypes tps
-         , length bks == length tsArgs
-         -> do  let ns     = [n | BindName n <- map fst bks]
+        TAbs tpsParam tBody
+         | bksParam <- takeTPTypes tpsParam
+         , tsArgs   <- takeTGTypes tgsArgs
+         , length bksParam == length tsArgs
+         -> do  let ns     = [n | BindName n <- map fst bksParam]
                 let snv    = snvOfBinds $ zip ns tsArgs
                 let tBody' = snvApplyType upsEmpty snv tBody
                 reduceType a ctx tBody'

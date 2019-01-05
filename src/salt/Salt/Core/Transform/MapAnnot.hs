@@ -88,8 +88,9 @@ instance MapAnnot TypeParams where
 
 
 instance MapAnnot TypeArgs where
- mapAnnot f gg
-  = case gg of
+ mapAnnot f tgs
+  = case tgs of
+        TGAnn a tgs'    -> TGAnn (f a) (mapAnnot f tgs')
         TGTypes ts      -> TGTypes (map (mapAnnot f) ts)
 
 

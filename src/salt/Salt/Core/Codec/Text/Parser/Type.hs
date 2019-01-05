@@ -86,20 +86,24 @@ pTypesHead
         -- Take multiple TypeArgs at once to curry them together into a
         -- single application. Each occurrence of an uncurried form with
         -- square brackets is a separate application.
-        tsArgs  <- P.many $ P.choice
-                 -- TypeArg+
-                 [ P.many1 (pTypeArg <?> "an argument type")
+        tgsArgs
+         <- P.many $ pTGAnn
+          $ P.choice
+          [ do  -- TypeArg+
+                ts <- P.many1 (pTypeArg <?> "an argument type")
+                return $ TGTypes ts
 
-                 -- '[' Type,+ ']'
-                 , pTypeVector
-                 ]
+          , do  -- '[' Type,+ ']'
+                ts <- pTypeVector
+                return $ TGTypes ts
+          ]
 
-        let tApp = foldl TApt tFun tsArgs
+        let tApp = foldl TApp tFun tgsArgs
         return $ TGTypes [tApp]
 
         -- '[' Type,+ ']'
  , do   ts      <- pTypeVector
-        return  $ TGTypes ts
+        return $ TGTypes ts
  ]
 
 
@@ -214,8 +218,9 @@ pTypeArg
 --   about needing to define them to be equal to 'T'.
 pTypeParams :: Parser (TypeParams RL)
 pTypeParams
- = do   (r, bts) <- pRanged pTypeSigs
-        return  $ TPAnn r $ TPTypes bts
+ = pTPAnn
+ $ do   bts <- pTypeSigs
+        return  $ TPTypes bts
 
 
 -- | Parser for some type signatures.
@@ -252,7 +257,7 @@ pTypeVariantFields
 -- | Parser for type args specified in a record or variant field.
 pTypeArgsField :: Parser (TypeArgs RL)
 pTypeArgsField
- = P.choice
+ = pTGAnn $ P.choice
  [ -- We need to try this first as [record| ] etc overlaps with the first
    -- part of the type vector syntax we try next.
    P.try $ do
@@ -279,8 +284,23 @@ pTypeVector
 
 
 ------------------------------------------------------------------------------------- Annotation --
+-- | Parse a type wrapped in source range annotations.
 pTAnn :: Parser (Type RL) -> Parser (Type RL)
 pTAnn p
  = do   (r, m) <- pRanged p
         return $ TAnn r m
+
+
+-- | Parse some type parameters wrapped in source range annotations.
+pTPAnn :: Parser (TypeParams RL) -> Parser (TypeParams RL)
+pTPAnn p
+ = do   (r, tgs) <- pRanged p
+        return $ TPAnn r tgs
+
+
+-- | Parse some type arguments wrapped in source range annotations.
+pTGAnn :: Parser (TypeArgs RL) -> Parser (TypeArgs RL)
+pTGAnn p
+ = do   (r, tgs) <- pRanged p
+        return $ TGAnn r tgs
 

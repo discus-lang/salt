@@ -41,23 +41,23 @@ instance Pretty c (Type a) where
                       | (b, t) <- takeTPTypes tps ]
           %  text "." %% ppr c tBody
 
-        TRecord ns tgs
-         | length ns == length tgs
+        TRecord ns tgss
+         | length ns == length tgss
          -> text "∏" % squared
                 [ pprLbl n % text ":"
-                        %% (case tg of
-                                TGTypes [t]     -> ppr c t
-                                _               -> ppr c tg)
-                | n <- ns | tg <- tgs ]
+                        %% (case takeTGTypes tgs of
+                                [t] -> ppr c t
+                                _   -> ppr c tgs)
+                | n <- ns | tgs <- tgss ]
 
-        TVariant ns tgs
-         | length ns == length tgs
+        TVariant ns tgss
+         | length ns == length tgss
          -> text "∑" % squared
                 [ pprLbl n % text ":"
-                        %% (case tg of
-                                TGTypes [t]     -> ppr c t
-                                _               -> ppr c tg)
-                | n <- ns | tg <- tgs ]
+                        %% (case takeTGTypes tgs of
+                                [t] -> ppr c t
+                                _   -> ppr c tgs)
+                | n <- ns | tgs <- tgss ]
 
         TSusp tsv te
          -> squared (map (ppr c) tsv) % text "!" % pprTArg c te
@@ -135,18 +135,17 @@ instance Pretty c (TypeEnvBinds a) where
 instance Pretty c (TypeArgs a) where
  ppr c tgs
   = case tgs of
-        TGTypes ts -> squared $ map (ppr c) ts
+        TGAnn _ tgs' -> ppr c tgs'
+        TGTypes ts   -> squared $ map (ppr c) ts
 
 
 instance Pretty c (TypeParams a) where
  ppr c tps
   = case tps of
-        TPAnn _ tps'
-         -> ppr c tps'
-
+        TPAnn _ tps' -> ppr c tps'
         TPTypes nts
          -> squared [ ppr c n % text ":" %% ppr c t
-                   | (n, t) <- nts ]
+                    | (n, t) <- nts ]
 
 
 instance Pretty c TypeKey where

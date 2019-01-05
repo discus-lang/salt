@@ -41,25 +41,25 @@ test/30-error/10-check-type/Test.salt:33:31
 
   33:11  In test
 
-test/30-error/10-check-type/Test.salt:36:50
+test/30-error/10-check-type/Test.salt:36:49
   Not enough arguments in type application.
    parameter types: [#Data, #Data]
 
   36:11  In test
 
-test/30-error/10-check-type/Test.salt:39:11
+test/30-error/10-check-type/Test.salt:39:29
   Not enough arguments in type application.
    parameter types: [#Data]
 
   39:11  In test
 
-test/30-error/10-check-type/Test.salt:42:50
+test/30-error/10-check-type/Test.salt:42:49
   Too many arguments in type application.
    parameter types: [#Data, #Data]
 
   42:11  In test
 
-test/30-error/10-check-type/Test.salt:45:42
+test/30-error/10-check-type/Test.salt:45:41
   Too many arguments in type application.
    parameter types: [#Data, #Data]
 
@@ -163,7 +163,7 @@ test/30-error/10-check-type/Test.salt:112:11
 
   112:11 In test
 
-test/30-error/10-check-type/Test.salt:115:14
+test/30-error/10-check-type/Test.salt:115:16
   Unexpected type: #Data
         expecting: #Effect
 

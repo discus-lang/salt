@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 50f3e04ec5326afe3abc648d350daeb0cc3f895d99f390c82fff04c46a9abb51
+-- hash: f697731480338ee8dd5154de253c3165f915a98f1c85ad88870ac5b65c0499c2
 
 name:           salt
 version:        0.0.0.0
@@ -91,6 +91,7 @@ executable salt
       Salt.Core.Transform.Snv
       Salt.Core.Transform.Ups
       Salt.Data.List
+      Salt.Data.Location
       Salt.Data.Pretty
       Salt.Data.PrettyPrint
       Salt.Data.Textual
@@ -112,6 +113,7 @@ executable salt
   hs-source-dirs:
       src/salt
   default-extensions: LambdaCase RankNTypes BangPatterns PatternGuards NamedFieldPuns ConstraintKinds PatternSynonyms ParallelListComp FlexibleContexts FlexibleInstances OverloadedStrings StandaloneDeriving ScopedTypeVariables TypeSynonymInstances DuplicateRecordFields MultiParamTypeClasses NoMonomorphismRestriction
+  ghc-options: -fwarn-identities -fwarn-deprecations -fwarn-unused-binds -fwarn-unused-imports -fwarn-unused-matches -fwarn-wrong-do-bind -fwarn-hi-shadowing -fwarn-type-defaults -fwarn-name-shadowing -fwarn-duplicate-exports -fwarn-missing-fields -fwarn-overlapping-patterns -fwarn-incomplete-patterns -fwarn-name-shadowing -fwarn-unrecognised-pragmas -fwarn-monomorphism-restriction -fno-warn-missing-methods -fno-warn-missing-signatures -fno-warn-missing-local-signatures -fno-warn-orphans -fno-warn-simplifiable-class-constraints
   build-depends:
       base
     , bytestring

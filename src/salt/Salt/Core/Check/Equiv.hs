@@ -87,7 +87,7 @@ checkTypeEquiv ctx aL psL tL aR psR tR
                 Just (TypeLocal k l)    -> return $ Left  (a, k, l)
                 Nothing                 -> return $ Right (a, tt)
 
-         | TApt{} <- tt
+         | TApp{} <- tt
          = reduceType a ctx tt
          >>= \case
                 Just t' -> normalize a ps t'
@@ -108,8 +108,14 @@ checkTypeEquivs ctx a1 ps1 ts1 a2 ps2 ts2
 
 -- | Check that two type argument blocks are equivalent pairwise.
 checkTypeArgsEquiv :: Type a -> Type a -> CheckTypeEquiv a (TypeArgs a)
-checkTypeArgsEquiv tBlame1 tBlame2 ctx a1 ps1 g1 a2 ps2 g2
- = case (g1, g2) of
+checkTypeArgsEquiv tBlame1 tBlame2 ctx a1 ps1 tgs1 a2 ps2 tgs2
+ = case (tgs1, tgs2) of
+        (TGAnn _ tgs1', _)
+         -> checkTypeArgsEquiv tBlame1 tBlame2 ctx a1 ps1 tgs1' a2 ps2 tgs2
+
+        (_, TGAnn _ tgs2')
+         -> checkTypeArgsEquiv tBlame1 tBlame2 ctx a1 ps1 tgs1  a2 ps2 tgs2'
+
         (TGTypes ts1, TGTypes ts2)
          | length ts1 == length ts2
          -> checkTypeEquivs ctx a1 ps1 ts1 a2 ps2 ts2

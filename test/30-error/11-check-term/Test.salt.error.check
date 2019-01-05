@@ -71,7 +71,7 @@ test/30-error/11-check-term/Test.salt:53:17
 
   53:11  In test
 
-test/30-error/11-check-term/Test.salt:56:17
+test/30-error/11-check-term/Test.salt:56:22
   Cannot apply type
     of kind: #Data
 
@@ -292,7 +292,7 @@ test/30-error/11-check-term/Test.salt:173:11
 
   173:11 In test
 
-test/30-error/11-check-term/Test.salt:178:11
+test/30-error/11-check-term/Test.salt:178:20
   Cannot apply type
     of kind: #Data
 
@@ -404,7 +404,7 @@ test/30-error/11-check-term/Test.salt:241:25
 
   241:11 In test
 
-test/30-error/11-check-term/Test.salt:246:18
+test/30-error/11-check-term/Test.salt:246:23
   Cannot apply type
     of kind: #Data
 
@@ -428,7 +428,7 @@ test/30-error/11-check-term/Test.salt:255:23
 
   255:11 In test
 
-test/30-error/11-check-term/Test.salt:260:17
+test/30-error/11-check-term/Test.salt:260:22
   Cannot apply type
     of kind: #Data
 
@@ -452,7 +452,7 @@ test/30-error/11-check-term/Test.salt:269:22
 
   269:11 In test
 
-test/30-error/11-check-term/Test.salt:274:17
+test/30-error/11-check-term/Test.salt:274:22
   Cannot apply type
     of kind: #Data
 

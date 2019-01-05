@@ -5,6 +5,29 @@ executables:
   salt:
     main: Main.hs
 
+    ghc-options:
+      - -fwarn-identities
+      - -fwarn-deprecations
+      - -fwarn-unused-binds
+      - -fwarn-unused-imports
+      - -fwarn-unused-matches
+      - -fwarn-wrong-do-bind
+      - -fwarn-hi-shadowing
+      - -fwarn-type-defaults
+      - -fwarn-name-shadowing
+      - -fwarn-duplicate-exports
+      - -fwarn-missing-fields
+      - -fwarn-overlapping-patterns
+      - -fwarn-incomplete-patterns
+      - -fwarn-name-shadowing
+      - -fwarn-unrecognised-pragmas
+      - -fwarn-monomorphism-restriction
+      - -fno-warn-missing-methods
+      - -fno-warn-missing-signatures
+      - -fno-warn-missing-local-signatures
+      - -fno-warn-orphans
+      - -fno-warn-simplifiable-class-constraints
+
     default-extensions:
       - LambdaCase
       - RankNTypes
@@ -38,4 +61,3 @@ executables:
       - bytestring
       - pretty-show
 
-  
