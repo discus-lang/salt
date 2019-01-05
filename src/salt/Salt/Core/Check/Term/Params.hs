@@ -20,7 +20,7 @@ checkTermParams a wh ctx mps
                 let ns          = [ n | BindName n <- bs]
                 let nsDup       = List.duplicates ns
                 when (not $ null nsDup)
-                 $ throw $ ErrorAbsTypeBindConflict a wh nsDup
+                 $ throw $ ErrorAbsConflict UType a wh nsDup
 
                 -- Check the parameter kinds.
                 ks' <- mapM (checkKind a wh ctx) ks
@@ -33,10 +33,10 @@ checkTermParams a wh ctx mps
                 let ns          = [ n | BindName n <- bs]
                 let nsDup       = List.duplicates ns
                 when (not $ null nsDup)
-                 $ throw $ ErrorAbsTermBindConflict a wh nsDup
+                 $ throw $ ErrorAbsConflict UTerm a wh nsDup
 
                 -- Check the parameter types.
-                ts' <- checkTypesAre a wh ctx (replicate (length ts) TData) ts
+                ts' <- checkTypesAre UType a wh ctx (replicate (length ts) TData) ts
                 return  $ MPTerms $ zip bs ts'
 
 

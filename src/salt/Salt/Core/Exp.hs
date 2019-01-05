@@ -7,7 +7,8 @@ module Salt.Core.Exp
         , module Salt.Core.Exp.TypeEnv
         , module Salt.Core.Exp.Term
         , module Salt.Core.Exp.TermEnv
-        , module Salt.Core.Exp.Module)
+        , module Salt.Core.Exp.Module
+        , module Salt.Core.Exp.Universe)
 where
 import Salt.Core.Exp.Name
 import Salt.Core.Exp.Ups
@@ -17,5 +18,6 @@ import Salt.Core.Exp.TypeEnv
 import Salt.Core.Exp.Term
 import Salt.Core.Exp.TermEnv
 import Salt.Core.Exp.Module
+import Salt.Core.Exp.Universe
 
 

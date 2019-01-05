@@ -27,14 +27,14 @@ checkDeclTypeSig _ _ decl
 
 -- | Check bodies of type declarations.
 checkDeclType :: CheckDecl a
-checkDeclType _a ctx (DType (DeclType a n tpss kResult tBody))
+checkDeclType _a ctx (DType (DeclType a n tpss kResult kBody))
  = do   let wh   = [WhereTypeDecl a n]
         tpss'    <- checkTypeParamss a wh ctx tpss
         kResult' <- checkKind a wh ctx kResult
 
         let ctx' =  foldl (flip contextBindTypeParams) ctx tpss'
-        tBody'   <- checkTypeIs a wh ctx' kResult' tBody
-        return  $ DType $ DeclType a n tpss' kResult' tBody'
+        kBody'   <- checkTypeHas UKind a wh ctx' kResult' kBody
+        return  $ DType $ DeclType a n tpss' kResult' kBody'
 
 checkDeclType _ _ decl
  = return decl

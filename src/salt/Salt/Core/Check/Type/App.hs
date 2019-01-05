@@ -30,4 +30,4 @@ checkTypeAppTypes a  wh ctx kFun (TGTypes tsArg)
          >>= \case
                 Nothing -> return (tsArg', kResult)
                 Just ((_aErrParam, kErrParam), (aErrArg', kErrArg))
-                 -> throw $ ErrorTypeMismatch aErrArg' wh kErrArg kErrParam
+                 -> throw $ ErrorMismatch UKind aErrArg' wh kErrArg kErrParam

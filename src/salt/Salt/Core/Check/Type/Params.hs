@@ -26,7 +26,7 @@ checkTypeParams a wh ctx (TPTypes bks)
         let ns          = [ n | BindName n <- bs ]
         let nsDup       = List.duplicates ns
         when (not $ null nsDup)
-         $ throw $ ErrorAbsTypeBindConflict a wh nsDup
+         $ throw $ ErrorAbsConflict UType a wh nsDup
 
         -- Check the parameter kinds.
         ks' <- mapM (checkKind a wh ctx) ks

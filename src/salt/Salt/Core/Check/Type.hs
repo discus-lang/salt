@@ -27,7 +27,7 @@ checkTypeWith _a _wh _ctx THole
 checkTypeWith a wh _ctx t@(TRef (TRPrm n))
  = case Map.lookup n Prim.primTypeCtors of
         Just k  -> return (t, mapAnnot (const a) k)
-        Nothing -> throw $ ErrorUnknownTypePrim a wh n
+        Nothing -> throw $ ErrorUnknownPrim UType a wh n
 
 
 -- (k-var) ------------------------------------------------
@@ -36,7 +36,7 @@ checkTypeWith a wh ctx t@(TVar u)
  >>= \case
          Just (TypeDecl  k _) -> return (t, k)
          Just (TypeLocal k _) -> return (t, k)
-         _ -> throw $ ErrorUnknownTypeBound a wh u
+         _ -> throw $ ErrorUnknownBound UType a wh u
 
 
 -- (k-abs) ------------------------------------------------
@@ -68,7 +68,7 @@ checkTypeWith a wh ctx (TApp tFun tgsArg)
 checkTypeWith a wh ctx (TForall tps tBody)
  = do   tps'    <- checkTypeParams a wh ctx tps
         let ctx' = contextBindTypeParams tps' ctx
-        tBody'  <- checkTypeIs a wh ctx' TData tBody
+        tBody'  <- checkTypeHas UKind a wh ctx' TData tBody
         return  (TForall tps' tBody', TData)
 
 
@@ -76,14 +76,14 @@ checkTypeWith a wh ctx (TForall tps tBody)
 checkTypeWith a wh ctx (TExists tps tBody)
  = do   tps'    <- checkTypeParams a wh ctx tps
         let ctx' = contextBindTypeParams tps' ctx
-        tBody'  <- checkTypeIs a wh ctx' TData tBody
+        tBody'  <- checkTypeHas UKind a wh ctx' TData tBody
         return  (TExists tps' tBody', TData)
 
 
 -- (k-fun) ------------------------------------------------
 checkTypeWith a wh ctx (TFun tsParam tsResult)
- = do   tsParam'  <- checkTypesAreAll a wh ctx TData tsParam
-        tsResult' <- checkTypesAreAll a wh ctx TData tsResult
+ = do   tsParam'  <- checkTypesAreAll UKind a wh ctx TData tsParam
+        tsResult' <- checkTypesAreAll UKind a wh ctx TData tsResult
         return  (TFun tsParam' tsResult', TData)
 
 
@@ -109,8 +109,8 @@ checkTypeWith a wh ctx (TVariant ns tgsField)
 
 -- (k-susp) -----------------------------------------------
 checkTypeWith a wh ctx (TSusp tsResult tEffect)
- = do   tsResult' <- checkTypesAreAll a wh ctx TData tsResult
-        tEffect'  <- checkTypeIs a wh ctx TEffect tEffect
+ = do   tsResult' <- checkTypesAreAll UKind a wh ctx TData tsResult
+        tEffect'  <- checkTypeHas UKind a wh ctx TEffect tEffect
         return  (TSusp tsResult' tEffect', TData)
 
 
@@ -126,7 +126,7 @@ checkTypeWith _a _wh _ctx TPure
 
 -- (k-sum) ------------------------------------------------
 checkTypeWith a wh ctx (TSum ts)
- = do   ts' <- checkTypesAreAll  a wh ctx TEffect ts
+ = do   ts' <- checkTypesAreAll UKind a wh ctx TEffect ts
         return  (TSum ts', TEffect)
 
 
@@ -134,5 +134,5 @@ checkTypeWith a wh ctx (TSum ts)
 -- The type expression is malformed,
 --   so we don't have any rule that could match it.
 checkTypeWith a wh _ t
- = throw $ ErrorTypeMalformed a wh t
+ = throw $ ErrorTypeMalformed UType a wh t
 

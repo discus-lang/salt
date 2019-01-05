@@ -87,7 +87,7 @@ checkTermWith a wh ctx Synth m@(MRef (MRPrm nPrim))
         return (m, [tCon], [])
 
  | otherwise
- = throw $ ErrorUnknownPrimitive a wh nPrim
+ = throw $ ErrorUnknownPrim UTerm a wh nPrim
 
 
 -- (t-con) ------------------------------------------------
@@ -95,7 +95,7 @@ checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
  =  contextResolveDataCtor nCon ctx
  >>= \case
         Nothing
-         -> throw $ ErrorUnknownDataCtor a wh nCon
+         -> throw $ ErrorUnknownCtor UTerm a wh nCon
 
         Just tCtor
          -> do  let tCtor' = mapAnnot (const a) tCtor
@@ -107,7 +107,7 @@ checkTermWith a wh ctx Synth m@(MVar u)
  =   contextResolveTermBound ctx u
  >>= \case
          Just t  -> return (m, [t], [])
-         Nothing -> throw $ ErrorUnknownTermBound a wh u
+         Nothing -> throw $ ErrorUnknownBound UTerm a wh u
 
 
 -- (t-abt) ------------------------------------------------
@@ -125,7 +125,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTypes{} m)
         let aBody  = fromMaybe a $ takeAnnotOfTerm m
         eBody_red  <- simplType aBody ctx' (TSum es)
         when (not $ isTPure eBody_red)
-         $ throw $ ErrorAbsTypeImpure aBody wh eBody_red
+         $ throw $ ErrorAbsImpure UType aBody wh eBody_red
 
         return  (MAbs ps' m', [TForall (TPTypes bts) t], [])
 
@@ -145,7 +145,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTerms{} m)
         let aBody  = fromMaybe a $ takeAnnotOfTerm m
         eBody_red    <- simplType a ctx' (TSum es)
         when (not $ isTPure eBody_red)
-         $ throw $ ErrorAbsTermImpure aBody wh eBody_red
+         $ throw $ ErrorAbsImpure UTerm aBody wh eBody_red
 
         return  (MAbs ps' m', [TFun (map snd bts) ts], [])
 
@@ -180,7 +180,7 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
 
                         return (mFun0, tCon', [])
 
-                 | otherwise    -> throw $ ErrorUnknownPrimitive a wh nPrm
+                 | otherwise    -> throw $ ErrorUnknownPrim UTerm a wh nPrm
 
                 Nothing
                  -> checkTerm1 a wh ctx Synth mFun0
@@ -212,7 +212,7 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
             --   then we had a type abstraction that returned multiple values
             --   but haven't detected that when it was constructed.
             checkApp tsResult _ _ _
-             = throw $ ErrorTermsWrongArity a wh tsResult [TData]
+             = throw $ ErrorWrongArity UTerm a wh tsResult [TData]
 
         checkApp [tFun1] esFun1 mgss0 []
 
@@ -245,7 +245,7 @@ checkTermWith a wh ctx Synth (MLet bts mBind mBody)
              >>= \case
                 Nothing -> return tBind
                 Just ((_a1, tErr1), (_a2, tErr2))
-                  -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+                  -> throw $ ErrorMismatch UType a wh tErr1 tErr2
 
         tsBind'   <- zipWithM checkLetAnnot tsParam tsBind
         let bts'' = zip bs tsBind'
@@ -424,14 +424,14 @@ checkTermWith a wh ctx Synth mIf@(MIf msCond msThen mElse)
 
 -- (t-lst) ------------------------------------------------
 checkTermWith a wh ctx Synth (MList t ms)
- = do   t' <- checkTypeIs a wh ctx TData t
+ = do   t' <- checkTypeHas UKind a wh ctx TData t
         (ms', es) <- checkTermsAreAll a wh ctx t' ms
         return  (MList t' ms', [TList t], es)
 
 
 -- (t-set) ------------------------------------------------
 checkTermWith a wh ctx Synth (MSet t ms)
- = do   t' <- checkTypeIs a wh ctx TData t
+ = do   t' <- checkTypeHas UKind a wh ctx TData t
         (ms', es) <- checkTermsAreAll a wh ctx t' ms
         return (MSet t ms', [TSet t], es)
 
@@ -442,8 +442,8 @@ checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
         when (not $ length msk == length msv)
          $ throw $ ErrorTermMalformed a wh m
 
-        tk' <- checkTypeIs a wh ctx TData tk
-        tv' <- checkTypeIs a wh ctx TData tv
+        tk' <- checkTypeHas UKind a wh ctx TData tk
+        tv' <- checkTypeHas UKind a wh ctx TData tv
 
         (msk', esKeys) <- checkTermsAreAll a wh ctx tk' msk
         (msv', esVals) <- checkTermsAreAll a wh ctx tv' msv

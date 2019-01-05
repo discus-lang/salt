@@ -1,8 +1,10 @@
 
 module Salt.Core.Check.ErrorMsg where
-import Salt.Core.Codec.Text.Pretty
-import Salt.Core.Codec.Text         ()
+import Salt.Core.Check.WhereMsg         ()
 import Salt.Core.Check.Error
+import Salt.Core.Codec.Text.Pretty
+import Salt.Core.Codec.Text             ()
+import Salt.Core.Exp
 import Salt.Data.Pretty
 
 
@@ -10,14 +12,11 @@ instance Show a => Pretty c (Error a) where
  ppr c err = ppre c err
 
 -- Malformed AST ------------------------------------------
-ppre _c (ErrorKindMalformed _a _wh _k)
- = vcat [ text "Malformed kind." ]
+ppre c (ErrorTypeMalformed uni _a _wh _k)
+ = vcat [ text "Malformed" %% ppr c uni %% text "." ]
 
-ppre _c (ErrorTypeMalformed _a _wh _t)
- = vcat [ text "Malformed type." ]
-
-ppre _c (ErrorTermMalformed _a _wc _m)
- = vcat [ text "Malformed term." ]
+ppre _c (ErrorTermMalformed _a _wh _m)
+ = vcat [ text "Malformed term."]
 
 
 -- Module level problems ----------------------------------
@@ -31,12 +30,12 @@ ppre _c (ErrorTypeDeclRebound _a _wh nDecl)
 ppre _c (ErrorTermDeclRebound _a _wh nDecl)
  = vcat [ text "Rebound term name" %% squotes (pprVar nDecl)]
 
+ppre _c (ErrorTestDeclRebound _a _wh nDecl)
+ = vcat [ text "Rebound test"   %% squotes (pprVar nDecl) ]
+
 ppre c  (ErrorTermDeclImpure  _a _wh nDecl tEffect)
  = vcat [ text "Impure term declaration" %% squotes (pprVar nDecl)
         , text " has effect"    %% squotes (ppr c tEffect) ]
-
-ppre _c (ErrorTestDeclRebound _a _wh nDecl)
- = vcat [ text "Rebound test"   %% squotes (pprVar nDecl) ]
 
 ppre c  (ErrorTestDeclImpure  _a _wh mnDecl tEffect)
  = vcat [ text "Impure test declaration" %% maybe empty (squotes . pprVar) mnDecl
@@ -48,69 +47,44 @@ ppre c  (ErrorTestDeclNotSusp  _a _wh mnDecl tsBody)
         , text " Actual types"  %% squared (map (ppr c) tsBody) ]
 
 
--- Structural arity ---------------------------------------
-ppre c (ErrorTermsWrongArity _a _wh ts ks)
- = let  reason = if length ts >= length ks then "Too many" else "Not enough"
-   in   vcat [ text reason %% text "values"
-             , text " of types" %% squared (map (ppr c) ts)
-             , text " Expected" %% squared (map (ppr c) ks) ]
-
-ppre c (ErrorTypesWrongArity _a _wh ts ks)
- = let  reason = if length ts >= length ks then "Too many" else "Not enough"
-   in   vcat [ text reason %% text "types"
-             , text " of kinds" %% squared (map (ppr c) ts) ]
-
-
 -- Unknown vars and refs ----------------------------------
-ppre _ (ErrorUnknownPrimitive _a _wh n)
- = vcat [ text "Unknown primitive"        %% squotes (pprPrm n)]
+ppre c (ErrorUnknownPrim uni _a _wh n)
+ = vcat [ text "Unknown" %% ppr c uni %% text "primitive"   %% squotes (pprPrm n)]
 
-ppre _ (ErrorUnknownDataCtor _a _wh n)
- = vcat [ text "Unknown data constructor" %% squotes (pprCon n)]
+ppre c (ErrorUnknownCtor uni _a _wh n)
+ = vcat [ text "Unknown" %% ppr c uni %% text "constructor" %% squotes (pprCon n)]
 
-ppre _ (ErrorUnknownTypeCtor _a _wh n)
- = vcat [ text "Unknown type constructor" %% squotes (pprCon n)]
+ppre c (ErrorUnknownBound uni _a _wh u)
+ = vcat [ text "Unknown" %% ppr c uni %% text "name"        %% squotes (ppr c u)]
 
-ppre _ (ErrorUnknownTypePrim _a _wh n)
- = vcat [ text "Unknown type primitive"   %% squotes (pprPrm n)]
 
-ppre _ (ErrorUnknownKindCtor _a _wh n)
- = vcat [ text "Unknown kind constructor" %% squotes (text "#" % pprCon n)]
-
-ppre c (ErrorUnknownTypeBound _a _wh u)
- = vcat [ text "Unknown type name"        %% squotes (ppr c u)]
-
-ppre c (ErrorUnknownTermBound _a _wh u)
- = vcat [ text "Unknown term name"        %% squotes (ppr c u)]
+-- Structural arity ---------------------------------------
+ppre c (ErrorWrongArity uni _a _wh ts ks)
+ = let  reason = if length ts >= length ks then "Too many" else "Not enough"
+   in   vcat [ text reason %% ppr c uni
+             , text " of" %% ppThings' c uni ts
+             , text " Expected" %% squared (map (ppr c) ks) ]
 
 
 -- Abstraction problems -----------------------------------
--- type
-ppre c (ErrorAbsTypeImpure _a _wh eActual)
- = vcat [ text "Impure type abstraction body"
-        , text " causes effect" %% ppr c eActual ]
-
-ppre _ (ErrorAbsTypeBindConflict _a _wh ns)
- = vcat [ text "Conflicting type binders"
+ppre c (ErrorAbsConflict uni _a _wh ns)
+ = vcat [ text "Conflicting" %% ppr c uni %% text "binders for"
                 %% squotes (hsep $ punctuate (text ",") $ map pprVar ns) ]
 
--- term
-ppre c (ErrorAbsTermImpure _a _wh eActual)
- = vcat [ text "Impure term abstraction body"
+ppre c (ErrorAbsImpure uni _a _wh eActual)
+ = vcat [ text "Impure" %% ppr c uni %% text "abstraction body"
         , text " causes effect" %% ppr c eActual ]
-
-ppre _ (ErrorAbsTermBindConflict _a _wh ns)
- = vcat [ text "Conflicting term binders" %% squared (map pprVar ns) ]
 
 ppre c (ErrorAbsTermNoValueForForall _a _wh ps)
  = vcat [ text "Polymorphic term abstraction does not produce a value."
         , text " Parameters" %% hsep (map (ppr c) ps) ]
 
+
 -- Unexpected types ---------------------------------------
-ppre c (ErrorTypeMismatch _a _wh tExpected tActual)
- = vcat [ text "Actual type"    %% squotes (ppr c tActual)
+ppre c (ErrorMismatch uni _a _wh tActual tExpected)
+ = vcat [ text "Actual" %% ppr c uni %% squotes (ppr c tActual)
         , text " does not match"
-        , text " expected type" %% squotes (ppr c tExpected) ]
+        , text " expected" %% ppr c uni %% squotes (ppr c tExpected) ]
 
 
 -- Application problems -----------------------------------
@@ -134,18 +108,20 @@ ppre c (ErrorAppTypeTypeCannot _a _wh tFun)
 ppre c (ErrorAppTypeTypeWrongArity _a _wh ksExpected ksActual)
  | length ksExpected > length ksActual
  = vcat [ text "Not enough type arguments in application."
-        , text " Parameter kinds" %% squared (map (ppr c) ksExpected)
-        , text " Argument  kinds" %% squared (map (ppr c) ksActual) ]
+        , text " Parameter" %% ppThings c UKind ksExpected
+        , text " Argument " %% ppThings c UKind ksActual ]
 
  | otherwise
  = vcat [ text "Too many type arguments in application."
-        , text " Parameter kinds" %% squared (map (ppr c) ksExpected)
-        , text " Argument  types" %% squared (map (ppr c) ksActual) ]
+        , text " Parameter" %% ppThings c UKind ksExpected
+        , text " Argument " %% ppThings c UKind ksActual ]
 
 ppre c (ErrorAppTypeTypeWrongArityNum _a _wh tsParam nArg)
  = let  reason = if nArg >= length tsParam then "Too many" else "Not enough"
    in   vcat [ text reason %% text "arguments in type application."
-             , text " Parameter types" %% squared (map (ppr c) tsParam) ]
+             , case tsParam of
+                [t] -> text " Expected argument of"  %% ppThings c UKind [t]
+                _   -> text " Expected arguments of" %% ppThings c UKind tsParam ]
 
 -- term/type
 ppre c (ErrorAppTermTypeCannot _a _wh tFun)
@@ -158,16 +134,14 @@ ppre c (ErrorAppTermTypeWrongArity _a _wh btsParam tsArg)
         , text " Parameter kinds"
                 %% squared [ (ppr c b %% text ":" %% ppr c t)
                            | (b, t) <- btsParam]
-        , text " Argument types"
-                %% squared (map (ppr c) tsArg) ]
+        , text " Argument" %% ppThings c UType tsArg ]
 
  | otherwise
  = vcat [ text "Too many type arguments in application."
         , text " Parameter kinds"
                 %% squared [ (ppr c b %% text ":" %% ppr c t)
                            | (b, t) <- btsParam]
-        , text " Argument types"
-                %% squared (map (ppr c) tsArg) ]
+        , text " Argument" %% ppThings c UType tsArg ]
 
 -- term/term
 ppre c (ErrorAppTermTermCannot _a _wh tFun)
@@ -177,13 +151,13 @@ ppre c (ErrorAppTermTermCannot _a _wh tFun)
 ppre c (ErrorAppTermTermWrongArity _a _wh tsParam tsArg)
  = let  reason = if length tsArg >= length tsParam then "Too many" else "Not enough"
    in   vcat [ text reason %% text "arguments in function application."
-             , text " Parameter types" %% squared (map (ppr c) tsParam)
-             , text " Argument types " %% squared (map (ppr c) tsArg) ]
+             , text " Parameter" %% ppThings c UType tsParam
+             , text " Argument " %% ppThings c UType tsParam ]
 
 ppre c (ErrorAppTermTermWrongArityNum _a _wh tsParam nArg)
  = let  reason = if nArg >= length tsParam then "Too many" else "Not enough"
    in   vcat [ text reason %% text "arguments in function application."
-             , text " Parameter types" %% squared (map (ppr c) tsParam) ]
+             , text " Parameter" %% ppThings c UType tsParam ]
 
 
 -- Let bindings -------------------------------------------
@@ -259,4 +233,25 @@ ppre c (ErrorCaseAltsInexhaustive _a _wh ns tScrut)
 ppre c (ErrorRunSuspensionIsNot _a _wh ts)
  = vcat [ text "Cannot run non-suspension of type"
         , text " " %% squared (map (ppr c) ts) ]
+
+
+-- | Print some universed things with proper pluralization.
+ppThings  :: c -> Universe -> [Type a] -> Doc
+ppThings c UKind [k]     = text "kind"    %% squotes (ppr c k)
+ppThings c UKind ks      = text "kinds"   %% squared (map (ppr c) ks)
+ppThings c UType [t]     = text "type"    %% squotes (ppr c t)
+ppThings c UType ts      = text "types"   %% squared (map (ppr c) ts)
+ppThings c UTerm [m]     = text "term"    %% squotes (ppr c m)
+ppThings c UTerm ms      = text "terms"   %% squared (map (ppr c) ms)
+
+
+-- | Print some universed things with proper pluralization,
+--   taking the universe one level up.
+ppThings' :: c -> Universe -> [Type a] -> Doc
+ppThings' c UKind [k]     = text "thing"  %% squotes (ppr c k)
+ppThings' c UKind ks      = text "things" %% squared (map (ppr c) ks)
+ppThings' c UType [t]     = text "kind"   %% squotes (ppr c t)
+ppThings' c UType ts      = text "kinds"  %% squared (map (ppr c) ts)
+ppThings' c UTerm [m]     = text "type"   %% squotes (ppr c m)
+ppThings' c UTerm ms      = text "types"  %% squared (map (ppr c) ms)
 

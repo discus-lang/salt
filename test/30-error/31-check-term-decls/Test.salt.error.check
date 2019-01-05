@@ -1,7 +1,7 @@
 test/30-error/31-check-term-decls/Test.salt:6:20
-  Actual type '#Bool'
+  Actual type '#Nat'
    does not match
-   expected type '#Nat'
+   expected type '#Bool'
 
   6:6    In term declaration "term1"
 

@@ -23,7 +23,7 @@ checkKind _a wh ctx (TAnn a' t)
 checkKind a wh _ctx k@(TRef (TRPrm n))
  = case Map.lookup n Prim.primKindCtors of
         Just () -> return k
-        Nothing -> throw $ ErrorUnknownKindCtor a wh n
+        Nothing -> throw $ ErrorUnknownCtor UKind a wh n
 
 
 -- (s-arr) ------------------------------------------------
@@ -36,4 +36,4 @@ checkKind a wh ctx (TArr ks1 k2)
 -- The kind expression is malformed,
 --   so we don't have any rule that could match it.
 checkKind a wh _ k
- = throw $ ErrorKindMalformed a wh k
+ = throw $ ErrorTypeMalformed UKind a wh k

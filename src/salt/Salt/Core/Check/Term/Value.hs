@@ -84,7 +84,7 @@ checkValue a wh ctx v
                 -- The body must be pure.
                 eBody_red <- simplType a ctx2 (TSum esBody)
                 when (not $ isTPure eBody_red)
-                 $ throw $ ErrorAbsTermImpure a wh eBody_red
+                 $ throw $ ErrorAbsImpure UTerm a wh eBody_red
 
                 return $ TFun tsParam tsResult
 
@@ -110,7 +110,7 @@ checkValueIs a wh ctx tExpected v
          >>= \case
                 Nothing -> return ()
                 Just ((_a1, t1Err), (_a2, t2Err))
-                 -> throw $ ErrorTypeMismatch a wh t1Err t2Err
+                 -> throw $ ErrorMismatch UType a wh t1Err t2Err
 
 
 -- | Check an environment binding and add it to the context.

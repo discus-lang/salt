@@ -1,4 +1,3 @@
-
 -- Trigger all the errors that can be produced by checkType.
 
 -- (k-prm) --------------------------------------------------------------------
@@ -15,19 +14,18 @@ test kind a
 -- Error: parameter kind is ill-formed.
 test kind (λ[a: #Derp] ⇒ a)
 
--- Error: duplicate type parameters
+-- Error: conflicting type binders
 test kind (λ[a: #Data, a: #Data] ⇒ #List a)
 
 -- Error: body type is ill-kinded.
--- TODO: fix type/kind name in message.
 test kind (λ[a: #Effect] ⇒ #List a)
 
 
 -- (k-app) --------------------------------------------------------------------
--- Error: function kind is ill-formed.
+-- Error: parameter kind is ill-formed. Unknown kind constructor.
 test kind (λ[a: #Derp] ⇒ a) #Nat
 
--- Error: argument kind is ill-formed.
+-- Error: argument type is ill-formed. Unknown type primitive.
 test kind (λ[a: #Data] ⇒ a) #Derp
 
 -- Error: kind of argument does not match parameter.

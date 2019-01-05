@@ -33,7 +33,7 @@ checkTermAppTypes a wh ctx tFun tsArg
          >>= \case
                 Nothing -> return ()
                 Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                  -> throw $ ErrorTypeMismatch a wh tErr1 tErr2)
+                  -> throw $ ErrorMismatch UType a wh tErr1 tErr2)
 
         -- Substitute arguments into the result type to instantiate
         -- the type scheme.
@@ -73,7 +73,7 @@ checkTermAppTerms a wh ctx tFun msArg
          >>= \case
                 Nothing -> return  (msArg', tsResult, esArgs)
                 Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+                 -> throw $ ErrorMismatch UType a wh tErr1 tErr2
 
 
 -- | Check the application of a functional term to an argument term.
@@ -104,5 +104,5 @@ checkTermAppTerm a wh ctx tFun mArg
          >>= \case
                 Nothing -> return (mArg', tsResult, esArg)
                 Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorTypeMismatch a wh tErr1 tErr2
+                 -> throw $ ErrorMismatch UType a wh tErr1 tErr2
 

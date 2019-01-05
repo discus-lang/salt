@@ -16,7 +16,7 @@ checkDeclTermSig _a ctx (DTerm (DeclTerm a n mpss tsResult mBody))
         mpss'     <- checkTermParamss a wh ctx mpss
 
         let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
-        tsResult' <- checkTypesAreAll a wh ctx' TData tsResult
+        tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
         return  $ DTerm $ DeclTerm a n mpss' tsResult' mBody
 
 checkDeclTermSig _ _ decl
@@ -33,7 +33,7 @@ checkDeclTerm _a ctx (DTerm (DeclTerm a nDecl mpss tsResult mBody))
 
         -- Check the result type annotation.
         let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
-        tsResult' <- checkTypesAreAll a wh ctx' TData tsResult
+        tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
 
         -- Check the body.
         (mBody', _tsResult, esResult)
@@ -43,8 +43,8 @@ checkDeclTerm _a ctx (DTerm (DeclTerm a nDecl mpss tsResult mBody))
         eBody_red <- simplType a ctx' (TSum esResult)
         when (not $ isTPure eBody_red)
          $ case reverse mpss of
-                MPTypes{} : _   -> throw $ ErrorAbsTypeImpure  a wh eBody_red
-                MPTerms{} : _   -> throw $ ErrorAbsTermImpure  a wh eBody_red
+                MPTypes{} : _   -> throw $ ErrorAbsImpure UType  a wh eBody_red
+                MPTerms{} : _   -> throw $ ErrorAbsImpure UTerm a wh eBody_red
                 []              -> throw $ ErrorTermDeclImpure a wh nDecl eBody_red
 
         return  $ DTerm $ DeclTerm a nDecl mpss' tsResult' mBody'

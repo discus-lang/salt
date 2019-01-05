@@ -9,15 +9,11 @@ import Data.Typeable
 -- Error messages that the type checker can throw.
 data Error a
         -- Malformed AST ------------------------
-        = ErrorKindMalformed
-        { errorAnnot            :: a
+        = ErrorTypeMalformed
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorKind             :: Kind a }
-
-        | ErrorTypeMalformed
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorType             :: Type a }
 
         | ErrorTermMalformed
         { errorAnnot            :: a
@@ -25,12 +21,6 @@ data Error a
         , errorTerm             :: Term a }
 
         -- Module level problems ----------------
-        | ErrorTypeDeclsRecursive
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorName             :: Name
-        , errorLoop             :: [(Name, a)] }
-
         | ErrorTypeDeclRebound
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
@@ -58,6 +48,12 @@ data Error a
         , errorNameMaybe        :: Maybe Name
         , errorEffect           :: Type a }
 
+        | ErrorTypeDeclsRecursive
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name
+        , errorLoop             :: [(Name, a)] }
+
         | ErrorTestDeclNotSusp
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
@@ -65,84 +61,52 @@ data Error a
         , errorTypes            :: [Type a] }
 
         -- Structural arity ---------------------
-        | ErrorTermsWrongArity
-        { errorAnnot            :: a
+        | ErrorWrongArity
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorTypesActual      :: [Type a]
         , errorKindsExpected    :: [Type a] }
 
-        | ErrorTypesWrongArity
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorTypes            :: [Type a]
-        , errorKinds            :: [Kind a] }
-
         -- Unknown vars and refs ----------------
-        | ErrorUnknownPrimitive
-        { errorAnnot            :: a
+        | ErrorUnknownPrim
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorName             :: Name }
 
-        | ErrorUnknownDataCtor
-        { errorAnnot            :: a
+        | ErrorUnknownCtor
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorName             :: Name }
 
-        | ErrorUnknownTypeCtor
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorName             :: Name }
-
-        | ErrorUnknownTypePrim
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorName             :: Name }
-
-        | ErrorUnknownKindCtor
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorName             :: Name }
-
-        | ErrorUnknownTypeBound
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorVar              :: Bound }
-
-        | ErrorUnknownTermBound
-        { errorAnnot            :: a
+        | ErrorUnknownBound
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorVar              :: Bound }
 
         -- Unexpected types ----------------------
-        | ErrorTypeMismatch
-        { errorAnnot            :: a
+        | ErrorMismatch
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorTypeExpected     :: Type a
         , errorTypeActual       :: Type a }
 
         -- Abstraction problems ------------------
-        -- type
-        | ErrorAbsTypeImpure
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorEffect           :: Type a }
-
-        | ErrorAbsTypeBindConflict
-        { errorAnnot            :: a
+        | ErrorAbsConflict
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorNames            :: [Name] }
 
-
-        -- term
-        | ErrorAbsTermImpure
-        { errorAnnot            :: a
+        | ErrorAbsImpure
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorEffect           :: Type a }
-
-        | ErrorAbsTermBindConflict
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorNames            :: [Name] }
 
         | ErrorAbsTermNoValueForForall
         { errorAnnot            :: a

@@ -51,7 +51,7 @@ checkTerm1 a wh ctx mode m
          <- checkTerm a wh ctx mode m
         case ts' of
          [t]    -> return (m', t, es')
-         _      -> throw $ ErrorTermsWrongArity a wh ts' [TData]
+         _      -> throw $ ErrorWrongArity UTerm a wh ts' [TData]
 
 
 -- (t-check) --------------------------------------------------------------------------------------
@@ -68,13 +68,13 @@ checkTermIs a wh ctx tsExpected m
          <- checkTerm a wh ctx Synth m
 
         when (length tsActual /= length tsExpected)
-         $ throw $ ErrorTermsWrongArity a wh tsActual tsExpected
+         $ throw $ ErrorWrongArity UTerm a wh tsActual tsExpected
 
         checkTypeEquivs ctx a [] tsExpected a [] tsActual
          >>= \case
                 Nothing -> return (m', tsActual, esActual)
                 Just ((_a1, t1Err), (_a2, t2Err))
-                 -> throw $ ErrorTypeMismatch a wh t1Err t2Err
+                 -> throw $ ErrorMismatch UType a wh t1Err t2Err
 
 
 -- (t-many / t-gets) ------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ checkTerms a wh ctx (Check ts) ms
  | otherwise
  = do   (_ms, ts', _ess')
          <- fmap unzip3 $ mapM (checkTerm1 a wh ctx Synth) ms
-        throw $ ErrorTermsWrongArity a wh ts' (replicate (length ms) TData)
+        throw $ ErrorWrongArity UTerm a wh ts' (replicate (length ms) TData)
 
 
 -- | Check the given terms all have the specified type,

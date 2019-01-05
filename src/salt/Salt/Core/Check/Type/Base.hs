@@ -14,7 +14,7 @@ module Salt.Core.Check.Type.Base
 
         , checkType
         , checkTypes
-        , checkTypeIs
+        , checkTypeHas
         , checkTypesAre
         , checkTypesAreAll
 
@@ -49,45 +49,45 @@ checkTypes a wh ctx ts
 
 
 -- | Check the kind of a single type matches the expected one.
-checkTypeIs
-        :: Annot a => a -> [Where a]
+checkTypeHas
+        :: Annot a => Universe -> a -> [Where a]
         -> Context a -> Kind a -> Type a -> IO (Type a)
 
-checkTypeIs _a wh ctx k (TAnn a' t')
- = do   t''  <- checkTypeIs a' wh ctx k t'
+checkTypeHas uni _a wh ctx k (TAnn a' t')
+ = do   t''  <- checkTypeHas uni a' wh ctx k t'
         return $ TAnn a' t''
 
-checkTypeIs a wh ctx k t
- = do   [t']    <- checkTypesAre a wh ctx [k] [t]
+checkTypeHas uni a wh ctx k t
+ = do   [t']    <- checkTypesAre uni a wh ctx [k] [t]
         return t'
 
 
 -- | Check the kinds of some types match the expected ones.
 checkTypesAre
-        :: Annot a => a -> [Where a]
+        :: Annot a => Universe -> a -> [Where a]
         -> Context a -> [Kind a] -> [Type a] -> IO [Type a]
 
-checkTypesAre a wh ctx ksExpected ts
+checkTypesAre uni a wh ctx ksExpected ts
  = do   (ts', ksActual)
          <- checkTypes a wh ctx ts
 
         when (not $ length ts' == length ksActual)
          $ throw $ ErrorAppTypeTypeWrongArity a wh ksExpected ksActual
 
-        checkTypeEquivs ctx a [] ksExpected a [] ksActual
+        checkTypeEquivs ctx a [] ksActual a [] ksExpected
          >>= \case
                 Nothing -> return ts'
                 Just ((_aErr1', kErr1), (_aErr2, kErr2))
-                 -> throw $ ErrorTypeMismatch a wh kErr1 kErr2
+                 -> throw $ ErrorMismatch uni a wh kErr1 kErr2
 
 
 -- | Check that some types all have the given kind.
 checkTypesAreAll
-        :: Annot a => a -> [Where a]
+        :: Annot a => Universe -> a -> [Where a]
         -> Context a -> Kind a -> [Type a] -> IO [Type a]
 
-checkTypesAreAll a wh ctx kExpected ts
- = checkTypesAre a wh ctx (replicate (length ts) kExpected) ts
+checkTypesAreAll uni a wh ctx kExpected ts
+ = checkTypesAre uni a wh ctx (replicate (length ts) kExpected) ts
 
 
 ---------------------------------------------------------------------------------------------------
@@ -100,9 +100,9 @@ checkTypeArgsAreAll a wh ctx kExpected (TGAnn _ tgs')
  = checkTypeArgsAreAll a wh ctx kExpected tgs'
 
 checkTypeArgsAreAll a wh ctx kExpected (TGTypes ts)
- = do   ts' <- checkTypesAre a wh ctx
-                        (replicate (length ts) kExpected)
-                        ts
+ = do   ts' <- checkTypesAre UKind a wh ctx
+                (replicate (length ts) kExpected)
+                ts
 
         return $ TGTypes ts'
 

@@ -1,31 +1,31 @@
-test/30-error/30-check-term-sigs/Test.salt:6:16
+test/30-error/30-check-term-sigs/Test.salt:5:16
   Unknown type primitive '#Derp'
 
-  6:6    In term declaration "term1"
+  5:6    In term declaration "term1"
 
-test/30-error/30-check-term-sigs/Test.salt:9:23
+test/30-error/30-check-term-sigs/Test.salt:8:23
   Unknown type primitive '#Derp'
 
-  9:6    In term declaration "term2"
+  8:6    In term declaration "term2"
 
-test/30-error/30-check-term-sigs/Test.salt:12:6
-  Conflicting term binders [x]
+test/30-error/30-check-term-sigs/Test.salt:11:6
+  Conflicting term binders for 'x'
 
-  12:6   In term declaration "term3"
+  11:6   In term declaration "term3"
+
+test/30-error/30-check-term-sigs/Test.salt:14:6
+  Rebound term name 'term4'
+
+  14:6   In term declaration "term4"
 
 test/30-error/30-check-term-sigs/Test.salt:15:6
   Rebound term name 'term4'
 
   15:6   In term declaration "term4"
 
-test/30-error/30-check-term-sigs/Test.salt:16:6
-  Rebound term name 'term4'
-
-  16:6   In term declaration "term4"
-
-test/30-error/30-check-term-sigs/Test.salt:19:6
+test/30-error/30-check-term-sigs/Test.salt:18:6
   Polymorphic term abstraction does not produce a value.
    Parameters @[a: #Data]
 
-  19:6   In term declaration "term5"
+  18:6   In term declaration "term5"
 

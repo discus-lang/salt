@@ -1,4 +1,3 @@
-
 -- Trigger all the errors that can be produced by
 -- 'goTypeSigs' when checking the top-level module structure.
 

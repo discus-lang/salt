@@ -20,6 +20,14 @@ instance Pretty c Bound where
         BoundWith n d   -> pprVar n % text "^" % integer d
 
 
+instance Pretty c Universe where
+ ppr _ vv
+  = case vv of
+        UKind   -> text "kind"
+        UType   -> text "type"
+        UTerm   -> text "term"
+
+
 instance Pretty c Ups where
  ppr _ (Ups bs)
   =     braced (map pprBump bs)
