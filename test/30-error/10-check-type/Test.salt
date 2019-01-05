@@ -19,6 +19,7 @@ test kind (λ[a: #Derp] ⇒ a)
 test kind (λ[a: #Data, a: #Data] ⇒ #List a)
 
 -- Error: body type is ill-kinded.
+-- TODO: fix type/kind name in message.
 test kind (λ[a: #Effect] ⇒ #List a)
 
 
