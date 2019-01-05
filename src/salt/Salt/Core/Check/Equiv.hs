@@ -55,10 +55,12 @@ checkTypeEquiv ctx aL psL tL aR psR tR
                 _ -> return $ Just ((aL, tL), (aR, tR))
 
          -- Abstractions.
-         | Right (aL', TAbs pL@(TPTypes bksL) tBodyL) <- etL
-         , Right (aR', TAbs pR@(TPTypes bksR) tBodyR) <- etR
+         | Right (aL', TAbs tpsL tBodyL) <- etL
+         , Right (aR', TAbs tpsR tBodyR) <- etR
+         , bksL <- takeTPTypes tpsL
+         , bksR <- takeTPTypes tpsR
          = altsM [ checkTypeEquivs ctx aL' [] (map snd bksL) aR' [] (map snd bksR)
-                 , checkTypeEquiv  ctx aL' (pL : psL) tBodyL aR' (pR : psR) tBodyR ]
+                 , checkTypeEquiv  ctx aL' (tpsL : psL) tBodyL aR' (tpsR : psR) tBodyR ]
 
          -- Compare other types generically.
          | Right (aL', TKey tkL tgssL) <- etL

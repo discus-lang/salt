@@ -13,7 +13,7 @@ test/30-error/10-check-type/Test.salt:16:17
 
   16:11  In test
 
-test/30-error/10-check-type/Test.salt:19:12
+test/30-error/10-check-type/Test.salt:19:13
   Duplicate type binders at same level
    with names {a}
 
@@ -70,7 +70,7 @@ test/30-error/10-check-type/Test.salt:50:17
 
   50:11  In test
 
-test/30-error/10-check-type/Test.salt:53:12
+test/30-error/10-check-type/Test.salt:53:13
   Duplicate type binders at same level
    with names {a}
 
@@ -87,7 +87,7 @@ test/30-error/10-check-type/Test.salt:61:17
 
   61:11  In test
 
-test/30-error/10-check-type/Test.salt:64:12
+test/30-error/10-check-type/Test.salt:64:13
   Duplicate type binders at same level
    with names {a}
 

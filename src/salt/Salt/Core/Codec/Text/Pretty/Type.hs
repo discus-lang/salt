@@ -29,16 +29,16 @@ instance Pretty c (Type a) where
          %%  text "→"
          %%  squared (map (ppr c) tsResult)
 
-        TForall bks tBody
+        TForall tps tBody
          ->  text "∀"
           %  squared  [ ppr c b % text ":" %% ppr c t
-                      | (b, t) <- bks ]
+                      | (b, t) <- takeTPTypes tps ]
           %  text "." %% ppr c tBody
 
-        TExists bks tBody
+        TExists tps tBody
          ->  text "∃"
           %  squared  [ ppr c b % text ":" %% ppr c t
-                      | (b, t) <- bks ]
+                      | (b, t) <- takeTPTypes tps ]
           %  text "." %% ppr c tBody
 
         TRecord ns tgs
@@ -141,6 +141,9 @@ instance Pretty c (TypeArgs a) where
 instance Pretty c (TypeParams a) where
  ppr c tps
   = case tps of
+        TPAnn _ tps'
+         -> ppr c tps'
+
         TPTypes nts
          -> squared [ ppr c n % text ":" %% ppr c t
                    | (n, t) <- nts ]

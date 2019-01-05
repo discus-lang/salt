@@ -16,8 +16,8 @@ checkTermAppTypes a wh ctx tFun tsArg
         tFun_red <- simplType a ctx tFun
         (bksParam, tResult)
          <- case tFun_red of
-                TForall bksParam tResult
-                  -> return (bksParam, tResult)
+                TForall tps tResult
+                  -> return (takeTPTypes tps, tResult)
                 _ -> throw $ ErrorAppTermTypeCannot a wh tFun
 
         -- Check the kinds of the arguments.

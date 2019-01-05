@@ -69,7 +69,8 @@ evalType s a env (TApp tFun tgs)
                         return  $ TApp tFun (TGTypes tsArg)
 
          -- Apply type closures.
-         TRef (TRClo (TypeClosure env' (TPTypes bks) tBody))
+         TRef (TRClo (TypeClosure env' tps tBody))
+          | bks <- takeTPTypes tps
           -> case tgs of
                 TGTypes ts
                  -> do  let bs  = map fst bks
@@ -91,23 +92,23 @@ evalType s a env (TFun ts1 ts2)
 
 
 -- (evt-all) ----------------------------------------------
-evalType s a env (TForall bks t)
- = do   let (bs, ks) = unzip bks
+evalType s a env (TForall tps t)
+ = do   let (bs, ks) = unzip $ takeTPTypes tps
         ks'      <- mapM (evalType s a env) ks
         let bks' =  zip bs ks'
         let env' = tenvExtendTypes bks' env
         t'       <- evalType s a env' t
-        return  $ TForall bks' t'
+        return  $ TForall (TPTypes bks') t'
 
 
 -- (evt-ext) ----------------------------------------------
 evalType s a env (TExists bks t)
- = do   let (bs, ks) = unzip bks
+ = do   let (bs, ks) = unzip $ takeTPTypes bks
         ks'      <- mapM (evalType s a env) ks
         let bks' = zip bs ks'
         let env' = tenvExtendTypes bks' env
         t'       <- evalType s a env' t
-        return  $ TExists bks' t'
+        return  $ TExists (TPTypes bks') t'
 
 
 -- (evt-rec) ----------------------------------------------

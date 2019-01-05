@@ -24,18 +24,16 @@ pType
  , do   -- '∀' TypeParams '.' Type
         pForall
         tps     <- pTypeParams  <?> "some parameters for the forall type"
-        let TPTypes bks = tps
         pTok KDot               <?> "more parameters, or '.' to start the body type"
         tBody   <- pType        <?> "a body for the exists type"
-        return  $ TForall bks tBody
+        return  $ TForall tps tBody
 
  , do   -- '∃' TypeParams '.' Type
         pExists
         tps     <- pTypeParams  <?> "some parameters for the exists type"
-        let TPTypes bks = tps
         pTok KDot               <?> "more parameters, or '.' to start the body type"
         tBody   <- pType        <?> "a body for the forall type"
-        return  $ TExists bks tBody
+        return  $ TExists tps tBody
 
  , do   -- '∙'
         pHole
@@ -216,8 +214,8 @@ pTypeArg
 --   about needing to define them to be equal to 'T'.
 pTypeParams :: Parser (TypeParams RL)
 pTypeParams
- = do   bts     <- pTypeSigs
-        return  $ TPTypes bts
+ = do   (r, bts) <- pRanged pTypeSigs
+        return  $ TPAnn r $ TPTypes bts
 
 
 -- | Parser for some type signatures.

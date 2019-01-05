@@ -101,6 +101,6 @@ makeTypeOfDeclTerm decl
 
         loop tsResult (MPTypes bts : pss')
          = case loop tsResult pss' of
-                [t] -> [TForall bts t]
+                [t] -> [TForall (TPTypes bts) t]
                 _   -> []
 

@@ -83,6 +83,7 @@ instance MapAnnot TypeRef where
 instance MapAnnot TypeParams where
  mapAnnot f pp
   = case pp of
+        TPAnn a tps'    -> TPAnn (f a) (mapAnnot f tps')
         TPTypes bts     -> TPTypes [(b, mapAnnot f t) | (b, t) <- bts]
 
 

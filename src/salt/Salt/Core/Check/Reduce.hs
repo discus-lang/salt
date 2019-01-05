@@ -14,7 +14,7 @@ reduceType
 
 reduceType a ctx (TAnn _a t)
  = reduceType a ctx t
- >>= \case 
+ >>= \case
         Nothing -> return $ Just t
         Just t' -> return $ Just t'
 
@@ -36,8 +36,9 @@ reduceType _a _ctx tt@(TSum{})
 reduceType a ctx (TApt tFun tsArgs)
  = simplType a ctx tFun
  >>= \case
-        TAbs (TPTypes bks) tBody
-         | length bks == length tsArgs
+        TAbs tps tBody
+         | bks <- takeTPTypes tps
+         , length bks == length tsArgs
          -> do  let ns     = [n | BindName n <- map fst bks]
                 let snv    = snvOfBinds $ zip ns tsArgs
                 let tBody' = snvApplyType upsEmpty snv tBody
@@ -116,9 +117,9 @@ stripTermParamsOfType ctx tt
         TAnn _ t
          -> stripTermParamsOfType ctx t
 
-        TForall bks tBody
+        TForall tps tBody
          -> do  rest    <- stripTermParamsOfType ctx tBody
-                return  $ Left bks : rest
+                return  $ Left (takeTPTypes tps) : rest
 
         TFun tsParam [tBody]
          -> do  rest    <- stripTermParamsOfType ctx tBody

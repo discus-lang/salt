@@ -8,7 +8,7 @@ test/30-error/20-check-type-sigs/Test.salt:9:24
 
   9:6    In type declaration "decl2"
 
-test/30-error/20-check-type-sigs/Test.salt:12:6
+test/30-error/20-check-type-sigs/Test.salt:12:12
   Duplicate type binders at same level
    with names {a}
 

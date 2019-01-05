@@ -65,19 +65,19 @@ checkTypeWith a wh ctx (TApt tFun tsArg)
 
 
 -- (k-all) ------------------------------------------------
-checkTypeWith a wh ctx (TForall bks tBody)
- = do   TPTypes bks' <- checkTypeParams a wh ctx (TPTypes bks)
-        let ctx' = contextBindTypeParams (TPTypes bks') ctx
+checkTypeWith a wh ctx (TForall tps tBody)
+ = do   tps'    <- checkTypeParams a wh ctx tps
+        let ctx' = contextBindTypeParams tps' ctx
         tBody'  <- checkTypeIs a wh ctx' TData tBody
-        return  (TForall bks' tBody', TData)
+        return  (TForall tps' tBody', TData)
 
 
 -- (k-ext) ------------------------------------------------
-checkTypeWith a wh ctx (TExists bks tBody)
- = do   TPTypes bks' <- checkTypeParams a wh ctx (TPTypes bks)
-        let ctx' = contextBindTypeParams (TPTypes bks') ctx
+checkTypeWith a wh ctx (TExists tps tBody)
+ = do   tps'    <- checkTypeParams a wh ctx tps
+        let ctx' = contextBindTypeParams tps' ctx
         tBody'  <- checkTypeIs a wh ctx' TData tBody
-        return  (TExists bks' tBody', TData)
+        return  (TExists tps' tBody', TData)
 
 
 -- (k-fun) ------------------------------------------------

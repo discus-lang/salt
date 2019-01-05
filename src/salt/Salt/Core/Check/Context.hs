@@ -79,8 +79,8 @@ contextBindTypes nts ctx
 
 -- | Bind the kinds of type parameters into the context.
 contextBindTypeParams :: TypeParams a -> Context a -> Context a
-contextBindTypeParams (TPTypes bts) ctx
- = flip contextBindTypes ctx [ (n, t) | (BindName n, t) <- bts ]
+contextBindTypeParams tps ctx
+ = flip contextBindTypes ctx [ (n, t) | (BindName n, t) <- takeTPTypes tps ]
 
 
 ---------------------------------------------------------------------------------------------------
@@ -130,7 +130,10 @@ contextResolveTypeBound ctx ps0 (BoundWith n d0)
  = goParams 0 d0 upsEmpty ps0
  where
         -- Look through parameters
-        goParams level d ups (TPTypes bks : tpss)
+        goParams level d ups (TPAnn _a tps' : tpss)
+         = goParams level d ups (tps' : tpss)
+
+        goParams level d ups (TPTypes bks   : tpss)
          = let ups' = upsCombine ups (upsOfBinds $ map fst bks) in
            case lookup (BindName n) bks of
             Nothing      -> goParams (level + 1) d ups' tpss

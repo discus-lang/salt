@@ -34,7 +34,8 @@ data TypeRef a
 
 -- | Type Parameters.
 data TypeParams a
-        = TPTypes ![(Bind, Type a)]             -- ^ Type parameters.
+        = TPAnn a (TypeParams a)
+        | TPTypes ![(Bind, Type a)]             -- ^ Type parameters.
         deriving (Show, Eq, Ord)
 
 
@@ -90,8 +91,8 @@ pattern TArr    ks1 k2  = TKey TKArr          [TGTypes ks1,  TGTypes [k2]]
 pattern TApp    tF  gs2 = TKey TKApp          [TGTypes [tF], gs2]
 pattern TApt    tF  ts2 = TKey TKApp          [TGTypes [tF], TGTypes ts2]
 pattern TFun    ts1 ts2 = TKey TKFun          [TGTypes ts1,  TGTypes ts2]
-pattern TForall bks t   = TKey TKForall       [TGTypes [TAbs (TPTypes bks) t]]
-pattern TExists bks t   = TKey TKExists       [TGTypes [TAbs (TPTypes bks) t]]
+pattern TForall tps t   = TKey TKForall       [TGTypes [TAbs tps t]]
+pattern TExists tps t   = TKey TKExists       [TGTypes [TAbs tps t]]
 pattern TRecord  ns mgs = TKey (TKRecord  ns) mgs
 pattern TVariant ns mgs = TKey (TKVariant ns) mgs
 pattern TSusp   tsv te  = TKey TKSusp         [TGTypes tsv, TGTypes [te]]
@@ -105,7 +106,7 @@ infixr 4 :=>
 pattern (:->) ts1 ts2   = TFun    ts1 ts2
 infixr 4 :->
 
-pattern (:*>) tps t     = TForall tps t
+pattern (:*>) bks t     = TForall (TPTypes bks) t
 infixr 3 :*>
 
 
@@ -189,6 +190,15 @@ makeTAbsOfParams tps tBody
         _       -> foldr TAbs tBody tps
 
 
+-- | Take the binders from a TPTypes.
+takeTPTypes :: TypeParams a -> [(Bind, Type a)]
+takeTPTypes tps
+ = case tps of
+        TPAnn _ tps'    -> takeTPTypes tps'
+        TPTypes bks     -> bks
+
+
+
 -- | If this is a `forall` type then split off the parameters and body.
 takeTForalls :: Type a -> Maybe ([[(Bind, Type a)]], Type a)
 takeTForalls tt
@@ -196,10 +206,10 @@ takeTForalls tt
  where start
         = case tt of
                 TForall tps tBody   -> Just $ go [tps] tBody
-                _                   -> Nothing
+                _ -> Nothing
 
        go tpss tBody
         = case tBody of
                 TForall tps' tBody' -> go (tps' : tpss) tBody'
-                _                   -> (reverse tpss, tBody)
+                _ -> (map takeTPTypes $ reverse tpss, tBody)
 

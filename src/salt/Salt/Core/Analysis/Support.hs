@@ -116,8 +116,8 @@ instance HasSupport (Type a) where
         TRef r          -> supportOf r
         TVar u          -> supportBoundType u
 
-        TAbs (TPTypes bks) t
-         ->     supportBindTypes (map fst bks) $ supportOf t
+        TAbs tps t
+         -> supportBindTypes (map fst $ takeTPTypes tps) $ supportOf t
 
         TKey tk ts      -> mconcat (supportOf tk : map supportOf ts)
 

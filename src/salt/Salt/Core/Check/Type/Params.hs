@@ -16,20 +16,21 @@ checkTypeParams
         :: Annot a => a -> [Where a]
         -> Context a -> TypeParams a -> IO (TypeParams a)
 
-checkTypeParams a wh ctx tps
- = case tps of
-        TPTypes bks
-         -> do  let (bs, ks) = unzip bks
+checkTypeParams _a wh ctx (TPAnn a' tps')
+ = checkTypeParams a' wh ctx tps'
 
-                -- Check for duplicate binder names.
-                let ns          = [ n | BindName n <- bs ]
-                let nsDup       = List.duplicates ns
-                when (not $ null nsDup)
-                 $ throw $ ErrorAbsTypeBindConflict a wh nsDup
+checkTypeParams a wh ctx (TPTypes bks)
+ = do   let (bs, ks) = unzip bks
 
-                -- Check the parameter kinds.
-                ks' <- mapM (checkKind a wh ctx) ks
-                return $ TPTypes $ zip bs ks'
+        -- Check for duplicate binder names.
+        let ns          = [ n | BindName n <- bs ]
+        let nsDup       = List.duplicates ns
+        when (not $ null nsDup)
+         $ throw $ ErrorAbsTypeBindConflict a wh nsDup
+
+        -- Check the parameter kinds.
+        ks' <- mapM (checkKind a wh ctx) ks
+        return $ TPTypes $ zip bs ks'
 
 
 -- | Check a list of type function parameters,

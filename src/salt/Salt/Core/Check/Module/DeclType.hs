@@ -112,6 +112,6 @@ makeKindOfDeclType pss0 kResult
  = loop pss0
  where
         loop [] = kResult
-        loop (TPTypes bks : pss')
-         = TArr (map snd bks) $ loop pss'
+        loop (TPAnn _ tps' : pss') = loop (tps' : pss')
+        loop (TPTypes bks  : pss') = TArr (map snd bks) $ loop pss'
 

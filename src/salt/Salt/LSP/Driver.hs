@@ -1,5 +1,5 @@
 
-module Salt.LSP.Driver 
+module Salt.LSP.Driver
        (runLSP)
 where
 
@@ -18,6 +18,9 @@ import qualified Text.Show.Pretty               as T
 --   We listen to requests on stdin and send responses to stdout.
 --   We take an optional path for server side logging.
 --
+--   TODO: catch any errors thrown by this code and send a diagnostic
+--   reporting an error. The language server itself should never go down.
+--
 runLSP :: Maybe FilePath -> IO ()
 runLSP mFileLog
  = do  state  <- lspBegin mFileLog
@@ -26,8 +29,8 @@ runLSP mFileLog
 
 ---------------------------------------------------------------------------------------------------
 -- | The main event loop for the language server.
--- 
---   We do a blocking read of stdin to get a request, 
+--
+--   We do a blocking read of stdin to get a request,
 --   then dispatch it to the appropriat
 lspLoop :: State -> IO ()
 lspLoop state
@@ -51,7 +54,7 @@ lspLoop state
 lspBegin :: Maybe FilePath -> IO State
 lspBegin mFileLog
  = do
-       pid <- Process.getProcessID 
+       pid <- Process.getProcessID
        mLogDebug
         <- case mFileLog of
               Nothing -> return Nothing
@@ -77,7 +80,7 @@ lspStartup state req
  -- Client sends us 'inititialize' with the set of its capabilities.
  -- We reply with our own capabilities.
  | "initialize" <- reqMethod req
- , Just (params :: InitializeParams) 
+ , Just (params :: InitializeParams)
       <- join $ fmap unpack $ reqParams req
  = do
         lspLog state "* Initialize"
@@ -86,9 +89,9 @@ lspStartup state req
         -- help make this work with other than VSCode.
         lspLog state $ T.ppShow params
 
-        lspSend state 
+        lspSend state
          $ jobj [ "id" := V $ pack $ reqId req
-                , "result"      
+                , "result"
                   := O  [ "capabilities"
                           := O  [ "textDocumentSync"
                                   := O  [ "openClose" := B True   -- send us open/close notif.
@@ -97,7 +100,7 @@ lspStartup state req
                                 ]]]]
         lspLoop state
 
- -- Cient sends us 'initialized' if it it is happy with the 
+ -- Cient sends us 'initialized' if it it is happy with the
  -- capabilities that we sent.
  | "initialized" <- reqMethod req
  = do  lspLog  state "* Initialized"
@@ -124,7 +127,7 @@ lspInitialized state req
  , Just jParams         <- reqParams req
  , Just jSettings       <- getField jParams   "settings"
  , Just jSettingsSalt   <- getField jSettings "salt"
- = do   
+ = do
         lspLog state "* DidChangeConfiguration (salt)"
         lspLog state $ "  jSettings:    " ++ show jSettingsSalt
         lspLoop state
@@ -145,7 +148,7 @@ lspInitialized state req
         lspLog state $ "  sText:        " ++ show sText
 
         Task.updateDiagnostics state sUri sText
-        lspLoop state 
+        lspLoop state
 
  -- A file was closed.
  | "textDocument/didClose" <- reqMethod req
@@ -159,8 +162,8 @@ lspInitialized state req
         -- Once the file is closed, clear any errors that it might still have
         -- from the IDE.
         Task.sendClearDiagnostics state sUri
-        lspLoop state 
-      
+        lspLoop state
+
  -- A file was saved.
  | "textDocument/didSave" <- reqMethod req
  , Just jParams         <- reqParams req
@@ -171,7 +174,7 @@ lspInitialized state req
         lspLog state "* DidSave"
         lspLog state $ "  sUri:         " ++ show sUri
         lspLog state $ "  iVersion:     " ++ show iVersion
-        lspLoop state 
+        lspLoop state
 
  -- A file was changed.
  | "textDocument/didChange" <- reqMethod req
@@ -195,4 +198,4 @@ lspInitialized state req
  = do
         lspLog  state "* Request"
         lspLog  state (T.ppShow req)
-        lspLoop state 
+        lspLoop state

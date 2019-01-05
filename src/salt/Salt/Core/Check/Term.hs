@@ -127,7 +127,7 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTypes{} m)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsTypeImpure aBody wh eBody_red
 
-        return  (MAbs ps' m', [TForall bts t], [])
+        return  (MAbs ps' m', [TForall (TPTypes bts) t], [])
 
 
 -- (t-abm) ------------------------------------------------

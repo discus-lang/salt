@@ -26,8 +26,8 @@ snvApplyType ups snv tt
         -- Carry subsitution under binders.
         --   We update the ups to account for any binders that shadow
         --   elements of our subsitution.
-        TAbs tps@(TPTypes bks) tBody
-         -> let nsBind  = [ n | (BindName n, _) <- bks ]
+        TAbs tps tBody
+         -> let nsBind  = [ n | (BindName n, _) <- takeTPTypes tps ]
                 upsBind = upsOfNames nsBind
                 ups'    = upsCombine upsBind ups
                 snv'    = snvBump nsBind snv

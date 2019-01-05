@@ -23,8 +23,8 @@ upsApplyType ups tt
         TVar u   -> TVar $ upsApplyBound ups u
 
         -- Carry ups under abstraction.
-        TAbs tps@(TPTypes bks) tBody
-         -> let nsBind  = [ n | (BindName n, _) <- bks ]
+        TAbs tps tBody
+         -> let nsBind  = [ n | (BindName n, _) <- takeTPTypes tps ]
                 ups'    = upsBumpNames nsBind ups
             in  TAbs tps $ upsApplyType ups' tBody
 
