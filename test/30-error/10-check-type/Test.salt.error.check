@@ -9,7 +9,7 @@ test/30-error/10-check-type/Test.salt:10:11
   10:11  In test
 
 test/30-error/10-check-type/Test.salt:15:17
-  Unknown kind constructor 'Derp'
+  Unknown kind primitive '#Derp'
 
   15:11  In test
 
@@ -26,7 +26,7 @@ test/30-error/10-check-type/Test.salt:21:34
   21:11  In test
 
 test/30-error/10-check-type/Test.salt:26:17
-  Unknown kind constructor 'Derp'
+  Unknown kind primitive '#Derp'
 
   26:11  In test
 
@@ -67,7 +67,7 @@ test/30-error/10-check-type/Test.salt:44:41
   44:11  In test
 
 test/30-error/10-check-type/Test.salt:49:17
-  Unknown kind constructor 'Derp'
+  Unknown kind primitive '#Derp'
 
   49:11  In test
 
@@ -84,7 +84,7 @@ test/30-error/10-check-type/Test.salt:55:27
   55:11  In test
 
 test/30-error/10-check-type/Test.salt:60:17
-  Unknown kind constructor 'Derp'
+  Unknown kind primitive '#Derp'
 
   60:11  In test
 
@@ -124,64 +124,64 @@ test/30-error/10-check-type/Test.salt:84:11
 
   84:11  In test
 
-test/30-error/10-check-type/Test.salt:89:11
+test/30-error/10-check-type/Test.salt:90:11
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  89:11  In test
+  90:11  In test
 
-test/30-error/10-check-type/Test.salt:92:11
+test/30-error/10-check-type/Test.salt:93:11
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  92:11  In test
+  93:11  In test
 
-test/30-error/10-check-type/Test.salt:95:11
+test/30-error/10-check-type/Test.salt:96:11
   Duplicate fields in record type
    [x]
 
-  95:11  In test
+  96:11  In test
 
-test/30-error/10-check-type/Test.salt:100:11
+test/30-error/10-check-type/Test.salt:101:11
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  100:11 In test
+  101:11 In test
 
-test/30-error/10-check-type/Test.salt:103:11
+test/30-error/10-check-type/Test.salt:104:11
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  103:11 In test
+  104:11 In test
 
-test/30-error/10-check-type/Test.salt:106:11
+test/30-error/10-check-type/Test.salt:107:11
   Duplicate alternatives in variant type
    {x}
 
-  106:11 In test
+  107:11 In test
 
-test/30-error/10-check-type/Test.salt:111:11
+test/30-error/10-check-type/Test.salt:112:11
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  111:11 In test
+  112:11 In test
 
-test/30-error/10-check-type/Test.salt:114:16
+test/30-error/10-check-type/Test.salt:115:16
   Actual kind '#Data'
    does not match
    expected kind '#Effect'
 
-  114:11 In test
+  115:11 In test
 
-test/30-error/10-check-type/Test.salt:119:11
+test/30-error/10-check-type/Test.salt:120:11
   Actual kind '#Data'
    does not match
    expected kind '#Effect'
 
-  119:11 In test
+  120:11 In test
 

@@ -23,7 +23,7 @@ checkKind _a wh ctx (TAnn a' t)
 checkKind a wh _ctx k@(TRef (TRPrm n))
  = case Map.lookup n Prim.primKindCtors of
         Just () -> return k
-        Nothing -> throw $ ErrorUnknownCtor UKind a wh n
+        Nothing -> throw $ ErrorUnknownPrim UKind a wh n
 
 
 -- (s-arr) ------------------------------------------------

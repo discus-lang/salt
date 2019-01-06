@@ -1,10 +1,10 @@
 test/30-error/20-check-type-sigs/Test.salt:5:16
-  Unknown kind constructor 'Derp'
+  Unknown kind primitive '#Derp'
 
   5:6    In type declaration "decl1"
 
 test/30-error/20-check-type-sigs/Test.salt:8:24
-  Unknown kind constructor 'Derp'
+  Unknown kind primitive '#Derp'
 
   8:6    In type declaration "decl2"
 

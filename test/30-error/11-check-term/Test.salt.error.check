@@ -39,7 +39,7 @@ test/30-error/11-check-term/Test.salt:30:11
   30:11  In test
 
 test/30-error/11-check-term/Test.salt:35:18
-  Unknown kind constructor 'Nat'
+  Unknown kind primitive '#Nat'
 
   35:11  In test
 
