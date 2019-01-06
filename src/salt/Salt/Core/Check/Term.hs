@@ -45,19 +45,20 @@ checkTermWith a wh ctx Synth (MBox m)
 
 
 -- (t-run) ------------------------------------------------
-checkTermWith a wh ctx Synth (MRun m)
+checkTermWith a wh ctx Synth (MRun mBody)
  = do
         -- Check the body.
-        (m', tsSusp', es)
-         <- checkTerm a wh ctx Synth m
+        (mBody', tsSusp', es)
+         <- checkTerm a wh ctx Synth mBody
 
         -- The body must produce a suspension.
         -- When we run it it causes the effects in its annotations.
         tsSusp_red' <- simplTypes a ctx tsSusp'
+        let aBody   = fromMaybe a $ takeAnnotOfTerm mBody
         case tsSusp_red' of
          [TSusp tsResult' e']
-            -> return (MRun m', tsResult', es ++ [e'])
-         _  -> throw $ ErrorRunSuspensionIsNot a wh tsSusp_red'
+            -> return (MRun mBody', tsResult', es ++ [e'])
+         _  -> throw $ ErrorRunSuspensionIsNot aBody wh tsSusp_red'
 
 
 -- (t-val) ------------------------------------------------
@@ -111,23 +112,29 @@ checkTermWith a wh ctx Synth m@(MVar u)
 
 
 -- (t-abt) ------------------------------------------------
-checkTermWith a wh ctx Synth (MAbs ps@MPTypes{} m)
+checkTermWith a wh ctx Synth (MAbs mps@MPTypes{} m)
  = do
         -- Check the parameters and bind into the context.
-        ps'@(MPTypes bts) <- checkTermParams a wh ctx ps
-        let ctx' = contextBindTermParams ps ctx
+        mps'@(MPTypes bts) <- checkTermParams a wh ctx mps
+        let ctx' = contextBindTermParams mps ctx
 
         -- Check the body of the abstraction in the new context.
-        (m', t, es) <- checkTerm1 a wh ctx' Synth m
+        -- It needs to produce a single value.
+        let aBody  = fromMaybe a $ takeAnnotOfTerm m
+        (m', ts, es) <- checkTerm a wh ctx' Synth m
+        tBody
+         <- case ts of
+                []      -> throw $ ErrorAbsEmpty UType aBody wh
+                [t]     -> return t
+                _       -> throw $ ErrorWrongArity UTerm a wh ts [TData]
 
         -- The body must be pure.
         -- TODO: ensure types like (pure + pure) are reduced to pure,
-        let aBody  = fromMaybe a $ takeAnnotOfTerm m
         eBody_red  <- simplType aBody ctx' (TSum es)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsImpure UType aBody wh eBody_red
 
-        return  (MAbs ps' m', [TForall (TPTypes bts) t], [])
+        return  (MAbs mps' m', [TForall (TPTypes bts) tBody], [])
 
 
 -- (t-abm) ------------------------------------------------
@@ -180,7 +187,9 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
 
                         return (mFun0, tCon', [])
 
-                 | otherwise    -> throw $ ErrorUnknownPrim UTerm a wh nPrm
+                 | otherwise
+                 -> let aFun = fromMaybe a (takeAnnotOfTerm mFun0)
+                    in  throw $ ErrorUnknownPrim UTerm aFun wh nPrm
 
                 Nothing
                  -> checkTerm1 a wh ctx Synth mFun0

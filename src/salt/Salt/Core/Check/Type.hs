@@ -59,8 +59,9 @@ checkTypeWith a wh ctx (TArr ks1 k2)
 
 -- (k-app) ------------------------------------------------
 checkTypeWith a wh ctx (TApp tFun tgsArg)
- = do   (tFun',  kFun)     <- checkType a wh ctx tFun
-        (tgsArg', kResult) <- checkTypeAppTypes a wh ctx kFun tgsArg
+ = do   let aFun = fromMaybe a $ takeAnnotOfType tFun
+        (tFun',  kFun)     <- checkType a wh ctx tFun
+        (tgsArg', kResult) <- checkTypeAppTypes a wh ctx aFun kFun tgsArg
         return  (TApp tFun' tgsArg', kResult)
 
 

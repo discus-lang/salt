@@ -6,17 +6,17 @@ import Salt.Core.Check.Type.Base
 -- | Check the application of a type to some types.
 checkTypeAppTypes
         :: Annot a => a -> [Where a]
-        -> Context a -> Kind a -> TypeArgs a
+        -> Context a -> a -> Kind a -> TypeArgs a
         -> IO (TypeArgs a, Kind a)
 
-checkTypeAppTypes _a wh ctx kFun (TGAnn a tgs')
- = checkTypeAppTypes a wh ctx kFun tgs'
+checkTypeAppTypes _a wh ctx aFun kFun (TGAnn a tgs')
+ = checkTypeAppTypes a wh ctx aFun kFun tgs'
 
-checkTypeAppTypes a  wh ctx kFun (TGTypes tsArg)
+checkTypeAppTypes a  wh ctx aFun kFun (TGTypes tsArg)
  = case kFun of
         TArr ksParam kResult
           -> goCheckArgs ksParam kResult
-        _ -> throw $ ErrorAppTypeTypeCannot a wh kFun
+        _ -> throw $ ErrorAppTypeTypeCannot aFun wh kFun
  where
         goCheckArgs ksParam kResult
          = if length ksParam /= length tsArg

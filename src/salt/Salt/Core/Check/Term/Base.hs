@@ -70,11 +70,11 @@ checkTermIs a wh ctx tsExpected m
         when (length tsActual /= length tsExpected)
          $ throw $ ErrorWrongArity UTerm a wh tsActual tsExpected
 
-        checkTypeEquivs ctx a [] tsExpected a [] tsActual
+        checkTypeEquivs ctx a [] tsActual a [] tsExpected
          >>= \case
                 Nothing -> return (m', tsActual, esActual)
-                Just ((_a1, t1Err), (_a2, t2Err))
-                 -> throw $ ErrorMismatch UType a wh t1Err t2Err
+                Just ((_a1, tActualErr), (_a2, tExpectedErr))
+                 -> throw $ ErrorMismatch UType a wh tActualErr tExpectedErr
 
 
 -- (t-many / t-gets) ------------------------------------------------------------------------------

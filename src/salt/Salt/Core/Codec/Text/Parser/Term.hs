@@ -222,13 +222,13 @@ pTermBody
          <?> "arguments for the constructor application"
 
  , do   -- Prm TermArgs*
-        nPrm    <- pPrm
+        (rPrm, nPrm) <- pRanged pPrm
         case takePrimValueOfName nPrm of
-         Just v  -> pTermAppArgsSat (MVal v)
-                     <?> "arguments for the primitive application"
+         Just vPrm -> pTermAppArgsSat (MAnn rPrm (MVal vPrm))
+                      <?> "arguments for the primitive application"
 
-         Nothing -> pTermAppArgsSat (MPrm nPrm)
-                     <?> "arguments for the primitive application"
+         Nothing   -> pTermAppArgsSat (MAnn rPrm (MPrm nPrm))
+                      <?> "arguments for the primitive application"
 
  , do   -- TermArg TermArgs*
         mFun    <- pTermArgProj
@@ -341,9 +341,9 @@ pTermArg
         -- This matches primitive values.
         -- Primitive operators that should be applied to arguments are
         -- handled by the general term parser.
- , do   nPrm <- pPrm
+ , do   (rPrm, nPrm) <- pRanged pPrm
         case takePrimValueOfName nPrm of
-         Just v  -> return $ MVal v
+         Just v  -> return $ MAnn rPrm $ MVal v
          Nothing -> P.unexpected "primitive value"
 
 

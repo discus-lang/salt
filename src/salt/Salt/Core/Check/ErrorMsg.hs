@@ -13,7 +13,7 @@ instance Show a => Pretty c (Error a) where
 
 -- Malformed AST ------------------------------------------
 ppre c (ErrorTypeMalformed uni _a _wh _k)
- = vcat [ text "Malformed" %% ppr c uni %% text "." ]
+ = vcat [ text "Malformed" %% ppr c uni % text "." ]
 
 ppre _c (ErrorTermMalformed _a _wh _m)
  = vcat [ text "Malformed term."]
@@ -73,7 +73,11 @@ ppre c (ErrorAbsConflict uni _a _wh ns)
 
 ppre c (ErrorAbsImpure uni _a _wh eActual)
  = vcat [ text "Impure" %% ppr c uni %% text "abstraction body"
-        , text " causes effect" %% ppr c eActual ]
+        , text " causes effect" %% squotes (ppr c eActual) ]
+
+ppre c (ErrorAbsEmpty uni _a _wh)
+ = vcat [ text "Empty" %% ppr c uni %% text "abstraction body"
+        , text " does not produce a value." ]
 
 ppre c (ErrorAbsTermNoValueForForall _a _wh ps)
  = vcat [ text "Polymorphic term abstraction does not produce a value."
@@ -89,11 +93,11 @@ ppre c (ErrorMismatch uni _a _wh tActual tExpected)
 
 -- Application problems -----------------------------------
 ppre c (ErrorUnsaturatedPrim _a _wh n t)
- = vcat [ text "Unsaturated primitive" %% squotes (text "#" % pprLbl n)
+ = vcat [ text "Unsaturated term primitive" %% squotes (text "#" % pprLbl n)
         , text " of type" %% squotes (ppr c t) ]
 
 ppre c (ErrorUnsaturatedCtor _a _wh n t)
- = vcat [ text "Unsaturated data constructor" %% squotes (pprLbl n)
+ = vcat [ text "Unsaturated term constructor" %% squotes (pprCon n)
         , text " of type" %% squotes (ppr c t) ]
 
 ppre c (ErrorAppNoArguments _a _wh tFun)
@@ -228,8 +232,8 @@ ppre c (ErrorCaseAltsInexhaustive _a _wh ns tScrut)
 
 -- Suspension problems ------------------------------------
 ppre c (ErrorRunSuspensionIsNot _a _wh ts)
- = vcat [ text "Cannot run non-suspension of type"
-        , text " " %% squared (map (ppr c) ts) ]
+ = vcat [ text "Cannot run non-suspension"
+        , text " of type" %% squared (map (ppr c) ts) ]
 
 
 -- | Print some universed things with proper pluralization.

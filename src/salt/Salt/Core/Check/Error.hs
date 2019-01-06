@@ -108,6 +108,11 @@ data Error a
         , errorWhere            :: [Where a]
         , errorEffect           :: Type a }
 
+        | ErrorAbsEmpty
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
+        , errorWhere            :: [Where a] }
+
         | ErrorAbsTermNoValueForForall
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
