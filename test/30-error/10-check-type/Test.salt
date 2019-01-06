@@ -71,22 +71,17 @@ test kind (∃[a: #Effect]. a)
 test kind [#Derp] -> []
 
 -- Error: parameter type has wrong kind.
--- TODO: error in the wrong place. Make TFun take TGTypes like the others.
--- then attach annot to the TGTypes.
 test kind [#Console] -> []
 
 -- Error: result type is ill-formed.
 test kind [] -> [#Derp]
 
--- TODO: errors are on in the wrong place.
---       same problem as above. Same issue below.
 -- Error: result type has wrong kind.
 test kind [] -> [#Console]
 
 
 -- (k-rec) --------------------------------------------------------------------
 -- Error: field does not have kind data.
--- TODO: get error onto the field type.
 test kind [x: #Console]
 
 -- Error: field does not have kind data.

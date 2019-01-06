@@ -77,7 +77,7 @@ test/30-error/11-check-term/Test.salt:55:22
 
   55:11  In test
 
-test/30-error/11-check-term/Test.salt:58:12
+test/30-error/11-check-term/Test.salt:58:17
   Actual type '#Effect'
    does not match
    expected type '#Data'

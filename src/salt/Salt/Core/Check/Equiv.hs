@@ -29,6 +29,13 @@ checkTypeEquiv ctx aL psL tL aR psR tR
  where
         -- Normalize both sides before comparing them.
         goNormalize
+         | TAnn aL' tL' <- tL
+         = checkTypeEquiv ctx aL' psL tL' aR psR tR
+
+         | TAnn aR' tR' <- tR
+         = checkTypeEquiv ctx aL  psL tL aR' psR tR'
+
+         | otherwise
          = do   etL <- normalize aL psL tL
                 etR <- normalize aL psR tR
                 goCompare etL etR

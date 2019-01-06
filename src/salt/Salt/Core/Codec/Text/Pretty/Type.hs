@@ -17,9 +17,9 @@ instance Pretty c (Type a) where
 
         THole    -> text "∙"
 
-        TArr tsParam tResult
-         -> squared (map (ppr c) tsParam)
-         %% text "⇒" %% ppr c tResult
+        TArr ksParam kResult
+         -> squared (map (ppr c) ksParam)
+         %% text "⇒" %% ppr c kResult
 
         TApt tFun tsArg
          -> pprTFun c tFun %% squared (map (pprTArg c) tsArg)

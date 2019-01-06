@@ -105,83 +105,83 @@ test/30-error/10-check-type/Test.salt:71:12
 
   71:11  In test
 
-test/30-error/10-check-type/Test.salt:76:11
+test/30-error/10-check-type/Test.salt:74:12
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  76:11  In test
+  74:11  In test
 
-test/30-error/10-check-type/Test.salt:79:18
+test/30-error/10-check-type/Test.salt:77:18
   Unknown type primitive '#Derp'
 
-  79:11  In test
+  77:11  In test
 
-test/30-error/10-check-type/Test.salt:84:11
+test/30-error/10-check-type/Test.salt:80:18
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  84:11  In test
+  80:11  In test
 
-test/30-error/10-check-type/Test.salt:90:11
+test/30-error/10-check-type/Test.salt:85:15
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  90:11  In test
+  85:11  In test
 
-test/30-error/10-check-type/Test.salt:93:11
+test/30-error/10-check-type/Test.salt:88:22
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  93:11  In test
+  88:11  In test
 
-test/30-error/10-check-type/Test.salt:96:11
+test/30-error/10-check-type/Test.salt:91:11
   Duplicate fields in record type
    [x]
 
+  91:11  In test
+
+test/30-error/10-check-type/Test.salt:96:15
+  Actual kind '#Effect'
+   does not match
+   expected kind '#Data'
+
   96:11  In test
 
-test/30-error/10-check-type/Test.salt:101:11
+test/30-error/10-check-type/Test.salt:99:22
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  101:11 In test
+  99:11  In test
 
-test/30-error/10-check-type/Test.salt:104:11
-  Actual kind '#Effect'
-   does not match
-   expected kind '#Data'
-
-  104:11 In test
-
-test/30-error/10-check-type/Test.salt:107:11
+test/30-error/10-check-type/Test.salt:102:11
   Duplicate alternatives in variant type
    {x}
 
-  107:11 In test
+  102:11 In test
 
-test/30-error/10-check-type/Test.salt:112:11
+test/30-error/10-check-type/Test.salt:107:11
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  112:11 In test
+  107:11 In test
 
-test/30-error/10-check-type/Test.salt:115:16
+test/30-error/10-check-type/Test.salt:110:16
+  Actual kind '#Data'
+   does not match
+   expected kind '#Effect'
+
+  110:11 In test
+
+test/30-error/10-check-type/Test.salt:115:22
   Actual kind '#Data'
    does not match
    expected kind '#Effect'
 
   115:11 In test
-
-test/30-error/10-check-type/Test.salt:120:11
-  Actual kind '#Data'
-   does not match
-   expected kind '#Effect'
-
-  120:11 In test
 

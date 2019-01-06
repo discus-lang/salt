@@ -71,14 +71,20 @@ checkTypesAre uni a wh ctx ksExpected ts
  = do   (ts', ksActual)
          <- checkTypes a wh ctx ts
 
-        when (not $ length ts' == length ksActual)
+        when (not $ length ksExpected == length ksActual)
          $ throw $ ErrorAppTypeTypeWrongArity a wh ksExpected ksActual
 
-        checkTypeEquivs ctx a [] ksActual a [] ksExpected
-         >>= \case
-                Nothing -> return ts'
-                Just ((_aErr1', kErr1), (_aErr2, kErr2))
-                 -> throw $ ErrorMismatch uni a wh kErr1 kErr2
+        -- Check each of the types in turn against their expected kinds.
+        -- If one of them doesn't match then attribute the error to the
+        -- top most annotatino on the type that was checked, not the
+        -- resulting kind expression.
+        forM (zip3 ts' ksActual ksExpected) $ \(t', kActual, kExpected)
+         -> let a' = fromMaybe a $ takeAnnotOfType t'
+            in checkTypeEquiv ctx a' [] kActual a' [] kExpected
+                >>= \case
+                        Nothing -> return t'
+                        Just ((_aErr1', kErr1), (_aErr2, kErr2))
+                         -> throw $ ErrorMismatch uni a' wh kErr1 kErr2
 
 
 -- | Check that some types all have the given kind.
