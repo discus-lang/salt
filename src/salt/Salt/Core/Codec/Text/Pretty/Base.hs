@@ -32,22 +32,20 @@ instance Pretty c Ups where
  ppr _ (Ups bs)
   =     braced (map pprBump bs)
 
-
 braced ds
  = braces    $ hcat $ punctuate (text "; ") ds
-
 
 bracketed ds
  = brackets  $ hcat $ punctuate (text ", ") ds
 
-
 bracketed' name ds
  = brackets  $ hcat (text name : text "|" : punctuate (text ", ") ds)
-
 
 squared ds
  = text "[" % (hcat $ punctuate (text ", ") ds) % text "]"
 
+squoted ds
+ = squotes (hsep $ punctuate (text ",") ds)
 
 pprBump ((n, d), b)
  = pprVar n % text "^" % integer d % text ":" % integer b

@@ -139,8 +139,7 @@ test/30-error/10-check-type/Test.salt:88:22
   88:11  In test
 
 test/30-error/10-check-type/Test.salt:91:11
-  Duplicate fields in record type
-   [x]
+  Duplicate fields 'x' in record type.
 
   91:11  In test
 
@@ -159,8 +158,7 @@ test/30-error/10-check-type/Test.salt:99:22
   99:11  In test
 
 test/30-error/10-check-type/Test.salt:102:11
-  Duplicate alternatives in variant type
-   {x}
+  Duplicate alternatives 'x' in variant type.
 
   102:11 In test
 

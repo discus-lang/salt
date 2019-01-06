@@ -69,7 +69,7 @@ ppre c (ErrorWrongArity uni _a _wh ts ks)
 -- Abstraction problems -----------------------------------
 ppre c (ErrorAbsConflict uni _a _wh ns)
  = vcat [ text "Conflicting" %% ppr c uni %% text "binders for"
-                %% squotes (hsep $ punctuate (text ",") $ map pprVar ns) ]
+                %% squoted (map pprVar ns)  ]
 
 ppre c (ErrorAbsImpure uni _a _wh eActual)
  = vcat [ text "Impure" %% ppr c uni %% text "abstraction body"
@@ -77,7 +77,7 @@ ppre c (ErrorAbsImpure uni _a _wh eActual)
 
 ppre c (ErrorAbsTermNoValueForForall _a _wh ps)
  = vcat [ text "Polymorphic term abstraction does not produce a value."
-        , text " Parameters" %% hsep (map (ppr c) ps) ]
+        , text " Parameters" %% squared (map (ppr c) ps) ]
 
 
 -- Unexpected types ---------------------------------------
@@ -177,18 +177,16 @@ ppre c (ErrorRecordProjectNoField _a _wh t n)
         , text " Actual type " %% ppr c t ]
 
 ppre _ (ErrorRecordTypeDuplicateFields _a _wh ns)
- = vcat [ text "Duplicate fields in record type"
-        , text " " % squared (map pprLbl ns) ]
+ = vcat [ text "Duplicate fields" %% squoted (map pprVar ns) %% text "in record type." ]
 
 ppre _ (ErrorRecordDuplicateFields _a _wh ns)
- = vcat [ text "Duplicate fields in record"
-        , text " " % squared (map pprLbl ns) ]
+ = vcat [ text "Duplicate fields" %% squoted (map pprVar ns) %% text "in record." ]
 
 
 -- Variant problems ---------------------------------------
 ppre c (ErrorVariantAnnotIsNot _a _wh t)
- = vcat [ text "Variant annotation does not have variant type"
-        , text " " %% squotes (ppr c t) ]
+ = vcat [ text "Variant annotation does not have variant type."
+        , text " Actual type" %% squotes (ppr c t) ]
 
 ppre c (ErrorVariantAnnotAltMissing _a _wh t n)
  = vcat [ text "Variant annotation is missing specified alternative."
@@ -196,16 +194,15 @@ ppre c (ErrorVariantAnnotAltMissing _a _wh t n)
         , text " Lacks" %% squotes (pprLbl n) ]
 
 ppre _ (ErrorVariantTypeDuplicateAlts _a _wh ns)
- = vcat [ text "Duplicate alternatives in variant type"
-        , text " " % braced (map pprLbl ns) ]
+ = vcat [ text "Duplicate alternatives" %% squoted (map pprVar ns) %% text "in variant type." ]
 
 ppre c (ErrorCaseScrutNotVariant _a _wh t)
- = vcat [ text "Scrutinee does not have variant type"
-        , text " " % squotes (ppr c t) ]
+ = vcat [ text "Scrutinee does not have variant type."
+        , text " Actual type" %% squotes (ppr c t) ]
 
 ppre c (ErrorCaseAltNotInVariant _a _wh n t)
  = vcat [ text "Alternative" %% squotes (pprLbl n)
-                %% text "is not in scrutinee type"
+                %% text "is not in scrutinee type."
         , text " " % squotes (ppr c t) ]
 
 ppre c (ErrorCaseAltPatMismatch _a _wh n tAlt tScrut)
@@ -215,17 +212,17 @@ ppre c (ErrorCaseAltPatMismatch _a _wh n tAlt tScrut)
 
 ppre c (ErrorCaseAltPatWrongArity _a _wh _nAlt tsPat tsField)
  = let  reason = if length tsPat >= length tsField then "Too many" else "Not enough"
-   in   vcat [ text reason %% text "binders in pattern"
+   in   vcat [ text reason %% text "binders in pattern."
              , text " with field types" %% squared (map (ppr c) tsField) ]
 
 ppre _c (ErrorCaseAltPatBindConflict _a _wh _nAlt nsDup)
- = vcat [ text "Duplicate binders in pattern" %% squared (map pprVar nsDup) ]
+ = vcat [ text "Duplicate binders in pattern" %% squoted (map pprVar nsDup) ]
 
 ppre _c (ErrorCaseAltsOverlapping _a _wh ns)
- = vcat [ text "Overlapping alternatives" %% squared (map pprLbl ns) ]
+ = vcat [ text "Overlapping alternatives" %% squoted (map pprLbl ns) ]
 
 ppre c (ErrorCaseAltsInexhaustive _a _wh ns tScrut)
- = vcat [ text "Case has missing alternatives" %% squared (map pprLbl ns)
+ = vcat [ text "Case has missing alternatives" %% squoted (map pprLbl ns)
         , text " Scrutinee type" %% squotes (ppr c tScrut) ]
 
 

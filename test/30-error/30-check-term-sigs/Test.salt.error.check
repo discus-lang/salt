@@ -25,7 +25,7 @@ test/30-error/30-check-term-sigs/Test.salt:15:6
 
 test/30-error/30-check-term-sigs/Test.salt:18:6
   Polymorphic term abstraction does not produce a value.
-   Parameters @[a: #Data]
+   Parameters [@[a: #Data]]
 
   18:6   In term declaration "term5"
 

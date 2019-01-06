@@ -254,14 +254,12 @@ test/30-error/11-check-term/Test.salt:147:23
   147:11 In test
 
 test/30-error/11-check-term/Test.salt:150:11
-  Duplicate fields in record
-   [x]
+  Duplicate fields 'x' in record.
 
   150:11 In test
 
 test/30-error/11-check-term/Test.salt:153:11
-  Duplicate fields in record
-   [x, y]
+  Duplicate fields 'x, y' in record.
 
   153:11 In test
 
@@ -305,8 +303,8 @@ test/30-error/11-check-term/Test.salt:177:20
   177:11 In test
 
 test/30-error/11-check-term/Test.salt:180:15
-  Variant annotation does not have variant type
-    '#Nat'
+  Variant annotation does not have variant type.
+   Actual type '#Nat'
 
   180:11 In test
 
@@ -338,13 +336,13 @@ test/30-error/11-check-term/Test.salt:194:16
   194:11 In test
 
 test/30-error/11-check-term/Test.salt:197:16
-  Scrutinee does not have variant type
-   '#Nat'
+  Scrutinee does not have variant type.
+   Actual type '#Nat'
 
   197:11 In test
 
 test/30-error/11-check-term/Test.salt:202:11
-  Case has missing alternatives [foo]
+  Case has missing alternatives 'foo'
    Scrutinee type '∑[foo: #Nat]'
 
   202:11 In test
@@ -357,36 +355,36 @@ test/30-error/11-check-term/Test.salt:205:11
   205:11 In test
 
 test/30-error/11-check-term/Test.salt:208:11
-  Overlapping alternatives [foo]
+  Overlapping alternatives 'foo'
 
   208:11 In test
 
 test/30-error/11-check-term/Test.salt:212:11
-  Case has missing alternatives [bar]
+  Case has missing alternatives 'bar'
    Scrutinee type '∑[foo: #Nat, bar: #Nat]'
 
   212:11 In test
 
 test/30-error/11-check-term/Test.salt:216:11
-  Not enough binders in pattern
+  Not enough binders in pattern.
    with field types [#Nat]
 
   216:11 In test
 
 test/30-error/11-check-term/Test.salt:220:11
-  Not enough binders in pattern
+  Not enough binders in pattern.
    with field types [#Nat, #Nat]
 
   220:11 In test
 
 test/30-error/11-check-term/Test.salt:224:11
-  Too many binders in pattern
+  Too many binders in pattern.
    with field types [#Nat, #Nat]
 
   224:11 In test
 
 test/30-error/11-check-term/Test.salt:228:11
-  Duplicate binders in pattern [x]
+  Duplicate binders in pattern 'x'
 
   228:11 In test
 
