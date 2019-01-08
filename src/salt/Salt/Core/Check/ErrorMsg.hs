@@ -22,7 +22,7 @@ ppre _c (ErrorTermMalformed _a _wh _m)
 -- Module level problems ----------------------------------
 ppre _c (ErrorTypeDeclsRecursive _a _wh nDecl nas)
  = vcat [ text "Recursive type declaration" %% squotes (pprVar nDecl)
-        , text " Involving" %% squared [pprVar n | (n, _) <- nas] ]
+        , text " Involving" %% squoted [pprVar n | (n, _) <- nas] ]
 
 ppre _c (ErrorTypeDeclRebound _a _wh nDecl)
  = vcat [ text "Rebound type name" %% squotes (pprVar nDecl)]

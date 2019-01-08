@@ -20,3 +20,8 @@ type decl5: #Data = decl5
 -- Error: Synonym is indirectly recursive.
 type decl6: #Data = decl7
 type decl7: #Data = [x: decl6, y: #Nat]
+
+-- Error: Synonym is indirectly recursive.
+type decl8:  #Data = decl9
+type decl9:  #Data = [x: decl10, y: #Nat]
+type decl10: #Data = [x: decl8,  y: #Nat]

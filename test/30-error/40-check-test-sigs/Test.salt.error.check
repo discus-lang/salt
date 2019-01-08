@@ -1,10 +1,10 @@
-test/30-error/40-check-test-sigs/Test.salt:6:19
+test/30-error/40-check-test-sigs/Test.salt:6:11
   Rebound test 'test1'
 
-  6:19   In test "test1"
+  6:11   In test "test1"
 
-test/30-error/40-check-test-sigs/Test.salt:7:19
+test/30-error/40-check-test-sigs/Test.salt:7:11
   Rebound test 'test1'
 
-  7:19   In test "test1"
+  7:11   In test "test1"
 

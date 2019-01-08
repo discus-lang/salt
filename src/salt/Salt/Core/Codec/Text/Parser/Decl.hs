@@ -18,17 +18,16 @@ pDecl
  = P.choice
  [ do   -- 'type' Var TypeParams* ':' Type '=' Type
         pTok KType
-        lStart  <- locHere
-        nName   <- pVar <?> "a name for the type"
+        (rName, nName)
+         <- pRanged (pVar       <?> "a name for the type")
         tps     <- P.many (pTypeParams
                                 <?> "some parameters, or a ':' to give the result kind")
         pTok KColon             <?> "more parameters, or a ':' to give the result kind"
         kResult <- pType        <?> "the result kind"
         pTok KEquals            <?> "a '=' to start the body"
         tBody   <- pType        <?> "the body"
-        lEnd    <- locPrev
         return  $ DType $ DeclType
-                { declAnnot       = Range lStart lEnd
+                { declAnnot       = rName
                 , declName        = nName
                 , declParams      = tps
                 , declKindResult  = kResult
@@ -37,17 +36,16 @@ pDecl
 
  , do   -- 'term' Var TermParams* (':' Type)? '=' Term
         pTok KTerm
-        lStart  <- locHere
-        nName   <- pVar         <?> "a name for the term"
+        (rName, nName)
+         <- pRanged (pVar       <?> "a name for the term")
         mps     <- P.many (pTermParams
                                 <?> "some parameters, or a result type annotation")
         pTok KColon             <?> "more parameters, or a ':' to start the result type"
         tsRes   <- pTypesResult <?> "some result types"
         pTok KEquals            <?> "a '=' to start the body"
         mBody   <- pTerm        <?> "the body"
-        lEnd    <- locPrev
         return  $  DTerm $ DeclTerm
-                { declAnnot       = Range lStart lEnd
+                { declAnnot       = rName
                 , declName        = nName
                 , declParams      = mps
                 , declTypesResult = tsRes
@@ -83,9 +81,12 @@ pDecl
 
         -- See if this is a named test, or a bare type/term.
         --  We know it's a named test if we can see the '=' after the name.
-        mName   <- P.choice
-                [  P.try $ do n <- pVar; pTok KEquals; return $ Just n
+        mRangeName
+                <- P.choice
+                [  P.try $ do rn <- pRanged pVar; pTok KEquals; return $ Just rn
                 ,  return Nothing ]
+
+        let mName = fmap snd mRangeName
 
         -- What we parse next depends on the test mode.
         lStart  <- locHere
@@ -96,8 +97,9 @@ pDecl
                                 then "the type to take the kind of"
                                 else "a test name, or the type to take the kind of"
                 lEnd    <- locPrev
+                let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestKind
-                        { declAnnot     = Range lStart lEnd
+                        { declAnnot     = a
                         , declTestName  = mName
                         , declTestType  = tType }
 
@@ -107,8 +109,9 @@ pDecl
                                 then "the term to take the type of"
                                 else "a test name, or the term to take the type of"
                 lEnd    <- locPrev
+                let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestType
-                        { declAnnot     = Range lStart lEnd
+                        { declAnnot     = a
                         , declTestName  = mName
                         , declTestTerm  = mTerm }
 
@@ -118,8 +121,9 @@ pDecl
                                 then "the type to evaluate"
                                 else "a test name, or the type to evaluate"
                 lEnd    <- locPrev
+                let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestEvalType
-                        { declAnnot     = Range lStart lEnd
+                        { declAnnot     = a
                         , declTestName  = mName
                         , declTestType  = tBody }
 
@@ -129,8 +133,9 @@ pDecl
                                 then "the term to evaluate"
                                 else "a test name, or the term to evaluate"
                 lEnd    <- locPrev
+                let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestEvalTerm
-                        { declAnnot     = Range lStart lEnd
+                        { declAnnot     = a
                         , declTestName  = mName
                         , declTestTerm  = mBody }
 
@@ -140,8 +145,9 @@ pDecl
                                 then "the term to execute"
                                 else "a test name, or the term to execute"
                 lEnd    <- locPrev
+                let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestExec
-                        { declAnnot     = Range lStart lEnd
+                        { declAnnot     = a
                         , declTestName  = mName
                         , declTestBody  = mBody }
 
@@ -151,8 +157,9 @@ pDecl
                                 then "the term you hope is true"
                                 else "a test name, or the term you hope is true"
                 lEnd    <- locPrev
+                let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestAssert
-                        { declAnnot     = Range lStart lEnd
+                        { declAnnot     = a
                         , declTestName  = mName
                         , declTestBody  = mBody }
          ]

@@ -25,19 +25,37 @@ test/30-error/20-check-type-sigs/Test.salt:15:6
 
 test/30-error/20-check-type-sigs/Test.salt:18:6
   Recursive type declaration 'decl5'
-   Involving [decl5]
+   Involving 'decl5'
 
   18:6   In type declaration "decl5"
 
 test/30-error/20-check-type-sigs/Test.salt:21:6
   Recursive type declaration 'decl6'
-   Involving [decl7]
+   Involving 'decl7'
 
   21:6   In type declaration "decl6"
 
 test/30-error/20-check-type-sigs/Test.salt:22:6
   Recursive type declaration 'decl7'
-   Involving [decl6]
+   Involving 'decl6'
 
   22:6   In type declaration "decl7"
+
+test/30-error/20-check-type-sigs/Test.salt:25:6
+  Recursive type declaration 'decl8'
+   Involving 'decl9'
+
+  25:6   In type declaration "decl8"
+
+test/30-error/20-check-type-sigs/Test.salt:26:6
+  Recursive type declaration 'decl9'
+   Involving 'decl10'
+
+  26:6   In type declaration "decl9"
+
+test/30-error/20-check-type-sigs/Test.salt:27:6
+  Recursive type declaration 'decl10'
+   Involving 'decl8'
+
+  27:6   In type declaration "decl10"
 
