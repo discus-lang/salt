@@ -333,21 +333,22 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
 checkTermWith a wh ctx Synth (MProject nLabel mRecord)
  = do
         -- Check the body expression.
+        let aRecord = fromMaybe a $ takeAnnotOfTerm mRecord
         (mRecord', tRecord, esRecord)
-         <- checkTerm1 a wh ctx Synth mRecord
+         <- checkTerm1 aRecord wh ctx Synth mRecord
 
         -- The body needs to have record type with the field that we were expecting.
         (ns, tgss, tRecord')
          <- simplType a ctx tRecord
          >>= \case
                 t@(TRecord ns tgss) -> return (ns, tgss, t)
-                tThing  -> throw $ ErrorRecordProjectIsNot a wh tThing nLabel
+                tThing  -> throw $ ErrorRecordProjectIsNot aRecord wh tThing nLabel
 
         -- Lookup the types of the field.
         tsField
          <- case lookup nLabel $ zip ns tgss of
                 Just tgs -> return $ takeTGTypes tgs
-                Nothing  -> throw $ ErrorRecordProjectNoField a wh tRecord' nLabel
+                Nothing  -> throw $ ErrorRecordProjectNoField aRecord wh tRecord' nLabel
 
         return  ( MProject nLabel mRecord'
                 , tsField, esRecord)

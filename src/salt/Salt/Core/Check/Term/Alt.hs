@@ -18,8 +18,10 @@ checkAlts
 checkAlts a wh ctx mCase tScrut nmgsScrut alts
  = go alts [] Nothing []
  where
-    go  (MVarAlt nPat btsPat mBody : msAltsRest)
+    go  (MVarAlt nPat mpsPat mBody : msAltsRest)
         msAltsChecked mtsResult esAlt
+     | (aPatBind, mpsPat_) <- unwrapTermParams a mpsPat
+     , Just btsPat         <- takeMPTerms mpsPat_
      = do
         -- Lookup the field types from the type of the scrutinee.
         -- The type of the scrutinee must cover this alternative.
@@ -31,20 +33,20 @@ checkAlts a wh ctx mCase tScrut nmgsScrut alts
         -- Check we have the same number of pattern binders as fields.
         let tsPat = map snd btsPat
         when (not $ length tsPat == length tsField)
-         $ throw $ ErrorCaseAltPatWrongArity a wh nPat tsPat tsField
+         $ throw $ ErrorCaseAltPatWrongArity aPatBind wh nPat tsPat tsField
 
         -- Check we don't have duplicate binders.
         let nsPat    = [n | BindName n <- map fst btsPat ]
         let nsPatDup = List.duplicates nsPat
         when (not $ null nsPatDup)
-         $ throw $ ErrorCaseAltPatBindConflict a wh nPat nsPatDup
+         $ throw $ ErrorCaseAltPatBindConflict aPatBind wh nPat nsPatDup
 
         -- Check that the pattern field types match the fields of the scrutinee.
         (checkTypeEquivs ctx a [] tsPat a [] tsField
          >>= \case
               Nothing -> return ()
               Just ((_a1, t1), (_a2, t2))
-               -> throw $ ErrorCaseAltPatMismatch a wh nPat t1 t2)
+               -> throw $ ErrorCaseAltPatMismatch aPatBind wh nPat t1 t2)
 
         -- Check the result in the context extended by the fields
         -- we matched with the pattern. Also ensure this alternative
@@ -54,11 +56,12 @@ checkAlts a wh ctx mCase tScrut nmgsScrut alts
                       Nothing -> Synth
                       Just ts -> Check ts
 
+        let aBody = fromMaybe a $ takeAnnotOfTerm mBody
         (mBody', tsResult, esResult)
-         <- checkTerm a wh ctx' mode' mBody
+         <- checkTerm aBody wh ctx' mode' mBody
 
         go  msAltsRest
-            (MVarAlt nPat btsPat mBody' : msAltsChecked)
+            (MVarAlt nPat mpsPat mBody' : msAltsChecked)
             (Just tsResult)
             (esResult ++ esAlt)
 

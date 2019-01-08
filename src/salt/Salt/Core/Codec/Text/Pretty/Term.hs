@@ -129,11 +129,12 @@ pprMArg c mm
 
 pprMAlt c mm
  = case mm of
-        MVarAlt n bts mBody
+        MVarAlt n mps mBody
+         | Just bts <- takeMPTerms mps
          -> pprLbl n
-         %% squared [ppr c b % text ":" %% ppr c t | (b, t) <- bts]
-         %% text "→"
-         %% ppr c mBody
+                %% squared [ppr c b % text ":" %% ppr c t | (b, t) <- bts]
+                %% text "→"
+                %% ppr c mBody
 
         _ -> parens (ppr c mm)
 

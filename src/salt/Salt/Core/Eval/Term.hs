@@ -197,8 +197,9 @@ evalTerm s a env mm@(MVarCase mScrut msAlt0)
                 VVariant l _ vs -> (l, vs)
                 _ -> throw $ ErrorCaseScrutNotVariant a vScrut
 
-        let go (MVarAlt nAlt btsPat mBody : msAlt)
-                |  nAlt == nScrut = (btsPat, mBody)
+        let go (MVarAlt nAlt mpsPat mBody : msAlt)
+                | Just btsPat   <- takeMPTerms mpsPat
+                , nAlt == nScrut = (btsPat, mBody)
                 |  otherwise      = go msAlt
             go [] = throw $ ErrorCaseNoMatch a vScrut
             go _  = throw $ ErrorInvalidTerm a mm

@@ -29,7 +29,7 @@ pattern MProject l  m           = MKey  (MKProject l) [MGTerm  m]
 
 pattern MVariant l m tResult    = MKey  (MKVariant l) [MGTerm  m,      MGTypes [tResult]]
 pattern MVarCase mScrut msAlt   = MKey   MKVarCase    [MGTerm  mScrut, MGTerms msAlt]
-pattern MVarAlt  n bts mBody    = MKey  (MKVarAlt n)  [MGTerm (MAbs (MPTerms bts) mBody)]
+pattern MVarAlt  n mps mBody    = MKey  (MKVarAlt n)  [MGTerm (MAbs mps mBody)]
 
 pattern MData    n ts ms        = MKey  (MKCon n)     [MGTypes ts, MGTerms ms]
 

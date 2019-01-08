@@ -216,8 +216,9 @@ ppre c (ErrorCaseAltNotInVariant _a _wh n t)
         , text " " % squotes (ppr c t) ]
 
 ppre c (ErrorCaseAltPatMismatch _a _wh n tAlt tScrut)
- = vcat [ text "Pattern does not match scrutinee type in alternative" %% squotes (pprLbl n)
-        , text " Pattern type"   %% squotes (ppr c tAlt)
+ = vcat [ text "Pattern does not match scrutinee type."
+        , text " In alternative" %% squotes (pprLbl n)
+        , text " Pattern type  " %% squotes (ppr c tAlt)
         , text " Scrutinee type" %% squotes (ppr c tScrut) ]
 
 ppre c (ErrorCaseAltPatWrongArity _a _wh _nAlt tsPat tsField)

@@ -195,8 +195,6 @@ test type case 2 2 of { one [] → [] }
 test type case 2 of { one [] → [] }
 
 -- Error: alternative is not in scrutinee type.
--- TODO: all these error locs are bad, we don't have a way to pass ranges
--- for the individual patterns and alts.
 test type case (the <foo: #Nat> of `foo 5) of { bar [] → [] }
 
 -- Error: pattern type does not match scrutinee type.

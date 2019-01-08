@@ -203,7 +203,8 @@ pTermBody
          <- flip P.sepEndBy1 (pTok KSemi)
          $  do  lAlt    <- pLbl <?> " a variant label"
 
-                btsPat  <- (pSquared
+                (rPat, btsPat)
+                  <- pRanged (pSquared
                         $  flip P.sepBy (pTok KComma)
                         $  do   b <- pBind  <?> "a binder for a variant field"
                                 pTok KColon <?> "a ':' to specify the type of the field"
@@ -213,7 +214,7 @@ pTermBody
 
                 pRight           <?> "a '→' to start the body"
                 mBody <- pTerm   <?> "the body of the alternative"
-                return $ MVarAlt lAlt btsPat mBody
+                return $ MVarAlt lAlt (MPAnn rPat $ MPTerms btsPat) mBody
         pTok KCKet               <?> "a completed term, or '}' to end the alternatives"
         return  $ MVarCase mScrut msAlts
 
