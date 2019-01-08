@@ -11,6 +11,9 @@ import qualified Salt.Core.Codec.Text.Parser    as Parser
 import qualified Salt.Core.Codec.Text.Lexer     as Lexer
 import qualified Salt.Core.Check                as Checker
 
+import Data.IORef
+import qualified Data.Map.Strict                as Map
+
 
 -- | Compute diagnostics for a source file, and push them to the client.
 updateDiagnostics :: State -> String -> String -> IO ()
@@ -38,11 +41,15 @@ updateDiagnostics state sUri sSource
                 mm
          >>= \case
                 Left errs
-                 -> sendCheckerDiagnostics state sUri
-                 $  map diagnosticOfCheckerError errs
+                 -> do  modifyIORef' (stateCoreChecked state)
+                         $ \mp -> Map.delete sUri mp
+                        sendCheckerDiagnostics state sUri
+                         $  map diagnosticOfCheckerError errs
 
-                Right (_mm', _ctx)
-                 -> sendClearDiagnostics state sUri
+                Right (mm', _ctx)
+                 -> do  modifyIORef' (stateCoreChecked state)
+                         $ \mp -> Map.insert sUri (Just mm') mp
+                        sendClearDiagnostics state sUri
 
 
 -- | Clear diagnostics for the given file.

@@ -1,13 +1,21 @@
 
 module Salt.LSP.State where
+import Salt.Core.Exp
+import Salt.Data.Location
+
+import Data.Map                 (Map)
+import Data.IORef
 import qualified System.IO      as S
 
 
 -- | Language server plugin state.
 data State
         = State
-        { statePhase    :: Phase 
-        , stateLogDebug :: Maybe (FilePath, S.Handle) }
+        { statePhase            :: Phase
+        , stateLogDebug         :: Maybe (FilePath, S.Handle)
+
+          -- | Checked core files.
+        , stateCoreChecked      :: IORef (Map String (Maybe (Module (Range Location)))) }
 
 
 -- | Phase of the LSP server protocol.

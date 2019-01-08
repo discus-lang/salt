@@ -2,16 +2,17 @@
 module Salt.LSP.Driver
        (runLSP)
 where
-
 import Salt.LSP.Protocol
 import Salt.LSP.Interface
 import Salt.LSP.State
 import qualified Salt.LSP.Task.Diagnostics      as Task
+import qualified Salt.LSP.Task.CodeLens         as Task
 
+import Data.IORef
 import qualified System.IO                      as System
 import qualified System.Posix.Process           as Process
 import qualified Text.Show.Pretty               as T
-
+import qualified Data.Map                       as Map
 
 ---------------------------------------------------------------------------------------------------
 -- | Become a language server plugin.
@@ -54,21 +55,24 @@ lspLoop state
 lspBegin :: Maybe FilePath -> IO State
 lspBegin mFileLog
  = do
-       pid <- Process.getProcessID
-       mLogDebug
-        <- case mFileLog of
+        pid <- Process.getProcessID
+        mLogDebug
+         <- case mFileLog of
               Nothing -> return Nothing
               Just filePath
                 -> do let filePathPid = filePath ++ "." ++ show pid
                       hLogDebug <- System.openFile filePathPid System.WriteMode
                       return  $ Just (filePathPid, hLogDebug)
-       let state
-                = State
-                { stateLogDebug = mLogDebug
-                , statePhase    = PhaseStartup }
 
-       lspLog state "* Salt language server starting up"
-       return state
+        refCoreChecked <- newIORef Map.empty
+        let state
+                = State
+                { stateLogDebug         = mLogDebug
+                , statePhase            = PhaseStartup
+                , stateCoreChecked      = refCoreChecked }
+
+        lspLog state "* Salt language server starting up"
+        return state
 
 
 ---------------------------------------------------------------------------------------------------
@@ -97,7 +101,10 @@ lspStartup state req
                                   := O  [ "openClose" := B True   -- send us open/close notif.
                                         , "change"    := I 1      -- send us full file changes.
                                         , "save"      := B True   -- send us save notif.
-                                ]]]]
+                                        ]
+                                , "codeLensProvider"
+                                  := O  [ "resolveProvider" := B True]
+                                ]]]
         lspLoop state
 
  -- Cient sends us 'initialized' if it it is happy with the
@@ -146,7 +153,6 @@ lspInitialized state req
         lspLog state $ "  sLanguageId:  " ++ show sLanguageId
         lspLog state $ "  iVersion:     " ++ show iVersion
         lspLog state $ "  sText:        " ++ show sText
-
         Task.updateDiagnostics state sUri sText
         lspLoop state
 
@@ -189,9 +195,20 @@ lspInitialized state req
         lspLog state $ "  sUri:         " ++ show sUri
         lspLog state $ "  iVersion:     " ++ show iVersion
         lspLog state $ "  sText:        " ++ show sText
-
         Task.updateDiagnostics state sUri sText
         lspLoop state
+
+ -- Requested code lenses for a document.
+ | "textDocument/codeLens" <- reqMethod req
+ , Just jParams         <- reqParams req
+ , Just jDoc            <- getField jParams "textDocument"
+ , Just sUri            <- getString =<< getField jDoc "uri"
+ = do
+        lspLog state "* CodeLens"
+        lspLog state $ "  sUri:         " ++ show sUri
+        Task.updateCodeLenses state (reqId req) sUri
+        lspLoop state
+
 
  -- Some other request that we don't handle.
  | otherwise
