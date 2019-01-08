@@ -8,7 +8,7 @@ test/30-error/30-check-term-sigs/Test.salt:8:23
 
   8:6    In term declaration "term2"
 
-test/30-error/30-check-term-sigs/Test.salt:11:6
+test/30-error/30-check-term-sigs/Test.salt:11:12
   Conflicting term binders for 'x'
 
   11:6   In term declaration "term3"

@@ -12,7 +12,7 @@ import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
-
+import Text.Show.Pretty
 
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
@@ -112,10 +112,11 @@ checkTermWith a wh ctx Synth m@(MVar u)
 
 
 -- (t-abt) ------------------------------------------------
-checkTermWith a wh ctx Synth (MAbs mps@MPTypes{} m)
+checkTermWith a wh ctx Synth (MAbs mps m)
+ | Just bks <- takeMPTypes mps
  = do
         -- Check the parameters and bind into the context.
-        mps'@(MPTypes bts) <- checkTermParams a wh ctx mps
+        mps' <- checkTermParams a wh ctx mps
         let ctx' = contextBindTermParams mps ctx
 
         -- Check the body of the abstraction in the new context.
@@ -134,15 +135,16 @@ checkTermWith a wh ctx Synth (MAbs mps@MPTypes{} m)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsImpure UType aBody wh eBody_red
 
-        return  (MAbs mps' m', [TForall (TPTypes bts) tBody], [])
+        return  (MAbs mps' m', [TForall (TPTypes bks) tBody], [])
 
 
 -- (t-abm) ------------------------------------------------
-checkTermWith a wh ctx Synth (MAbs ps@MPTerms{} m)
+checkTermWith a wh ctx Synth (MAbs mps m)
+ | Just bts <- takeMPTerms mps
  = do
         -- Check the parameters and bind them into the context.
-        ps'@(MPTerms bts) <- checkTermParams a wh ctx ps
-        let ctx' =  contextBindTermParams ps ctx
+        mps' <- checkTermParams a wh ctx mps
+        let ctx' = contextBindTermParams mps ctx
 
         -- Check the body of the abstraction in the new context.
         (m', ts, es) <- checkTerm a wh ctx' Synth m
@@ -150,11 +152,11 @@ checkTermWith a wh ctx Synth (MAbs ps@MPTerms{} m)
         -- The body must be pure.
         -- TODO: ensure types like (pure + pure) are reduced to pure,
         let aBody  = fromMaybe a $ takeAnnotOfTerm m
-        eBody_red    <- simplType a ctx' (TSum es)
+        eBody_red  <- simplType a ctx' (TSum es)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsImpure UTerm aBody wh eBody_red
 
-        return  (MAbs ps' m', [TFun (map snd bts) ts], [])
+        return  (MAbs mps' m', [TFun (map snd bts) ts], [])
 
 
 -- (t-aps) ------------------------------------------------
@@ -200,19 +202,22 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
 
         -- Check argument types line up with parameter types.
         let -- (t-apt) -----
-            checkApp [tFun] es (MGTypes tsArg : mgss) mgssAcc
-             = do (tsArg', tResult)  <- checkTermAppTypes a wh ctx tFun tsArg
-                  checkApp [tResult] es mgss (MGTypes tsArg' : mgssAcc)
+            checkApp [tFun] es (mps : mgss) mgssAcc
+             | Just (a', tsArg) <- takeAnnMGTypes a mps
+             = do (tsArg', tResult)  <- checkTermAppTypes a' wh ctx tFun tsArg
+                  checkApp [tResult] es mgss (MGAnn a' (MGTypes tsArg') : mgssAcc)
 
             -- (t-apm) -----
-            checkApp [tFun] es (MGTerms msArg : mgss) mgssAcc
-             = do (msArg', tsResult, es') <- checkTermAppTerms a wh ctx tFun msArg
-                  checkApp tsResult (es ++ es') mgss (MGTerms msArg' : mgssAcc)
+            checkApp [tFun] es (mps : mgss) mgssAcc
+             | Just (a', msArg) <- takeAnnMGTerms a mps
+             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh ctx tFun msArg
+                  checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerms msArg') : mgssAcc)
 
             -- (t-apv) -----
-            checkApp [tFun] es (MGTerm  mArg  : mgss) mgssAcc
+            checkApp [tFun] es (mps : mgss) mgssAcc
+             | Just (a', mArg) <- takeAnnMGTerm a mps
              = do (mArg',  tsResult, es') <- checkTermAppTerm  a wh ctx tFun mArg
-                  checkApp tsResult (es ++ es') mgss (MGTerm  mArg'  : mgssAcc)
+                  checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerm mArg') : mgssAcc)
 
             checkApp tsResult es [] mgssAcc
              = return (MAps mFun1 (reverse mgssAcc), tsResult, es)
@@ -469,6 +474,7 @@ checkTermWith a wh ctx (Check tsExpected) m
  = checkTermIs a wh ctx tsExpected m
 
 -- We don't know how to check this sort of term.
-checkTermWith a wh _ctx _mode mm
- = throw $ ErrorTermMalformed a wh mm
+checkTermWith _a _wh _ctx _mode mm
+ = error $ ppShow mm
+-- = throw $ ErrorTermMalformed a wh mm
 

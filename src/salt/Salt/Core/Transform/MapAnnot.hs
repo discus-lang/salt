@@ -132,6 +132,7 @@ instance MapAnnot TermRef where
 instance MapAnnot TermParams where
  mapAnnot f pp
   = case pp of
+        MPAnn a mps     -> MPAnn (f a) $ mapAnnot f mps
         MPTerms bms     -> MPTerms [(b , mapAnnot f m) | (b, m) <- bms]
         MPTypes bts     -> MPTypes [(b , mapAnnot f t) | (b, t) <- bts]
 
@@ -139,6 +140,7 @@ instance MapAnnot TermParams where
 instance MapAnnot TermArgs where
  mapAnnot f gg
   = case gg of
+        MGAnn a mgs     -> MGAnn (f a) $ mapAnnot f mgs
         MGTerm  m       -> MGTerm  (mapAnnot f m)
         MGTerms ms      -> MGTerms (map (mapAnnot f) ms)
         MGTypes ts      -> MGTypes (map (mapAnnot f) ts)

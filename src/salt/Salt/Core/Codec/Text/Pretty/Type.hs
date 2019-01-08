@@ -21,7 +21,8 @@ instance Pretty c (Type a) where
          -> squared (map (ppr c) ksParam)
          %% text "⇒" %% ppr c kResult
 
-        TApt tFun tsArg
+        TApp tFun tgsArg
+         | tsArg <- takeTGTypes tgsArg
          -> pprTFun c tFun %% squared (map (pprTArg c) tsArg)
 
         TFun tsParam tsResult

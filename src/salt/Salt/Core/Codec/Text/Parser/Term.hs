@@ -241,7 +241,7 @@ pTermBody
 --   returning the constructed application.
 pTermAppArgs :: Term RL -> Parser (Term RL)
 pTermAppArgs mFun
- = P.choice
+ = pMAnn $ P.choice
  [ do   gsArgs  <- P.many1 (pTermArgs <?> "some arguments")
         return $ foldl MApp mFun gsArgs
 
@@ -252,7 +252,7 @@ pTermAppArgs mFun
 --   returning a saturated primitive application.
 pTermAppArgsSat :: Term RL -> Parser (Term RL)
 pTermAppArgsSat mFun
- = P.choice
+ = pMAnn $ P.choice
  [ do   gsArgs  <- P.many1 (pTermArgs <?> "some arguments")
         return  $ MAps mFun gsArgs
 
@@ -262,7 +262,7 @@ pTermAppArgsSat mFun
 -- | Parse some term arguments.
 pTermArgs :: Parser (TermArgs RL)
 pTermArgs
- = P.choice
+ = pMGAnn $ P.choice
  [ do   -- '@' '[' Type;+ ']'
         -- '@' TypeArg
         pTok KAt
@@ -411,7 +411,7 @@ pTermArg
 -- | Parser for some term parameters.
 pTermParams :: Parser (TermParams RL)
 pTermParams
- = P.choice
+ = pMPAnn $ P.choice
  [ do   -- '@' '[' (Var ':' Type)+ ']'
         pTok KAt
         bts     <- pSquared $ flip P.sepEndBy1 (pTok KComma)
@@ -568,4 +568,17 @@ pMAnn p
  = do   (r, m) <- pRanged p
         return $ MAnn r m
 
+
+-- | Parse some type parameters wrapped in source range annotations.
+pMPAnn :: Parser (TermParams RL) -> Parser (TermParams RL)
+pMPAnn p
+ = do   (r, tgs) <- pRanged p
+        return $ MPAnn r tgs
+
+
+-- | Parse some type arguments wrapped in source range annotations.
+pMGAnn :: Parser (TermArgs RL) -> Parser (TermArgs RL)
+pMGAnn p
+ = do   (r, tgs) <- pRanged p
+        return $ MGAnn r tgs
 

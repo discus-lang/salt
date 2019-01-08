@@ -43,9 +43,10 @@ checkDeclTerm _a ctx (DTerm (DeclTerm a nDecl mpss tsResult mBody))
         eBody_red <- simplType a ctx' (TSum esResult)
         when (not $ isTPure eBody_red)
          $ case reverse mpss of
-                MPTypes{} : _   -> throw $ ErrorAbsImpure UType  a wh eBody_red
-                MPTerms{} : _   -> throw $ ErrorAbsImpure UTerm a wh eBody_red
-                []              -> throw $ ErrorTermDeclImpure a wh nDecl eBody_red
+            mps : _
+             | Just _ <- takeMPTypes mps -> throw $ ErrorAbsImpure UType a wh eBody_red
+             | Just _ <- takeMPTerms mps -> throw $ ErrorAbsImpure UTerm a wh eBody_red
+            _ -> throw $ ErrorTermDeclImpure a wh nDecl eBody_red
 
         return  $ DTerm $ DeclTerm a nDecl mpss' tsResult' mBody'
 
@@ -95,6 +96,9 @@ makeTypeOfDeclTerm decl
 
  where
         loop tsResult [] = tsResult
+
+        loop tsResult (MPAnn _ mps' : pss')
+         = loop tsResult (mps' : pss')
 
         loop tsResult (MPTerms bts : pss')
          = [TFun (map snd bts) (loop tsResult pss')]

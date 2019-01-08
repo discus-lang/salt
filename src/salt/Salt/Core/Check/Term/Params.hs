@@ -11,33 +11,34 @@ checkTermParams
         :: Annot a => a -> [Where a]
         -> Context a -> TermParams a -> IO (TermParams a)
 
-checkTermParams a wh ctx mps
- = case mps of
-        MPTypes bks
-         -> do  let (bs, ks) = unzip bks
+checkTermParams _a wh ctx (MPAnn a' mps)
+ = checkTermParams a' wh ctx mps
 
-                -- Check for duplicate binder names.
-                let ns          = [ n | BindName n <- bs]
-                let nsDup       = List.duplicates ns
-                when (not $ null nsDup)
-                 $ throw $ ErrorAbsConflict UType a wh nsDup
+checkTermParams a wh ctx (MPTypes bks)
+ = do   let (bs, ks) = unzip bks
 
-                -- Check the parameter kinds.
-                ks' <- mapM (checkKind a wh ctx) ks
-                return  $ MPTypes $ zip bs ks'
+        -- Check for duplicate binder names.
+        let ns          = [ n | BindName n <- bs]
+        let nsDup       = List.duplicates ns
+        when (not $ null nsDup)
+         $ throw $ ErrorAbsConflict UType a wh nsDup
 
-        MPTerms bts
-         -> do  let (bs, ts)    = unzip bts
+        -- Check the parameter kinds.
+        ks' <- mapM (checkKind a wh ctx) ks
+        return  $ MPTypes $ zip bs ks'
 
-                -- Check for duplicate binder names.
-                let ns          = [ n | BindName n <- bs]
-                let nsDup       = List.duplicates ns
-                when (not $ null nsDup)
-                 $ throw $ ErrorAbsConflict UTerm a wh nsDup
+checkTermParams a wh ctx (MPTerms bts)
+ = do   let (bs, ts)    = unzip bts
 
-                -- Check the parameter types.
-                ts' <- checkTypesAre UType a wh ctx (replicate (length ts) TData) ts
-                return  $ MPTerms $ zip bs ts'
+        -- Check for duplicate binder names.
+        let ns          = [ n | BindName n <- bs]
+        let nsDup       = List.duplicates ns
+        when (not $ null nsDup)
+         $ throw $ ErrorAbsConflict UTerm a wh nsDup
+
+        -- Check the parameter types.
+        ts' <- checkTypesAre UType a wh ctx (replicate (length ts) TData) ts
+        return  $ MPTerms $ zip bs ts'
 
 
 -- | Check a list of term function parameters,

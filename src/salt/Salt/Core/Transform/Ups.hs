@@ -57,19 +57,21 @@ upsApplyTerm upsT upsM mm
         -- Apply the ups to the term bound.
         MVar u   -> MVar $ upsApplyBound upsM u
 
-        -- Carry ups under type abstractions.
-        MAbs (MPTypes bks) mBody
-         -> let nsBind  = [ n | (BindName n, _) <- bks ]
-                bks'    = [ (b, upsApplyType upsT k) | (b, k) <- bks ]
-                upsT'   = upsBumpNames nsBind upsT
-            in  MAbs (MPTypes bks') $ upsApplyTerm upsT' upsM mBody
+        MAbs mps mBody
+         -> case takeTermParams mps of
+                -- Carry ups under type abstractions.
+                Left bks
+                 -> let nsBind  = [ n | (BindName n, _) <- bks ]
+                        bks'    = [ (b, upsApplyType upsT k) | (b, k) <- bks ]
+                        upsT'   = upsBumpNames nsBind upsT
+                    in  MAbs (MPTypes bks') $ upsApplyTerm upsT' upsM mBody
 
-        -- Carry ups under term abstractions.
-        MAbs (MPTerms bts) mBody
-         -> let nsBind  = [ n | (BindName n, _) <- bts ]
-                bts'    = [ (b, upsApplyType upsT t) | (b, t) <- bts ]
-                upsM'   = upsBumpNames nsBind upsM
-            in  MAbs (MPTerms bts') $ upsApplyTerm upsT upsM' mBody
+                -- Carry ups under term abstractions.
+                Right bts
+                 -> let nsBind  = [ n | (BindName n, _) <- bts ]
+                        bts'    = [ (b, upsApplyType upsT t) | (b, t) <- bts ]
+                        upsM'   = upsBumpNames nsBind upsM
+                    in  MAbs (MPTerms bts') $ upsApplyTerm upsT upsM' mBody
 
         -- Apply ups to other terms generically.
         MKey k mgss
@@ -80,6 +82,7 @@ upsApplyTerm upsT upsM mm
 upsApplyTermParams :: Ups -> TermParams a -> TermParams a
 upsApplyTermParams ups mps
  = case mps of
+        MPAnn a mps'    -> MPAnn a $ upsApplyTermParams ups mps'
         MPTypes bks     -> MPTypes [ (b, upsApplyType ups k) | (b, k) <- bks ]
         MPTerms bts     -> MPTerms [ (b, upsApplyType ups t) | (b, t) <- bts ]
 
@@ -88,9 +91,11 @@ upsApplyTermParams ups mps
 upsApplyTermArgs :: Ups -> Ups -> TermArgs a -> TermArgs a
 upsApplyTermArgs upsT upsM mgs
  = case mgs of
+        MGAnn a mgs'    -> MGAnn a $ upsApplyTermArgs upsT upsM mgs'
         MGTypes ts      -> MGTypes (map (upsApplyType upsT) ts)
         MGTerms ms      -> MGTerms (map (upsApplyTerm upsT upsM) ms)
         MGTerm  m       -> MGTerm  (upsApplyTerm upsT upsM m)
+
 
 -- | Apply type and term `Ups` to a `Value`.
 --
@@ -145,21 +150,31 @@ upsApplyValue upsT upsM vv
                                         , upsApplyValue upsT upsM ve)
                                       | (vk, ve) <- Map.toList kvs ])
 
-        VClosure (TermClosure env (MPTypes bks) mBody)
+        VClosure tclo
+         -> VClosure $ upsApplyTermClosure upsT upsM tclo
+
+
+upsApplyTermClosure :: Ups -> Ups -> TermClosure a -> TermClosure a
+upsApplyTermClosure upsT upsM tc
+ = case tc of
+        TermClosure env (MPAnn _ mps') mBody
+         -> upsApplyTermClosure upsT upsM (TermClosure env mps' mBody)
+
+        TermClosure env (MPTypes bks) mBody
          -> let env'    = upsApplyTermEnv upsT upsM env
                 nsBind  = [ n | (BindName n, _) <- bks ]
                 bks'    = [ (b, upsApplyType upsT k) | (b, k) <- bks ]
                 upsT'   = upsBumpNames nsBind upsT
                 mBody'  = upsApplyTerm upsT' upsM mBody
-            in  VClosure $ TermClosure env' (MPTypes bks') mBody'
+            in  TermClosure env' (MPTypes bks') mBody'
 
-        VClosure (TermClosure env (MPTerms bts) mBody)
+        TermClosure env (MPTerms bts) mBody
          -> let env'    = upsApplyTermEnv upsT upsM env
                 nsBind  = [ n | (BindName n, _) <- bts ]
                 bts'    = [ (b, upsApplyType upsT t) | (b, t) <- bts ]
                 upsM'   = upsBumpNames nsBind upsM
                 mBody'  = upsApplyTerm upsT upsM' mBody
-            in  VClosure $ TermClosure env' (MPTerms bts') mBody'
+            in  TermClosure env' (MPTerms bts') mBody'
 
 
 -- | Apply type and term `Ups` to an `Env`

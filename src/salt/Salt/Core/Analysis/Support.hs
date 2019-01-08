@@ -152,12 +152,14 @@ instance HasSupport (Term a) where
         MRef r          -> supportOf r
         MVar u          -> supportBoundTerm u
 
-        MAbs (MPTypes bts) m
-         ->     mappend (mconcat $ map supportOf $ map snd bts)
-                        (supportBindTypes (map fst bts) $ supportOf m)
-
-        MAbs (MPTerms bts) m
-         ->     mappend (mconcat $ map supportOf $ map snd bts)
+        MAbs mps m
+         -> case mps of
+                MPAnn _a mps'  -> supportOf mps'
+                MPTypes bks
+                 -> mappend (mconcat $ map supportOf $ map snd bks)
+                        (supportBindTypes (map fst bks) $ supportOf m)
+                MPTerms bts
+                 -> mappend (mconcat $ map supportOf $ map snd bts)
                         (supportBindTerms (map fst bts) $ supportOf m)
 
         MKey mk ms      -> mconcat (supportOf mk : map supportOf ms)
@@ -171,17 +173,20 @@ instance HasSupport TermKey where
  supportOf _    = mempty
 
 
+instance HasSupport (TermParams a) where
+ supportOf mp
+  = case mp of
+        MPAnn _a mps    -> supportOf mps
+        MPTerms bts     -> mconcat $ map supportOf $ map snd bts
+        MPTypes bts     -> mconcat $ map supportOf $ map snd bts
+
+
 instance HasSupport (TermArgs a) where
  supportOf mg
   = case mg of
+        MGAnn _a mgs    -> supportOf mgs
         MGTerm  m       -> supportOf m
         MGTerms ms      -> mconcat $ map supportOf ms
         MGTypes ts      -> mconcat $ map supportOf ts
 
-
-instance HasSupport (TermParams a) where
- supportOf mp
-  = case mp of
-        MPTerms bts     -> mconcat $ map supportOf $ map snd bts
-        MPTypes bts     -> mconcat $ map supportOf $ map snd bts
 

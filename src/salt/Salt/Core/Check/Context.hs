@@ -107,11 +107,9 @@ contextBindTerms nts ctx
 contextBindTermParams :: TermParams a -> Context a -> Context a
 contextBindTermParams mps ctx
  = case mps of
-        MPTypes bts
-         -> flip contextBindTypes ctx [ (n, t) | (BindName n, t) <- bts ]
-
-        MPTerms bts
-         -> flip contextBindTerms ctx [ (n, t) | (BindName n, t) <- bts ]
+        MPAnn _ mps' -> contextBindTermParams mps' ctx
+        MPTypes bts  -> flip contextBindTypes ctx [ (n, t) | (BindName n, t) <- bts ]
+        MPTerms bts  -> flip contextBindTerms ctx [ (n, t) | (BindName n, t) <- bts ]
 
 
 ---------------------------------------------------------------------------------------------------

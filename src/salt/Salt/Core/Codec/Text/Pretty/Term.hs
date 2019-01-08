@@ -28,16 +28,17 @@ instance Pretty c (Term a) where
                 _   -> text "the" %% squared (map (ppr c) ts )
                                   %% text "of" %% ppr c m
 
-        MApt mFun tsArg
+        MApp mFun mgsArg
+         | Just tsArg <- takeMGTypes mgsArg
          -> case tsArg of
                 [t] -> pprMFun c mFun %% text "@" % pprTArg c t
                 _   -> pprMFun c mFun %% text "@" % squared (map (pprTArg c) tsArg)
 
-        MApv mFun mArg
-         -> pprMFun c mFun %% pprMArg c mArg
-
-        MApm mFun msArg
+         | Just msArg <- takeMGTerms mgsArg
          -> pprMFun c mFun %% squared (map (pprMArg c) msArg)
+
+         | Just mArg <- takeMGTerm mgsArg
+         -> pprMFun c mFun %% pprMArg c mArg
 
         MLet bts mBind mBody
          -> let pp (b, THole) = ppr c b
@@ -147,14 +148,17 @@ instance Pretty c (TermRef a) where
 instance Pretty c (TermArgs a) where
  ppr c ma
   = case ma of
-        MGTerm m   -> parens $ ppr c m
-        MGTerms ms -> squared $ map (ppr c) ms
-        MGTypes ts -> text "@" % (squared $ map (ppr c) ts)
+        MGAnn _ mgs -> ppr c mgs
+        MGTerm m    -> parens $ ppr c m
+        MGTerms ms  -> squared $ map (ppr c) ms
+        MGTypes ts  -> text "@" % (squared $ map (ppr c) ts)
 
 
 instance Pretty c (TermParams a) where
  ppr c mp
   = case mp of
+        MPAnn _ mps -> ppr c mps
+
         MPTerms nts
          -> squared [ ppr c n % text ":" %% ppr c t
                     | (n, t) <- nts]
