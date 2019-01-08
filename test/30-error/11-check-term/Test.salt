@@ -21,7 +21,7 @@ test type #None
 
 
 -- (t-con) --------------------------------------------------------------------
--- Error: unknown data constructor.
+-- Error: unknown term constructor.
 test type Derp
 
 
