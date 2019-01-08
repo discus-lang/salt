@@ -127,7 +127,8 @@ evalTerm s a env (MApp mFun mgs)
 
 
 -- (evm-let) -----------------------------------------------
-evalTerm s a env (MLet bts mBind mBody)
+evalTerm s a env (MLet mps mBind mBody)
+ | Just bts <- takeMPTerms mps
  = do   vsBind <- evalTerm s a env mBind
         let nWanted = length bts
         let nHave   = length vsBind

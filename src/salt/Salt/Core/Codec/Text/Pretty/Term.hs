@@ -40,7 +40,8 @@ instance Pretty c (Term a) where
          | Just mArg <- takeMGTerm mgsArg
          -> pprMFun c mFun %% pprMArg c mArg
 
-        MLet bts mBind mBody
+        MLet mps mBind mBody
+         | Just bts <- takeMPTerms mps
          -> let pp (b, THole) = ppr c b
                 pp (b, t)     = ppr c b % text ":" %% ppr c t
             in  case bts of

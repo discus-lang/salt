@@ -46,6 +46,14 @@ takeTermParams mps
         MPTerms bts     -> Right bts
 
 
+-- | Unwrap annotations from an `TermParams` until we get to the first non-annotation.
+unwrapTermParams :: a -> TermParams a -> (a, TermParams a)
+unwrapTermParams a mps
+ = case mps of
+        MPAnn a' mps'   -> unwrapTermParams a' mps'
+        _               -> (a, mps)
+
+
 -- | Take the contents of an `MPTypes`, if this is one,
 --   looking through any annotations.
 takeMPTypes :: TermParams a -> Maybe [(Bind, Kind a)]

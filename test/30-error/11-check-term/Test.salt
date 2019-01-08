@@ -122,8 +122,6 @@ test type let x: #Derp = #true; #true
 test type let x = #true #true; #true
 
 -- Error: wrong arity in binding.
--- TODO: we want the location of the binding group, not the let keyword,
--- same problem repeats below.
 test type let [] = [#true]; #true
 
 -- Error: wrong arity in binding.

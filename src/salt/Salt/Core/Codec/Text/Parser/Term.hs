@@ -101,7 +101,8 @@ pTermBody
 
  , do   -- 'let' '[' Var,* ']' '=' Term ';' Term
         pTok KLet
-        bts     <- P.choice
+        (rBinds, bts)
+         <- pRanged (P.choice
                 [ do    pSquared
                          $ flip P.sepBy (pTok KComma)
                          $ do   b  <- pBind <?> "a binder"
@@ -120,13 +121,13 @@ pTermBody
 
                          , do   return [(b, THole)]]
                 ]
-                <?> "some binders"
+                <?> "some binders")
 
         pTok KEquals    <?> "a type annotation, or '=' to start the binding"
         mBind <- pTerm  <?> "a term for the binding"
         pTok KSemi      <?> "a completed term, or ';' to start the body"
         mBody <- pTerm  <?> "a body term"
-        return  $ MLet bts mBind mBody
+        return  $ MLet (MPAnn rBinds (MPTerms bts)) mBind mBody
 
 
   , do  -- 'do' '{' Stmt;* '}'
@@ -145,9 +146,10 @@ pTermBody
                 <?> "some statements"
 
         m <- case reverse binds of
-                ([], mBody) : bmsRest
+                (mps', mBody) : bmsRest
+                 | Just [] <- takeMPTerms mps'
                   -> let (bsBind, msBind) = unzip $ reverse bmsRest
-                     in  return $ foldr (\(bs, m) m' -> MLet (zip bs $ repeat THole) m m')
+                     in  return $ foldr (\(mps, m) m' -> MLet mps m m')
                                         mBody (zip bsBind msBind)
 
                 [] -> fail "Empty do block."
@@ -443,15 +445,17 @@ pTermBind
 
 ------------------------------------------------------------------------------------------- Stmt --
 -- | Parser for a statement.
-pTermStmt :: Parser ([Bind], Term RL)
+pTermStmt :: Parser (TermParams RL, Term RL)
 pTermStmt
  = P.choice
  [ do   -- '[' (Var : Type),* ']' = Term
-        bs      <- pSquared $ flip P.sepEndBy (pTok KComma)
+        (rBinds, bs)
+         <- pRanged $ pSquared $ flip P.sepEndBy (pTok KComma)
                         (pBind <?> "a binder")
         pTok KEquals     <?> "an '=' to start the body"
         mBody   <- pTerm <?> "the body of the statement"
-        return  (bs, mBody)
+        return  ( MPAnn rBinds $ MPTerms $ zip bs $ repeat THole
+                , mBody)
 
  , do   -- Var '=' Term
         -- We need the lookahead here because plain terms
@@ -459,14 +463,15 @@ pTermStmt
         P.try $ P.lookAhead $ do
                 pBind; pTok KEquals
 
-        nBind <- pBind  <?> "a binder"
+        (rBind, nBind)
+         <- pRanged $ (pBind  <?> "a binder")
         pTok KEquals    <?> "a '=' to start the body"
         mBody <- pTerm  <?> "the body of the statement"
-        return  ([nBind], mBody)
+        return  (MPAnn rBind $ MPTerms [(nBind, THole)], mBody)
 
  , do   -- Term
         mBody   <- pTerm
-        return  ([], mBody)
+        return  (MPTerms [], mBody)
  ]
 
 

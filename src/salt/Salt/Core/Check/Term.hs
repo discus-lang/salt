@@ -234,11 +234,12 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
 
 
 -- (t-let) ------------------------------------------------
-checkTermWith a wh ctx Synth (MLet bts mBind mBody)
+checkTermWith a wh ctx Synth (MLet mps mBind mBody)
+ | (aParam, mps_) <- unwrapTermParams a mps
+ , Just _bts      <- takeMPTerms mps_
  = do
         -- Check kinds of binder annotations.
-        MPTerms bts'
-         <- checkTermParams a wh ctx (MPTerms bts)
+        mps' <- checkTermParams a wh ctx mps
 
         -- Check the bound expression.
         (mBind', tsBind, esBind)
@@ -246,22 +247,23 @@ checkTermWith a wh ctx Synth (MLet bts mBind mBody)
 
         -- Check we have the same number of binders
         -- as values produced by the binding.
-        let (bs, tsParam) = unzip bts'
+        let Just (bs, tsParam) = fmap unzip $ takeMPTerms mps'
         when (not $ length tsParam == length tsBind)
-         $ throw $ ErrorLetWrongArity a wh tsBind bs
+         $ throw $ ErrorLetWrongArity aParam wh tsBind bs
 
         -- Check binding types against any annotations for them,
         -- then add them to the context.
+        let aBind = fromMaybe a $ takeAnnotOfTerm mBind
         let checkLetAnnot tAnnot tBind
              | THole    <- tAnnot
              = return tBind
 
              | otherwise
-             = checkTypeEquiv ctx a [] tAnnot a [] tBind
+             = checkTypeEquiv ctx a [] tBind a [] tAnnot
              >>= \case
                 Nothing -> return tBind
                 Just ((_a1, tErr1), (_a2, tErr2))
-                  -> throw $ ErrorMismatch UType a wh tErr1 tErr2
+                  -> throw $ ErrorMismatch UType aBind wh tErr1 tErr2
 
         tsBind'   <- zipWithM checkLetAnnot tsParam tsBind
         let bts'' = zip bs tsBind'
@@ -271,7 +273,7 @@ checkTermWith a wh ctx Synth (MLet bts mBind mBody)
         (mBody', tsResult, esResult)
          <- checkTerm a wh ctx' Synth mBody
 
-        return  ( MLet bts' mBind' mBody'
+        return  ( MLet mps' mBind' mBody'
                 , tsResult
                 , esBind ++ esResult)
 

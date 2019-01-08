@@ -172,7 +172,7 @@ ppre c (ErrorAppTermTermWrongArityNum _a _wh tsParam nArg)
 
 -- Let bindings -------------------------------------------
 ppre c (ErrorLetWrongArity _a _wh tsActual bsExpected)
- = vcat [ text "Wrong aity in let binding"
+ = vcat [ text "Wrong arity in let binding"
         , text " Binders" %% squared (map (ppr c) bsExpected)
         , text " Values " %% squared (map (ppr c) tsActual) ]
 

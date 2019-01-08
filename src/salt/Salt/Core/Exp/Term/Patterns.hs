@@ -20,7 +20,7 @@ pattern MApv mFun mArg          = MKey   MKApp  [MGTerm  mFun, MGTerm  mArg]
 pattern MApm mFun msArg         = MKey   MKApp  [MGTerm  mFun, MGTerms msArg]
 pattern MApt mFun tsArg         = MKey   MKApp  [MGTerm  mFun, MGTypes tsArg]
 
-pattern MLet btsBind mBind mBod = MKey   MKLet  [MGTerms [mBod, MAbs (MPTerms btsBind) mBind]]
+pattern MLet mps mBind mBod     = MKey   MKLet  [MGTerms [mBod, MAbs mps mBind]]
 
 pattern MIf  mCond mThen mElse  = MKey   MKIf   [MGTerms mCond,  MGTerms mThen, MGTerm mElse]
 
