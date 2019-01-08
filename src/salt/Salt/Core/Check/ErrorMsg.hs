@@ -61,9 +61,15 @@ ppre c (ErrorUnknownBound uni _a _wh u)
 -- Structural arity ---------------------------------------
 ppre c (ErrorWrongArity uni _a _wh ts ks)
  = let  reason = if length ts >= length ks then "Too many" else "Not enough"
-   in   vcat [ text reason %% ppr c uni
-             , text " of" %% ppThings' c uni ts
-             , text " Expected" %% squared (map (ppr c) ks) ]
+   in   vcat [ text reason %% ppr c uni % text "s."
+             , text " Actual  " %% ppThings'  c uni ts
+             , text " Expected" %% ppThings'  c uni ks ]
+
+ppre c (ErrorWrongArityUp uni _a _wh ts ks)
+ = let  reason = if length ts >= length ks then "Too many" else "Not enough"
+   in   vcat [ text reason %% ppr c uni % text "s."
+             , text " Actual  " %% ppThings'  c uni ts
+             , text " Expected" %% ppThings'' c uni ks ]
 
 
 -- Abstraction problems -----------------------------------
@@ -138,14 +144,14 @@ ppre c (ErrorAppTermTypeWrongArity _a _wh btsParam tsArg)
         , text " Parameter kinds"
                 %% squared [ (ppr c b %% text ":" %% ppr c t)
                            | (b, t) <- btsParam]
-        , text " Argument" %% ppThings c UType tsArg ]
+        , text " Argument " %% ppThings c UType tsArg ]
 
  | otherwise
  = vcat [ text "Too many type arguments in application."
         , text " Parameter kinds"
                 %% squared [ (ppr c b %% text ":" %% ppr c t)
                            | (b, t) <- btsParam]
-        , text " Argument" %% ppThings c UType tsArg ]
+        , text " Argument " %% ppThings c UType tsArg ]
 
 -- term/term
 ppre c (ErrorAppTermTermCannot _a _wh tFun)
@@ -255,4 +261,15 @@ ppThings' c UType [t]     = text "kind"   %% squotes (ppr c t)
 ppThings' c UType ts      = text "kinds"  %% squared (map (ppr c) ts)
 ppThings' c UTerm [m]     = text "type"   %% squotes (ppr c m)
 ppThings' c UTerm ms      = text "types"  %% squared (map (ppr c) ms)
+
+
+-- | Print some universed things with proper pluralization,
+--   taking the universe two levels up.
+ppThings'' :: c -> Universe -> [Type a] -> Doc
+ppThings'' c UKind [k]     = text "thing"  %% squotes (ppr c k)
+ppThings'' c UKind ks      = text "things" %% squared (map (ppr c) ks)
+ppThings'' c UType [t]     = text "thing"  %% squotes (ppr c t)
+ppThings'' c UType ts      = text "things" %% squared (map (ppr c) ts)
+ppThings'' c UTerm [m]     = text "kind"   %% squotes (ppr c m)
+ppThings'' c UTerm ms      = text "kinds"  %% squared (map (ppr c) ms)
 

@@ -217,8 +217,8 @@ pTermBody
 
 
  , do   -- Con TypeArg* TermArg*
-        nCon    <- pCon
-        pTermAppArgsSat (MCon nCon)
+        (rCon, nCon)  <- pRanged pCon
+        pTermAppArgsSat (MAnn rCon $ MCon nCon)
          <?> "arguments for the constructor application"
 
  , do   -- Prm TermArgs*

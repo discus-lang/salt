@@ -7,10 +7,10 @@ import Salt.Core.Check.Type.Base
 -- | Check the application of a term to some types.
 checkTermAppTypes
         :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> [Type a]
+        -> Context a -> a -> Type a -> [Type a]
         -> IO ([Type a], Type a)
 
-checkTermAppTypes a wh ctx tFun tsArg
+checkTermAppTypes a wh ctx aFun tFun tsArg
  = do
         -- The funtion needs to have a forall type.
         tFun_red <- simplType a ctx tFun
@@ -18,7 +18,7 @@ checkTermAppTypes a wh ctx tFun tsArg
          <- case tFun_red of
                 TForall tps tResult
                   -> return (takeTPTypes tps, tResult)
-                _ -> throw $ ErrorAppTermTypeCannot a wh tFun
+                _ -> throw $ ErrorAppTermTypeCannot aFun wh tFun
 
         -- Check the kinds of the arguments.
         (tsArg', ksArg)
@@ -49,15 +49,15 @@ checkTermAppTypes a wh ctx tFun tsArg
 --   The arguments may only produce a single value each.
 checkTermAppTerms
         :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> [Term a]
+        -> Context a -> a -> Type a -> [Term a]
         -> IO ([Term a], [Type a], [Effect a])
 
-checkTermAppTerms a wh ctx tFun msArg
+checkTermAppTerms a wh ctx aFun tFun msArg
  = do
         -- The function needs to have a functional type.
         tFun_red <- simplType a ctx tFun
         let (tsParam, tsResult)
-                = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
+                = fromMaybe (throw $ ErrorAppTermTermCannot aFun wh tFun)
                 $ takeTFun tFun_red
 
         -- The number of arguments must match the number of parameters.
@@ -80,15 +80,15 @@ checkTermAppTerms a wh ctx tFun msArg
 --   Reduction of the argument may produce a vector of values.
 checkTermAppTerm
         :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> Term a
+        -> Context a -> a -> Type a -> Term a
         -> IO (Term a, [Type a], [Effect a])
 
-checkTermAppTerm a wh ctx tFun mArg
+checkTermAppTerm a wh ctx aFun tFun mArg
  = do
         -- The function needs to have a functional type.
         tFun_red <- simplType a ctx tFun
         let (tsParam, tsResult)
-                = fromMaybe (throw $ ErrorAppTermTermCannot a wh tFun)
+                = fromMaybe (throw $ ErrorAppTermTermCannot aFun wh tFun)
                 $ takeTFun tFun_red
 
         -- Check the types of the argument.

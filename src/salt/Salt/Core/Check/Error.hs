@@ -66,7 +66,14 @@ data Error a
         , errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorTypesActual      :: [Type a]
-        , errorKindsExpected    :: [Type a] }
+        , errorTypesExpected    :: [Type a] }
+
+        | ErrorWrongArityUp
+        { errorUniverse         :: Universe
+        , errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorTypesActual      :: [Type a]
+        , errorKindsExpected    :: [Kind a] }
 
         -- Unknown vars and refs ----------------
         | ErrorUnknownPrim

@@ -28,7 +28,7 @@ test/30-error/11-check-term/Test.salt:20:11
 
   20:11  In test
 
-test/30-error/11-check-term/Test.salt:30:1
+test/30-error/11-check-term/Test.salt:25:11
   Unknown term constructor 'Derp'
 
   25:11  In test
@@ -95,13 +95,13 @@ test/30-error/11-check-term/Test.salt:64:13
   64:11  In test
 
 test/30-error/11-check-term/Test.salt:69:26
-  Too many term
-   of types [#Bool, #Bool]
-   Expected [#Data]
+  Too many terms.
+   Actual   types [#Bool, #Bool]
+   Expected kind '#Data'
 
   69:11  In test
 
-test/30-error/11-check-term/Test.salt:73:13
+test/30-error/11-check-term/Test.salt:73:11
   Cannot instantiate non-polymorphic value
    of type  '#Nat'
 
@@ -110,14 +110,14 @@ test/30-error/11-check-term/Test.salt:73:13
 test/30-error/11-check-term/Test.salt:76:44
   Not enough type arguments in application.
    Parameter kinds [a : #Data, b : #Data]
-   Argument type '#Nat'
+   Argument  type '#Nat'
 
   76:11  In test
 
 test/30-error/11-check-term/Test.salt:79:34
   Too many type arguments in application.
    Parameter kinds [a : #Data]
-   Argument types [#Nat, #Nat]
+   Argument  types [#Nat, #Nat]
 
   79:11  In test
 
@@ -128,23 +128,23 @@ test/30-error/11-check-term/Test.salt:82:34
 
   82:11  In test
 
-test/30-error/11-check-term/Test.salt:86:13
+test/30-error/11-check-term/Test.salt:86:11
   Cannot apply non-function
    of type '#Nat'
 
   86:11  In test
 
 test/30-error/11-check-term/Test.salt:89:21
-  Too many term
-   of type '#Bool'
-   Expected [#Data]
+  Not enough terms.
+   Actual   type '#Bool'
+   Expected kinds [#Data, #Data]
 
   89:11  In test
 
 test/30-error/11-check-term/Test.salt:92:21
-  Too many term
-   of types [#Bool, #Bool, #Bool]
-   Expected [#Data, #Data, #Data]
+  Too many terms.
+   Actual   types [#Bool, #Bool, #Bool]
+   Expected kinds [#Data, #Data]
 
   92:11  In test
 
@@ -155,23 +155,23 @@ test/30-error/11-check-term/Test.salt:95:22
 
   95:11  In test
 
-test/30-error/11-check-term/Test.salt:99:13
+test/30-error/11-check-term/Test.salt:99:11
   Cannot apply non-function
    of type '#Nat'
 
   99:11  In test
 
 test/30-error/11-check-term/Test.salt:102:21
-  Not enough term
-   of type '#Bool'
-   Expected [#Bool, #Bool]
+  Not enough terms.
+   Actual   type '#Bool'
+   Expected types [#Bool, #Bool]
 
   102:11 In test
 
 test/30-error/11-check-term/Test.salt:105:52
-  Too many term
-   of types [#Bool, #Bool, #Bool]
-   Expected [#Bool, #Bool]
+  Too many terms.
+   Actual   types [#Bool, #Bool, #Bool]
+   Expected types [#Bool, #Bool]
 
   105:11 In test
 
@@ -199,7 +199,7 @@ test/30-error/11-check-term/Test.salt:119:18
 
   119:11 In test
 
-test/30-error/11-check-term/Test.salt:122:25
+test/30-error/11-check-term/Test.salt:122:19
   Cannot apply non-function
    of type '#Bool'
 
@@ -226,7 +226,7 @@ test/30-error/11-check-term/Test.salt:133:11
 
   133:11 In test
 
-test/30-error/11-check-term/Test.salt:136:32
+test/30-error/11-check-term/Test.salt:136:26
   Cannot apply non-function
    of type '#Bool'
 
@@ -262,7 +262,7 @@ test/30-error/11-check-term/Test.salt:153:11
 
   153:11 In test
 
-test/30-error/11-check-term/Test.salt:156:22
+test/30-error/11-check-term/Test.salt:156:16
   Cannot apply non-function
    of type '#Bool'
 
@@ -289,9 +289,9 @@ test/30-error/11-check-term/Test.salt:169:11
   169:11 In test
 
 test/30-error/11-check-term/Test.salt:172:11
-  Too many term
-   of types [#Nat, #Nat]
-   Expected [#Data]
+  Too many terms.
+   Actual   types [#Nat, #Nat]
+   Expected kind '#Data'
 
   172:11 In test
 
@@ -328,7 +328,7 @@ test/30-error/11-check-term/Test.salt:189:15
 
   189:11 In test
 
-test/30-error/11-check-term/Test.salt:194:18
+test/30-error/11-check-term/Test.salt:194:16
   Cannot apply non-function
    of type '#Nat'
 
@@ -387,7 +387,7 @@ test/30-error/11-check-term/Test.salt:228:11
 
   228:11 In test
 
-test/30-error/11-check-term/Test.salt:234:16
+test/30-error/11-check-term/Test.salt:234:14
   Cannot apply non-function
    of type '#Nat'
 
@@ -420,7 +420,7 @@ test/30-error/11-check-term/Test.salt:248:17
 
   248:11 In test
 
-test/30-error/11-check-term/Test.salt:251:25
+test/30-error/11-check-term/Test.salt:251:23
   Cannot apply non-function
    of type '#Nat'
 
@@ -446,7 +446,7 @@ test/30-error/11-check-term/Test.salt:262:16
 
   262:11 In test
 
-test/30-error/11-check-term/Test.salt:265:24
+test/30-error/11-check-term/Test.salt:265:22
   Cannot apply non-function
    of type '#Nat'
 
@@ -472,7 +472,7 @@ test/30-error/11-check-term/Test.salt:276:16
 
   276:11 In test
 
-test/30-error/11-check-term/Test.salt:279:29
+test/30-error/11-check-term/Test.salt:279:27
   Cannot apply non-function
    of type '#Nat'
 

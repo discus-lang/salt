@@ -127,7 +127,7 @@ checkTermWith a wh ctx Synth (MAbs mps m)
          <- case ts of
                 []      -> throw $ ErrorAbsEmpty UType aBody wh
                 [t]     -> return t
-                _       -> throw $ ErrorWrongArity UTerm a wh ts [TData]
+                _       -> throw $ ErrorWrongArityUp UTerm a wh ts [TData]
 
         -- The body must be pure.
         -- TODO: ensure types like (pure + pure) are reduced to pure,
@@ -200,23 +200,25 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
         when (null mgss0)
          $ throw $ ErrorAppNoArguments a wh tFun1
 
+        let aFun = fromMaybe a $ takeAnnotOfTerm mFun0
+
         -- Check argument types line up with parameter types.
         let -- (t-apt) -----
             checkApp [tFun] es (mps : mgss) mgssAcc
              | Just (a', tsArg) <- takeAnnMGTypes a mps
-             = do (tsArg', tResult)  <- checkTermAppTypes a' wh ctx tFun tsArg
+             = do (tsArg', tResult)  <- checkTermAppTypes a' wh ctx aFun tFun tsArg
                   checkApp [tResult] es mgss (MGAnn a' (MGTypes tsArg') : mgssAcc)
 
             -- (t-apm) -----
             checkApp [tFun] es (mps : mgss) mgssAcc
              | Just (a', msArg) <- takeAnnMGTerms a mps
-             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh ctx tFun msArg
+             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh ctx aFun tFun msArg
                   checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerms msArg') : mgssAcc)
 
             -- (t-apv) -----
             checkApp [tFun] es (mps : mgss) mgssAcc
              | Just (a', mArg) <- takeAnnMGTerm a mps
-             = do (mArg',  tsResult, es') <- checkTermAppTerm  a wh ctx tFun mArg
+             = do (mArg',  tsResult, es') <- checkTermAppTerm  a wh ctx aFun tFun mArg
                   checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerm mArg') : mgssAcc)
 
             checkApp tsResult es [] mgssAcc
@@ -226,7 +228,7 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
             --   then we had a type abstraction that returned multiple values
             --   but haven't detected that when it was constructed.
             checkApp tsResult _ _ _
-             = throw $ ErrorWrongArity UTerm a wh tsResult [TData]
+             = throw $ ErrorWrongArityUp UTerm a wh tsResult [TData]
 
         checkApp [tFun1] esFun1 mgss0 []
 
