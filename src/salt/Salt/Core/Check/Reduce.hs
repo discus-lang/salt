@@ -3,7 +3,7 @@ module Salt.Core.Check.Reduce where
 import Salt.Core.Check.Context
 import Salt.Core.Transform.Snv
 import Salt.Core.Exp
-
+import qualified Data.Set       as Set
 
 ---------------------------------------------------------------------------------------------------
 -- | Reduce a type to weak head normal form.
@@ -93,34 +93,53 @@ simplMode a ctx mode
 
 
 ---------------------------------------------------------------------------------------------------
--- | Flatten nested TSums at the head of a type,
---   or `Nothing` if we didn't need to do anything.
+-- | Flatten TSums at the head of a type.
+--
+--   * We flatten nested TSums
+--   * Drop TPure inside TSum
+--   * Drop repeated TPrms and TCons in TSums
+--   * Return `Nothing` if we didn't need to do anything.
+--
 flattenType :: Type a -> Maybe (Type a)
 flattenType tt
  = goStart tt
  where
-        goStart (TSum ts) = goParts False [] ts
-        goStart _         = Nothing
+        goStart (TSum ts)
+         = goParts False Set.empty Set.empty [] ts
 
-        goParts bMoved acc (TAnn _ t : tsMore)
-         = goParts bMoved acc (t : tsMore)
+        goStart _
+         = Nothing
 
-        goParts _ acc (TPure : tsMore)
-         = goParts True acc tsMore
+        goParts bMoved nsPrm nsCon acc (t : tsMore)
+         = case t of
+            TAnn _ t'             -> goParts bMoved nsPrm nsCon acc (t' : tsMore)
+            TPure                 -> goParts True   nsPrm nsCon acc tsMore
+            TSum ts'              -> goParts True   nsPrm nsCon acc (ts' ++ tsMore)
 
-        goParts _ acc (TSum ts' : tsMore)
-         = goParts True acc (ts' ++ tsMore)
+            TCon n
+             | Set.member n nsCon -> goParts True   nsPrm nsCon acc tsMore
+             | otherwise          -> goParts bMoved nsPrm (Set.insert n nsCon) acc tsMore
 
-        goParts bMoved acc (t : tsMore)
-         = goParts bMoved (t : acc) tsMore
+            TPrm n
+             | Set.member n nsPrm -> goParts True   nsPrm nsCon acc tsMore
+             | otherwise          -> goParts bMoved (Set.insert n nsPrm) nsCon acc tsMore
 
-        goParts bMoved acc []
-         | not bMoved   = Nothing
+            _                     -> goParts bMoved nsPrm nsCon (t : acc) tsMore
+
+        goParts bMoved nsPrm nsCon acc []
+         | not bMoved
+         = Nothing
+
          | otherwise
+         = goEmit (  (map TPrm $ Set.toList nsPrm)
+                  ++ (map TCon $ Set.toList nsCon)
+                  ++ reverse acc)
+
+        goEmit acc
          = case acc of
                 []      -> Just TPure
                 [t]     -> Just t
-                _       -> Just $ TSum (reverse acc)
+                _       -> Just $ TSum acc
 
 
 ---------------------------------------------------------------------------------------------------

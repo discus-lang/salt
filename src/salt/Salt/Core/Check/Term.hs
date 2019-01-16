@@ -40,7 +40,7 @@ checkTermWith a wh ctx Synth (MThe ts m)
 -- (t-box) ------------------------------------------------
 checkTermWith a wh ctx Synth (MBox m)
  = do   (m', ts, es) <- checkTerm a wh ctx Synth m
-        let tEff = fromMaybe (TSum es) $ flattenType (TSum es)
+        tEff <- simplType a ctx (TSum es)
         return  (MBox m', [TSusp ts tEff], [])
 
 

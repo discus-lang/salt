@@ -15,12 +15,13 @@ import qualified Control.Exception              as Control
 import qualified Data.Map                       as Map
 import qualified Text.Show.Pretty               as T
 
+
 ---------------------------------------------------------------------------------------------------
 -- | Become a language server plugin.
 --
 --   * We listen to requests on stdin and send responses to stdout.
 --   * We take an optional path for server side logging.
---   * If the server process crashes
+--   * If the server process crashes then try to write the reason to the debug log.
 --
 runLSP :: Maybe FilePath -> IO ()
 runLSP mFileLog
@@ -109,21 +110,19 @@ lspStartup state req
  = do
         lspLog state "* Initialize"
 
-        -- TODO: check server can actually do things.
-        -- help make this work with other than VSCode.
+        -- Log the list of client capabilities.
         lspLog state $ T.ppShow params
 
-        lspSend state
-         $ jobj [ "id" := V $ pack $ reqId req
-                , "result"
-                  := O  [ "capabilities"
-                          := O  [ "textDocumentSync"
-                                  := O  [ "openClose" := B True   -- send us open/close notif.
-                                        , "change"    := I 1      -- send us full file changes.
-                                        , "save"      := B True   -- send us save notif.
-                                        ]
-                                ]]]
-
+        -- Tell the client what our capabilities are.
+        lspSend state $ jobj
+         [ "id" := V $ pack $ reqId req
+         , "result"
+           := O  [ "capabilities"
+                    := O  [ "textDocumentSync"
+                            := O  [ "openClose" := B True   -- send us open/close notif.
+                                  , "change"    := I 1      -- send us full file changes.
+                                  , "save"      := B True   -- send us save notif.
+                                  ]]]]
         lspLoop state
 
  -- Cient sends us 'initialized' if it it is happy with the

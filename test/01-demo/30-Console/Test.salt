@@ -1,6 +1,6 @@
+
 -- Effectful term using let-expressions.
--- TODO: flatten result effect.
-term hello : []! (#Console + #Console)
+term hello : []! #Console
  = box  let []  = #console'print   "hello ";
         #console'println "world"
 
@@ -8,8 +8,7 @@ test exec hello
 
 
 -- Sugared version of above.
--- TODO: flatten result effect.
-term hello2 : []! (#Console + #Console)
+term hello2 : []! #Console
  = box do
         { #console'print   "hello "
         ; #console'println "world" }
