@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4038f5020cdcb1e86a85276e7e6c757485921b7395669c668aed81620c4e7d7e
+-- hash: b645f6423c3e27169998e24cc02d38ebe175935be2009c0f4a713a6cfa72e283
 
 name:           salt
 version:        0.0.0.0
@@ -119,6 +119,7 @@ executable salt
       Salt.LSP.Task.Diagnostics.Parser
       Salt.LSP.Task.Diagnostics.Tester
       Salt.Main.Config
+      Salt.Main.Mode.Lex
       Paths_salt
   hs-source-dirs:
       src/salt

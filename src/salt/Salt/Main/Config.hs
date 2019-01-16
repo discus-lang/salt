@@ -7,14 +7,15 @@ import qualified Data.Text      as T
 
 -- | Command line mode.
 data Mode
-        = ModeLex       FilePath
-        | ModeParse     FilePath
-        | ModeCheck     FilePath
+        = ModeLSP
+        { modeFileLog   :: Maybe FilePath }
+
         | ModeTest      FilePath
         | ModeTest1     FilePath Text
 
-        | ModeLSP       
-        { modeFileLog   :: Maybe FilePath }
+        | ModeCheck     FilePath
+        | ModeParse     FilePath
+        | ModeLex       FilePath
         deriving Show
 
 data Config
@@ -33,13 +34,13 @@ parseArgs :: [String] -> Config -> IO Config
 parseArgs [] config
  = return config
 
-parseArgs ("-lex" : filePath : rest) config
+parseArgs ("-lsp" : rest) config
  = parseArgs rest
- $ config { configMode = Just (ModeLex filePath) }
+ $ config { configMode = Just (ModeLSP Nothing) }
 
-parseArgs ("-parse" : filePath : rest) config
+parseArgs ("-lsp-debug" : fileLog : rest) config
  = parseArgs rest
- $ config { configMode = Just (ModeParse filePath) }
+ $ config { configMode = Just (ModeLSP (Just fileLog)) }
 
 parseArgs ("-check" : filePath : rest) config
  = parseArgs rest
@@ -53,13 +54,13 @@ parseArgs ("-test1"  : filePath : name : rest) config
  = parseArgs rest
  $ config { configMode = Just (ModeTest1 filePath (T.pack name)) }
 
-parseArgs ("-lsp" : rest) config
+parseArgs ("-parse" : filePath : rest) config
  = parseArgs rest
- $ config { configMode = Just (ModeLSP Nothing) }
+ $ config { configMode = Just (ModeParse filePath) }
 
-parseArgs ("-lsp-debug" : fileLog : rest) config
+parseArgs ("-lex" : filePath : rest) config
  = parseArgs rest
- $ config { configMode = Just (ModeLSP (Just fileLog)) }
+ $ config { configMode = Just (ModeLex filePath) }
 
 parseArgs (filePath : []) config
  = return
@@ -71,12 +72,15 @@ parseArgs _ _
 
 usage
  = unlines
- [ "salt FLAGS"
- , "   -lex     FILE.salt           lex a core file and print its tokens"
- , "   -parse   FILE.salt           parse a core file and print its AST"
- , "   -check   FILE.salt           type check a core file and print its AST"
- , "   -test    FILE.salt           run all the tests in the given module"
- , "   -test1   FILE.salt NAME      run a single test in the given module"
- , "   -lsp                         become a language server plugin"
- , "   -lsp-log FILE.log             .. and log debug messages to a file"
+ [ "salt: The compilation target that functional programmers always wanted."
+ , ""
+ , " salt FILE.salt                   Run all the tests in the given module."
+ , " salt -test   FILE.salt           Run all the tests in the given module."
+ , " salt -test1  FILE.salt NAME      Run a single test in the given module."
+ , " salt -check  FILE.salt           Type check a core file and print its AST."
+ , " salt -parse  FILE.salt           Tarse a core file and print its AST."
+ , " salt -lex    FILE.salt           Lex a core file and print its tokens."
+ , ""
+ , " salt -lsp                        Become a language server"
+ , " salt -lsp-log FILE.log             .. and log debug messages to a file"
  ]
