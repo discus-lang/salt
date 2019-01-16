@@ -86,4 +86,5 @@ usage
  , ""
  , " salt -lsp                        Become a language server"
  , " salt -lsp-debug FILE.log          .. and log debug messages to a file"
+ , ""
  ]
