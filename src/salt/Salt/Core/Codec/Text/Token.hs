@@ -4,7 +4,8 @@ module Salt.Core.Codec.Text.Token
         , IW.Range      (..)
         , IW.Location   (..)
         , Token         (..)
-        , showTokenAsSource)
+        , showTokenAsSource
+        , rangeOfTokenList)
 where
 import qualified Text.Lexer.Inchworm.Source     as IW
 import Data.Text        as T
@@ -142,3 +143,17 @@ showTokenAsSource kk
         KInt  i         -> show i
         KText tx        -> show tx
 
+
+-- | Get a range covering the location from the start of the first token,
+--   to the end of the last token.
+rangeOfTokenList :: [At t] -> IW.Range IW.Location
+rangeOfTokenList toks
+ = let  lFirst  = case toks of
+                   At (IW.Range l _) _ : _ -> l
+                   _ -> IW.Location 0 0
+
+        lLast   = case Prelude.reverse toks of
+                   At (IW.Range _ l) _ : _ -> l
+                   _ -> IW.Location 0 0
+
+   in   IW.Range lFirst lLast

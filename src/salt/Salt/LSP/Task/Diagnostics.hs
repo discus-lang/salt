@@ -7,9 +7,9 @@ import Salt.LSP.Task.Diagnostics.Tester
 import Salt.LSP.State
 import Salt.LSP.Protocol
 import Salt.LSP.Interface
-import Salt.Data.Location
 import qualified Salt.Core.Codec.Text.Parser    as Parser
 import qualified Salt.Core.Codec.Text.Lexer     as Lexer
+import qualified Salt.Core.Codec.Text.Token     as Token
 import qualified Salt.Core.Check                as Checker
 
 import Data.IORef
@@ -33,13 +33,10 @@ updateDiagnostics state sUri sSource
                  $  map (diagnosticOfParseError toks) errs
 
                 Right mm
-                 -> goCheck mm
+                 -> goCheck toks mm
 
-        -- TODO: start with range of whole file.
-        goCheck mm
-         = Checker.checkModule
-                (Range (Location 0 0) (Location 0 0))
-                mm
+        goCheck toks mm
+         = Checker.checkModule (Token.rangeOfTokenList toks) mm
          >>= \case
                 Left errs
                  -> do  modifyIORef' (stateCoreChecked state)
@@ -57,6 +54,7 @@ updateDiagnostics state sUri sSource
                 if (not $ null diags)
                  then sendTesterDiagnostics state sUri diags
                  else sendClearDiagnostics  state sUri
+
 
 
 -- | Clear diagnostics for the given file.
