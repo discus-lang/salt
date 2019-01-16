@@ -19,6 +19,7 @@ isTPure tt
  = case tt of
         TAnn _ t -> isTPure t
         TPure    -> True
+        TSum []  -> True
         _        -> False
 
 

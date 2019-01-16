@@ -29,9 +29,8 @@ reduceType a ctx tt@(TVar u)
 
        _ -> return $ Just tt
 
--- TODO: flattenType should report whether it's done anything.
 reduceType _a _ctx tt@(TSum{})
- = return $ Just $ flattenType tt
+ = return $ flattenType tt
 
 reduceType a ctx (TApp tFun tgsArgs)
  = simplType a ctx tFun
@@ -94,17 +93,34 @@ simplMode a ctx mode
 
 
 ---------------------------------------------------------------------------------------------------
--- | Flatten nested TSums in a type.
-flattenType :: Type a -> Type a
+-- | Flatten nested TSums at the head of a type,
+--   or `Nothing` if we didn't need to do anything.
+flattenType :: Type a -> Maybe (Type a)
 flattenType tt
- = case parts tt of
-        []      -> TPure
-        [t]     -> t
-        ts      -> TSum ts
+ = goStart tt
  where
-        parts (TSum ts) = concatMap parts ts
-        parts TPure     = []
-        parts t         = [t]
+        goStart (TSum ts) = goParts False [] ts
+        goStart _         = Nothing
+
+        goParts bMoved acc (TAnn _ t : tsMore)
+         = goParts bMoved acc (t : tsMore)
+
+        goParts _ acc (TPure : tsMore)
+         = goParts True acc tsMore
+
+        goParts _ acc (TSum ts' : tsMore)
+         = goParts True acc (ts' ++ tsMore)
+
+        goParts bMoved acc (t : tsMore)
+         = goParts bMoved (t : acc) tsMore
+
+        goParts bMoved acc []
+         | not bMoved   = Nothing
+         | otherwise
+         = case acc of
+                []      -> Just TPure
+                [t]     -> Just t
+                _       -> Just $ TSum (reverse acc)
 
 
 ---------------------------------------------------------------------------------------------------
