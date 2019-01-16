@@ -19,6 +19,8 @@ mainCheck filePath
         runCheck filePath mm
         return ()
 
+
+-- | Check a source module and return the resulting top-level context.
 runCheck :: FilePath -> Module RL -> IO (Check.Context RL)
 runCheck filePath mm
  = do   Check.checkModule rlNone mm

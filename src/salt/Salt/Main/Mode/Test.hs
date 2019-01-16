@@ -14,6 +14,19 @@ import qualified Data.Text                      as T
 
 
 ------------------------------------------------------------------------------------------- Main --
+-- | Run all the tests in the given source file,
+--   printing the result to stdout.
+mainTests :: FilePath -> IO ()
+mainTests filePath
+ = do   mm      <- runParse filePath
+        ctx     <- runCheck filePath mm
+
+        let tests = [ d | DTest d <- moduleDecls mm ]
+        mapM_ (runTest ctx mm) tests
+
+
+-- | Run a single test in the given source file,
+--   printing the result to stdout.
 mainTest :: FilePath -> Text -> IO ()
 mainTest filePath name
  = do
@@ -28,15 +41,7 @@ mainTest filePath name
          _      -> mapM_ (runTest ctx mm) tests
 
 
-mainTests :: FilePath -> IO ()
-mainTests filePath
- = do   mm      <- runParse filePath
-        ctx     <- runCheck filePath mm
-
-        let tests = [ d | DTest d <- moduleDecls mm ]
-        mapM_ (runTest ctx mm) tests
-
-
+-- | Run a single test declaration from a type-checked module.
 runTest :: Check.Context RL -> Module RL -> DeclTest RL -> IO ()
 runTest ctx mm tt
  = case tt of

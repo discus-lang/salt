@@ -5,6 +5,12 @@ import qualified System.Exit    as System
 import qualified Data.Text      as T
 
 
+-- | Command line configuration.
+data Config
+        = Config
+        { configMode    :: Maybe Mode }
+
+
 -- | Command line mode.
 data Mode
         = ModeLSP
@@ -18,11 +24,8 @@ data Mode
         | ModeLex       FilePath
         deriving Show
 
-data Config
-        = Config
-        { configMode    :: Maybe Mode }
 
-
+-- | Default command line mode.
 configDefault :: Config
 configDefault
         = Config

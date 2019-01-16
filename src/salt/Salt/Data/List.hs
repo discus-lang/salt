@@ -3,6 +3,7 @@ module Salt.Data.List where
 import Data.Set as Set
 
 
+-- | Get the list of duplicate values in a list.
 duplicates :: Ord a => [a] -> [a]
 duplicates xx
  = go Set.empty Set.empty xx
