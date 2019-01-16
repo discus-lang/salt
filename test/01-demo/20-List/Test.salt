@@ -26,7 +26,7 @@ term reverse @[a: #Data] [xx: #List a]: #List a
  = case #list'case @a xx of
         { nil  [] → [list a|]
         ; cons [x: a, xs: #List a]
-           → append @a [xs, #list'one @a x] }
+           → append @a [reverse @a xs, #list'one @a x] }
 
 test eval reverse
  = reverse @#Nat [list #Nat| 10, 12, 13, 14]
