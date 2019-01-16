@@ -133,6 +133,7 @@ scanner
                 "type"          -> Just KType
                 "term"          -> Just KTerm
                 "test"          -> Just KTest
+                "watch"         -> Just KWatch
 
                 "forall"        -> Just KAsciiForall
                 "exists"        -> Just KAsciiExists

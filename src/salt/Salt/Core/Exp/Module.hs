@@ -51,36 +51,42 @@ data DeclTest a
         -- Print the kind of a type.
         = DeclTestKind
         { declAnnot             :: a
+        , declTestWatch         :: Bool
         , declTestName          :: Maybe Name
         , declTestType          :: Type a }
 
         -- Print the type of a term.
         | DeclTestType
         { declAnnot             :: a
+        , declTestWatch         :: Bool
         , declTestName          :: Maybe Name
         , declTestTerm          :: Term a }
 
         -- Evaluate a type and print the result
         | DeclTestEvalType
         { declAnnot             :: a
+        , declTestWatch         :: Bool
         , declTestName          :: Maybe Name
         , declTestType          :: Type a }
 
         -- Evaluate a term and print the result
         | DeclTestEvalTerm
         { declAnnot             :: a
+        , declTestWatch         :: Bool
         , declTestName          :: Maybe Name
         , declTestTerm          :: Term a }
 
         -- Execute an effectful term.
         | DeclTestExec
         { declAnnot             :: a
+        , declTestWatch         :: Bool
         , declTestName          :: Maybe Name
         , declTestBody          :: Term a }
 
         -- Check that a term evaluates to true.
         | DeclTestAssert
         { declAnnot             :: a
+        , declTestWatch         :: Bool
         , declTestName          :: Maybe Name
         , declTestBody          :: Term a }
         deriving Show

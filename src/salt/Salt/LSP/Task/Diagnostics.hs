@@ -3,6 +3,7 @@ module Salt.LSP.Task.Diagnostics where
 import Salt.LSP.Task.Diagnostics.Lexer
 import Salt.LSP.Task.Diagnostics.Parser
 import Salt.LSP.Task.Diagnostics.Checker
+import Salt.LSP.Task.Diagnostics.Tester
 import Salt.LSP.State
 import Salt.LSP.Protocol
 import Salt.LSP.Interface
@@ -46,10 +47,16 @@ updateDiagnostics state sUri sSource
                         sendCheckerDiagnostics state sUri
                          $  map diagnosticOfCheckerError errs
 
-                Right (mm', _ctx)
+                Right (mm', ctx)
                  -> do  modifyIORef' (stateCoreChecked state)
                          $ \mp -> Map.insert sUri (Just mm') mp
-                        sendClearDiagnostics state sUri
+                        goTest ctx mm'
+
+        goTest ctx mm'
+         = do   diags <- buildTesterDiagnostics state ctx mm'
+                if (not $ null diags)
+                 then sendTesterDiagnostics state sUri diags
+                 else sendClearDiagnostics  state sUri
 
 
 -- | Clear diagnostics for the given file.

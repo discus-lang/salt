@@ -52,12 +52,19 @@ pDecl
                 , declBody        = mBody }
 
 
- , do   -- 'test' 'kind'   (Name '=')? Type
-        -- 'test' 'type'   (Name '=')? Term
-        -- 'test' 'eval'   (Name '=')? Term
-        -- 'test' 'exec'   (Name '=')? Term
-        -- 'test' 'assert' (Name '=')? Term
-        pTok KTest
+ , do   -- 'watch'? 'test' 'kind'   (Name '=')? Type
+        -- 'watch'? 'test' 'type'   (Name '=')? Term
+        -- 'watch'? 'test' 'eval'   (Name '=')? Term
+        -- 'watch'? 'test' 'exec'   (Name '=')? Term
+        -- 'watch'? 'test' 'assert' (Name '=')? Term
+        bWatch
+         <- P.choice
+         [  do  pTok KTest;  return False
+
+         ,  do  pTok KWatch
+                P.choice [ pTok KTest, return ()]
+                return True
+         ]
 
         -- Lookahead to get the test mode.
         --  If we don't recognize it then we want the error to be on this token,
@@ -72,6 +79,12 @@ pDecl
                 , "eval'type", "eval'term", "eval"
                 , "exec",      "assert"])
          $ P.unexpected "test mode"
+
+        -- Don't allow exec tests to be watched in the IDE as we don't have
+        -- anywhere to direct console output to, and the order of side effects
+        -- is indetermiante.
+        when (bWatch && nMode == "exec")
+         $ fail "exec tests cannot be watched"
 
         -- 'type' is both a test specifier and a keyword,
         -- so we need to match for it explicitly.
@@ -100,6 +113,7 @@ pDecl
                 let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestKind
                         { declAnnot     = a
+                        , declTestWatch = bWatch
                         , declTestName  = mName
                         , declTestType  = tType }
 
@@ -112,6 +126,7 @@ pDecl
                 let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestType
                         { declAnnot     = a
+                        , declTestWatch = bWatch
                         , declTestName  = mName
                         , declTestTerm  = mTerm }
 
@@ -124,6 +139,7 @@ pDecl
                 let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestEvalType
                         { declAnnot     = a
+                        , declTestWatch = bWatch
                         , declTestName  = mName
                         , declTestType  = tBody }
 
@@ -136,6 +152,7 @@ pDecl
                 let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestEvalTerm
                         { declAnnot     = a
+                        , declTestWatch = bWatch
                         , declTestName  = mName
                         , declTestTerm  = mBody }
 
@@ -148,6 +165,7 @@ pDecl
                 let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestExec
                         { declAnnot     = a
+                        , declTestWatch = bWatch
                         , declTestName  = mName
                         , declTestBody  = mBody }
 
@@ -160,6 +178,7 @@ pDecl
                 let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
                 return  $ DTest $ DeclTestAssert
                         { declAnnot     = a
+                        , declTestWatch = bWatch
                         , declTestName  = mName
                         , declTestBody  = mBody }
          ]

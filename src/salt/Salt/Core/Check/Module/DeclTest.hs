@@ -12,29 +12,29 @@ import qualified Data.Set       as Set
 checkDeclTest :: CheckDecl a
 
 -- (t-decl-kind) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestKind a' n t))
+checkDeclTest _a ctx (DTest (DeclTestKind a' bWatch n t))
  = do   let wh    = [WhereTestDecl a' n]
         (t', _k) <- checkType a' wh ctx t
-        return  $ DTest $ DeclTestKind a' n t'
+        return  $ DTest $ DeclTestKind a' bWatch n t'
 
 
 -- (t-decl-type) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestType a' n m))
+checkDeclTest _a ctx (DTest (DeclTestType a' bWatch n m))
  = do   let wh    = [WhereTestDecl a' n]
         (m', _tResult, _esResult)
          <- checkTerm a' wh ctx Synth m
-        return  $ DTest $ DeclTestType a' n m'
+        return  $ DTest $ DeclTestType a' bWatch n m'
 
 
 -- (t-decl-eval-type) -------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestEvalType a nDecl t))
+checkDeclTest _a ctx (DTest (DeclTestEvalType a bWatch nDecl t))
  = do   let wh  = [WhereTestDecl a nDecl]
         (t', _k) <- checkType a wh ctx t
-        return  $ DTest $ DeclTestEvalType a nDecl t'
+        return  $ DTest $ DeclTestEvalType a bWatch nDecl t'
 
 
 -- (t-decl-eval-term) -------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestEvalTerm a nDecl mBody))
+checkDeclTest _a ctx (DTest (DeclTestEvalTerm a bWatch nDecl mBody))
  = do   let wh  = [WhereTestDecl a nDecl]
 
         -- Check the body term.
@@ -46,11 +46,11 @@ checkDeclTest _a ctx (DTest (DeclTestEvalTerm a nDecl mBody))
         when (not $ isTPure eBody_simp)
          $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
 
-        return  $ DTest $ DeclTestEvalTerm a nDecl mBody'
+        return  $ DTest $ DeclTestEvalTerm a bWatch nDecl mBody'
 
 
 -- (t-decl-exec) ------------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestExec a nDecl mBody))
+checkDeclTest _a ctx (DTest (DeclTestExec a bWatch nDecl mBody))
  = do   let wh  = [WhereTestDecl a nDecl]
 
         -- Check the body term.
@@ -68,11 +68,11 @@ checkDeclTest _a ctx (DTest (DeclTestExec a nDecl mBody))
          [t] | isTSusp t        -> return ()
          _ -> throw $ ErrorTestDeclNotSusp a wh nDecl tsResult
 
-        return  $ DTest $ DeclTestExec a nDecl mBody'
+        return  $ DTest $ DeclTestExec a bWatch nDecl mBody'
 
 
 -- (t-decl-assert) ----------------------------------------
-checkDeclTest _a ctx (DTest (DeclTestAssert a nDecl mBody))
+checkDeclTest _a ctx (DTest (DeclTestAssert a bWatch nDecl mBody))
  = do   let wh  = [WhereTestDecl a nDecl]
 
         -- Check the body term.
@@ -84,7 +84,7 @@ checkDeclTest _a ctx (DTest (DeclTestAssert a nDecl mBody))
         when (not $ isTPure eBody_simp)
          $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
 
-        return  $ DTest $ DeclTestAssert a nDecl mBody'
+        return  $ DTest $ DeclTestAssert a bWatch nDecl mBody'
 
 checkDeclTest _a _ctx decl
  = return decl

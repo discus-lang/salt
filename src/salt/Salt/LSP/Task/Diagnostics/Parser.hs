@@ -109,6 +109,7 @@ diagnosticOfParseError _toks (ParseError rangeTokHere mRangeTokPrev msgs)
 isDeclStartToken :: Token -> Bool
 isDeclStartToken tok
  = case tok of
+        KWatch  -> True
         KTerm   -> True
         KType   -> True
         KTest   -> True

@@ -48,7 +48,7 @@ data Token
         | KSymProd
 
         -- Keywords
-        | KType         | KTerm         | KTest
+        | KType         | KTerm         | KTest         | KWatch
         | KPure         | KSync
         | KThe          | KOf
         | KBox          | KRun
@@ -113,6 +113,7 @@ showTokenAsSource kk
         KType           -> "type"
         KTerm           -> "term"
         KTest           -> "test"
+        KWatch          -> "watch"
         KPure           -> "pure"
         KSync           -> "sync"
         KThe            -> "the"

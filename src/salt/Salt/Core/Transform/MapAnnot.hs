@@ -53,12 +53,12 @@ instance MapAnnot DeclTerm where
 instance MapAnnot DeclTest where
  mapAnnot f dd
   = case dd of
-        DeclTestKind     a mn t   -> DeclTestKind     (f a) mn (mapAnnot f t)
-        DeclTestType     a mn m   -> DeclTestType     (f a) mn (mapAnnot f m)
-        DeclTestEvalType a mn m   -> DeclTestEvalType (f a) mn (mapAnnot f m)
-        DeclTestEvalTerm a mn m   -> DeclTestEvalTerm (f a) mn (mapAnnot f m)
-        DeclTestExec     a mn m   -> DeclTestExec     (f a) mn (mapAnnot f m)
-        DeclTestAssert   a mn m   -> DeclTestAssert   (f a) mn (mapAnnot f m)
+        DeclTestKind     a w mn t   -> DeclTestKind     (f a) w mn (mapAnnot f t)
+        DeclTestType     a w mn m   -> DeclTestType     (f a) w mn (mapAnnot f m)
+        DeclTestEvalType a w mn m   -> DeclTestEvalType (f a) w mn (mapAnnot f m)
+        DeclTestEvalTerm a w mn m   -> DeclTestEvalTerm (f a) w mn (mapAnnot f m)
+        DeclTestExec     a w mn m   -> DeclTestExec     (f a) w mn (mapAnnot f m)
+        DeclTestAssert   a w mn m   -> DeclTestAssert   (f a) w mn (mapAnnot f m)
 
 
 ---------------------------------------------------------------------------------------------------

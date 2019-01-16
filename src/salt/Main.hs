@@ -154,12 +154,12 @@ mainTests filePath
 runTest :: Check.Context RL -> Module RL -> DeclTest RL -> IO ()
 runTest ctx mm tt
  = case tt of
-        DeclTestKind     _ n t   -> runTestKind     ctx mm n t
-        DeclTestType     _ n m   -> runTestType     ctx mm n m
-        DeclTestEvalType _ n t   -> runTestEvalType mm n t
-        DeclTestEvalTerm _ n m   -> runTestEvalTerm mm n m
-        DeclTestExec     _ n m   -> runTestExec     mm n m
-        DeclTestAssert   _ n m   -> runTestAssert   mm n m
+        DeclTestKind     _ _ n t -> runTestKind     ctx mm n t
+        DeclTestType     _ _ n m -> runTestType     ctx mm n m
+        DeclTestEvalType _ _ n t -> runTestEvalType mm n t
+        DeclTestEvalTerm _ _ n m -> runTestEvalTerm mm n m
+        DeclTestExec     _ _ n m -> runTestExec     mm n m
+        DeclTestAssert   _ _ n m -> runTestAssert   mm n m
 
 
 -- TestKind ---------------------------------------------------------------------------------------
@@ -304,7 +304,7 @@ runTestAssert mm mnTest mTest
 
         vResult <- Eval.evalTerm state rlNone (TermEnv []) mTest
         case vResult of
-         [VTrue]        -> putStrLn "ok"
-         [VFalse]       -> putStrLn "failed"
-         _              -> putStrLn "invalid"
+         [VTrue]  -> putStrLn "ok"
+         [VFalse] -> putStrLn "failed"
+         _        -> putStrLn "invalid"
 
