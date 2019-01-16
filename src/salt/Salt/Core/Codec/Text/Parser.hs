@@ -18,20 +18,30 @@ import qualified Text.Parsec.Error              as P
 -- | Parse a salt source file from tokens.
 parseModule :: [At Token] -> Either [ParseError] (Module RL)
 parseModule toks
- = let  toks'   = [ Token.At l k
+ = let
+        -- Get the range of the last token in the file, if there is one.
+        rangeLast
+         = case reverse toks of
+                []                -> Range (Location 0 0) (Location 0 0)
+                Token.At r _ : _  -> r
+
+        -- Drop comments before we try to parse the tokens.
+        toks'   = [ Token.At l k
                   | Token.At l k <- toks
                   , k & \case Token.KComment _ -> False
                               _                -> True]
-                ++ [Token.At (Range (Location 0 0) (Location 0 0)) Token.KEnd]
-                -- TODO: fix location of end token
+                ++ [Token.At rangeLast Token.KEnd]
 
+        -- Parse the module in the prefix,
+        -- also returning any remaining unparsable tokens.
         eResult
          = P.runParser
                 (do result <- pModule
                     rest <- P.getInput
                     return (result, rest))
                 (Location 0 0)
-                "sourceName" toks'
+                "sourceName"
+                toks'
 
    in   case eResult of
          Left err
@@ -40,10 +50,9 @@ parseModule toks
          Right (xModule, [])
           -> Right xModule
 
-         -- TODO: real location
          Right (_, _xRest)
           -> Left [ParseError
-                        (Range (Location 0 0) (Location 0 0), Nothing)
+                        (rangeLast, Nothing)
                         Nothing
                         [P.Message "parse error at end of input"]]
 
@@ -116,7 +125,7 @@ findPrevTokenRange _err _ = Nothing
 
 
 -------------------------------------------------------------------------------- Pretty Printing --
--- | Pretty print a parse error for display in the console.
+-- | Pretty print a parse error suitable for display in the console.
 ppParseError :: FilePath -> ParseError -> Doc
 ppParseError path (ParseError (range, _mTok) _mLocPrev msgs)
  = vcat ( string path

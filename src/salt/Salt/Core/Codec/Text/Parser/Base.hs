@@ -18,20 +18,13 @@ type RL         = IW.Range IW.Location
 
 
 ------------------------------------------------------------------------------ Location Handling --
--- | Get the current position in the input stream,
---   using the Inchworm location type that was originally
---   attached to the tokens.
-getLocation :: Parser IW.Location
-getLocation
- = do   sp      <- P.getPosition
-        let loc =  IW.Location (P.sourceLine sp) (P.sourceColumn sp)
-        return  $ loc
-
+-- | Get the current positino in the source stream.
 locHere :: Parser IW.Location
 locHere
  = do   sp      <- P.getPosition
         let loc =  IW.Location (P.sourceLine sp) (P.sourceColumn sp)
         return  $ loc
+
 
 -- | Get the position of the end of the last token.
 locPrev :: Parser IW.Location
@@ -66,22 +59,14 @@ pTokOf f
         P.putState lEnd
         return x
 
-pRanged     :: Parser a -> Parser (Range Location, a)
+
+-- | Parse a thing, and also return its range in the source file.
+pRanged :: Parser a -> Parser (Range Location, a)
 pRanged p
  = do   lHere   <- locHere
         x       <- p
         lPrev   <- locPrev
         return  $ (Range lHere lPrev, x)
-
-
--- | Parse a thing, also returning the range from the source file.
---   TODO: kill this old version.
-pWithRange  :: Parser a -> Parser (Range Location, a)
-pWithRange p
- = do   l1      <- getLocation
-        x       <- p
-        l2      <- getLocation
-        return  (Range l1 l2, x)
 
 
 --------------------------------------------------------------------------------------- Wrapping --
