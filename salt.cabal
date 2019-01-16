@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f697731480338ee8dd5154de253c3165f915a98f1c85ad88870ac5b65c0499c2
+-- hash: e6291e5d84e2ec5223757a291f62c19c302697289b268dee80b5ac2e213b73aa
 
 name:           salt
 version:        0.0.0.0
@@ -60,9 +60,18 @@ executable salt
       Salt.Core.Exp.Name
       Salt.Core.Exp.Snv
       Salt.Core.Exp.Term
+      Salt.Core.Exp.Term.Base
+      Salt.Core.Exp.Term.Compounds
+      Salt.Core.Exp.Term.Patterns
+      Salt.Core.Exp.Term.Predicates
       Salt.Core.Exp.TermEnv
       Salt.Core.Exp.Type
+      Salt.Core.Exp.Type.Base
+      Salt.Core.Exp.Type.Compounds
+      Salt.Core.Exp.Type.Patterns
+      Salt.Core.Exp.Type.Predicates
       Salt.Core.Exp.TypeEnv
+      Salt.Core.Exp.Universe
       Salt.Core.Exp.Ups
       Salt.Core.Prim
       Salt.Core.Prim.Ctor
@@ -103,6 +112,7 @@ executable salt
       Salt.LSP.Protocol.Request
       Salt.LSP.Protocol.Response
       Salt.LSP.State
+      Salt.LSP.Task.CodeLens
       Salt.LSP.Task.Diagnostics
       Salt.LSP.Task.Diagnostics.Base
       Salt.LSP.Task.Diagnostics.Checker
@@ -120,8 +130,10 @@ executable salt
     , containers
     , inchworm
     , json
+    , network-uri
     , parsec
     , pretty-show
+    , temporary
     , text
     , unix
   default-language: Haskell2010

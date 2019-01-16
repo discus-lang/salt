@@ -278,12 +278,12 @@ test/30-error/11-check-term/Test.salt:159:35
 
 test/30-error/11-check-term/Test.salt:164:11
   Cannot take field x from non-record
-   of type '#Bool' .
+   of type '#Bool'.
 
   164:11 In test
 
 test/30-error/11-check-term/Test.salt:167:11
-  Record does not have field 'y' .
+  Record does not have field 'y'.
    Actual type  ∏[x: #Nat]
 
   167:11 In test

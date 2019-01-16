@@ -179,11 +179,11 @@ ppre c (ErrorLetWrongArity _a _wh tsActual bsExpected)
 
 -- Record problems ----------------------------------------
 ppre c (ErrorRecordProjectIsNot _a _wh t n)
- = vcat [ text "Cannot take field" %% pprLbl n  %% text "from non-record"
-        , text " of type" %% squotes (ppr c t) %% text "."]
+ = vcat [ text "Cannot take field" %% pprLbl n %% text "from non-record"
+        , text " of type" %% squotes (ppr c t) % text "."]
 
 ppre c (ErrorRecordProjectNoField _a _wh t n)
- = vcat [ text "Record does not have field"     %% squotes (pprLbl n) %% text "."
+ = vcat [ text "Record does not have field" %% squotes (pprLbl n) % text "."
         , text " Actual type " %% ppr c t ]
 
 ppre _ (ErrorRecordTypeDuplicateFields _a _wh ns)

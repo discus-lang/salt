@@ -17,7 +17,6 @@ SALT_PACKAGES := \
         -package pretty-show \
         -package unix
 
-
 WAR_PACKAGES := \
         -hide-all-packages \
         -package base \
@@ -27,7 +26,7 @@ WAR_PACKAGES := \
         -package containers \
         -package stm \
         -package process \
-        -package buildbox 
+        -package buildbox
 
 WAVES_PACKAGES := \
 	$(SALT_PACKAGES) \
