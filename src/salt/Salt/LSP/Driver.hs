@@ -9,22 +9,38 @@ import qualified Salt.LSP.Task.Diagnostics      as Task
 
 import Data.IORef
 import qualified System.IO                      as System
+import qualified System.Exit                    as System
 import qualified System.Posix.Process           as Process
-import qualified Text.Show.Pretty               as T
+import qualified Control.Exception              as Control
 import qualified Data.Map                       as Map
+import qualified Text.Show.Pretty               as T
 
 ---------------------------------------------------------------------------------------------------
 -- | Become a language server plugin.
---   We listen to requests on stdin and send responses to stdout.
---   We take an optional path for server side logging.
 --
---   TODO: catch any errors thrown by this code and send a diagnostic
---   reporting an error. The language server itself should never go down.
+--   * We listen to requests on stdin and send responses to stdout.
+--   * We take an optional path for server side logging.
+--   * If the server process crashes
 --
 runLSP :: Maybe FilePath -> IO ()
 runLSP mFileLog
- = do  state  <- lspBegin mFileLog
-       lspLoop state
+ = Control.catch
+        -- Enter the main server loop.
+        (do state  <- lspBegin mFileLog
+            lspLoop state)
+
+        -- If we get any exception from the server process then try to
+        -- write it to the log file, if we have one.
+        (\(e :: Control.SomeException)
+         -> do  (case mFileLog of
+                  Nothing  -> return ()
+                  Just file
+                   -> System.appendFile file
+                        $  "\n" ++ T.ppShow e)
+
+                System.die $ unlines
+                 [ "salt lsp server crashed"
+                 , T.ppShow e ])
 
 
 ---------------------------------------------------------------------------------------------------
