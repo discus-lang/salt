@@ -85,5 +85,5 @@ usage
  , " salt -lex    FILE.salt           Lex a core file and print its tokens."
  , ""
  , " salt -lsp                        Become a language server"
- , " salt -lsp-log FILE.log             .. and log debug messages to a file"
+ , " salt -lsp-debug FILE.log          .. and log debug messages to a file"
  ]
