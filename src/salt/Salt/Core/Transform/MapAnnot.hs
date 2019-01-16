@@ -17,6 +17,7 @@ stripAnnot xx
  = mapAnnot (const ()) xx
 
 
+---------------------------------------------------------------------------------------------------
 instance MapAnnot Module where
  mapAnnot f mm
         = Module
