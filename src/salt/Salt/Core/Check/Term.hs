@@ -130,7 +130,6 @@ checkTermWith a wh ctx Synth (MAbs mps m)
                 _       -> throw $ ErrorWrongArityUp UTerm a wh ts [TData]
 
         -- The body must be pure.
-        -- TODO: ensure types like (pure + pure) are reduced to pure,
         eBody_red  <- simplType aBody ctx' (TSum es)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsImpure UType aBody wh eBody_red
@@ -150,7 +149,6 @@ checkTermWith a wh ctx Synth (MAbs mps m)
         (m', ts, es) <- checkTerm a wh ctx' Synth m
 
         -- The body must be pure.
-        -- TODO: ensure types like (pure + pure) are reduced to pure,
         let aBody  = fromMaybe a $ takeAnnotOfTerm m
         eBody_red  <- simplType a ctx' (TSum es)
         when (not $ isTPure eBody_red)
