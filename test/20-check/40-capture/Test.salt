@@ -1,3 +1,4 @@
+-- Check that name capture is avoided correctly.
 
 -- Check that variable capture is avoided.
 -- When determining the type of 'x' in the result we need to account

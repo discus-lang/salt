@@ -1,4 +1,3 @@
-
 -- Effectful term using let-expressions.
 -- TODO: flatten result effect.
 term hello : []! (#Console + #Console)

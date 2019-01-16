@@ -1,3 +1,4 @@
+-- Check operation of each of the kinding rules.
 
 -- Check type synonym lookup in kind checker.
 type nat: #Data = #Nat

@@ -1,3 +1,4 @@
+-- Check type reduction.
 
 -- Check type operator reduction.
 type some: #Data ⇒ #Data = λ[a: #Data] ⇒ [x: a, y: a]

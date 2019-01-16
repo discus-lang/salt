@@ -1,3 +1,4 @@
+-- Check type equivalence decider.
 
 -- Type equivalence checking under alpha conversion.
 --   The types themselves are closed, so when deciding equivalence the

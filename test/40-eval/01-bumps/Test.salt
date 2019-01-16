@@ -1,4 +1,4 @@
-
+-- Check evaluator handles variable bumps correctly.
 
 -- Use bumps to refer to vars in the environment.
 term add [x: #Nat] [x: #Nat]: #Nat

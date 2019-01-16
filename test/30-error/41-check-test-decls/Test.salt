@@ -1,4 +1,3 @@
-
 -- Trigger all the errors that can be produced by
 -- 'goTestDecls' when checking the top-level module structure.
 

@@ -1,4 +1,3 @@
-
 -- Power-on tests ensure the most basic things work.
 -- At least the lights go on..
 test eval #true
