@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 606cdeb1646e047aea2c0a5dafea6f6c2a9ca043b1168a614786a5a366c83628
+-- hash: d96c2721c8de914848c7ad030fea5155b051698ba9af7dfc90dc036076372c34
 
 name:           salt
 version:        0.0.0.0
@@ -98,6 +98,7 @@ executable salt
       Salt.Core.Prim.Values
       Salt.Core.Transform.MapAnnot
       Salt.Core.Transform.Snv
+      Salt.Core.Transform.StripAnnot
       Salt.Core.Transform.Ups
       Salt.Data.List
       Salt.Data.Location

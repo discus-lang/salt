@@ -5,6 +5,7 @@ import Salt.Core.Transform.Snv
 import Salt.Core.Exp
 import qualified Data.Set       as Set
 
+
 ---------------------------------------------------------------------------------------------------
 -- | Reduce a type to weak head normal form.
 --   If the head is also an effect type then normalize it.
