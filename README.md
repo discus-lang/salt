@@ -30,7 +30,7 @@ The new version of the language includes:
 
  * A [System-F](https://en.wikipedia.org/wiki/System_F) substrate with distinct namespaces for types and terms.
  * Mixed named and [de Bruijn index](https://en.wikipedia.org/wiki/De_Bruijn_index) representation for variables.
- * Functions work on vectors of argument and return values, as described in [Types are Calling Conventions](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/08/tacc-hs09.pdf. Arity information is expressed directly in the types of functions, instead of needing to be maintained as separate meta-data.
+ * Functions work on vectors of argument and return values, as described in [Types are Calling Conventions](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/08/tacc-hs09.pdf). Arity information is expressed directly in the types of functions, instead of needing to be maintained as separate meta-data.
  * A coeffect system using `box` and `run` casts, as described in [Capabilities and Coeffects](http://blog.discus-lang.org/2013/12/capabilities-and-coeffects.html). This system is also part of the Discus language.
  * Structural record and variant types.
 
