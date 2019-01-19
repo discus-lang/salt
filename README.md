@@ -4,7 +4,7 @@ Salt is what you get when you leave C out in the sun for too long.
 
 Salt is the compilation target that functional programmers always wanted.
 
-Salt is a [System-F](https://en.wikipedia.org/wiki/System_F) variant intended as an intermediate language between higher level languages and an abstract assembly [LLVM](https://llvm.org/). Hand written code can also be used to implement runtime systems and the like. The [Disco Discus Compiler](https://github.com/discus-lang/ddc) uses an earlier version of Salt (v1), and its runtime system is written in it. This current repo contains a newer version of the Salt language (v2) that is being split out into its own project. Salt v1 has a working LLVM backend, but the one for v2 in this repo is still a work in progress.
+Salt is a [System-F](https://en.wikipedia.org/wiki/System_F) variant intended as an intermediate language between higher level languages and an abstract assembly language ([LLVM](https://llvm.org/)). Hand written code can also be used to implement runtime systems. The [Disco Discus Compiler](https://github.com/discus-lang/ddc) uses an earlier version of Salt (v1), and its runtime system is written in it. This current repo contains a newer version of Salt (v2) which is being split out into its own project. Salt v1 has a working LLVM backend, but the one for v2 in this repo is still a work in progress.
 
 ## Example
 
