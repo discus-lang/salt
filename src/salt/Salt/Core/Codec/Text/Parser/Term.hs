@@ -13,7 +13,7 @@ import qualified Text.Parsec            as P
 
 
 ------------------------------------------------------------------------------------------- Term --
--- | Parse a term, and wrap the result in an source location annotation.
+-- | Parse a term, and wrap the result in a source location annotation.
 pTerm  :: Parser (Term RL)
 pTerm
  = pMAnn
