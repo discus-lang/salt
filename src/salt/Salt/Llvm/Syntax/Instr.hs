@@ -20,12 +20,13 @@ import Data.Sequence            (Seq)
 import Data.Set                 (Set)
 import qualified Data.Set       as Set
 import qualified Data.Foldable  as Seq
+import Data.Text                (Text)
 
 
 -- Block ----------------------------------------------------------------------
 -- | Block labels.
 data Label
-        = Label String
+        = Label Text
         deriving (Eq, Ord, Show)
 
 
@@ -44,18 +45,9 @@ data Block
 -------------------------------------------------------------------------------
 -- | Instructions
 data Instr
+        -- Meta -------------------------------------------
         -- | Wrap an instruction in meta-data.
         = IMeta         Instr [MDecl]
-
-        -- | Set meta instruction v1 = value.
-        --   This isn't accepted by the real LLVM compiler.
-        --   ISet instructions are erased by the 'Clean' transform.
-        | ISet          Var     Exp
-
-        -- | No operation.
-        --   This isn't accepted by the real LLVM compiler.
-        --   INop instructions are erased by the 'Clean' transform.
-        | INop
 
         -- Phi nodes --------------------------------------
         | IPhi          Var    [(Exp, Label)]
@@ -133,8 +125,6 @@ defVarOfInstr :: Instr -> Maybe Var
 defVarOfInstr instr
  = case instr of
         IMeta i _       -> defVarOfInstr i
-        ISet var _      -> Just var
-        INop            -> Nothing
         IPhi var _      -> Just var
         IReturn{}       -> Nothing
         IBranch{}       -> Nothing

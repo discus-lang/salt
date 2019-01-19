@@ -92,7 +92,7 @@ data Static
         | StaticUninitType Type
 
         -- | Defines a static 'LMString'.
-        | StaticStr     String   Type
+        | StaticStr     Text Type
 
         -- | A static array.
         | StaticArray   [Static] Type

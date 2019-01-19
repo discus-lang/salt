@@ -1,6 +1,7 @@
 
 module Main where
 import Salt.Llvm.Syntax                         ()
+import Salt.Llvm.Write                          ()
 import Salt.Main.Mode.Test
 import Salt.Main.Mode.Check
 import Salt.Main.Mode.Parse

@@ -45,7 +45,7 @@ data FunctionDecl
         , declAlign             :: Align
 
         -- | The garbage collector strategy used by the function
-        , declGarbageCollector  :: Maybe String }
+        , declGarbageCollector  :: Maybe Text }
         deriving (Eq, Show)
 
 
