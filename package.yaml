@@ -29,6 +29,7 @@ executables:
       - -fno-warn-simplifiable-class-constraints
 
     default-extensions:
+      - Strict
       - LambdaCase
       - RankNTypes
       - BangPatterns

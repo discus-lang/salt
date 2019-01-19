@@ -21,7 +21,7 @@ test eval reverse
  = reverse @#Nat [list #Nat| 10, 12, 13, 14]
 ```
 
-The `@[a: #Data]` indicates a type parameter, and `@a` in the body is a type argument. Name starting with `#` are primitive constructors and operators. Test cases can be defined inline with the code and evaluated within the IDE via the Language Server. The syntax permits standard unicode symbols for punctuation, but there are plain ASCII alternatives.
+The `@[a: #Data]` indicates a type parameter, and `@a` in the body is a type argument. Names starting with `#` are primitive constructors and operators. Test cases can be defined inline with the code and evaluated within the IDE via the Language Server. The syntax permits standard unicode symbols for punctuation, but there are plain ASCII alternatives.
 
 
 ## Features

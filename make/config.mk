@@ -40,6 +40,7 @@ WAVES_PACKAGES := \
 #   we don't enable advanced GHC type system extensions globally
 #
 GHC_LANGUAGE := \
+	-XStrict \
 	-XLambdaCase \
 	-XRankNTypes \
         -XViewPatterns \
