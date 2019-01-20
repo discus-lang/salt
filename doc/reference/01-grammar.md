@@ -265,6 +265,9 @@ BlocBody
 
   |   bexp   BlocExp                    (BlocExp)
   |   bblc   Bloc
+
+BlocExp
+ ::=  ... shared Exp forms ...
 ```
 
 Blocs contain a body with tree-like control flow, rather than graph-like control flow as with procs.
