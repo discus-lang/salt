@@ -210,7 +210,9 @@ The record term `[ L1 = M1, ... Ln = Mn ]` must have at least one field to disam
 
 ## Procs (Procedures)
 
-Procedures provide the imperative statement/expression model of computation including mutable storage cells. Control flow constructs are restricted to the statement fragment.
+Procedures provide the imperative statement/expression model of computation using mutable storage cells. Control flow constructs appear in the statement fragment only. This restriction ensures that expressions can always be flattened into straight line code during compilation.
+
+Procedure storage cells are abstract in the sense that references (addresses) to them cannot be taken. This restriction ensures that cell updates can always be converted into Static Single Assignment (SSA) form, to yield the Code Blocks described in the next section. In generated machine code the cell values may be stored in registers, which do not have associated memory addresses.
 
 
 ```
@@ -223,7 +225,7 @@ ProcStmt
   |   scll   Var Type ProcExp       ('cell' Var ':' Type '←' ProcExp)
   |   sass   Var ProcExp            (Var '←' ProcExp)
 
-  |   sifs n ProcExpⁿ Procⁿ Proc    ('if' '{' (ProcExp '→' Proc);* ('otherwise' '→' Proc)? '}')
+  |   sifs n ProcExpⁿ Procⁿ         ('if' '{' (ProcExp '→' Proc);* '}')
   |   swhl   ProcExp  Proc          ('while'  ProcExp 'do' Proc)
   |   sret   ProcExp                ('return' ProcExp)
 
@@ -242,8 +244,6 @@ ProcExp
   |   xcfn   Var ProcArgs           (Var ProcArgs)
   |   xcpm   Prm ProcArgs           (Prm ProcArgs)
 
-  |   xldd   Var                    ('!' Var)
-
   |   xrec n Lblⁿ ProcExpⁿ          (∏ '[' (Lbl '=' ProcExp),* ']')
   |   xprj   ProcExp Lbl            (ProcExp '.' Lbl)
 
@@ -252,6 +252,8 @@ ProcExp
   |   xlst n Type ProcExpⁿ               ('[list' Type '|' ProcExp,* ']')
   |   xset n Type ProcExpⁿ               ('[set'  Type '|' ProcExp,* ']')
   |   xmap n Type Type ProcExpⁿ ProcExpⁿ ('[map'  Type Type '|' ProcMapBind,* ']')
+
+  |   xldd   Var                    ('!' Var)
 
 ProcArgs
  ::=  xgst n Typeⁿ                  ('@' '[' Type,*    ']')
