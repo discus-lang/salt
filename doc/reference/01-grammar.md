@@ -221,34 +221,34 @@ The grammar for procs and blocs shares forms for expressions. The common forms a
 
 ```
 Proc
- ::=  proc n ProcStmtⁿ ProcResult       ('proc' '{' ProcStmt;+ ProcBody '}')
+ ::=  proc n ProcStmtⁿ ProcResult           ('proc' '{' ProcStmt;+ ProcBody '}')
 
 ProcBody
  ::=  Proc | ProcResult
 
 ProcStmt
- ::=  plet n Varⁿ ProcExp               ('let' '[' Var;* ']' '=' ProcExp)
-  |   pcll   Var  Type ProcExp          ('cell' Var ':' Type '←' ProcExp)
-  |   pass   Var  ProcExp               (Var '←' ProcExp)
-  |   pwhl   ProcExp  Proc              ('while'  ProcExp 'do' ProcBody)
-  |   pwhn n ProcExpⁿ Procⁿ             ('when' '{' (ProcExp     '→' ProcBody)
-                                                    ('otherwise' '→' ProcBody)? '}')
+ ::=  plet n Varⁿ ProcExp                   ('let' '[' Var;* ']' '=' ProcExp)
+  |   pcll   Var  Type ProcExp              ('cell' Var ':' Type '←' ProcExp)
+  |   pass   Var  ProcExp                   (Var '←' ProcExp)
+  |   pwhl   ProcExp  ProcBody              ('while'  ProcExp 'do' ProcBody)
+  |   pwhn n ProcExpⁿ ProcBodyⁿ             ('when' '{' (ProcExp     '→' ProcBody)
+                                                        ('otherwise' '→' ProcBody)? '}')
   |   ProcResult
 
 ProcResult
- ::=  pifs n ProcExpⁿ Procⁿ             ('if'   '{' (ProcExp     '→' ProcBody);*
-                                                     'otherwise' '→' ProcBody '}')
+ ::=  pifs n ProcExpⁿ ProcBodyⁿ ProcBody    ('if'   '{' (ProcExp    '→' ProcBody);*
+                                                        'otherwise' '→' ProcBody '}')
 
-  |   pcse n ProcExp Lblⁿ Typeⁿ Procⁿ   ('case' ProcExp 'of'
-                                         '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}')
+  |   pcse n ProcExp Lblⁿ Typeⁿ ProcBodyⁿ   ('case' ProcExp 'of'
+                                             '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}')
 
-  |   pret   ProcExp                    ('return' ProcExp)
-  |   pexp   ProcExp                    (ProcExp)
-  |   pblc   Bloc                       (Bloc)
+  |   pret   ProcExp                        ('return' ProcExp)
+  |   pexp   ProcExp                        (ProcExp)
+  |   pblc   Bloc                           (Bloc)
 
 ProcExp
  ::=  ... shared Exp forms ...
-  |   xldd   Var                        ('!' Var)
+  |   xldd   Var                            ('!' Var)
 ```
 Procs consist of a sequence of statements, and an expression to compute the return values.
 
@@ -261,22 +261,22 @@ Proc expressions include the shared forms as well as `xldd` / `(! v)`  which loa
 
 ```
 Bloc
- ::=  bloc n BlocBindⁿ BlocResult       ('bloc' '{' BlocBind;+ BlocBody '}')
+ ::=  bloc n BlocBindⁿ BlocResult           ('bloc' '{' BlocBind;+ BlocBody '}')
 
 BlocBody
  ::=  Bloc | BlocResult
 
 BlocBind
- ::=  blet n Varⁿ BlocExp               ('let' '[' Var;* ']' '=' BlocExp)
+ ::=  blet n Varⁿ BlocExp                   ('let' '[' Var;* ']' '=' BlocExp)
 
 BlocResult
- ::=  bifs n BlocExpⁿ Blocⁿ Bloc        ('if' '{' (BlocExp    '→' BlocBody);*
-                                                  'otherwise' '→' BlocBody '}')
+ ::=  bifs n BlocExpⁿ BlocBodyⁿ BlocBody    ('if' '{' (BlocExp    '→' BlocBody);*
+                                                      'otherwise' '→' BlocBody '}')
 
-  |   bcse n BlocExp Lblⁿ Typeⁿ Blocⁿ   ('case' BlocExp 'of'
-                                          '{' (Lbl '[' (Var ':' Type),* ']' → BlocBody);+ '}')
+  |   bcse n BlocExp Lblⁿ Typeⁿ BlocBodyⁿ   ('case' BlocExp 'of'
+                                             '{' (Lbl '[' (Var ':' Type),* ']' → BlocBody);+ '}')
 
-  |   bexp   BlocExp                    (BlocExp)
+  |   bexp   BlocExp                        (BlocExp)
 
 BlocExp
  ::=  ... shared Exp forms ...
