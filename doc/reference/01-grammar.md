@@ -212,7 +212,7 @@ The record term `[ L1 = M1, ... Ln = Mn ]` must have at least one field to disam
 
 Procs (Procedures) provide the statement/expression model of computation, with graph-like control flow and mutable storage cells. Control constructs appear as statements only, which ensures the expressions can always be flattened into straight line code during compilation. Storage cells are abstract, in the sense that references (addresses) to them cannot be taken. This means that updates can always be converted into Static Single Assignment (SSA) form.
 
-Blocs (Code Blocks) provide the SSA model of computation, with tree-like control flow. SSA is particularly easy to convert into target assembly languages such as LLVM. Control flow is restricted to be tree-like so that join points do not appear within the bloc body. Join points are expressed using calls to continuation functions, which is cleaner than using the phi-nodes of other SSA representations. Blocs do not support mutable storage cells, so all updates must be translated into SSA form.
+Blocs (Code Blocks) provide the pure SSA model of computation, with tree-like control flow. SSA is particularly easy to convert into target assembly languages such as LLVM. Control flow is restricted to be tree-like so that join points do not appear within the bloc body. Join points are expressed using calls to continuation functions, which is cleaner than using the phi-nodes of other SSA representations. Blocs do not support mutable storage cells, so all updates must be translated into SSA form.
 
 The grammar for procs and blocs shares forms for expressions. The common forms are listed below as `_Exp`, `_Args` and `_MapBinds`. These forms are intended to be instantiated to `ProcExp`, `ProcArgs` and `ProcMapBinds` for procs, and `BlocExp`, `BlocArgs` and `BlocMapBinds` for blocs.
 
@@ -226,13 +226,13 @@ Proc
 ProcStmt
  ::=  slet n Varⁿ ProcExp               ('let' '[' Var;* ']' '=' ProcExp)
 
-  |   scll   Var  Type ProcExp          ('cell' Var ':' Type '←' ProcExp)
-  |   sass   Var  ProcExp               (Var '←' ProcExp)
-
   |   sifs n ProcExpⁿ Procⁿ             ('if' '{' (ProcExp '→' Proc);* ('otherwise' '→' Proc)? '}')
 
   |   scse n ProcExp Lblⁿ Typeⁿ Procⁿ   ('case' ProcExp 'of'
                                               '{' (Lbl '[' (Var ':' Type),* ']' → Proc);+ '}')
+
+  |   scll   Var  Type ProcExp          ('cell' Var ':' Type '←' ProcExp)
+  |   sass   Var  ProcExp               (Var '←' ProcExp)
 
   |   swhl   ProcExp  Proc              ('while'  ProcExp 'do' Proc)
   |   sret   ProcExp                    ('return' ProcExp)
@@ -264,7 +264,7 @@ BlocBody
                                               '{' (Lbl '[' (Var ':' Type),* ']' → Bloc);+ '}')
 
   |   bexp   BlocExp                    (BlocExp)
-  |   bblc   Bloc
+  |   bblc   Bloc                       (Bloc)
 
 BlocExp
  ::=  ... shared Exp forms ...
@@ -277,7 +277,7 @@ Bloc bodies consist of `let`-binding, `if`-branching, `case`-branching, expressi
 Bloc expressions are the shared forms only, without the ability to load from storage cells.
 
 
-## Shared forms
+### Shared forms
 
 These shared expression, argument and map binding forms are common to both the proc and bloc grammars. In our concrete implementation we reuse the `Term` data type to represent proc and bloc expressions. The differences between the various forms are enforced by checking the syntax trees after they have been parsed. We provide separate grammars here for ease of presentation.
 
