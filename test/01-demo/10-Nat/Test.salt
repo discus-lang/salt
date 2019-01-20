@@ -51,4 +51,3 @@ term tak [x: #Nat, y: #Nat, z: #Nat]: #Nat
         ; otherwise → z }
 
 test eval tak'12'8'4 = tak [12, 8, 4]
-

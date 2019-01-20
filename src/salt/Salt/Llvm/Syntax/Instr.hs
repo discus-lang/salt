@@ -23,26 +23,24 @@ import qualified Data.Foldable  as Seq
 import Data.Text                (Text)
 
 
--- Block ----------------------------------------------------------------------
 -- | Block labels.
 data Label
         = Label Text
         deriving (Eq, Ord, Show)
 
 
--- | A block of LLVM code with an optional annotation.
+-- | A block of LLVM code with an entry label.
 data Block
         = Block
         { -- | The code label for this block
           blockLabel    :: Label
 
-          -- | A list of LlvmStatement's representing the code for this block.
-          --   This list must end with a control flow statement.
+          -- | A list of Instructions for ths block.
+          --   This list must end with a control flow terminator instruction.
         , blockInstrs   :: Seq Instr
         }
 
 
--------------------------------------------------------------------------------
 -- | Instructions
 data Instr
         -- Meta -------------------------------------------

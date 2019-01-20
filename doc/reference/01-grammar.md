@@ -161,6 +161,8 @@ Term
   |   mset n Type Termⁿ             ('[set'  Type '|' Term,* ']')
   |   mmap n Type Type Termⁿ Termⁿ  ('[map'  Type Type '|' TermMapBind,* ']')
 
+  |   mprc Proc                     (Proc)
+  |   mblc Bloc                     (Bloc)
 
 TermParams
  ::=  mpst n Varⁿ Typeⁿ             ('@' '[' (Var ':' Type),* ']')
@@ -204,4 +206,74 @@ The term/type application sytnax `Term @Type` desugars to `Term @[Type]`, becaus
 Let expression syntax that binds a single value is equivalent to binding a vector containing a single value. Do-expression syntax is desugared to let-expression syntax, where the do-block must end with a statement rather than a binding.
 
 The record term `[ L1 = M1, ... Ln = Mn ]` must have at least one field to disambiguate the syntax from the empty term vector `[]`.
+
+
+## Procs (Procedures)
+
+Procedures provide the imperative statement/expression model of computation including mutable storage cells. Control flow constructs are restricted to the statement fragment.
+
+
+```
+Proc
+ ::=  proc n ProcStmtⁿ ProcExp      ('proc' '{' ProcStmt;+ ProcExp '}')
+
+ProcStmt
+ ::=  slet n Varⁿ ProcExp           ('[' Var;* ']' '=' ProcExp)
+
+  |   scll   Var Type ProcExp       ('cell' Var ':' Type '←' ProcExp)
+  |   sass   Var ProcExp            (Var '←' ProcExp)
+
+  |   sifs n ProcExpⁿ Procⁿ Proc    ('if' '{' (ProcExp '→' Proc);* ('otherwise' '→' Proc)? '}')
+  |   swhl   ProcExp  Proc          ('while'  ProcExp 'do' Proc)
+  |   sret   ProcExp                ('return' ProcExp)
+
+  |   sblc   Bloc                   (Bloc)
+
+ProcExp
+ ::=  xvar   Var                    (Var)
+  |   xcon   Con                    (Con)
+  |   xsym   Sym                    ('Sym)
+  |   xprm   Prm                    (#Prm)
+
+  |   xxxx n ProcExpⁿ               ('[' ProcExp,* ']')
+
+  |   xthe n Typeⁿ ProcExp          ('the' Types 'of' ProcExp)
+
+  |   xcfn   Var ProcArgs           (Var ProcArgs)
+  |   xcpm   Prm ProcArgs           (Prm ProcArgs)
+
+  |   xldd   Var                    ('!' Var)
+
+  |   xrec n Lblⁿ ProcExpⁿ          (∏ '[' (Lbl '=' ProcExp),* ']')
+  |   xprj   ProcExp Lbl            (ProcExp '.' Lbl)
+
+  |   xvnt   Lbl  ProcExp Type      ('the' Type  'of' '`' Lbl ProcExp)
+
+  |   xlst n Type ProcExpⁿ               ('[list' Type '|' ProcExp,* ']')
+  |   xset n Type ProcExpⁿ               ('[set'  Type '|' ProcExp,* ']')
+  |   xmap n Type Type ProcExpⁿ ProcExpⁿ ('[map'  Type Type '|' ProcMapBind,* ']')
+
+ProcArgs
+ ::=  xgst n Typeⁿ                  ('@' '[' Type,*    ']')
+  |   xgsm n ProcExpⁿ               (    '[' ProcExp,* ']')
+  |   xgsv   ProcExp                (ProcExp)
+
+ProcMapBind
+ ::=  xpbd   ProcExp ProcExp        (ProcExp ':=' ProcExp)
+```
+
+
+## Blocs (Code Blocks)
+
+Code Blocks provide the Static Single Assignment (SSA) model of computation, and are particularly easy to convert into target assembly languages such as LLVM. Control flow constructs are restricted so that join points do not appear within a sequence of statements. Control transfer must be expressed using calls to continuation functions. Update of storage cells must be converted into single assignment form.
+
+```
+Bloc
+ ::=  bloc n BlocStmtⁿ ProcExp      ('bloc' '{' BlocStmt;* ProcExp '}')
+
+BlocStmt
+ ::=  blet n Varⁿ ProcExp           ('[' Var;* ']' '=' ProcExp)
+  |   bifs n ProcExpⁿ Blocⁿ Bloc    ('if' '{' (ProcExp '→' Bloc);* 'otherwise' '→' Bloc '}')
+```
+
 
