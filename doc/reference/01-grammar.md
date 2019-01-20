@@ -208,74 +208,106 @@ Let expression syntax that binds a single value is equivalent to binding a vecto
 The record term `[ L1 = M1, ... Ln = Mn ]` must have at least one field to disambiguate the syntax from the empty term vector `[]`.
 
 
-## Procs (Procedures)
+## Procs and Blocs
 
-Procedures provide the imperative statement/expression model of computation using mutable storage cells. Control flow constructs appear in the statement fragment only. This restriction ensures that expressions can always be flattened into straight line code during compilation.
+Procs (Procedures) provide the statement/expression model of computation, with graph-like control flow and mutable storage cells. Control constructs appear as statements only, which ensures the expressions can always be flattened into straight line code during compilation. Storage cells are abstract, in the sense that references (addresses) to them cannot be taken. This means that updates can always be converted into Static Single Assignment (SSA) form.
 
-Procedure storage cells are abstract in the sense that references (addresses) to them cannot be taken. This restriction ensures that cell updates can always be converted into Static Single Assignment (SSA) form, to yield the Code Blocks described in the next section. In generated machine code the cell values may be stored in registers, which do not have associated memory addresses.
+Blocs (Code Blocks) provide the SSA model of computation, with tree-like control flow. SSA is particularly easy to convert into target assembly languages such as LLVM. Control flow is restricted to be tree-like so that join points do not appear within the bloc body. Join points are expressed using calls to continuation functions, which is cleaner than using the phi-nodes of other SSA representations. Blocs do not support mutable storage cells, so all updates must be translated into SSA form.
 
+The grammar for procs and blocs shares forms for expressions. The common forms are listed below as `_Exp`, `_Args` and `_MapBinds`. These forms are intended to be instantiated to `ProcExp`, `ProcArgs` and `ProcMapBinds` for procs, and `BlocExp`, `BlocArgs` and `BlocMapBinds` for blocs.
+
+
+### Procs
 
 ```
 Proc
- ::=  proc n ProcStmtⁿ ProcExp      ('proc' '{' ProcStmt;+ ProcExp '}')
+ ::=  proc n ProcStmtⁿ ProcExp          ('proc' '{' ProcStmt;+ ProcExp '}')
 
 ProcStmt
- ::=  slet n Varⁿ ProcExp           ('[' Var;* ']' '=' ProcExp)
+ ::=  slet n Varⁿ ProcExp               ('let' '[' Var;* ']' '=' ProcExp)
 
-  |   scll   Var Type ProcExp       ('cell' Var ':' Type '←' ProcExp)
-  |   sass   Var ProcExp            (Var '←' ProcExp)
+  |   scll   Var  Type ProcExp          ('cell' Var ':' Type '←' ProcExp)
+  |   sass   Var  ProcExp               (Var '←' ProcExp)
 
-  |   sifs n ProcExpⁿ Procⁿ         ('if' '{' (ProcExp '→' Proc);* '}')
-  |   swhl   ProcExp  Proc          ('while'  ProcExp 'do' Proc)
-  |   sret   ProcExp                ('return' ProcExp)
+  |   sifs n ProcExpⁿ Procⁿ             ('if' '{' (ProcExp '→' Proc);* ('otherwise' '→' Proc)? '}')
 
-  |   sblc   Bloc                   (Bloc)
+  |   scse n ProcExp Lblⁿ Typeⁿ Procⁿ   ('case' ProcExp 'of'
+                                              '{' (Lbl '[' (Var ':' Type),* ']' → Proc);+ '}')
+
+  |   swhl   ProcExp  Proc              ('while'  ProcExp 'do' Proc)
+  |   sret   ProcExp                    ('return' ProcExp)
+  |   sblc   Bloc                       (Bloc)
 
 ProcExp
+ ::=  ... shared Exp forms ...
+  |   xldd   Var                        ('!' Var)
+```
+Procs consist of a sequence of statements, and an expression to compute the return values.
+
+Proc statements consist of `let`-binding, `cell`-definition and assignment, `if`-branching, `case`-branching, `while`- loops, `return`-statements, and embedded `bloc` constructs. Note that the `if` form does not require an `otherwise` branch. When no alternative matches control flow continues to the next statement after the `if`, which creates a join point in the control flow graph. The `while` loops execute their bodies while their scrutinees evaluates to `#true`. The `return` statement causes control to transfer to the end of the enclosing `proc` construct. Blocs are a fragment of Procs, so they can be embedded directly.
+
+Proc expressions include the shared forms as well as `xldd` / `(! v)`  which loads the current value from the storage cell named `v`.
+
+
+### Blocs
+
+```
+Bloc
+ ::=  bloc   BlocBody                   ('bloc' '{' BlocBody '}')
+
+BlocBody
+ ::=  blet n Varⁿ BlocExp BlocBody      ('let' '[' Var;* ']' '=' BlocExp ';' BlocBody)
+
+  |   bifs n BlocExpⁿ Blocⁿ Bloc        ('if' '{' (BlocExp '→' Bloc);* 'otherwise' '→' Bloc '}')
+
+  |   bcse n BlocExp Lblⁿ Typeⁿ Blocⁿ   ('case' BlocExp 'of'
+                                              '{' (Lbl '[' (Var ':' Type),* ']' → Bloc);+ '}')
+
+  |   bexp   BlocExp                    (BlocExp)
+  |   bblc   Bloc
+```
+
+Blocs contain a body with tree-like control flow, rather than graph-like control flow as with procs.
+
+Bloc bodies consist of `let`-binding, `if`-branching, `case`-branching, expression evaluation and nested `bloc` constructs. Note that the `if` form requires an `otherwise` branch to ensure the control flow is tree-like.
+
+Bloc expressions are the shared forms only, without the ability to load from storage cells.
+
+
+## Shared forms
+
+These shared expression, argument and map binding forms are common to both the proc and bloc grammars. In our concrete implementation we reuse the `Term` data type to represent proc and bloc expressions. The differences between the various forms are enforced by checking the syntax trees after they have been parsed. We provide separate grammars here for ease of presentation.
+
+
+```
+_Exp
  ::=  xvar   Var                    (Var)
   |   xcon   Con                    (Con)
   |   xsym   Sym                    ('Sym)
   |   xprm   Prm                    (#Prm)
 
-  |   xxxx n ProcExpⁿ               ('[' ProcExp,* ']')
+  |   xxxx n _Expⁿ                  ('[' _Exp,* ']')
 
-  |   xthe n Typeⁿ ProcExp          ('the' Types 'of' ProcExp)
+  |   xthe n Typeⁿ _Exp             ('the' Types 'of' _Exp)
 
-  |   xcfn   Var ProcArgs           (Var ProcArgs)
-  |   xcpm   Prm ProcArgs           (Prm ProcArgs)
+  |   xcfn   Var _Args              (Var _Args)
+  |   xcpm   Prm _Args              (Prm _Args)
 
-  |   xrec n Lblⁿ ProcExpⁿ          (∏ '[' (Lbl '=' ProcExp),* ']')
-  |   xprj   ProcExp Lbl            (ProcExp '.' Lbl)
+  |   xrec n Lblⁿ _Expⁿ             (∏ '[' (Lbl '=' _Exp),* ']')
+  |   xprj   _Exp Lbl               (_Exp '.' Lbl)
 
-  |   xvnt   Lbl  ProcExp Type      ('the' Type  'of' '`' Lbl ProcExp)
+  |   xvnt   Lbl  _Exp Type         ('the' Type  'of' '`' Lbl _Exp)
 
-  |   xlst n Type ProcExpⁿ               ('[list' Type '|' ProcExp,* ']')
-  |   xset n Type ProcExpⁿ               ('[set'  Type '|' ProcExp,* ']')
-  |   xmap n Type Type ProcExpⁿ ProcExpⁿ ('[map'  Type Type '|' ProcMapBind,* ']')
+  |   xlst n Type _Expⁿ             ('[list' Type '|' _Exp,* ']')
+  |   xset n Type _Expⁿ             ('[set'  Type '|' _Exp,* ']')
+  |   xmap n Type Type _Expⁿ _Expⁿ  ('[map'  Type Type '|' _MapBind,* ']')
 
-  |   xldd   Var                    ('!' Var)
-
-ProcArgs
+_Args
  ::=  xgst n Typeⁿ                  ('@' '[' Type,*    ']')
-  |   xgsm n ProcExpⁿ               (    '[' ProcExp,* ']')
-  |   xgsv   ProcExp                (ProcExp)
+  |   xgsm n _Expⁿ                  (    '[' _Exp,* ']')
+  |   xgsv   _Exp                   (_Exp)
 
-ProcMapBind
- ::=  xpbd   ProcExp ProcExp        (ProcExp ':=' ProcExp)
+_MapBind
+ ::=  xpbd   _Exp _Exp              (_Exp ':=' _Exp)
 ```
-
-
-## Blocs (Code Blocks)
-
-Code Blocks provide the Static Single Assignment (SSA) model of computation, and are particularly easy to convert into target assembly languages such as LLVM. Control flow constructs are restricted so that join points do not appear within a sequence of statements. Control transfer must be expressed using calls to continuation functions. Update of storage cells must be converted into single assignment form.
-
-```
-Bloc
- ::=  bloc n BlocStmtⁿ ProcExp      ('bloc' '{' BlocStmt;* ProcExp '}')
-
-BlocStmt
- ::=  blet n Varⁿ ProcExp           ('[' Var;* ']' '=' ProcExp)
-  |   bifs n ProcExpⁿ Blocⁿ Bloc    ('if' '{' (ProcExp '→' Bloc);* 'otherwise' '→' Bloc '}')
-```
-
 
