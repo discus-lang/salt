@@ -135,6 +135,9 @@ scanner
                 "test"          -> Just KTest
                 "watch"         -> Just KWatch
 
+                "proc"          -> Just KProc
+                "bloc"          -> Just KBloc
+
                 "forall"        -> Just KAsciiForall
                 "exists"        -> Just KAsciiExists
                 "pure"          -> Just KPure

@@ -65,6 +65,9 @@ data TermKey
 
         | MKIf                                  -- ^ If-then-else expression.
 
+        | MKProc                                -- ^ Embed a proc.
+        | MKBloc                                -- ^ Embed a bloc.
+
         | MKList                                -- ^ List constructor.
         | MKSet                                 -- ^ Set constructor.
         | MKMap                                 -- ^ Map constructor.

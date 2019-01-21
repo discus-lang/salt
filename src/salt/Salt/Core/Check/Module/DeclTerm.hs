@@ -11,13 +11,13 @@ import qualified Data.Set       as Set
 ---------------------------------------------------------------------------------------------------
 -- | Check type signatures of term declarations.
 checkDeclTermSig :: CheckDecl a
-checkDeclTermSig _a ctx (DTerm (DeclTerm a n mpss tsResult mBody))
+checkDeclTermSig _a ctx (DTerm (DeclTerm a mode n mpss tsResult mBody))
  = do   let wh  = [WhereTermDecl a n]
         mpss'     <- checkTermParamss a wh ctx mpss
 
         let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
         tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
-        return  $ DTerm $ DeclTerm a n mpss' tsResult' mBody
+        return  $ DTerm $ DeclTerm a mode n mpss' tsResult' mBody
 
 checkDeclTermSig _ _ decl
  = return decl
@@ -25,8 +25,9 @@ checkDeclTermSig _ _ decl
 
 -- | Check bodies of term declarations
 checkDeclTerm :: CheckDecl a
-checkDeclTerm _a ctx (DTerm (DeclTerm a nDecl mpss tsResult mBody))
- = do   let wh   = [WhereTermDecl a nDecl]
+checkDeclTerm _a ctx0 (DTerm (DeclTerm a mode nDecl mpss tsResult mBody))
+ = do   let wh  = [WhereTermDecl a nDecl]
+        let ctx = ctx0 { contextTermMode = mode }
 
         -- Check the parameter type annotations.
         mpss'     <- checkTermParamss a wh ctx mpss
@@ -48,7 +49,7 @@ checkDeclTerm _a ctx (DTerm (DeclTerm a nDecl mpss tsResult mBody))
              | Just _ <- takeMPTerms mps -> throw $ ErrorAbsImpure UTerm a wh eBody_red
             _ -> throw $ ErrorTermDeclImpure a wh nDecl eBody_red
 
-        return  $ DTerm $ DeclTerm a nDecl mpss' tsResult' mBody'
+        return  $ DTerm $ DeclTerm a mode nDecl mpss' tsResult' mBody'
 
 checkDeclTerm _ _ decl
  = return decl
@@ -60,7 +61,7 @@ checkDeclTermRebound decls
  = let  nsDeclTerm = catMaybes [nameOfDecl d | d@DTerm{} <- decls]
         nsDup      = Set.fromList $ List.duplicates nsDeclTerm
 
-        check (DTerm (DeclTerm aDecl nDecl _ _ _))
+        check (DTerm (DeclTerm aDecl _mode nDecl _ _ _))
          | Set.member nDecl nsDup
          = Just $ ErrorTermDeclRebound aDecl [WhereTermDecl aDecl nDecl] nDecl
         check _ = Nothing
@@ -86,7 +87,7 @@ checkDeclTermRebound decls
 makeTypeOfDeclTerm :: Decl a -> Either (Error a) [(Name, Type a)]
 makeTypeOfDeclTerm decl
  = case decl of
-        DTerm (DeclTerm a n pss0 tsResult _mBody)
+        DTerm (DeclTerm a _mode n pss0 tsResult _mBody)
          -> case loop tsResult pss0 of
                 [t] -> Right [(n, t)]
                 _   -> Left $ ErrorAbsTermNoValueForForall a

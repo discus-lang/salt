@@ -24,6 +24,9 @@ pattern MLet mps mBind mBod     = MKey   MKLet  [MGTerms [mBod, MAbs mps mBind]]
 
 pattern MIf  mCond mThen mElse  = MKey   MKIf   [MGTerms mCond,  MGTerms mThen, MGTerm mElse]
 
+pattern MProc mBody             = MKey   MKProc [MGTerm mBody]
+pattern MBloc mBody             = MKey   MKBloc [MGTerm mBody]
+
 pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]
 pattern MProject l  m           = MKey  (MKProject l) [MGTerm  m]
 

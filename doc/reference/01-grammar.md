@@ -221,18 +221,30 @@ The grammar for procs and blocs shares forms for expressions. The common forms a
 
 ```
 Proc
- ::=  proc n ProcStmtⁿ ProcResult           ('proc' '{' ProcStmt;+ ProcBody '}')
+ ::=  proc n ProcStmtⁿ ProcResult           ('proc' ProcBody)
 
 ProcBody
- ::=  Proc | ProcResult
+ ::=  plet n Varⁿ ProcExp       ProcBody    ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
+                                             ';' ProcBody)
 
-ProcStmt
- ::=  plet n Varⁿ ProcExp                   ('let' '[' Var;* ']' '=' ProcExp)
-  |   pcll   Var  Type ProcExp              ('cell' Var ':' Type '←' ProcExp)
-  |   pass   Var  ProcExp                   (Var '←' ProcExp)
-  |   pwhl   ProcExp  ProcBody              ('while'  ProcExp 'do' ProcBody)
-  |   pwhn n ProcExpⁿ ProcBodyⁿ             ('when' '{' (ProcExp     '→' ProcBody)
-                                                        ('otherwise' '→' ProcBody)? '}')
+  |   pcll   Var  Type ProcExp  ProcBody    ('cell' Var ':' Type '←' ProcExp
+                                             ';' ProcBody)
+
+  |   pass   Var  ProcExp       ProcBody    (Var '←' ProcExp
+                                             ';' ProcBody)
+
+  |   pwhl   ProcExp  ProcBody  ProcBody    ('while'  ProcExp 'do' ProcBody
+                                             ';' ProcBody)
+
+  |   pwhn n ProcExpⁿ ProcBodyⁿ ProcBody    ('when' '{' (ProcExp     '→' ProcBody)
+                                                        ('otherwise' '→' ProcBody)?
+                                                    '}'
+                                             ';' ProcBody)
+
+  |   pmch n ProcExp Lblⁿ Typeⁿ ProcBody    ('match' ProcExp 'of'
+             ProcBody                        '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
+                                             ';' ProcBody)
+
   |   ProcResult
 
 ProcResult
@@ -261,16 +273,12 @@ Proc expressions include the shared forms as well as `xldd` / `(! v)`  which loa
 
 ```
 Bloc
- ::=  bloc n BlocBindⁿ BlocResult           ('bloc' '{' BlocBind;+ BlocBody '}')
+ ::=  bloc n BlocBindⁿ BlocResult           ('bloc' BlocBody)
 
 BlocBody
- ::=  Bloc | BlocResult
+ ::=  blet n Varⁿ BlocExp BlocBody BlocBody ('let' '[' (Var (':' Type)?),* ']' '=' BlocExp ';' BlocBody)
 
-BlocBind
- ::=  blet n Varⁿ BlocExp                   ('let' '[' Var;* ']' '=' BlocExp)
-
-BlocResult
- ::=  bifs n BlocExpⁿ BlocBodyⁿ BlocBody    ('if' '{' (BlocExp    '→' BlocBody);*
+  |   bifs n BlocExpⁿ BlocBodyⁿ BlocBody    ('if' '{' (BlocExp    '→' BlocBody);*
                                                       'otherwise' '→' BlocBody '}')
 
   |   bcse n BlocExp Lblⁿ Typeⁿ BlocBodyⁿ   ('case' BlocExp 'of'

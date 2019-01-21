@@ -31,4 +31,5 @@ contextEmpty
         , contextCheckTerm      = checkTermWith
         , contextModuleType     = Map.empty
         , contextModuleTerm     = Map.empty
-        , contextLocal          = [] }
+        , contextLocal          = []
+        , contextTermMode       = TermModePlain }

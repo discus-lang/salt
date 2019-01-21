@@ -51,6 +51,7 @@ data Token
         -- Keywords
         | KType         | KTerm         | KTest         | KWatch
         | KPure         | KSync
+        | KProc         | KBloc
         | KThe          | KOf
         | KBox          | KRun
         | KLet          | KDo           | KWhere
@@ -117,6 +118,8 @@ showTokenAsSource kk
         KWatch          -> "watch"
         KPure           -> "pure"
         KSync           -> "sync"
+        KBloc           -> "bloc"
+        KProc           -> "proc"
         KThe            -> "the"
         KOf             -> "of"
         KBox            -> "box"

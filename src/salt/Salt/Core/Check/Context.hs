@@ -1,10 +1,12 @@
 
 module Salt.Core.Check.Context where
 import Salt.Core.Transform.Ups
+import Salt.Core.Check.Error
 import Salt.Core.Check.Where
 import Salt.Core.Exp
 import qualified Salt.Core.Prim.Ctor    as Prim
 
+import Control.Exception
 import Data.Map.Strict                  (Map)
 import qualified Data.Map               as Map
 
@@ -42,6 +44,10 @@ data Context a
           -- | Holds types of local name bindings.
           --   This is used for bindings within a single top-level declaration.
         , contextLocal          :: [Elem a]
+
+          -- | The mode of this term,
+          --   whether it is a plain functional term, a proc or a bloc.
+        , contextTermMode       :: TermMode
         }
 
 
@@ -236,4 +242,39 @@ contextResolveTermBound ctx (BoundWith n d0)
 contextResolveDataCtor :: Name -> Context a -> IO (Maybe (Type ()))
 contextResolveDataCtor nCtor _ctx
  = return $ Map.lookup nCtor Prim.primDataCtors
+
+
+---------------------------------------------------------------------------------------------------
+-- | Check if the context has the given term mode.
+guardOnlyTermMode
+        :: Annot a => a -> [Where a] -> Context a
+        -> Text -> TermMode -> IO b -> IO b
+
+guardOnlyTermMode a wh ctx txBlame mode thing
+ = if contextTermMode ctx == mode
+         then thing
+         else throw $ ErrorTermNotMode a wh (contextTermMode ctx) txBlame
+
+
+-- | Check if the context has any of the given term modes.
+guardAnyTermMode
+        :: Annot a => a -> [Where a] -> Context a
+        -> Text -> [TermMode] -> IO b -> IO b
+
+guardAnyTermMode a wh ctx txBlame modes thing
+ = if elem (contextTermMode ctx) modes
+         then thing
+         else throw $ ErrorTermNotMode a wh (contextTermMode ctx) txBlame
+
+
+-- | Set the term mode in the given context to the expression
+--   form of what it is right now.
+asExp   :: Context a -> Context a
+asExp ctx
+ = case contextTermMode ctx of
+        TermModePlain    -> ctx
+        TermModeProcBody -> ctx { contextTermMode = TermModeProcExp }
+        TermModeProcExp  -> ctx
+        TermModeBlocBody -> ctx { contextTermMode = TermModeBlocExp }
+        TermModeBlocExp  -> ctx
 

@@ -34,7 +34,8 @@ checkModule a mm
          , contextCheckTerm     = checkTermWith
          , contextModuleType    = Map.empty
          , contextModuleTerm    = Map.empty
-         , contextLocal         = [] }
+         , contextLocal         = []
+         , contextTermMode      = TermModePlain }
 
         -- Check kind signatures on types, before adding them to the context.
         goTypeSigs  ctx decls

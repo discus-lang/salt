@@ -12,7 +12,6 @@ import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
-import Text.Show.Pretty
 
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
@@ -39,14 +38,16 @@ checkTermWith a wh ctx Synth (MThe ts m)
 
 -- (t-box) ------------------------------------------------
 checkTermWith a wh ctx Synth (MBox m)
- = do   (m', ts, es) <- checkTerm a wh ctx Synth m
+ = guardOnlyTermMode a wh ctx "Explicit box" TermModePlain
+ $ do   (m', ts, es) <- checkTerm a wh ctx Synth m
         tEff <- simplType a ctx (TSum es)
         return  (MBox m', [TSusp ts tEff], [])
 
 
 -- (t-run) ------------------------------------------------
 checkTermWith a wh ctx Synth (MRun mBody)
- = do
+ = guardOnlyTermMode a wh ctx "Explicit run" TermModePlain
+ $ do
         -- Check the body.
         (mBody', tsSusp', es)
          <- checkTerm a wh ctx Synth mBody
@@ -114,7 +115,8 @@ checkTermWith a wh ctx Synth m@(MVar u)
 -- (t-abt) ------------------------------------------------
 checkTermWith a wh ctx Synth (MAbs mps m)
  | Just bks <- takeMPTypes mps
- = do
+ = guardOnlyTermMode a wh ctx "Type abstraction" TermModePlain
+ $ do
         -- Check the parameters and bind into the context.
         mps' <- checkTermParams a wh ctx mps
         let ctx' = contextBindTermParams mps ctx
@@ -140,7 +142,8 @@ checkTermWith a wh ctx Synth (MAbs mps m)
 -- (t-abm) ------------------------------------------------
 checkTermWith a wh ctx Synth (MAbs mps m)
  | Just bts <- takeMPTerms mps
- = do
+ = guardOnlyTermMode a wh ctx "Term abstraction" TermModePlain
+ $ do
         -- Check the parameters and bind them into the context.
         mps' <- checkTermParams a wh ctx mps
         let ctx' = contextBindTermParams mps ctx
@@ -192,7 +195,7 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
                     in  throw $ ErrorUnknownPrim UTerm aFun wh nPrm
 
                 Nothing
-                 -> checkTerm1 a wh ctx Synth mFun0
+                 -> checkTerm1 a wh (asExp ctx) Synth mFun0
 
         -- Check that we have at least some arguments to apply.
         when (null mgss0)
@@ -210,13 +213,13 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
             -- (t-apm) -----
             checkApp [tFun] es (mps : mgss) mgssAcc
              | Just (a', msArg) <- takeAnnMGTerms a mps
-             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh ctx aFun tFun msArg
+             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh (asExp ctx) aFun tFun msArg
                   checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerms msArg') : mgssAcc)
 
             -- (t-apv) -----
             checkApp [tFun] es (mps : mgss) mgssAcc
              | Just (a', mArg) <- takeAnnMGTerm a mps
-             = do (mArg',  tsResult, es') <- checkTermAppTerm  a wh ctx aFun tFun mArg
+             = do (mArg',  tsResult, es') <- checkTermAppTerm  a wh (asExp ctx) aFun tFun mArg
                   checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerm mArg') : mgssAcc)
 
             checkApp tsResult es [] mgssAcc
@@ -241,7 +244,7 @@ checkTermWith a wh ctx Synth (MLet mps mBind mBody)
 
         -- Check the bound expression.
         (mBind', tsBind, esBind)
-         <- checkTerm a wh ctx Synth mBind
+         <- checkTerm a wh (asExp ctx) Synth mBind
 
         -- Check we have the same number of binders
         -- as values produced by the binding.
@@ -300,7 +303,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
                   <- fmap unzip3 $ forM nmtgs $ \(n, m, tgs)
                   -> do let ts  = takeTGTypes tgs
                         let wh' = WhereRecordField a n (Just ts) : wh
-                        checkTerm a wh' ctx (Check ts) m
+                        checkTerm a wh' (asExp ctx) (Check ts) m
 
                 return  ( MRecord ns ms'
                         , [TRecord ns $ map TGTypes tss']
@@ -320,7 +323,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
 
                  -- Check each of the field terms.
                  (ms', tss', ess')
-                  <- fmap unzip3 $ mapM (checkTerm a wh ctx Synth) ms
+                  <- fmap unzip3 $ mapM (checkTerm a wh (asExp ctx) Synth) ms
 
                  return  ( MRecord ns ms'
                          , [TRecord ns (map TGTypes tss')]
@@ -333,7 +336,7 @@ checkTermWith a wh ctx Synth (MProject nLabel mRecord)
         -- Check the body expression.
         let aRecord = fromMaybe a $ takeAnnotOfTerm mRecord
         (mRecord', tRecord, esRecord)
-         <- checkTerm1 aRecord wh ctx Synth mRecord
+         <- checkTerm1 aRecord wh (asExp ctx) Synth mRecord
 
         -- The body needs to have record type with the field that we were expecting.
         (ns, tgss, tRecord')
@@ -374,7 +377,7 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
 
         -- Check the body against the type from the annotation.
         (mValues', _tsValues, esValues)
-         <- checkTerm a wh ctx (Check tsExpected') mValues
+         <- checkTerm a wh (asExp ctx) (Check tsExpected') mValues
 
         return  ( MVariant nLabel mValues' tVariant
                 , [tVariant], esValues)
@@ -382,10 +385,13 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
 
 -- (t-cse) ------------------------------------------------
 checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
- = do
+ = guardAnyTermMode a wh ctx
+        "case-expression"
+        [TermModePlain, TermModeProcBody, TermModeBlocBody]
+ $ do
         -- Check the scrutinee.
         (mScrut', tScrut, esScrut)
-         <- checkTerm1 a wh ctx Synth mScrut
+         <- checkTerm1 a wh (asExp ctx) Synth mScrut
 
         -- The scrutinee needs to be a variant.
         let aScrut = fromMaybe a $ takeAnnotOfTerm mScrut
@@ -420,12 +426,15 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
 
 -- (t-ifs) ------------------------------------------------
 checkTermWith a wh ctx Synth mIf@(MIf msCond msThen mElse)
- = do
+ = guardAnyTermMode a wh ctx
+        "if-expression"
+        [TermModePlain, TermModeProcBody, TermModeBlocBody]
+ $ do
         when (not $ length msCond == length msThen)
          $ throw $ ErrorTermMalformed a wh mIf
 
         (msCond', esCond)
-         <- checkTermsAreAll a wh ctx TBool msCond
+         <- checkTermsAreAll a wh (asExp ctx) TBool msCond
 
         (mElse',  tsElse, esElse)
          <- checkTerm a wh ctx Synth mElse
@@ -439,17 +448,47 @@ checkTermWith a wh ctx Synth mIf@(MIf msCond msThen mElse)
                 , esCond ++ concat essThen ++ esElse)
 
 
+-- (t-proc) -----------------------------------------------
+checkTermWith a wh ctx Synth (MProc mBody)
+ = guardAnyTermMode a wh ctx
+        "Proc definition"
+        [TermModePlain, TermModeProcBody]
+ $ do
+        let ctx' = ctx { contextTermMode = TermModeProcBody }
+
+        (mBody', tsBody, esBody)
+         <- checkTerm a wh ctx' Synth mBody
+
+        return  ( MProc mBody'
+                , tsBody, esBody)
+
+
+-- (t-bloc) -----------------------------------------------
+checkTermWith a wh ctx Synth (MBloc mBody)
+ = guardAnyTermMode a wh ctx
+        "Bloc definition"
+        [TermModePlain, TermModeProcBody, TermModeBlocBody]
+ $ do
+        let ctx' = ctx { contextTermMode = TermModeBlocBody }
+
+        (mBody', tsBody, esBody)
+         <- checkTerm a wh ctx' Synth mBody
+
+        return  ( MBloc mBody'
+                , tsBody, esBody)
+
+
 -- (t-lst) ------------------------------------------------
 checkTermWith a wh ctx Synth (MList t ms)
  = do   t' <- checkTypeHas UKind a wh ctx TData t
-        (ms', es) <- checkTermsAreAll a wh ctx t' ms
+        (ms', es) <- checkTermsAreAll a wh (asExp ctx) t' ms
         return  (MList t' ms', [TList t], es)
 
 
 -- (t-set) ------------------------------------------------
 checkTermWith a wh ctx Synth (MSet t ms)
  = do   t' <- checkTypeHas UKind a wh ctx TData t
-        (ms', es) <- checkTermsAreAll a wh ctx t' ms
+        (ms', es) <- checkTermsAreAll a wh (asExp ctx) t' ms
         return (MSet t ms', [TSet t], es)
 
 
@@ -462,8 +501,8 @@ checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
         tk' <- checkTypeHas UKind a wh ctx TData tk
         tv' <- checkTypeHas UKind a wh ctx TData tv
 
-        (msk', esKeys) <- checkTermsAreAll a wh ctx tk' msk
-        (msv', esVals) <- checkTermsAreAll a wh ctx tv' msv
+        (msk', esKeys) <- checkTermsAreAll a wh (asExp ctx) tk' msk
+        (msv', esVals) <- checkTermsAreAll a wh (asExp ctx) tv' msv
         return  ( MMap tk tv msk' msv'
                 , [TMap tk tv]
                 , esKeys ++ esVals)
@@ -477,7 +516,6 @@ checkTermWith a wh ctx (Check tsExpected) m
  = checkTermIs a wh ctx tsExpected m
 
 -- We don't know how to check this sort of term.
-checkTermWith _a _wh _ctx _mode mm
- = error $ ppShow mm
--- = throw $ ErrorTermMalformed a wh mm
+checkTermWith a wh _ctx _mode mm
+ = throw $ ErrorTermMalformed a wh mm
 

@@ -23,14 +23,25 @@ instance Pretty c Bound where
 instance Pretty c Universe where
  ppr _ vv
   = case vv of
-        UKind   -> text "kind"
-        UType   -> text "type"
-        UTerm   -> text "term"
+        UKind           -> text "kind"
+        UType           -> text "type"
+        UTerm           -> text "term"
 
 
 instance Pretty c Ups where
  ppr _ (Ups bs)
   =     braced (map pprBump bs)
+
+
+instance Pretty c TermMode where
+ ppr _ mm
+  = case mm of
+        TermModePlain           -> text "term"
+        TermModeProcBody        -> text "proc body"
+        TermModeProcExp         -> text "proc exp"
+        TermModeBlocBody        -> text "bloc body"
+        TermModeBlocExp         -> text "bloc exp"
+
 
 braced ds
  = braces    $ hcat $ punctuate (text "; ") ds

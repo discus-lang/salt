@@ -12,11 +12,18 @@ import Data.Maybe
 import qualified Text.Parsec                    as P
 
 
+------------------------------------------------------------------------------------------- Decl --
 -- | Parser for a top-level declaration.
 pDecl :: Parser (Decl RL)
-pDecl
- = P.choice
- [ do   -- 'type' Var TypeParams* ':' Type '=' Type
+pDecl   = P.choice
+        [ pDeclType, pDeclTerm, pDeclTest]
+
+
+------------------------------------------------------------------------------------------- Type --
+-- | Parser for a type declaration.
+pDeclType :: Parser (Decl RL)
+pDeclType
+ = do   -- 'type' Var TypeParams* ':' Type '=' Type
         pTok KType
         (rName, nName)
          <- pRanged (pVar       <?> "a name for the type")
@@ -34,8 +41,17 @@ pDecl
                 , declBody        = tBody }
 
 
- , do   -- 'term' Var TermParams* (':' Type)? '=' Term
-        pTok KTerm
+------------------------------------------------------------------------------------------- Term --
+-- | Parser for a term declaration.
+pDeclTerm :: Parser (Decl RL)
+pDeclTerm
+ = do   -- 'term' Var TermParams* (':' Type)? '=' Term
+        termMode
+         <- P.choice
+                [ do pTok KTerm; return TermModePlain
+                , do pTok KProc; return TermModeProcBody
+                , do pTok KBloc; return TermModeBlocBody ]
+
         (rName, nName)
          <- pRanged (pVar       <?> "a name for the term")
         mps     <- P.many (pTermParams
@@ -46,13 +62,18 @@ pDecl
         mBody   <- pTerm        <?> "the body"
         return  $  DTerm $ DeclTerm
                 { declAnnot       = rName
+                , declTermMode    = termMode
                 , declName        = nName
                 , declParams      = mps
                 , declTypesResult = tsRes
                 , declBody        = mBody }
 
 
- , do   -- 'watch'? 'test' 'kind'   (Name '=')? Type
+------------------------------------------------------------------------------------------- Test --
+-- | Parser for a test declaration.
+pDeclTest :: Parser (Decl RL)
+pDeclTest
+ = do   -- 'watch'? 'test' 'kind'   (Name '=')? Type
         -- 'watch'? 'test' 'type'   (Name '=')? Term
         -- 'watch'? 'test' 'eval'   (Name '=')? Term
         -- 'watch'? 'test' 'exec'   (Name '=')? Term
@@ -182,4 +203,3 @@ pDecl
                         , declTestName  = mName
                         , declTestBody  = mBody }
          ]
- ]

@@ -185,6 +185,8 @@ instance Pretty c TermKey where
         MKVarCase       -> text "##var'case"
         MKVarAlt n      -> text "##var'alt" %% pprLbl n
         MKIf            -> text "##if"
+        MKProc          -> text "##proc"
+        MKBloc          -> text "##bloc"
         MKList          -> text "##list"
         MKSet           -> text "##set"
         MKMap           -> text "##map"

@@ -218,6 +218,15 @@ pTermBody
         pTok KCKet               <?> "a completed term, or '}' to end the alternatives"
         return  $ MVarCase mScrut msAlts
 
+ , do   -- 'proc' ProcBody
+        pTok KProc
+        mProcBody <- pTerm
+        return $ MProc mProcBody
+
+ , do   -- 'bloc' BlocBody
+        pTok KBloc
+        mBlocBody <- pTerm
+        return $ MBloc mBlocBody
 
  , do   -- Con TypeArg* TermArg*
         (rCon, nCon)  <- pRanged pCon

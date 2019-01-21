@@ -39,11 +39,22 @@ data DeclType a
 data DeclTerm a
         = DeclTerm
         { declAnnot             :: a
+        , declTermMode          :: TermMode
         , declName              :: Name
         , declParams            :: [TermParams a]
         , declTypesResult       :: [Type a]
         , declBody              :: Term a }
         deriving Show
+
+
+-- | Mode of the term declaration.
+data TermMode
+        = TermModePlain         -- ^ A plain term declaration.
+        | TermModeProcBody      -- ^ A proc body.
+        | TermModeProcExp       -- ^ A proc expression.
+        | TermModeBlocBody      -- ^ A bloc body.
+        | TermModeBlocExp       -- ^ A bloc expression.
+        deriving (Show, Eq)
 
 
 -- | Test declaration.
@@ -153,9 +164,10 @@ lookupDeclTypeOfModule n mm
 -- | Lookup a `DeclTerm` from a module.
 --
 --   If the declaration is multiply bound then `Nothing`.
+--
 lookupDeclTermOfModule :: Name -> Module a -> Maybe (DeclTerm a)
 lookupDeclTermOfModule n mm
- = case [d | DTerm d@(DeclTerm _ n' _ _ _) <- moduleDecls mm
+ = case [d | DTerm d@(DeclTerm _ _ n' _ _ _) <- moduleDecls mm
            , n == n']
    of   d : _   -> Just d
         _       -> Nothing
@@ -243,7 +255,7 @@ resolveTermBound mm (TermEnv bs0) (BoundWith n d0)
          = let  upsT' = flip upsBumpNames upsT $ typeNamesOfModule mm
                 upsM' = flip upsBumpNames upsM $ termNamesOfModule mm
            in case lookupDeclTermOfModule n mm of
-                Just (DeclTerm _a _n mpss tResult mBody)
+                Just (DeclTerm _a _mode _n mpss tResult mBody)
                   -> return $ Just $ TermDefDecl
                             $ upsApplyTerm upsT' upsM'
                             $ foldr MAbs (MThe tResult mBody) mpss

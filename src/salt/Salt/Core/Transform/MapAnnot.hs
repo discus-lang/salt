@@ -43,9 +43,9 @@ instance MapAnnot DeclType where
 
 
 instance MapAnnot DeclTerm where
- mapAnnot f (DeclTerm a n mps tsResult mBody)
+ mapAnnot f (DeclTerm a mode n mps tsResult mBody)
   = DeclTerm
-        (f a) n
+        (f a) mode n
         (map (mapAnnot f) mps)
         (map (mapAnnot f) tsResult)
         (mapAnnot f mBody)

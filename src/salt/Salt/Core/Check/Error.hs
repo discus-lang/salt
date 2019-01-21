@@ -20,6 +20,12 @@ data Error a
         , errorWhere            :: [Where a]
         , errorTerm             :: Term a }
 
+        | ErrorTermNotMode
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorTermMode         :: TermMode
+        , errorWhat             :: Text }
+
         -- Module level problems ----------------
         | ErrorTypeDeclRebound
         { errorAnnot            :: a
