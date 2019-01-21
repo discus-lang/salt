@@ -221,52 +221,49 @@ The grammar for procs and blocs shares forms for expressions. The common forms a
 
 ```
 Proc
- ::=  proc n ProcBody                       ('proc' ProcBody)
+ ::=  proc n ProcBody                         ('proc' ProcBody)
 
 ProcBody
- ::=  plet n Varⁿ ProcExp ProcBody          ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp ';' ProcBody)
+ ::=  plet n Varⁿ ProcExp ProcBody            ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp ';' ProcBody)
 
-  |   pifs n ProcExp ProcBody               ('if'  '{' (ProcExp    '→' ProcBody);*
-                                                       'otherwise' '→' ProcBody '}'
+  |   pifs n ProcExp ProcBody                 ('if'  '{' (ProcExp    '→' ProcBody);*
+                                                         'otherwise' '→' ProcBody '}')
 
-  |   pcse n ProcExp Lblⁿ Typeⁿ ProcBody    ('case' ProcExp 'of'
-                                             '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
+  |   pcse n ProcExp Lblⁿ Typeⁿ ProcBody      ('case' ProcExp 'of'
+                                               '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}')
 
-  |   pddo n ProcStmtⁿ ProcBody             ('do' ProcStmts 'done')
+  |   pddo n ProcChain ProcBody               ('do' ProcChain 'done')
 
-  |   pexp   ProcExp                        (ProcExp)
+  |   pexp   ProcExp                          (ProcExp)
+  |   pprc   Proc                             (Proc)
+  |   pblc   Bloc                             (Bloc)
 
+ProcChain
+ ::=  slet n Varⁿ    ProcExp    ProcChain     ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
+                                               ';' ProcChain)
 
-ProcStmts
- ::=  slet n Varⁿ    ProcExp   ProcStmts    ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
-                                             ';' ProcStmts)
+  |   swhn n ProcExp ProcBodyⁿ  ProcChain     ('when' '{' (ProcExp     '→' ProcBody) '}'
+                                               ';' ProcChain)
 
-  |   swhn n ProcExp ProcBody  ProcStmts    ('when' '{' (ProcExp     '→' ProcBody)
-                                                        ('otherwise' '→' ProcBody)? '}'
-                                             ';' ProcStmts)
+  |   swhc n ProcExp Lblⁿ Typeⁿ ProcBody      ('when' 'case' ProcExp 'of'
+             ProcChain                         '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
+                                               ';' ProcChain)
 
-  |   swhc n ProcExp Lblⁿ Typeⁿ ProcBody    ('when' 'case' ProcExp 'of'
-             ProcStmts                       '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
-                                             ';' ProcStmts)
+  |   sllp   ProcBody           ProcChain     ('loop' ProcBody ';' ProcChain)
+  |   sbrk                                    ('break')
+  |   scnt                                    ('continue')
 
-  |   swhl   ProcExp  ProcBody ProcStmts    ('while' '(' ProcExp ')' ProcBody ';' ProcStmts)
-  |   sbrk                                  ('break')
-  |   scnt                                  ('continue')
+  |   scll   Var Type ProcExp   ProcChain     ('cell' Var ':' Type '←' ProcExp ';' ProcChain)
+  |   sass   Var ProcExp        ProcChain     (Var '←' ProcExp ';' ProcChain)
 
-  |   scll   Var Type ProcExp  ProcStmts    ('cell' Var ':' Type '←' ProcExp ';' ProcStmts)
-  |   sass   Var ProcExp       ProcStmts    (Var '←' ProcExp ';' ProcStmts)
+  |   sret   ProcExp                          ('return' ProcExp)
 
-  |   sret   ProcExp                        ('return' ProcExp)
-
-  |   sexp   ProcExp           ProcStmts    (ProcExp ';' ProcStmts)
-
-  |   sprc   Proc                           (Proc)
-  |   sblc   Bloc                           (Bloc)
+  |   sbdy   ProcExp                          (ProcBody)
 
 
 ProcExp
  ::=  ... shared Exp forms ...
-  |   xldd   Var                            ('!' Var)
+  |   xldd   Var                              ('!' Var)
 ```
 Procs consist of a sequence of statements, and an expression to compute the return values.
 
@@ -291,6 +288,7 @@ BlocBody
                                              '{' (Lbl '[' (Var ':' Type),* ']' → BlocBody);+ '}')
 
   |   bexp   BlocExp                        (BlocExp)
+  |   bblk   Bloc                           (Bloc)
 
 BlocExp
  ::=  ... shared Exp forms ...
