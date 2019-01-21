@@ -234,6 +234,11 @@ ProcBody
 
   |   pddo n ProcChain ProcBody               ('do' ProcChain 'done')
 
+  |   pret   ProcExp                          ('return' ProcExp)
+
+  |   pbrk                                    ('break')
+  |   pcnt                                    ('continue')
+
   |   pexp   ProcExp                          (ProcExp)
   |   pprc   Proc                             (Proc)
   |   pblc   Bloc                             (Bloc)
@@ -242,7 +247,7 @@ ProcChain
  ::=  slet n Varⁿ    ProcExp    ProcChain     ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
                                                ';' ProcChain)
 
-  |   swhn n ProcExp ProcBodyⁿ  ProcChain     ('when' '{' (ProcExp     '→' ProcBody) '}'
+  |   swhn n ProcExp ProcBodyⁿ  ProcChain     ('when' '{' (ProcExp '→' ProcBody) '}'
                                                ';' ProcChain)
 
   |   swhc n ProcExp Lblⁿ Typeⁿ ProcBody      ('when' 'case' ProcExp 'of'
@@ -250,15 +255,11 @@ ProcChain
                                                ';' ProcChain)
 
   |   sllp   ProcBody           ProcChain     ('loop' ProcBody ';' ProcChain)
-  |   sbrk                                    ('break')
-  |   scnt                                    ('continue')
 
   |   scll   Var Type ProcExp   ProcChain     ('cell' Var ':' Type '←' ProcExp ';' ProcChain)
   |   sass   Var ProcExp        ProcChain     (Var '←' ProcExp ';' ProcChain)
 
-  |   sret   ProcExp                          ('return' ProcExp)
-
-  |   sbdy   ProcExp                          (ProcBody)
+  |   sbdy   ProcBody                         (ProcBody)
 
 
 ProcExp
