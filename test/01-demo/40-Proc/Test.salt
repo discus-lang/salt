@@ -5,5 +5,26 @@ proc fac [n: #Nat]: #Nat
         ; otherwise      → #nat'mul [n, fac [#nat'sub [n, 1]]] }
 
 
+-- proc derp [n: #Nat]: #Nat
+--  = let x: #Nat = 4;
+--
+--    do   let x = thing;
+--         when  { #nat'eq [3, 4] → return 4
+--               ; #nat'eq [x, t] → return 5 };
+--
+--         when case x of
+--                 { foo → #console'print "Derp"
+--                 ; bar → #console'print "derp" };
+--
+--         while (#nat'eq [x, y]) do
+--                 x ← #nat'add [x, y];
+--                 y ← 4;
+--         done;
+--
+--         cell x: #Nat ← #nat'add [x, y];
+--         x ← #nat'add [x, y];
+--
+--         #console'print "derp";
+--   done
 
 

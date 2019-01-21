@@ -221,36 +221,48 @@ The grammar for procs and blocs shares forms for expressions. The common forms a
 
 ```
 Proc
- ::=  proc n ProcStmtⁿ ProcResult           ('proc' ProcBody)
+ ::=  proc n ProcBody                       ('proc' ProcBody)
 
 ProcBody
- ::=  plet n Varⁿ ProcExp       ProcBody    ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
-                                             ';' ProcBody)
+ ::=  plet n Varⁿ ProcExp ProcBody          ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp ';' ProcBody)
 
-  |   pwhn n ProcExpⁿ ProcBodyⁿ ProcBody    ('when' '{' (ProcExp     '→' ProcBody)
-                                                        ('otherwise' '→' ProcBody)? '}'
-                                             ';' ProcBody)
+  |   pifs n ProcExp ProcBody               ('if'  '{' (ProcExp    '→' ProcBody);*
+                                                       'otherwise' '→' ProcBody '}'
 
-  |   pmch n ProcExp Lblⁿ Typeⁿ ProcBody    ('match' ProcExp 'of'
-             ProcBody                        '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
-                                             ';' ProcBody)
+  |   pcse n ProcExp Lblⁿ Typeⁿ ProcBody    ('case' ProcExp 'of'
+                                             '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
 
-  |   pwhl   ProcExp  ProcBody  ProcBody    ('while'  ProcExp 'do' ProcBody  ';' ProcBody)
-  |   pcll   Var  Type ProcExp  ProcBody    ('cell' Var ':' Type '←' ProcExp ';' ProcBody)
-  |   pass   Var  ProcExp       ProcBody    (Var '←' ProcExp ';' ProcBody)
+  |   pddo n ProcStmtⁿ ProcBody             ('do' ProcStmts 'done')
 
-  |   ProcResult
-
-ProcResult
- ::=  pifs n ProcExpⁿ ProcBodyⁿ ProcBody    ('if'   '{' (ProcExp    '→' ProcBody);*
-                                                        'otherwise' '→' ProcBody '}')
-
-  |   pcse n ProcExp Lblⁿ Typeⁿ ProcBodyⁿ   ('case' ProcExp 'of'
-                                             '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}')
-
-  |   pret   ProcExp                        ('return' ProcExp)
   |   pexp   ProcExp                        (ProcExp)
-  |   pblc   Bloc                           (Bloc)
+
+
+ProcStmts
+ ::=  slet n Varⁿ    ProcExp   ProcStmts    ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
+                                             ';' ProcStmts)
+
+  |   swhn n ProcExp ProcBody  ProcStmts    ('when' '{' (ProcExp     '→' ProcBody)
+                                                        ('otherwise' '→' ProcBody)? '}'
+                                             ';' ProcStmts)
+
+  |   swhc n ProcExp Lblⁿ Typeⁿ ProcBody    ('when' 'case' ProcExp 'of'
+             ProcStmts                       '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
+                                             ';' ProcStmts)
+
+  |   swhl   ProcExp  ProcBody ProcStmts    ('while' '(' ProcExp ')' ProcBody ';' ProcStmts)
+  |   sbrk                                  ('break')
+  |   scnt                                  ('continue')
+
+  |   scll   Var Type ProcExp  ProcStmts    ('cell' Var ':' Type '←' ProcExp ';' ProcStmts)
+  |   sass   Var ProcExp       ProcStmts    (Var '←' ProcExp ';' ProcStmts)
+
+  |   sret   ProcExp                        ('return' ProcExp)
+
+  |   sexp   ProcExp           ProcStmts    (ProcExp ';' ProcStmts)
+
+  |   sprc   Proc                           (Proc)
+  |   sblc   Bloc                           (Bloc)
+
 
 ProcExp
  ::=  ... shared Exp forms ...
@@ -267,7 +279,7 @@ Proc expressions include the shared forms as well as `xldd` / `(! v)`  which loa
 
 ```
 Bloc
- ::=  bloc n BlocBindⁿ BlocResult           ('bloc' BlocBody)
+ ::=  bloc n BlocBody                       ('bloc' BlocBody)
 
 BlocBody
  ::=  blet n Varⁿ BlocExp BlocBody BlocBody ('let' '[' (Var (':' Type)?),* ']' '=' BlocExp ';' BlocBody)
@@ -284,7 +296,7 @@ BlocExp
  ::=  ... shared Exp forms ...
 ```
 
-Blocs contain a body with tree-like control flow, rather than graph-like control flow as with procs.
+Blocs contain a body with tree-like control flow, rather than graph-like control flow as with procs. Bloc bodies are a proper fragment of proc bodies, namely the ones that can be written without the proc 'do' construct or cell load.
 
 Bloc bodies consist of `let`-binding, `if`-branching, `case`-branching, expression evaluation and nested `bloc` constructs. Note that the `if` form requires an `otherwise` branch to ensure the control flow is tree-like.
 
