@@ -227,23 +227,17 @@ ProcBody
  ::=  plet n Varⁿ ProcExp       ProcBody    ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
                                              ';' ProcBody)
 
-  |   pcll   Var  Type ProcExp  ProcBody    ('cell' Var ':' Type '←' ProcExp
-                                             ';' ProcBody)
-
-  |   pass   Var  ProcExp       ProcBody    (Var '←' ProcExp
-                                             ';' ProcBody)
-
-  |   pwhl   ProcExp  ProcBody  ProcBody    ('while'  ProcExp 'do' ProcBody
-                                             ';' ProcBody)
-
   |   pwhn n ProcExpⁿ ProcBodyⁿ ProcBody    ('when' '{' (ProcExp     '→' ProcBody)
-                                                        ('otherwise' '→' ProcBody)?
-                                                    '}'
+                                                        ('otherwise' '→' ProcBody)? '}'
                                              ';' ProcBody)
 
   |   pmch n ProcExp Lblⁿ Typeⁿ ProcBody    ('match' ProcExp 'of'
              ProcBody                        '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
                                              ';' ProcBody)
+
+  |   pwhl   ProcExp  ProcBody  ProcBody    ('while'  ProcExp 'do' ProcBody  ';' ProcBody)
+  |   pcll   Var  Type ProcExp  ProcBody    ('cell' Var ':' Type '←' ProcExp ';' ProcBody)
+  |   pass   Var  ProcExp       ProcBody    (Var '←' ProcExp ';' ProcBody)
 
   |   ProcResult
 
