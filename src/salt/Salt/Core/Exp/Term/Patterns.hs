@@ -3,6 +3,7 @@ module Salt.Core.Exp.Term.Patterns where
 import Salt.Core.Exp.Term.Base
 import Salt.Core.Exp.Name
 
+------------------------------------------------------------------------------------------- Term --
 pattern MVal v                  = MRef  (MRVal v)
 pattern MPrm n                  = MRef  (MRPrm n)
 pattern MCon n                  = MRef  (MRCon n)
@@ -20,12 +21,9 @@ pattern MApv mFun mArg          = MKey   MKApp  [MGTerm  mFun, MGTerm  mArg]
 pattern MApm mFun msArg         = MKey   MKApp  [MGTerm  mFun, MGTerms msArg]
 pattern MApt mFun tsArg         = MKey   MKApp  [MGTerm  mFun, MGTypes tsArg]
 
-pattern MLet mps mBind mBod     = MKey   MKLet  [MGTerms [mBod, MAbs mps mBind]]
+pattern MLet mps mBind mBod     = MKey   MKLet  [MGTerm mBod, MGTerm (MAbs mps mBind)]
 
-pattern MIf  mCond mThen mElse  = MKey   MKIf   [MGTerms mCond,  MGTerms mThen, MGTerm mElse]
-
-pattern MProc mBody             = MKey   MKProc [MGTerm mBody]
-pattern MBloc mBody             = MKey   MKBloc [MGTerm mBody]
+pattern MIf  mCond mThen mElse  = MKey   MKIf   [MGTerms mCond, MGTerms mThen, MGTerm mElse]
 
 pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]
 pattern MProject l  m           = MKey  (MKProject l) [MGTerm  m]
@@ -44,6 +42,33 @@ pattern MSet  tElem msElem      = MKey   MKSet  [MGTypes [tElem],  MGTerms msEle
 pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey, MGTerms msVal]
 
 
+------------------------------------------------------------------------------------------- Proc --
+pattern MProc     mBody         = MKey   MKProc     [MGTerm mBody]
+pattern MProcDo   mBody         = MKey   MKProcDo   [MGTerm mBody]
+
+pattern MProcWhen msCond msThen mRest
+ = MKey MKProcWhen   [MGTerms msCond, MGTerms msThen, MGTerm mRest]
+
+pattern MProcCase mScrut msAlt mRest
+ = MKey MKProcCase   [MGTerm  mScrut, MGTerms msAlt,  MGTerm mRest]
+
+pattern MProcLoop mBody mRest
+ = MKey MKProcLoop   [MGTerm mBody, MGTerm mRest]
+
+pattern MProcCell nCell tCell mBind mRest
+ = MKey MKProcCell   [MGTerm mBind, MGTerm (MAbs (MPTerms [(BindName nCell, tCell)]) mRest)]
+
+pattern MProcAssign nCell mValue mRest
+ = MKey MKProcAssign [MGTerm (MVar (Bound nCell)), MGTerm mValue, MGTerm mRest]
+
+pattern MProcReturn mResult     = MKey  MKProcReturn   [MGTerm mResult]
+pattern MProcBreak              = MKey  MKProcBreak    []
+pattern MProcContinue           = MKey  MKProcContinue []
+
+------------------------------------------------------------------------------------------- Bloc --
+pattern MBloc mBody             = MKey   MKBloc [MGTerm mBody]
+
+------------------------------------------------------------------------------------------ Value --
 pattern MUnit                   = MRef  (MRVal VUnit)
 pattern MBool b                 = MRef  (MRVal (VBool b))
 pattern MTrue                   = MRef  (MRVal (VBool True))

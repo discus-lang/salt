@@ -20,8 +20,8 @@ data At a
 -- | A source token.
 data Token
         -- Meta
-        = KEnd                  -- signal end of input.
-        | KComment Text         -- comment text
+        = KMetaEnd              -- signal end of input.
+        | KMetaComment Text     -- comment text
 
         -- Punctuation
         | KRBra         | KRKet       -- round bracket   ()
@@ -51,7 +51,6 @@ data Token
         -- Keywords
         | KType         | KTerm         | KTest         | KWatch
         | KPure         | KSync
-        | KProc         | KBloc
         | KThe          | KOf
         | KBox          | KRun
         | KLet          | KDo           | KWhere
@@ -59,6 +58,16 @@ data Token
         | KCase         | KOtherwise
         | KSymForall    | KAsciiForall
         | KSymExists    | KAsciiExists
+
+        | KProc
+        | KReturn
+        | KSeq          | KEnd
+        | KWhen         | KBreak        | KContinue
+        | KLoop         | KWhile
+        | KCell
+
+        | KBloc
+
 
         -- Names
         | KVar  Text            -- Plain variable name, "foo"
@@ -79,8 +88,8 @@ showTokenAsSource :: Token -> String
 showTokenAsSource kk
  = case kk of
         -- Meta
-        KEnd            -> "END"
-        KComment tx     -> "--" ++ T.unpack tx
+        KMetaEnd        -> "END"
+        KMetaComment tx -> "--" ++ T.unpack tx
 
         -- Punctuation
         KRBra           -> "("
@@ -118,8 +127,6 @@ showTokenAsSource kk
         KWatch          -> "watch"
         KPure           -> "pure"
         KSync           -> "sync"
-        KBloc           -> "bloc"
-        KProc           -> "proc"
         KThe            -> "the"
         KOf             -> "of"
         KBox            -> "box"
@@ -134,6 +141,19 @@ showTokenAsSource kk
         KOtherwise      -> "otherwise"
         KSymForall      -> "∀";         KAsciiExists    -> "exists"
         KSymExists      -> "∃";         KAsciiForall    -> "forall"
+
+        KProc           -> "proc"
+        KReturn         -> "return"
+        KSeq            -> "seq"
+        KEnd            -> "end"
+        KWhen           -> "when"
+        KBreak          -> "break"
+        KContinue       -> "continue"
+        KLoop           -> "loop"
+        KWhile          -> "while"
+        KCell           -> "cell"
+
+        KBloc           -> "bloc"
 
         -- Names
         KVar  tx        -> T.unpack tx

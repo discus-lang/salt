@@ -185,13 +185,24 @@ instance Pretty c TermKey where
         MKVarCase       -> text "##var'case"
         MKVarAlt n      -> text "##var'alt" %% pprLbl n
         MKIf            -> text "##if"
-        MKProc          -> text "##proc"
-        MKBloc          -> text "##bloc"
+        MKBox           -> text "##box"
+        MKRun           -> text "##run"
         MKList          -> text "##list"
         MKSet           -> text "##set"
         MKMap           -> text "##map"
-        MKBox           -> text "##box"
-        MKRun           -> text "##run"
+
+        MKProc          -> text "##proc"
+        MKProcDo        -> text "##proc'do"
+        MKProcReturn    -> text "##proc'return"
+        MKProcWhen      -> text "##proc'when"
+        MKProcCase      -> text "##proc'case"
+        MKProcLoop      -> text "##proc'loop"
+        MKProcBreak     -> text "##proc'break"
+        MKProcContinue  -> text "##proc'continue"
+        MKProcCell      -> text "##proc'cell"
+        MKProcAssign    -> text "##proc'assign"
+
+        MKBloc          -> text "##bloc"
 
 
 instance Pretty c (TermClosure a) where

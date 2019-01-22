@@ -28,8 +28,8 @@ parseModule toks
         -- Drop comments before we try to parse the tokens.
         toks'   = [ Token.At l k
                   | Token.At l k <- toks
-                  , k & \case Token.KComment _ -> False
-                              _                -> True]
+                  , k & \case Token.KMetaComment _ -> False
+                              _                    -> True]
                 ++ [Token.At rangeLast Token.KEnd]
 
         -- Parse the module in the prefix,

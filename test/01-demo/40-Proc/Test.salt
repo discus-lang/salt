@@ -6,26 +6,18 @@ proc fac [n: #Nat]: #Nat
 
 
 -- proc derp [n: #Nat]: #Nat
---  = let x: #Nat = 4;
---
---    do   let x = thing;
---         when { #nat'eq [3, 4] → do #console'print "derp"; [] done
---              ; #nat'eq [x, t] → return 5 };
---
---         when case x of
---              { foo → #console'print "Derp"
---              ; bar → #console'print "derp" };
---
---         loop do
---              when (#bool'not [#nat'eq [x, y]]) break;
---              x ← #nat'add [x, y];
---              y ← 4;
---         done;
---
---         cell x: #Nat ← #nat'add [x, y];
---         x ← #nat'add [x, y];
---
---         #console'print "derp";
---   done
-
+--  = let  x: #Nat = 4;
+--    seq  when { #nat'eq [3, 4] → return 4 }
+--         when { #nat'eq [5, 6] → [] }
+--         let x = #nat'add [4, 5];
+--         case n of { bar [] → return 5 }
+--         cell n: #Nat ← 0;
+--         loop seq
+--                 when { #nat'eq [n, 0] → break }
+--                 n ← 4;
+--                 #console'print "bar";
+--                 #console'print "baz";
+--         end
+--         #console'print "qux"
+--    end
 

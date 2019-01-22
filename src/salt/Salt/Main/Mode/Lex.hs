@@ -25,8 +25,8 @@ runLex filePath
 
         let toks'  = [ Token.At l k
                      | Token.At l k <- toks
-                     , k & \case Token.KComment _ -> False
-                                 _                -> True]
+                     , k & \case Token.KMetaComment _ -> False
+                                 _                    -> True]
 
         case strRest of
          [] -> return toks'

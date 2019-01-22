@@ -76,11 +76,11 @@ scanner
  = IW.skip Char.isSpace
  $ IW.alts
         [ -- Line comments.
-          fmap (stamp (KComment . Text.pack))
+          fmap (stamp (KMetaComment . Text.pack))
            $ IW.scanHaskellCommentLine
 
           -- Block comments.
-        , fmap (stamp (KComment . Text.pack))
+        , fmap (stamp (KMetaComment . Text.pack))
            $ IW.scanHaskellCommentBlock
 
           -- Compound operators.
@@ -135,9 +135,6 @@ scanner
                 "test"          -> Just KTest
                 "watch"         -> Just KWatch
 
-                "proc"          -> Just KProc
-                "bloc"          -> Just KBloc
-
                 "forall"        -> Just KAsciiForall
                 "exists"        -> Just KAsciiExists
                 "pure"          -> Just KPure
@@ -160,6 +157,19 @@ scanner
 
                 "case"          -> Just KCase
                 "otherwise"     -> Just KOtherwise
+
+                "proc"          -> Just KProc
+                "return"        -> Just KReturn
+                "seq"           -> Just KSeq
+                "end"           -> Just KEnd
+                "when"          -> Just KWhen
+                "break"         -> Just KBreak
+                "continue"      -> Just KContinue
+                "loop"          -> Just KLoop
+                "while"         -> Just KWhile
+                "cell"          -> Just KCell
+
+                "bloc"          -> Just KBloc
 
                 _               -> Nothing
 

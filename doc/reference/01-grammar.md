@@ -247,10 +247,10 @@ ProcChain
  ::=  slet n Varⁿ    ProcExp    ProcChain     ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
                                                ';' ProcChain)
 
-  |   swhn n ProcExp ProcBodyⁿ  ProcChain     ('when' '{' (ProcExp '→' ProcBody) '}'
+  |   swhn n ProcExp ProcBodyⁿ  ProcChain     ('when' '{' (ProcExp '→' ProcBody);+ '}'
                                                ';' ProcChain)
 
-  |   swhc n ProcExp Lblⁿ Typeⁿ ProcBody      ('when' 'case' ProcExp 'of'
+  |   scse n ProcExp Lblⁿ Typeⁿ ProcBody      ('case' ProcExp 'of'
              ProcChain                         '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
                                                ';' ProcChain)
 

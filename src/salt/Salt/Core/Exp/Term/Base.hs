@@ -45,32 +45,38 @@ data TermArgs a
 
 -- | Term Keyword.
 data TermKey
+        -- | Term formers.
         = MKTerms                               -- ^ Term sequence former.
         | MKThe                                 -- ^ Type ascription.
-
         | MKApp                                 -- ^ Term application.
         | MKLet                                 -- ^ Let expression former.
-
         | MKCon     Name                        -- ^ Data constructor.
-
         | MKBox                                 -- ^ Box up a computation.
         | MKRun                                 -- ^ Run a computation.
-
         | MKRecord  [Name]                      -- ^ Record former.
         | MKProject Name                        -- ^ Record field projection.
-
         | MKVariant Name                        -- ^ Variant former.
         | MKVarCase                             -- ^ Variant case matching.
         | MKVarAlt  Name                        -- ^ Variant case alternative.
-
         | MKIf                                  -- ^ If-then-else expression.
-
-        | MKProc                                -- ^ Embed a proc.
-        | MKBloc                                -- ^ Embed a bloc.
-
         | MKList                                -- ^ List constructor.
         | MKSet                                 -- ^ Set constructor.
         | MKMap                                 -- ^ Map constructor.
+
+        -- Proc term formers.
+        | MKProc                                -- ^ Define a proc.
+        | MKProcDo                              -- ^ Do construct in a proc body.
+        | MKProcReturn                          -- ^ Return from the enclosing proc.
+        | MKProcWhen                            -- ^ Branch on boolean flags.
+        | MKProcCase                            -- ^ Branch on variant constructor.
+        | MKProcLoop                            -- ^ Loop construct in a proc body.
+        | MKProcBreak                           -- ^ Break out of the enclosing loop.
+        | MKProcContinue                        -- ^ Continue to the start of the enclosing loop.
+        | MKProcCell                            -- ^ Define a new assignable cell.
+        | MKProcAssign                          -- ^ Assign to a cell.
+
+        -- Bloc term formers.
+        | MKBloc                                -- ^ Define a bloc.
         deriving (Show, Eq, Ord)
 
 
