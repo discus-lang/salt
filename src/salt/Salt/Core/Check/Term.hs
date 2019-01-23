@@ -384,7 +384,8 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
 
 
 -- (t-cse) ------------------------------------------------
-checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
+checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
+ | length msElse <= 1
  = guardAnyTermMode a wh ctx
         "case-expression"
         [TermModePlain, TermModeProcBody, TermModeBlocBody]
@@ -419,9 +420,19 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt)
         (msAlt', tsResult, esResult)
          <- checkAlts a wh ctx mCase tScrut nmgsScrut msAlt
 
-        return  ( MVarCase mScrut' msAlt'
+        -- Check the default 'else' branch if we have one.
+        (mmElse', _tElse, esElse)
+         <- case listToMaybe msElse of
+                Nothing
+                 -> return (Nothing, tsResult, [])
+                Just mElse
+                 -> do  (mElse', tsElse, esElse)
+                         <- checkTerm a wh ctx (Check tsResult) mElse
+                        return (Just mElse', tsElse, esElse)
+
+        return  ( MVarCase mScrut' msAlt' (maybeToList mmElse')
                 , tsResult
-                , esScrut ++ esResult)
+                , esScrut ++ esResult ++ esElse)
 
 
 -- (t-ifs) ------------------------------------------------

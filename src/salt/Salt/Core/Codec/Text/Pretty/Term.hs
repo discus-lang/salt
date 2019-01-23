@@ -63,9 +63,14 @@ instance Pretty c (Term a) where
         MVariant l m t
          -> text "the" %% ppr c t %% text "of" %% text "`" % pprLbl l %% pprMArg c m
 
-        MVarCase mScrut msAlt
+        MVarCase mScrut msAlt []
          -> text "case" %% ppr c mScrut %% text "of"
          %% braced (map (pprMAlt c) msAlt)
+
+        MVarCase mScrut msAlt [mElse]
+         -> text "case" %% ppr c mScrut %% text "of"
+         %% braced (map (pprMAlt c) msAlt)
+         %% text "else" %% ppr c mElse
 
         MData n ts ms
          -> pprCon n %% hsep (map (pprTArg c) ts) %% hsep (map (pprMArg c) ms)

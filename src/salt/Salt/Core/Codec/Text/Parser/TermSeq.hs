@@ -8,6 +8,7 @@ import Salt.Core.Exp
 import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
 
+-- TODO: check we still have expected text at intermediate points.
 
 -- | Parser for a term sequence.
 pTermSeq :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
@@ -45,14 +46,13 @@ pTermSeq pTerm pTermApp
 
 
  , do   -- proc sequence forms, with a continuing chain
-        -- 'if' '{' (Term '→' Term);+ '}' TermSeqRest
-        -- 'if' Term 'then' Term TermSeqRest
+        --  'if' '{' (Term '→' Term);+ '}' TermSeqRest
+        --  'if' Term 'then' Term TermSeqRest
 
         -- term forms
-        -- 'if' '{' (Term '→' Term);* '}' 'else' Term
-        -- 'if' '{' (Term '→' Term);* 'else' '→' Term '}'
-        -- 'if' Term 'then' Term 'else' Term
-
+        --  'if' '{' (Term '→' Term);* '}' 'else' Term
+        --  'if' '{' (Term '→' Term);* 'else' '→' Term '}'
+        --  'if' Term 'then' Term 'else' Term
         pTok KIf
         P.choice
          [ do   pTok KCBra          <?> "a '{' to start the list of branches"
@@ -103,7 +103,11 @@ pTermSeq pTerm pTermApp
                  ]
          ]
 
- , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}'
+ , do   -- proc sequence forms
+        --  'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}' TermSeqRest
+
+        -- term forms
+        --  'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}' ('else' Term)?
         pTok KCase
         mScrut <- pTerm         <?> "a term for the scrutinee"
         pTok KOf                <?> "a completed term, or 'of' to start the alternatives"
@@ -126,10 +130,17 @@ pTermSeq pTerm pTermApp
                 return $ MVarAlt lAlt (MPAnn rPat $ MPTerms btsPat) mBody
         pTok KCKet               <?> "a completed term, or '}' to end the alternatives"
 
-        mRest   <- P.choice [ pTermSeqRest pTerm pTermApp
-                            , pTermSeq     pTerm pTermApp]
+        P.choice
+         [ do   pTok KElse
+                mElse   <- pTerm <?> "a term for the default alternative"
+                return  $ MVarCase mScrut msAlts [mElse]
 
-        return  $ MProcCase mScrut msAlts mRest
+         , do   mRest   <- P.choice [ pTermSeqRest pTerm pTermApp
+                                    , pTermSeq     pTerm pTermApp ]
+
+                return  $ MProcCase mScrut msAlts mRest
+
+         , do   return  $ MVarCase  mScrut msAlts [] ]
 
 
  , do   -- 'loop' Term ';' TermSeq

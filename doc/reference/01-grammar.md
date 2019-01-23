@@ -145,14 +145,17 @@ Term
 
   |   mlet n Varⁿ Term Term         ('let' TermBind ';' Term)
 
-  |   mifs n Termⁿ Termⁿ Term       ('if' '{' (Term '→' Term);* '}' 'else' Term)
+  |   mifs n Termⁿ Termⁿ Term       ('if' '{' (Term '→' Term);* '}'
+                                          'else' Term)
 
   |   mrec n Lblⁿ Termⁿ             (∏ '[' (Lbl '=' Term),* ']')
   |   mprj   Term Lbl               (Term '.' Lbl)
 
   |   mvnt   Lbl  Term Type         ('the' Type  'of' '`' Lbl Term)
+
   |   mcse n Term Lblⁿ Typeⁿ Termⁿ  ('case' Term 'of'
-                                        '{' (Lbl '[' (Var ':' Type),* ']' → Term);+ '}')
+                  Term?                   '{' (Lbl '[' (Var ':' Type),* ']' → Term);+ '}'
+                                          ('else' Term)?)
 
   |   mbox   Term                   ('box' Term)
   |   mrun   Term                   ('run' Term)
@@ -227,11 +230,12 @@ ProcBody
  ::=  plet n Varⁿ ProcExp ProcBody            ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
                                                ';' ProcBody)
 
-  |   pifs n ProcExp ProcBody                 ('if'  '{' (ProcExp '→' ProcBody);+ '}'
-                                               'else' ProcBody)
+  |   pifs n ProcExp ProcBody                 ('if' '{' (ProcExp '→' ProcBody);+ '}'
+                                                    'else' ProcBody)
 
-  |   pcse n ProcExp Lblⁿ Typeⁿ ProcBody      ('case' ProcExp 'of'
-                                               '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}')
+  |   pcse n ProcExp Lblⁿ Typeⁿ ProcBodyⁿ     ('case' ProcExp 'of'
+             ProcBody?                           '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
+                                                 ('else' ProcBody)?)
 
   |   pseq   ProcSeq                          ('seq' ProcSeq 'end')
 

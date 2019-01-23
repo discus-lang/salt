@@ -200,7 +200,7 @@ pTermBody
          ]
 
 
- , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}'
+ , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}' ('else' Term)?
         pTok KCase
         mScrut <- pTerm         <?> "a term for the scrutinee"
         pTok KOf                <?> "a completed term, or 'of' to start the alternatives"
@@ -222,7 +222,13 @@ pTermBody
                 mBody <- pTerm   <?> "the body of the alternative"
                 return $ MVarAlt lAlt (MPAnn rPat $ MPTerms btsPat) mBody
         pTok KCKet               <?> "a completed term, or '}' to end the alternatives"
-        return  $ MVarCase mScrut msAlts
+
+        P.choice
+         [ do   pTok KElse
+                mElse   <- pTerm <?> "a term for the default alternative"
+                return  $ MVarCase mScrut msAlts [mElse]
+
+         , do   return  $ MVarCase mScrut msAlts [] ]
 
  , do   -- 'proc' Term
         pTok KProc

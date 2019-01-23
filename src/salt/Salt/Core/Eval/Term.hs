@@ -189,7 +189,8 @@ evalTerm s a env (MVariant l m t)
 
 
 -- (evm-cse) -----------------------------------------------
-evalTerm s a env mm@(MVarCase mScrut msAlt0)
+evalTerm s a env mm@(MVarCase mScrut msAlt0 msElse)
+ | length msElse <= 1
  = do   vScrut  <- evalTerm1 s a env mScrut
 
         let (nScrut, vsData)
@@ -199,20 +200,29 @@ evalTerm s a env mm@(MVarCase mScrut msAlt0)
 
         let go (MVarAlt nAlt mpsPat mBody : msAlt)
                 | Just btsPat   <- takeMPTerms mpsPat
-                , nAlt == nScrut = (btsPat, mBody)
-                |  otherwise      = go msAlt
-            go [] = throw $ ErrorCaseNoMatch a vScrut
+                , nAlt == nScrut = Just (btsPat, mBody)
+                |  otherwise     = go msAlt
+
+            go [] = Nothing
             go _  = throw $ ErrorInvalidTerm a mm
 
-        let (btsPat, mBody) = go msAlt0
+        case go msAlt0 of
+         -- We have a matching alternative.
+         Just (btsPat, mBody)
+          -> do when (not $ length btsPat == length vsData)
+                 $ throw $ ErrorWrongTermArity a (length btsPat) vsData
+                let bs   = map fst btsPat
+                let env' = menvExtendValues (zip bs vsData) env
+                evalTerm s a env' mBody
 
-        when (not $ length btsPat == length vsData)
-         $ throw $ ErrorWrongTermArity a (length btsPat) vsData
+         Nothing
+          -> case listToMaybe msElse of
+                -- We don't have an alternative that matches the value,
+                -- but we do have a default 'else' alternative.
+                Just mElse  -> evalTerm s a env mElse
 
-        let bs   = map fst btsPat
-        let env' = menvExtendValues (zip bs vsData) env
-
-        evalTerm s a env' mBody
+                -- There isn't a default alternative, so we're done here.
+                Nothing     -> throw $ ErrorCaseNoMatch a vScrut
 
 
 -- (evm-box) -----------------------------------------------
