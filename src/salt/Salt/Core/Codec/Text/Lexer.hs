@@ -152,11 +152,9 @@ scanner
                 "where"         -> Just KWhere
 
                 "if"            -> Just KIf
+                "case"          -> Just KCase
                 "then"          -> Just KThen
                 "else"          -> Just KElse
-
-                "case"          -> Just KCase
-                "otherwise"     -> Just KOtherwise
 
                 "proc"          -> Just KProc
                 "return"        -> Just KReturn

@@ -23,7 +23,7 @@ pattern MApt mFun tsArg         = MKey   MKApp  [MGTerm  mFun, MGTypes tsArg]
 
 pattern MLet mps mBind mBod     = MKey   MKLet  [MGTerm mBod, MGTerm (MAbs mps mBind)]
 
-pattern MIf  mCond mThen mElse  = MKey   MKIf   [MGTerms mCond, MGTerms mThen, MGTerm mElse]
+pattern MIf msCond msThen mElse = MKey   MKIf   [MGTerms msCond, MGTerms msThen, MGTerm mElse]
 
 pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]
 pattern MProject l  m           = MKey  (MKProject l) [MGTerm  m]
@@ -46,11 +46,11 @@ pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey
 pattern MProc     mBody         = MKey   MKProc     [MGTerm mBody]
 pattern MProcDo   mBody         = MKey   MKProcDo   [MGTerm mBody]
 
-pattern MProcWhen msCond msThen mRest
- = MKey MKProcWhen   [MGTerms msCond, MGTerms msThen, MGTerm mRest]
+pattern MProcIf msCond msThen mRest
+ = MKey MKProcIf     [MGTerms msCond, MGTerms msThen, MGTerm mRest]
 
 pattern MProcCase mScrut msAlt mRest
- = MKey MKProcCase   [MGTerm  mScrut, MGTerms msAlt,  MGTerm mRest]
+ = MKey MKProcCase   [MGTerm mScrut, MGTerms msAlt,  MGTerm mRest]
 
 pattern MProcLoop mBody mRest
  = MKey MKProcLoop   [MGTerm mBody, MGTerm mRest]

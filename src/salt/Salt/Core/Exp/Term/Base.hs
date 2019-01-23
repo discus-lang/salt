@@ -67,7 +67,7 @@ data TermKey
         | MKProc                                -- ^ Define a proc.
         | MKProcDo                              -- ^ Do construct in a proc body.
         | MKProcReturn                          -- ^ Return from the enclosing proc.
-        | MKProcWhen                            -- ^ Branch on boolean flags.
+        | MKProcIf                              -- ^ Branch on boolean flags.
         | MKProcCase                            -- ^ Branch on variant constructor.
         | MKProcLoop                            -- ^ Loop construct in a proc body.
         | MKProcBreak                           -- ^ Break out of the enclosing loop.

@@ -48,6 +48,7 @@
 * let'some: #Nat
 * if'then'else: #Nat
 * ifs'three: #Nat
+* ifs'three'else: #Nat
 * do'fst: #Bool
 * do'some: #Nat
 * do'things: #Nat

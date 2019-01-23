@@ -145,7 +145,7 @@ Term
 
   |   mlet n Varⁿ Term Term         ('let' TermBind ';' Term)
 
-  |   mifs n Termⁿ Termⁿ Termⁿ      ('if' '{' (Term '→' Term);* 'otherwise' '→' Term '}' )
+  |   mifs n Termⁿ Termⁿ Term       ('if' '{' (Term '→' Term);* '}' 'else' Term)
 
   |   mrec n Lblⁿ Termⁿ             (∏ '[' (Lbl '=' Term),* ']')
   |   mprj   Term Lbl               (Term '.' Lbl)
@@ -224,15 +224,16 @@ Proc
  ::=  proc n ProcBody                         ('proc' ProcBody)
 
 ProcBody
- ::=  plet n Varⁿ ProcExp ProcBody            ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp ';' ProcBody)
+ ::=  plet n Varⁿ ProcExp ProcBody            ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
+                                               ';' ProcBody)
 
-  |   pifs n ProcExp ProcBody                 ('if'  '{' (ProcExp    '→' ProcBody);*
-                                                         'otherwise' '→' ProcBody '}')
+  |   pifs n ProcExp ProcBody                 ('if'  '{' (ProcExp '→' ProcBody);+ '}'
+                                               'else' ProcBody)
 
   |   pcse n ProcExp Lblⁿ Typeⁿ ProcBody      ('case' ProcExp 'of'
                                                '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}')
 
-  |   pddo n ProcChain ProcBody               ('do' ProcChain 'done')
+  |   pseq   ProcSeq                          ('seq' ProcSeq 'end')
 
   |   pret   ProcExp                          ('return' ProcExp)
 
@@ -243,21 +244,21 @@ ProcBody
   |   pprc   Proc                             (Proc)
   |   pblc   Bloc                             (Bloc)
 
-ProcChain
- ::=  slet n Varⁿ    ProcExp    ProcChain     ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
-                                               ';' ProcChain)
+ProcSeq
+ ::=  slet n Varⁿ    ProcExp    ProcSeq       ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
+                                               ';' ProcSeq)
 
-  |   swhn n ProcExp ProcBodyⁿ  ProcChain     ('when' '{' (ProcExp '→' ProcBody);+ '}'
-                                               ';' ProcChain)
+  |   sifs n ProcExp ProcBody                 ('if'  '{' (ProcExp '→' ProcBody);+ '}'
+                                               ';' ProcSeq)
 
   |   scse n ProcExp Lblⁿ Typeⁿ ProcBody      ('case' ProcExp 'of'
-             ProcChain                         '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
-                                               ';' ProcChain)
+             ProcSeq                           '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
+                                               ';' ProcSeq)
 
-  |   sllp   ProcBody           ProcChain     ('loop' ProcBody ';' ProcChain)
+  |   sllp   ProcBody           ProcSeq       ('loop' ProcBody ';' ProcSeq)
 
-  |   scll   Var Type ProcExp   ProcChain     ('cell' Var ':' Type '←' ProcExp ';' ProcChain)
-  |   sass   Var ProcExp        ProcChain     (Var '←' ProcExp ';' ProcChain)
+  |   scll   Var Type ProcExp   ProcSeq       ('cell' Var ':' Type '←' ProcExp ';' ProcSeq)
+  |   sass   Var ProcExp        ProcSeq       (Var '←' ProcExp ';' ProcSeq)
 
   |   sbdy   ProcBody                         (ProcBody)
 

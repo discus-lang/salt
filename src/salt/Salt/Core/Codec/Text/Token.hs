@@ -54,8 +54,7 @@ data Token
         | KThe          | KOf
         | KBox          | KRun
         | KLet          | KDo           | KWhere
-        | KIf           | KThen         | KElse
-        | KCase         | KOtherwise
+        | KIf           | KCase         | KThen         | KElse
         | KSymForall    | KAsciiForall
         | KSymExists    | KAsciiExists
 
@@ -135,10 +134,9 @@ showTokenAsSource kk
         KDo             -> "do"
         KWhere          -> "where"
         KIf             -> "if"
+        KCase           -> "case"
         KThen           -> "then"
         KElse           -> "else"
-        KCase           -> "case"
-        KOtherwise      -> "otherwise"
         KSymForall      -> "∀";         KAsciiExists    -> "exists"
         KSymExists      -> "∃";         KAsciiForall    -> "forall"
 

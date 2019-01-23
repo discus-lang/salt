@@ -103,9 +103,14 @@ test type if'then'else
 test type ifs'three
  = if   { #nat'eq [1, 2] → 3
         ; #nat'eq [2, 3] → 4
-        ; #nat'eq [3, 4] → 5
-        ; otherwise      → 6 }
+        ; #nat'eq [3, 4] → 5 }
+   else 6
 
+test type ifs'three'else
+ = if   { #nat'eq [1, 2] → 3
+        ; #nat'eq [2, 3] → 4
+        ; #nat'eq [3, 4] → 5
+        ; else           → 6 }
 
 -- Do blocks ------------------------------------------------------------------
 test type do'fst
