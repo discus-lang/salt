@@ -1,6 +1,6 @@
 
 module Salt.Core.Codec.Text.Parser.Term where
-import Salt.Core.Codec.Text.Parser.TermSeq
+import Salt.Core.Codec.Text.Parser.TermProc
 import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Lexer
@@ -11,6 +11,18 @@ import Salt.Core.Exp
 import Control.Monad
 import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
+
+
+------------------------------------------------------------------------------------------ Terms --
+-- | Parse a term vector.
+pTerms :: Parser [Term RL]
+pTerms
+ = P.choice
+ [ do   pSquared $ flip P.sepEndBy1 (pTok KComma)
+                 $ pTerm
+ , do   m <- pTerm
+        return [m]
+ ]
 
 
 ------------------------------------------------------------------------------------------- Term --
@@ -143,7 +155,7 @@ pTermBody
          <?> "a '{' to start the do-block"
 
         binds   <- (flip P.sepEndBy (pTok KSemi)
-                        $ (pTermStmt <?> "another binding, or a result value"))
+                        $ (pTermDoStmt <?> "another binding, or a result value"))
                 <?> "some statements"
 
         m <- case reverse binds of
@@ -230,29 +242,12 @@ pTermBody
 
          , do   return  $ MVarCase mScrut msAlts [] ]
 
- , do   -- 'proc' Term
+ , do   -- 'proc' Types 'of' Proc
         pTok KProc
-        mBody <- pTerm
-        return $ MProc mBody
-
- , do   -- 'seq' Term 'end'
-        pTok KSeq
-        mBody <- pTermSeq pTerm pTermApp
-        pTok KEnd
-        return  $ MProcDo mBody
-
- , do   -- 'return' Term
-        pTok KReturn
-        mBody   <- pTerm
-        return  $ MProcReturn mBody
-
- , do   -- 'break'
-        pTok KBreak
-        return  $ MProcBreak
-
- , do   -- 'continue'
-        pTok KContinue
-        return  $ MProcContinue
+        tsReturn <- pTypes
+        pTok KOf
+        mBody    <- pTermProc pTerm pTermApp
+        return $ MProc tsReturn mBody
 
  , do   -- 'bloc' BlocBody
         pTok KBloc
@@ -498,9 +493,9 @@ pTermBind
 
 
 ------------------------------------------------------------------------------------------- Stmt --
--- | Parser for a statement.
-pTermStmt :: Parser (TermParams RL, Term RL)
-pTermStmt
+-- | Parser for a do-statement.
+pTermDoStmt :: Parser (TermParams RL, Term RL)
+pTermDoStmt
  = P.choice
  [ do   -- '[' (Var : Type),* ']' = Term
         (rBinds, bs)

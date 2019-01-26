@@ -9,6 +9,18 @@ import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
 
 
+------------------------------------------------------------------------------------------ Types --
+-- | Parser for a type vector.
+pTypes :: Parser [Type RL]
+pTypes
+ = P.choice
+ [ do   pSquared $ flip P.sepEndBy1 (pTok KComma)
+                 $ pType
+ , do   t <- pType
+        return [t]
+ ]
+
+
 ------------------------------------------------------------------------------------------- Type --
 -- | Parser for a type expression.
 pType :: Parser (Type RL)

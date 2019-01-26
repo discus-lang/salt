@@ -59,11 +59,10 @@ data Token
         | KSymExists    | KAsciiExists
 
         | KProc
-        | KReturn
-        | KSeq          | KEnd
-        | KWhen         | KBreak        | KContinue
+        | KSeq          | KEnd          | KWith
+        | KBreak        | KContinue     | KReturn
+        | KCel
         | KLoop         | KWhile
-        | KCell
 
         | KBloc
 
@@ -141,15 +140,15 @@ showTokenAsSource kk
         KSymExists      -> "∃";         KAsciiForall    -> "forall"
 
         KProc           -> "proc"
-        KReturn         -> "return"
         KSeq            -> "seq"
         KEnd            -> "end"
-        KWhen           -> "when"
+        KWith           -> "with"
         KBreak          -> "break"
         KContinue       -> "continue"
+        KReturn         -> "return"
+        KCel            -> "cel"
         KLoop           -> "loop"
         KWhile          -> "while"
-        KCell           -> "cell"
 
         KBloc           -> "bloc"
 

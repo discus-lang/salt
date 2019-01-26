@@ -235,7 +235,7 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
 
 
 -- (t-let) ------------------------------------------------
-checkTermWith a wh ctx Synth (MLet mps mBind mBody)
+checkTermWith a wh ctx modeBody (MLet mps mBind mBody)
  | (aParam, mps_) <- unwrapTermParams a mps
  , Just _bts      <- takeMPTerms mps_
  = do
@@ -272,11 +272,10 @@ checkTermWith a wh ctx Synth (MLet mps mBind mBody)
 
         -- Check the body term.
         (mBody', tsResult, esResult)
-         <- checkTerm a wh ctx' Synth mBody
+         <- checkTerm a wh ctx' modeBody mBody
 
         return  ( MLet mps' mBind' mBody'
-                , tsResult
-                , esBind ++ esResult)
+                , tsResult, esBind ++ esResult)
 
 
 -- (t-rec) ------------------------------------------------
@@ -284,6 +283,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
  = do
         mode'   <- simplMode a ctx mode
         case mode' of
+         Return{} -> error "TODO: return a value"
          -- If we have an expected type for all the fields then check the fields
          -- separately. This gives better error messages as we don't need to report
          -- types for fields that are irrelevant to the problem.
@@ -328,6 +328,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
                  return  ( MRecord ns ms'
                          , [TRecord ns (map TGTypes tss')]
                          , concat ess')
+
 
 
 -- (t-prj) ------------------------------------------------
@@ -436,14 +437,12 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
 
 
 -- (t-ifs) ------------------------------------------------
-checkTermWith a wh ctx Synth mIf@(MIf msCond msThen mElse)
+checkTermWith a wh ctx Synth (MIf msCond msThen mElse)
+ | length msCond == length msThen
  = guardAnyTermMode a wh ctx
         "if-expression"
         [TermModePlain, TermModeProcBody, TermModeBlocBody]
  $ do
-        when (not $ length msCond == length msThen)
-         $ throw $ ErrorTermMalformed a wh mIf
-
         (msCond', esCond)
          <- checkTermsAreAll a wh (asExp ctx) TBool msCond
 
@@ -460,18 +459,76 @@ checkTermWith a wh ctx Synth mIf@(MIf msCond msThen mElse)
 
 
 -- (t-proc) -----------------------------------------------
-checkTermWith a wh ctx Synth (MProc mBody)
+checkTermWith a wh ctx Synth (MProc tsReturn mBody)
  = guardAnyTermMode a wh ctx
-        "Proc definition"
+        "procedure"
         [TermModePlain, TermModeProcBody]
  $ do
+        (tsReturn', _)
+         <- checkTypes a wh ctx tsReturn
+
         let ctx' = ctx { contextTermMode = TermModeProcBody }
+        (mBody', _, esBody)
+         <- checkTerm a wh ctx' (Return tsReturn') mBody
 
-        (mBody', tsBody, esBody)
-         <- checkTerm a wh ctx' Synth mBody
+        return  ( MProc tsReturn' mBody'
+                , tsReturn, esBody)
 
-        return  ( MProc mBody'
-                , tsBody, esBody)
+
+-- (t-proc-seq) -------------------------------------------
+checkTermWith a wh ctx (Return tsReturn) (MProcSeq mStmt mResult)
+ = guardOnlyTermMode a wh ctx
+        "procedural if-statement" TermModeProcBody
+ $ do
+        (mStmt', _tsStmt, esStmt)
+         <- checkTerm a wh ctx (Return tsReturn) mStmt
+
+        (mResult', _tsResult, esResult)
+         <- checkTerm a wh ctx (Check tsReturn) mResult
+
+        return  ( MProcSeq mStmt' mResult'
+                , tsReturn, esStmt ++ esResult)
+
+
+-- (t-stmt-if) --------------------------------------------
+checkTermWith a wh ctx (Return tsReturn) (MStmtIf msCond msThen)
+ | length msCond == length msThen
+ = guardOnlyTermMode a wh ctx
+        "procedural if-statement" TermModeProcBody
+ $ do
+        (msCond', esCond)
+         <- checkTermsAreAll a wh (asExp ctx) TBool msCond
+
+        (msThen', _tssThen, essThen)
+         <- fmap unzip3
+         $  mapM (checkTerm a wh ctx (Return tsReturn)) msThen
+
+        return  ( MStmtIf msCond' msThen'
+                , [], esCond ++ concat essThen)
+
+
+-- (t-stmt-call) ------------------------------------------
+checkTermWith a wh ctx (Return _tsReturn) (MStmtCall mBody)
+ = guardOnlyTermMode a wh ctx
+        "procedure call" TermModeProcBody
+ $ do
+        (mBody', _, esBody)
+         <- checkTerm a wh (asExp ctx) (Check []) mBody
+
+        return  ( MStmtReturn mBody'
+                , [], esBody)
+
+
+-- (t-stmt-return) ----------------------------------------
+checkTermWith a wh ctx (Return _tsReturn) (MStmtReturn mBody)
+ = guardOnlyTermMode a wh ctx
+        "procedural return statement" TermModeProcBody
+ $ do
+        (mBody', _, esReturn)
+         <- checkTerm a wh ctx Synth mBody
+
+        return  ( MStmtReturn mBody'
+                , [], esReturn)
 
 
 -- (t-bloc) -----------------------------------------------

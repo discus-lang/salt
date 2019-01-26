@@ -64,16 +64,18 @@ data TermKey
         | MKMap                                 -- ^ Map constructor.
 
         -- Proc term formers.
-        | MKProc                                -- ^ Define a proc.
-        | MKProcDo                              -- ^ Do construct in a proc body.
-        | MKProcReturn                          -- ^ Return from the enclosing proc.
-        | MKProcIf                              -- ^ Branch on boolean flags.
-        | MKProcCase                            -- ^ Branch on variant constructor.
-        | MKProcLoop                            -- ^ Loop construct in a proc body.
-        | MKProcBreak                           -- ^ Break out of the enclosing loop.
-        | MKProcContinue                        -- ^ Continue to the start of the enclosing loop.
-        | MKProcCell                            -- ^ Define a new assignable cell.
-        | MKProcAssign                          -- ^ Assign to a cell.
+        | MKProc                                -- ^ Define a procedure.
+        | MKProcLet                             -- ^ Procedural let-binding.
+        | MKProcCel                             -- ^ Procedural cel-introduction.
+        | MKProcSeq                             -- ^ Procedural statement sequence.
+        | MKStmtIf                              -- ^ Branch on boolean flags.
+        | MKStmtCase                            -- ^ Branch on variant constructor.
+        | MKStmtLoop                            -- ^ Loop construct.
+        | MKStmtUpdate                          -- ^ Update a cel with a new value.
+        | MKStmtCall                            -- ^ Call another procedure.
+        | MKStmtBreak                           -- ^ Break to the end of the enclosing loop.
+        | MKStmtContinue                        -- ^ Continue to the start of the enclosing loop.
+        | MKStmtReturn                          -- ^ Return from the enclosing procecure.
 
         -- Bloc term formers.
         | MKBloc                                -- ^ Define a bloc.

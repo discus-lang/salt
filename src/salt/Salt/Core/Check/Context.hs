@@ -13,8 +13,9 @@ import qualified Data.Map               as Map
 
 ---------------------------------------------------------------------------------------------------
 data Mode a
-        = Synth
-        | Check [Type a]
+        = Synth                 -- ^ Synthesize the type of a term.
+        | Check  [Type a]       -- ^ Check that a term has the give type.
+        | Return [Type a]       -- ^ Check that a procedure returns values of the given type.
         deriving Show
 
 

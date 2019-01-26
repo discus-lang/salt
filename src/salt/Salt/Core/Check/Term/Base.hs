@@ -106,6 +106,11 @@ checkTerms a wh ctx (Check tsExpected) ms
         let ksExpected = replicate (length tsExpected) TData
         throw $ ErrorWrongArityUp UTerm a wh ts' ksExpected
 
+checkTerms _a _wh _ct mode ms
+ = error $ "TODO: checkTerms invalid mode"
+         ++ show (mode, ms)
+
+
 
 -- | Check the given terms all have the specified type,
 --   bundling all the caused effects together in the result.
