@@ -55,6 +55,7 @@ pattern TOption t       = TApt (TPrm "Option") [t]
 pattern TList t         = TApt (TPrm "List")   [t]
 pattern TSet t          = TApt (TPrm "Set")    [t]
 pattern TMap tk tv      = TApt (TPrm "Map")    [tk, tv]
+pattern TCel t          = TApt (TPrm "Cel")    [t]
 pattern TConsole        = TPrm "Console"
 pattern TSleep          = TPrm "Sleep"
 

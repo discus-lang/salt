@@ -51,6 +51,7 @@ data DeclTerm a
 data TermMode
         = TermModePlain         -- ^ A plain term declaration.
         | TermModeProcBody      -- ^ A proc body.
+        | TermModeProcStmt      -- ^ A proc statement.
         | TermModeProcExp       -- ^ A proc expression.
         | TermModeBlocBody      -- ^ A bloc body.
         | TermModeBlocExp       -- ^ A bloc expression.

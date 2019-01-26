@@ -65,9 +65,11 @@ data TermKey
 
         -- Proc term formers.
         | MKProc                                -- ^ Define a procedure.
+        | MKProcSeq                             -- ^ Procedural statement sequence.
         | MKProcLet                             -- ^ Procedural let-binding.
         | MKProcCel                             -- ^ Procedural cel-introduction.
-        | MKProcSeq                             -- ^ Procedural statement sequence.
+
+        | MKStmtSeq                             -- ^ Define a sub-sequence as a statement.
         | MKStmtIf                              -- ^ Branch on boolean flags.
         | MKStmtCase                            -- ^ Branch on variant constructor.
         | MKStmtLoop                            -- ^ Loop construct.

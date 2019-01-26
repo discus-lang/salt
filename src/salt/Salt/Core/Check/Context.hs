@@ -275,6 +275,7 @@ asExp ctx
  = case contextTermMode ctx of
         TermModePlain    -> ctx
         TermModeProcBody -> ctx { contextTermMode = TermModeProcExp }
+        TermModeProcStmt -> ctx { contextTermMode = TermModeProcExp }
         TermModeProcExp  -> ctx
         TermModeBlocBody -> ctx { contextTermMode = TermModeBlocExp }
         TermModeBlocExp  -> ctx

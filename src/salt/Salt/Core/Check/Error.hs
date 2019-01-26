@@ -291,6 +291,12 @@ data Error a
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorTypes            :: [Type a] }
+
+        -- Procedure problems -------------------
+        | ErrorProcUpdateNotCel
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorType             :: Type a }
         deriving Show
 
 instance (Show a, Typeable a) => Exception (Error a)

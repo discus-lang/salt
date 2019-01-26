@@ -38,6 +38,7 @@ instance Pretty c TermMode where
   = case mm of
         TermModePlain           -> text "term"
         TermModeProcBody        -> text "proc body"
+        TermModeProcStmt        -> text "proc stmt"
         TermModeProcExp         -> text "proc exp"
         TermModeBlocBody        -> text "bloc body"
         TermModeBlocExp         -> text "bloc exp"

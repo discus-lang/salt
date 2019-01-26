@@ -8,6 +8,7 @@ import Salt.Core.Exp
 import Salt.Data.Pretty
 
 
+---------------------------------------------------------------------------------------------------
 instance Show a => Pretty c (Error a) where
  ppr c err = ppre c err
 
@@ -245,6 +246,13 @@ ppre c (ErrorRunSuspensionIsNot _a _wh ts)
         , text " of type" %% squared (map (ppr c) ts) ]
 
 
+-- Procedure problems -------------------------------------
+ppre c (ErrorProcUpdateNotCel _a _wh t)
+ = vcat [ text "Cannot update non-cel"
+        , text " of type" %% ppr c t ]
+
+
+---------------------------------------------------------------------------------------------------
 -- | Print some universed things with proper pluralization.
 ppThings  :: c -> Universe -> [Type a] -> Doc
 ppThings c UKind [k]     = text "kind"    %% squotes (ppr c k)

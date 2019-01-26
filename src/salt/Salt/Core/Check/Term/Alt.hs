@@ -6,6 +6,11 @@ import qualified Salt.Data.List         as List
 
 
 -- Check some case alternatives.
+--  This same code is used to check alternatives in term case expressions,
+--  as well as in procedure case statements. In the latter case we set the
+--  incoming mode to (Return ts), where ts is the return type vector for
+--  the statement form.
+--
 checkAlts
         :: Annot a
         => a -> [Where a] -> Context a
@@ -13,9 +18,10 @@ checkAlts
         -> Type a               -- ^ Type of scrutinee, for error reporting.
         -> [(Name, TypeArgs a)] -- ^ Names and types of scrutinee fields.
         -> [Term a]             -- ^ Alternatives.
+        -> Mode a               -- ^ Checker mode for the alternative bodies.
         -> IO ([Term a], [Type a], [Effect a])
 
-checkAlts a wh ctx mCase tScrut nmgsScrut alts
+checkAlts a wh ctx mCase tScrut nmgsScrut alts mode
  = go alts [] Nothing []
  where
     go  (MVarAlt nPat mpsPat mBody : msAltsRest)
@@ -52,9 +58,15 @@ checkAlts a wh ctx mCase tScrut nmgsScrut alts
         -- we matched with the pattern. Also ensure this alternative
         -- has the same result type as any others we have checked before.
         let ctx'  = contextBindTermParams (MPTerms btsPat) ctx
-        let mode' = case mtsResult of
-                      Nothing -> Synth
-                      Just ts -> Check ts
+        let mode'
+                -- When checking the statement form the alts have the same mode
+                -- as the overall expression.
+                | Return{}      <- mode         = mode
+
+                -- When checking the term form we check successive alts against
+                -- the type of the first one.
+                | Just ts       <- mtsResult    = Check ts
+                | otherwise                     = Synth
 
         let aBody = fromMaybe a $ takeAnnotOfTerm mBody
         (mBody', tsResult, esResult)

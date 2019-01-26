@@ -1,4 +1,7 @@
 
+-- TODO: split out the stmt checker into its own function,
+--       the TermMode thing in the context isn't really working.
+--
 module Salt.Core.Check.Term where
 import Salt.Core.Check.Term.Alt
 import Salt.Core.Check.Term.App
@@ -12,6 +15,8 @@ import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
+
+import Text.Show.Pretty
 
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
@@ -32,7 +37,8 @@ checkTermWith a wh ctx mode (MTerms msArg)
 
 -- (t-the) ------------------------------------------------
 checkTermWith a wh ctx Synth (MThe ts m)
- = do   (m', _, es) <- checkTerm a wh ctx (Check ts) m
+ = do   -- TODO: check well kindedness of type annots.
+        (m', _, es) <- checkTerm a wh ctx (Check ts) m
         return  (MThe ts m', ts, es)
 
 
@@ -385,11 +391,16 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
 
 
 -- (t-cse) ------------------------------------------------
-checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
- | length msElse <= 1
+-- TODO: use this to also check if with fall through for procs.
+checkTermWith a wh ctx mode mCase@(MVarCase mScrut msAlt msElse)
+ | case mode of
+        Synth    -> True
+        Check{}  -> False
+        Return{} -> True
+ , length msElse <= 1
  = guardAnyTermMode a wh ctx
         "case-expression"
-        [TermModePlain, TermModeProcBody, TermModeBlocBody]
+        [TermModePlain, TermModeProcStmt, TermModeBlocBody]
  $ do
         -- Check the scrutinee.
         (mScrut', tScrut, esScrut)
@@ -402,6 +413,18 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
          >>= \case
                 TVariant ns mgs -> return (ns, mgs)
                 _ -> throw $ ErrorCaseScrutNotVariant aScrut wh tScrut
+
+        -- If this is the term form then we need at least one alternative
+        -- to compute the result value.
+        let bTermForm
+             = case mode of
+                Synth{}  -> True
+                Check{}  -> True
+                Return{} -> False
+
+        -- TODO: real error message.
+        when (bTermForm && length msAlt == 0)
+         $ error "no alternatives"
 
         -- Check for overlapping alternatives.
         let nsAlt    = [n | MVarAlt n _ _ <- msAlt]
@@ -419,7 +442,7 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
         --  and ensuring all the alt result types match.
         let nmgsScrut = zip nsScrut mgsScrut
         (msAlt', tsResult, esResult)
-         <- checkAlts a wh ctx mCase tScrut nmgsScrut msAlt
+         <- checkAlts a wh ctx mCase tScrut nmgsScrut msAlt mode
 
         -- Check the default 'else' branch if we have one.
         (mmElse', _tElse, esElse)
@@ -469,32 +492,66 @@ checkTermWith a wh ctx Synth (MProc tsReturn mBody)
 
         let ctx' = ctx { contextTermMode = TermModeProcBody }
         (mBody', _, esBody)
-         <- checkTerm a wh ctx' (Return tsReturn') mBody
+         <- checkTerm a wh ctx' (Check tsReturn') mBody
 
         return  ( MProc tsReturn' mBody'
                 , tsReturn, esBody)
 
 
 -- (t-proc-seq) -------------------------------------------
-checkTermWith a wh ctx (Return tsReturn) (MProcSeq mStmt mResult)
- = guardOnlyTermMode a wh ctx
-        "procedural if-statement" TermModeProcBody
+checkTermWith a wh ctx (Check tsReturn) (MProcSeq mStmt mRest)
+ = guardAnyTermMode a wh ctx
+        "procedural statement sequencing" [TermModeProcBody]
  $ do
+        let ctx' = ctx { contextTermMode = TermModeProcStmt }
         (mStmt', _tsStmt, esStmt)
-         <- checkTerm a wh ctx (Return tsReturn) mStmt
+         <- checkTerm a wh ctx' (Return tsReturn) mStmt
 
-        (mResult', _tsResult, esResult)
-         <- checkTerm a wh ctx (Check tsReturn) mResult
+        (mRest', _tsRest, esRest)
+         <- checkTerm a wh ctx (Check tsReturn) mRest
 
-        return  ( MProcSeq mStmt' mResult'
-                , tsReturn, esStmt ++ esResult)
+        return  ( MProcSeq mStmt' mRest'
+                , tsReturn, esStmt ++ esRest)
+
+
+-- (t-proc-let) -------------------------------------------
+-- The t-proc-let rule behaves similarly to t-let,
+--   so use the latter to avoid copying the code.
+checkTermWith a wh ctx (Check tsReturn) (MProcLet mps mBind mRest)
+ = guardOnlyTermMode a wh ctx
+        "procedural let-binding" TermModeProcBody
+ $ do
+        (  MLet mps' mBind' mRest'
+         , tsResult, esResult)
+         <- checkTermWith a wh ctx (Check tsReturn) (MLet mps mBind mRest)
+
+        return  ( MProcLet mps' mBind' mRest'
+                , tsResult, esResult)
+
+
+-- (t-proc-cel) -------------------------------------------
+checkTermWith a wh ctx (Check tsReturn) (MProcCel nCel tCel mBind mRest)
+ = guardOnlyTermMode a wh ctx
+        "procedural cel-binding" TermModeProcBody
+ $ do
+        tCel'    <- checkTypeHas UKind a wh ctx TData tCel
+
+        (mBind', _tBind, esBind)
+         <- checkTerm a wh (asExp ctx) (Check [tCel]) mBind
+
+        let ctx' = contextBindTerm nCel (TCel tCel') ctx
+        (mRest', _tsRest, esRest)
+         <- checkTerm a wh ctx' (Check tsReturn) mRest
+
+        return  ( MProcCel nCel tCel' mBind' mRest'
+                , tsReturn, esBind ++ esRest)
 
 
 -- (t-stmt-if) --------------------------------------------
 checkTermWith a wh ctx (Return tsReturn) (MStmtIf msCond msThen)
  | length msCond == length msThen
  = guardOnlyTermMode a wh ctx
-        "procedural if-statement" TermModeProcBody
+        "procedural if-statement" TermModeProcStmt
  $ do
         (msCond', esCond)
          <- checkTermsAreAll a wh (asExp ctx) TBool msCond
@@ -507,10 +564,60 @@ checkTermWith a wh ctx (Return tsReturn) (MStmtIf msCond msThen)
                 , [], esCond ++ concat essThen)
 
 
--- (t-stmt-call) ------------------------------------------
-checkTermWith a wh ctx (Return _tsReturn) (MStmtCall mBody)
+-- (t-stmt-case) -------------------------------------------
+-- The t-stmt-case rule behaves similarly to t-case
+--  so use the latter to avoid copying the code.
+checkTermWith a wh ctx (Return tsReturn) (MStmtCase mScrut msAlt)
  = guardOnlyTermMode a wh ctx
-        "procedure call" TermModeProcBody
+        "procedural case-statement" TermModeProcStmt
+ $ do
+        (  MVarCase mScrut' msAlts' _
+         , _tsResult, esResult)
+         <- checkTermWith a wh ctx (Return tsReturn) (MVarCase mScrut msAlt [])
+
+        return  ( MStmtCase mScrut' msAlts'
+                , [], esResult)
+
+
+-- (t-stmt-loop) ------------------------------------------
+checkTermWith a wh ctx (Return tsReturn) (MStmtLoop mBody)
+ = guardOnlyTermMode a wh ctx
+        "procedural loop" TermModeProcStmt
+ $ do
+        (mBody', _, esBody)
+         <- checkTermWith a wh ctx (Return tsReturn) mBody
+
+        return  ( MStmtLoop mBody'
+                , [], esBody)
+
+
+-- (t-stmt-update) ----------------------------------------
+checkTermWith a wh ctx (Return _) (MStmtUpdate nCel mNew)
+ = guardOnlyTermMode a wh ctx
+        "procedural cel-update" TermModeProcStmt
+ $ do
+        let uCel = BoundWith nCel 0
+        tCel    <- contextResolveTermBound ctx uCel
+                >>= \case
+                        Nothing -> throw $ ErrorUnknownBound UTerm a wh uCel
+                        Just t  -> return t
+
+        tCel'   <- simplType a ctx tCel
+        tVal    <- case tCel' of
+                        TCel t  -> return t
+                        _       -> throw $ ErrorProcUpdateNotCel a wh tCel'
+
+        (mNew', _tsNew, esNew)
+         <- checkTerm a wh (asExp ctx) (Check [tVal]) mNew
+
+        return  ( MStmtUpdate nCel mNew'
+                , [], esNew)
+
+
+-- (t-stmt-call) ------------------------------------------
+checkTermWith a wh ctx (Return _) (MStmtCall mBody)
+ = guardOnlyTermMode a wh ctx
+        "procedure call" TermModeProcStmt
  $ do
         (mBody', _, esBody)
          <- checkTerm a wh (asExp ctx) (Check []) mBody
@@ -520,12 +627,12 @@ checkTermWith a wh ctx (Return _tsReturn) (MStmtCall mBody)
 
 
 -- (t-stmt-return) ----------------------------------------
-checkTermWith a wh ctx (Return _tsReturn) (MStmtReturn mBody)
+checkTermWith a wh ctx (Return _) (MStmtReturn mBody)
  = guardOnlyTermMode a wh ctx
-        "procedural return statement" TermModeProcBody
+        "procedural return statement" TermModeProcStmt
  $ do
         (mBody', _, esReturn)
-         <- checkTerm a wh ctx Synth mBody
+         <- checkTerm a wh (asExp ctx) Synth mBody
 
         return  ( MStmtReturn mBody'
                 , [], esReturn)
@@ -584,6 +691,7 @@ checkTermWith a wh ctx (Check tsExpected) m
  = checkTermIs a wh ctx tsExpected m
 
 -- We don't know how to check this sort of term.
-checkTermWith a wh _ctx _mode mm
- = throw $ ErrorTermMalformed a wh mm
+checkTermWith _a _wh _ctx mode mm
+ = error $ ppShow (mode, mm)
+ -- throw $ ErrorTermMalformed a wh mm
 

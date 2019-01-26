@@ -50,14 +50,17 @@ pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey
 pattern MProc tsReturn mBody
  = MKey MKProc       [MGTypes tsReturn, MGTerm mBody]
 
+pattern MProcSeq mStmt mRest
+ = MKey MKProcSeq    [MGTerm mStmt, MGTerm mRest]
+
 pattern MProcLet mps mBind mRest
  = MKey MKProcLet    [MGTerm mBind, MGTerm (MAbs mps mRest)]
 
 pattern MProcCel nCel tCel mBind mRest
- = MKey MKProcCel    [MGTerm mBind,  MGTerm (MAbs (MPTerms [(BindName nCel, tCel)]) mRest)]
+ = MKey MKProcCel    [MGTerm mBind, MGTerm (MAbs (MPTerms [(BindName nCel, tCel)]) mRest)]
 
-pattern MProcSeq mStmt mRest
- = MKey MKProcSeq    [MGTerm mStmt, MGTerm mRest]
+pattern MStmtSeq mStmt msRest
+ = MKey MKStmtSeq    [MGTerm mStmt, MGTerms msRest]
 
 pattern MStmtIf msCond msThen
  = MKey MKStmtIf     [MGTerms msCond, MGTerms msThen]

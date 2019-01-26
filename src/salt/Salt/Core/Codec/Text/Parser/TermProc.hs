@@ -41,7 +41,6 @@ pTermProc pTerm pTermApp
 
         pTok KEquals      <?> "a type annotation, or '=' to start the binding"
         mBind <- pTerm    <?> "a term for the binding"
-        pTok KSemi        <?> "a completed term, or ';' to start the body"
         mRest <- pTermProc pTerm pTermApp
         return  $ MProcLet (MPAnn rBinds (MPTerms bts)) mBind mRest
 
@@ -114,7 +113,7 @@ pTermStmt pTerm pTermApp
                 return $ MStmtIf [mCond] [mThen]
          ]
 
- , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' TermProc)* '}'
+ , do   -- 'case' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' TermProc)* '}'
         pTok KCase
         mScrut <- pTerm         <?> "a term for the scrutinee"
         pTok KOf                <?> "a completed term, or 'of' to start the alternatives"

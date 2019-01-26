@@ -200,6 +200,8 @@ instance Pretty c TermKey where
         MKProcLet       -> text "##proc'let"
         MKProcCel       -> text "##proc'cel"
         MKProcSeq       -> text "##proc'seq"
+
+        MKStmtSeq       -> text "##stmt'seq"
         MKStmtIf        -> text "##stmt'if"
         MKStmtCase      -> text "##stmt'case"
         MKStmtLoop      -> text "##stmt'loop"
