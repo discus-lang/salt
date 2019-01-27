@@ -4,8 +4,8 @@
 --
 module Salt.Core.Check.Term where
 import Salt.Core.Check.Term.Proc
-import Salt.Core.Check.Term.Alt
 import Salt.Core.Check.Term.App
+import Salt.Core.Check.Term.Case
 import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Value
 import Salt.Core.Check.Term.Base
@@ -411,23 +411,12 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
                 TVariant ns mgs -> return (ns, mgs)
                 _ -> throw $ ErrorCaseScrutNotVariant aScrut wh tScrut
 
-        -- Check for overlapping alternatives.
-        let nsAlt    = [n | MVarAlt n _ _ <- msAlt]
-        let nsAltDup = List.duplicates nsAlt
-        when (not $ null nsAltDup)
-         $ throw $ ErrorCaseAltsOverlapping a wh nsAltDup
-
-        -- Check for inexhaustive alternatives.
-        let nsNot = Set.difference (Set.fromList nsScrut) (Set.fromList nsAlt)
-        when (not $ Set.null nsNot)
-         $ throw $ ErrorCaseAltsInexhaustive a wh (Set.toList nsNot) tScrut
-
         -- Check all alternatives in turn,
         --  collecting up all the effects,
         --  and ensuring all the alt result types match.
         let nmgsScrut = zip nsScrut mgsScrut
         (msAlt', tsResult, esResult)
-         <- checkAlts a wh ctx mCase tScrut nmgsScrut msAlt Synth
+         <- checkCaseAlts a wh ctx mCase tScrut nmgsScrut msAlt
 
         -- Check the default 'else' branch if we have one.
         (mmElse', _tElse, esElse)
