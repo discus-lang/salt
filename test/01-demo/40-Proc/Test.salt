@@ -5,14 +5,15 @@ term derp [n: #Nat]: #Nat ! #Console
    let  y = the <foo: #Nat> of `foo 4
    seq  #console'print "derp"
    seq  if #nat'eq [x, 0] then return 3
-   seq  case y of { foo [x: #Nat] → return x }
-   cel  n: #Nat ← 0
-   seq  return 5
-   end  with 0
 
---   seq  loop seq
---                n ← #nat'add [2, 3]
---        end
+   seq  loop
+        seq #console'print "hello"
+        seq #console'print "world"
+        end
+
+--   seq  case y of { foo [x: #Nat] → return x }
+   cel  n: #Nat ← 0
+   end  with 5
 
 
 -- term derp [n: #Nat]: #Nat ! #Console
@@ -27,60 +28,4 @@ term derp [n: #Nat]: #Nat ! #Console
 --         return 5
 --    }
 
-
---    let  x = 5
---    let  y = the <foo: #Nat> of `foo 4
---    seq  #console'print "derp"
---    seq  if #nat'eq [x, 0] then return 3
---    seq  case y of { foo [x: #Nat] → return x }
---    cel  n: #Nat ← 0
---    seq  return 5
---    end  with 0
-
--- term derp [n: #Nat]: #Nat
---  =  proc #Nat of
---     let x = #nat'add [2, 3]
---     seq if #nat'eq [3, 4] then return 4
---     seq if #nat'eq [3, 4] then seq #console'print "derp" end
---     seq seq x = #nat'add [2, 3]; #console'print x end end       -- has a sub sequence.
---     seq case n of { bar [] → return 5}
---     cel n: #Nat ← 0
---     seq loop
---         seq if #nat'eq [n, 0] then break
---         seq n ← 5
---         seq #console'print "bar"        -- is a stmt that might return (mode is Return Nat)
---         end
---     end with 5                  -- yields a value.. mode is (Check Nat)
-
-
---    proc #Nat
---    seq {
---        let x = #nat'add [2, 3];
---        if #nat'eq [3, 4] then return 4;
---        if #nat'eq [3, 4] then #console'print "derp";
---        case n of { bar [] → return 5};
---        cel n: #Nat ← 0;
---        loop seq {
---                if #nat'eq [n, 0] then break;
---                n ← 0;
---                #console'print "bar";
---        };
---        return 5        --
---    }
-
-
-
---    seq  let x = #nat'add [4, 5];
---         if #nat'eq [3, 4] then return 4 else derp;
---         case n of { bar [] → return 5 };
---         cell n: #Nat ← 0;
---         #console'print "quux";
---         loop seq
---                 if #nat'eq [n, 0] then break;
---                 n ← 4;
---                 #console'print "bar";
---                 #console'print "baz";
---         end
---         #console'print "qux"
---    end
 

@@ -15,7 +15,7 @@ import qualified Text.Parsec            as P
 pTermProc :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
 pTermProc pTerm pTermApp
  = P.choice
- [ do   -- 'let' '[' Var,* ']' '=' Term TermProc
+ [ do   -- 'let' '[' Var,* ']' '=' Term Proc
         pTok KLet
         (rBinds, bts)
          <- pRanged (P.choice
@@ -45,25 +45,14 @@ pTermProc pTerm pTermApp
         return  $ MProcLet (MPAnn rBinds (MPTerms bts)) mBind mRest
 
 
- , do   -- 'seq' Stmt TermProc
+ , do   -- 'seq' Stmt Proc
         pTok KSeq
         mStmt   <- pTermStmt pTerm pTermApp
-        P.choice
-         [ do   pTok KEnd
-                P.choice
-                 [ do   pTok KWith
-                        mResult <- pTerm
-                        return  $ MProcSeq mStmt mResult
-
-                 , do   return  $ MProcSeq mStmt (MTerms [])
-                 ]
-
-         , do   mRest   <- pTermProc pTerm pTermApp
-                return  $ MProcSeq mStmt mRest
-         ]
+        mRest   <- pTermProc pTerm pTermApp
+        return  $ MProcSeq mStmt mRest
 
 
- , do   -- 'cel' Var ':' Type '←' Term TermProc
+ , do   -- 'cel' Var ':' Type '←' Term Proc
         pTok KCel
         nCell   <- pVar
         pTok KColon
@@ -74,8 +63,15 @@ pTermProc pTerm pTermApp
         return  $ MProcCel nCell tCell mBind mRest
 
 
- , do   -- TermStmt
-        pTermStmt pTerm pTermApp
+ , do   -- 'end'
+        -- 'end' 'with' Term
+        pTok KEnd
+        P.choice
+         [ do   pTok KWith
+                mResult <- pTerm
+                return  $  MProcEnd [mResult]
+
+         , do   return  $  MProcEnd [] ]
  ]
 
 
@@ -83,37 +79,36 @@ pTermProc pTerm pTermApp
 pTermStmt :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
 pTermStmt pTerm pTermApp
  = P.choice
- [ do   --  'if' '{' (Term '→' Term);+ '}' TermProcRest
-        --  'if' Term 'then' Term TermProc
+ [ do   --  'if' '{' (Term '→' TermStmt);+ '}'
+        --  'if' Term 'then' TermStmt
         pTok KIf
         P.choice
-         [ do   -- ... '{' (Term '→' Term);+ '}' TermProcRest
+         [ do   -- ... '{' (Term '→' TermStmt);+ '}'
                 pTok KCBra          <?> "a '{' to start the list of branches"
                 (msCond, msThen)
                  <- fmap unzip $ flip P.sepEndBy (pTok KSemi)
                  $  do  mCond <- pTerm      <?> "a term for a condition."
                         pRight              <?> "a completed term, or '→' to start the body"
 
-                        mThen <- pTermProc pTerm pTermApp
+                        mThen <- pTermStmt pTerm pTermApp
                          <?> "the body of the branch"
 
                         return (mCond, mThen)
-
                 pTok KCKet
 
                 return  $ MStmtIf msCond msThen
 
-          , do  -- ... Term 'then' TermProc
+          , do  -- ... Term 'then' TermStmt
                 mCond   <- pTerm        <?> "a term for the condition"
                 pTok KThen              <?> "a completed procedure, or 'then' to start the body"
 
-                mThen   <- pTermProc pTerm pTermApp
+                mThen   <- pTermStmt pTerm pTermApp
                  <?> "the body of the 'then' branch"
 
                 return $ MStmtIf [mCond] [mThen]
          ]
 
- , do   -- 'case' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' TermProc)* '}'
+ , do   -- 'case' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' Stmt)* '}'
         pTok KCase
         mScrut <- pTerm         <?> "a term for the scrutinee"
         pTok KOf                <?> "a completed term, or 'of' to start the alternatives"
@@ -133,7 +128,7 @@ pTermStmt pTerm pTermApp
 
                 pRight          <?> "a '→' to start the body"
 
-                mBody <- pTermProc pTerm pTermApp
+                mBody <- pTermStmt pTerm pTermApp
                  <?> "the body of the alternative"
 
                 return $ MVarAlt lAlt (MPAnn rPat $ MPTerms btsPat) mBody
@@ -141,9 +136,9 @@ pTermStmt pTerm pTermApp
         pTok KCKet              <?> "a completed term, or '}' to end the alternatives"
         return $ MStmtCase mScrut msAlts
 
- , do   -- 'loop' TermProc
+ , do   -- 'loop' Stmt
         pTok KLoop
-        mBody   <- pTermProc pTerm pTermApp
+        mBody   <- pTermStmt pTerm pTermApp
         return  $ MStmtLoop mBody
 
  , do   -- 'Var' '←' Term
@@ -154,10 +149,6 @@ pTermStmt pTerm pTermApp
         pLeft
         mValue  <- pTerm
         return  $  MStmtUpdate nCell mValue
-
- , do   -- TermApp
-        mBody    <- pTermApp
-        return  $ MStmtCall mBody
 
  , do   -- 'break'
         pTok KBreak
@@ -172,8 +163,13 @@ pTermStmt pTerm pTermApp
         mBody <- pTerm
         return $ MStmtReturn mBody
 
- , do   -- 'TermApp'
-        mTerm   <- pTermApp
-        return mTerm
+ , do   -- Proc
+        mProc <- pTermProc pTerm pTermApp
+        return $ MStmtProc mProc
+
+ , do   -- TermApp
+        mBody    <- pTermApp
+        return  $ MStmtCall mBody
+
  ]
 

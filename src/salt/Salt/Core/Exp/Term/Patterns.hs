@@ -53,14 +53,19 @@ pattern MProc tsReturn mBody
 pattern MProcSeq mStmt mRest
  = MKey MKProcSeq    [MGTerm mStmt, MGTerm mRest]
 
+pattern MProcEnd msResult
+ = MKey MKProcEnd    [MGTerms msResult]
+
 pattern MProcLet mps mBind mRest
  = MKey MKProcLet    [MGTerm mBind, MGTerm (MAbs mps mRest)]
 
 pattern MProcCel nCel tCel mBind mRest
  = MKey MKProcCel    [MGTerm mBind, MGTerm (MAbs (MPTerms [(BindName nCel, tCel)]) mRest)]
 
-pattern MStmtSeq mStmt msRest
- = MKey MKStmtSeq    [MGTerm mStmt, MGTerms msRest]
+
+------------------------------------------------------------------------------------------- Stmt --
+pattern MStmtProc mProc
+ = MKey MKStmtProc    [MGTerm mProc]
 
 pattern MStmtIf msCond msThen
  = MKey MKStmtIf     [MGTerms msCond, MGTerms msThen]
