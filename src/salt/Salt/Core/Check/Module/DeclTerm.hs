@@ -25,9 +25,13 @@ checkDeclTermSig _ _ decl
 
 -- | Check bodies of term declarations
 checkDeclTerm :: CheckDecl a
-checkDeclTerm _a ctx0 (DTerm (DeclTerm a mode nDecl mpss tsResult mBody))
- = do   let wh  = [WhereTermDecl a nDecl]
-        let ctx = ctx0 { contextTermMode = mode }
+
+-- (d-term-plain) -----------------------------------------
+checkDeclTerm _a ctx0
+        (DTerm (DeclTerm a mode@DeclTermModePlain nDecl mpss tsResult mBody))
+ = do
+        let wh  = [WhereTermDecl a nDecl]
+        let ctx = ctx0 { contextTermMode = TermModePlain }
 
         -- Check the parameter type annotations.
         mpss'     <- checkTermParamss a wh ctx mpss
@@ -48,6 +52,43 @@ checkDeclTerm _a ctx0 (DTerm (DeclTerm a mode nDecl mpss tsResult mBody))
              | Just _ <- takeMPTypes mps -> throw $ ErrorAbsImpure UType a wh eBody_red
              | Just _ <- takeMPTerms mps -> throw $ ErrorAbsImpure UTerm a wh eBody_red
             _ -> throw $ ErrorTermDeclImpure a wh nDecl eBody_red
+
+        return  $ DTerm $ DeclTerm a mode nDecl mpss' tsResult' mBody'
+
+-- (d-term-proc) ------------------------------------------
+checkDeclTerm _a ctx
+        (DTerm (DeclTerm a mode@DeclTermModeProc nDecl mpss tsResult0 mBody))
+ = do
+        let wh  = [WhereTermDecl a nDecl]
+
+        -- Check the parameter type annotations.
+        mpss'     <- checkTermParamss a wh ctx mpss
+
+        -- Check the result type annotation.
+        (tsResult, _esResult)
+         <- simplTypes a ctx tsResult0
+         >>= \case
+                [TSusp tsResult tEffect]
+                  -> return (tsResult, [tEffect])
+                t -> return (t, [])
+
+        let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
+        tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
+
+        -- Check the body.
+        let ctx'' = ctx' { contextTermMode = TermModeProcBody }
+        (mBody', _esResult)
+         <- contextCheckProc ctx a wh ctx'' tsResult mBody
+
+        -- TODO: check proc effects against result type.
+
+--         eBody_red <- simplType a ctx' (TSum esResult)
+--         when (not $ isTPure eBody_red)
+--          $ case reverse mpss of
+--             mps : _
+--              | Just _ <- takeMPTypes mps -> throw $ ErrorAbsImpure UType a wh eBody_red
+--              | Just _ <- takeMPTerms mps -> throw $ ErrorAbsImpure UTerm a wh eBody_red
+--             _ -> throw $ ErrorTermDeclImpure a wh nDecl eBody_red
 
         return  $ DTerm $ DeclTerm a mode nDecl mpss' tsResult' mBody'
 

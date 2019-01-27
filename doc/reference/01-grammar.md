@@ -275,7 +275,12 @@ Procs consist of a sequence of statements, and an expression to compute the retu
 
 Proc statements consist of `let`-binding, `cell`-definition and assignment, `if`-branching, `case`-branching, `while`- loops, `return`-statements, and embedded `bloc` constructs. Note that the `if` form does not require an `otherwise` branch. When no alternative matches control flow continues to the next statement after the `if`, which creates a join point in the control flow graph. The `while` loops execute their bodies while their scrutinees evaluates to `#true`. The `return` statement causes control to transfer to the end of the enclosing `proc` construct. Blocs are a fragment of Procs, so they can be embedded directly.
 
-Proc expressions include the shared forms as well as `xldd` / `(! v)`  which loads the current value from the storage cell named `v`.
+#### TODO
+* we no longer have load forms in exps
+* add nested procedures, for clean inlining, not possible in plain C.
+* add nested sequences.
+* add end and end with forms.
+
 
 
 ### Blocs

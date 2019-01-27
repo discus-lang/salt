@@ -14,7 +14,7 @@ import qualified Text.Parsec            as P
 pTypes :: Parser [Type RL]
 pTypes
  = P.choice
- [ do   pSquared $ flip P.sepEndBy1 (pTok KComma)
+ [ do   pSquared $ flip P.sepEndBy (pTok KComma)
                  $ pType
  , do   t <- pType
         return [t]

@@ -69,9 +69,9 @@ pTermProc pTerm pTermApp
         P.choice
          [ do   pTok KWith
                 mResult <- pTerm
-                return  $  MProcEnd [mResult]
+                return  $  MProcEndWith mResult
 
-         , do   return  $  MProcEnd [] ]
+         , do   return  $  MProcEnd ]
  ]
 
 
@@ -163,9 +163,16 @@ pTermStmt pTerm pTermApp
         mBody <- pTerm
         return $ MStmtReturn mBody
 
+ , do   -- 'proc' Types 'of' Proc
+        pTok KProc
+        tsReturn <- pTypes
+        pTok KOf
+        mBody    <- pTermProc pTerm pTermApp
+        return $ MStmtProc tsReturn mBody
+
  , do   -- Proc
-        mProc <- pTermProc pTerm pTermApp
-        return $ MStmtProc mProc
+        mBody   <- pTermProc pTerm pTermApp
+        return  $ MStmtNest mBody
 
  , do   -- TermApp
         mBody    <- pTermApp

@@ -2,6 +2,7 @@
 module Salt.Core.Codec.Text.Parser.Decl where
 import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Term
+import Salt.Core.Codec.Text.Parser.TermProc
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp
@@ -45,13 +46,9 @@ pDeclType
 -- | Parser for a term declaration.
 pDeclTerm :: Parser (Decl RL)
 pDeclTerm
- = do   -- 'term' Var TermParams* (':' Type)? '=' Term
-        termMode
-         <- P.choice
-                [ do pTok KTerm; return TermModePlain
-                , do pTok KProc; return TermModeProcBody
-                , do pTok KBloc; return TermModeBlocBody ]
-
+ = P.choice
+ [ do   -- 'term' Var TermParams* ':' Type '=' Term
+        pTok KTerm
         (rName, nName)
          <- pRanged (pVar       <?> "a name for the term")
         mps     <- P.many (pTermParams
@@ -62,11 +59,31 @@ pDeclTerm
         mBody   <- pTerm        <?> "the body"
         return  $  DTerm $ DeclTerm
                 { declAnnot       = rName
-                , declTermMode    = termMode
+                , declTermMode    = DeclTermModePlain
                 , declName        = nName
                 , declParams      = mps
                 , declTypesResult = tsRes
                 , declBody        = mBody }
+
+ , do   -- 'proc' Var TermParams* ':' Type '=' Proc
+        pTok KProc
+        (rName, nName)
+         <- pRanged (pVar       <?> "a name for the proc")
+        mps     <- P.many (pTermParams
+                                <?> "some parameters, or a result type annotation")
+        pTok KColon             <?> "more parameters, or a ':' to start the result type"
+        tsRes   <- pTypesResult <?> "some result types"
+        pTok KEquals            <?> "a '=' to start the body"
+        mBody   <- pTermProc pTerm pTermApp
+                                <?> "the body"
+        return  $  DTerm $ DeclTerm
+                { declAnnot       = rName
+                , declTermMode    = DeclTermModeProc
+                , declName        = nName
+                , declParams      = mps
+                , declTypesResult = tsRes
+                , declBody        = mBody }
+ ]
 
 
 ------------------------------------------------------------------------------------------- Test --

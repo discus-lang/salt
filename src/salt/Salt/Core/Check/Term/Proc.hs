@@ -86,14 +86,20 @@ checkTermProc a wh ctx tsReturn (MProcCel nCel tCel mBind mRest)
                 , esBind ++ esRest)
 
 
--- (t-proc-end) -------------------------------------------
-checkTermProc a wh ctx tsReturn (MProcEnd msResult)
+-- (t-proc-end-with) -------------------------------------
+checkTermProc a wh ctx tsReturn (MProcEndWith mResult)
  = do
-        (msResult', _tsResult, esResult)
-         <- checkTerms a wh ctx (Check tsReturn) msResult
+        (mResult', _tsResult, esResult)
+         <- checkTerm a wh ctx (Check tsReturn) mResult
 
-        return  ( MProcEnd msResult'
+        return  ( MProcEndWith mResult'
                 , esResult)
+
+
+-- (t-proc-end) ------------------------------------------
+checkTermProc _a _wh _ctx _tsReturn MProcEnd
+ = do
+        return  (MProcEnd, [])
 
 
 -----------------------------------------------------------

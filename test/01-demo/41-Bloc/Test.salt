@@ -1,6 +1,6 @@
 
 
 
-bloc fac [n: #Nat]: #Nat
- = if   { #nat'eq [n, 0] → 4
-        ; else           → #nat'mul [n, fac [#nat'sub [n, 1]]] }
+-- bloc fac [n: #Nat]: #Nat
+--  = if   { #nat'eq [n, 0] → 4
+--         ; else           → #nat'mul [n, fac [#nat'sub [n, 1]]] }

@@ -468,6 +468,7 @@ checkTermWith a wh ctx Synth (MProc tsReturn mBody)
         "procedure"
         [TermModePlain, TermModeProcBody]
  $ do
+        -- TODO: these must have kind data.
         (tsReturn', _)
          <- checkTypes a wh ctx tsReturn
 

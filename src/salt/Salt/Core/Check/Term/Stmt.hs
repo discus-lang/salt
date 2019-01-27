@@ -2,6 +2,7 @@
 module Salt.Core.Check.Term.Stmt where
 import Salt.Core.Check.Term.Case
 import Salt.Core.Check.Term.Base
+import Salt.Core.Check.Type.Base
 import Salt.Core.Codec.Text             ()
 import Text.Show.Pretty
 
@@ -9,12 +10,26 @@ import Text.Show.Pretty
 checkTermStmt :: CheckTermStmt a
 
 -- (t-stmt-proc) ------------------------------------------
-checkTermStmt a wh ctx _tsReturn (MStmtProc mProc)
- = do   (mProc', esProc)
-         <- contextCheckProc ctx a wh ctx [] mProc
+checkTermStmt a wh ctx _tsReturn (MStmtProc tsResult mBody)
+ = do   tsResult'
+         <- checkTypesAreAll UType a wh ctx TData tsResult
 
-        return  ( MStmtProc mProc'
+        (mProc', esProc)
+         <- contextCheckProc ctx a wh ctx tsResult' mBody
+
+        return  ( MStmtProc tsResult mProc'
                 , esProc)
+
+
+-- (t-stmt-nest) ------------------------------------------
+checkTermStmt a wh ctx tsReturn (MStmtNest mProc)
+ = do
+        (mProc', esProc)
+         <- contextCheckProc ctx a wh ctx tsReturn mProc
+
+        return  ( MStmtNest mProc'
+                , esProc)
+
 
 -- (t-stmt-if) --------------------------------------------
 checkTermStmt a wh ctx tsReturn (MStmtIf msCond msThen)

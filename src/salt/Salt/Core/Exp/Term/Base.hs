@@ -68,9 +68,11 @@ data TermKey
         | MKProcSeq                             -- ^ Procedural statement sequence.
         | MKProcLet                             -- ^ Procedural let-binding.
         | MKProcCel                             -- ^ Procedural cel-introduction.
-        | MKProcEnd                             -- ^ End a procedure with a value.
+        | MKProcEnd                             -- ^ End a procedure without producing values.
+        | MKProcEndWith                         -- ^ End a procedure while producing some values.
 
         | MKStmtProc                            -- ^ Embed a sub-procedure into a statement.
+        | MKStmtNest                            -- ^ Embed a sub-procedure body into a statement.
         | MKStmtIf                              -- ^ Branch on boolean flags.
         | MKStmtCase                            -- ^ Branch on variant constructor.
         | MKStmtLoop                            -- ^ Loop construct.

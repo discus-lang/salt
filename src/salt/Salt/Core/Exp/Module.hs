@@ -39,7 +39,7 @@ data DeclType a
 data DeclTerm a
         = DeclTerm
         { declAnnot             :: a
-        , declTermMode          :: TermMode
+        , declTermMode          :: DeclTermMode
         , declName              :: Name
         , declParams            :: [TermParams a]
         , declTypesResult       :: [Type a]
@@ -47,7 +47,15 @@ data DeclTerm a
         deriving Show
 
 
+-- | Mode of a decl term.
+data DeclTermMode
+        = DeclTermModePlain
+        | DeclTermModeProc
+        deriving (Show, Eq)
+
+
 -- | Mode of the term declaration.
+--   TODO: kill this, it's only being used by the checker.
 data TermMode
         = TermModePlain         -- ^ A plain term declaration.
         | TermModeProcBody      -- ^ A proc body.
