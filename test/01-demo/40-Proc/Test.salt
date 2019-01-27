@@ -6,14 +6,14 @@ term derp [n: #Nat]: #Nat ! #Console
    seq  #console'print "derp"
    seq  if #nat'eq [x, 0] then return 3
 
+   cel  n: #Nat ← 0
    seq  loop
+        seq if #nat'gt [n, 5] then break
         seq #console'print "hello"
-        seq #console'print "world"
         end
 
    seq  case y of { foo [x: #Nat] → return x }
 
-   cel  n: #Nat ← 0
    end  with 5
 
 

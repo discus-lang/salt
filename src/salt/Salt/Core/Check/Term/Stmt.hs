@@ -94,6 +94,18 @@ checkTermStmt a wh ctx _tsReturn (MStmtCall mBody)
                 , esBody)
 
 
+-- (t-stmt-break) -----------------------------------------
+-- TODO: check we are syntactically within a loop.
+checkTermStmt _a _wh _ctx _tsReturn m@MStmtBreak
+ = do   return  (m, [])
+
+
+-- (t-stmt-continue) -----------------------------------------
+-- TODO: check we are syntactically within a loop.
+checkTermStmt _a _wh _ctx _tsReturn m@MStmtContinue
+ = do   return  (m, [])
+
+
 -- (t-stmt-return) ----------------------------------------
 checkTermStmt a wh ctx tsReturn (MStmtReturn mBody)
  = do   (mBody', _, esReturn)
@@ -104,5 +116,7 @@ checkTermStmt a wh ctx tsReturn (MStmtReturn mBody)
 
 
 -----------------------------------------------------------
+-- TODO: real error message.
 checkTermStmt _ _ _ _ mm
  = error $ "checkTermStmt: "  ++ ppShow mm
+

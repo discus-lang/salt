@@ -115,8 +115,15 @@ checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
 checkTermWith a wh ctx Synth m@(MVar u)
  =   contextResolveTermBound ctx u
  >>= \case
-         Just t  -> return (m, [t], [])
-         Nothing -> throw $ ErrorUnknownBound UTerm a wh u
+        -- Cels referenced in statements are implicitly read.
+        --   The type 'Cel T' has kind #Cel, not #Data,
+        --   so we cannot produce the Cel type itself.
+        --  TODO: only permit this within a Stmt Exp
+        Just (TCel t)
+         -> return (m, [t], [])
+
+        Just t  -> return (m, [t], [])
+        Nothing -> throw $ ErrorUnknownBound UTerm a wh u
 
 
 -- (t-abt) ------------------------------------------------
