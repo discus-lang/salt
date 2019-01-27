@@ -11,7 +11,8 @@ term derp [n: #Nat]: #Nat ! #Console
         seq #console'print "world"
         end
 
---   seq  case y of { foo [x: #Nat] → return x }
+   seq  case y of { foo [x: #Nat] → return x }
+
    cel  n: #Nat ← 0
    end  with 5
 

@@ -416,7 +416,7 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
         --  and ensuring all the alt result types match.
         let nmgsScrut = zip nsScrut mgsScrut
         (msAlt', tsResult, esResult)
-         <- checkCaseAlts a wh ctx mCase tScrut nmgsScrut msAlt
+         <- checkCaseTermAlts a wh ctx mCase tScrut nmgsScrut msAlt
 
         -- Check the default 'else' branch if we have one.
         (mmElse', _tElse, esElse)

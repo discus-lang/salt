@@ -7,13 +7,9 @@ import qualified Data.Set               as Set
 
 
 ---------------------------------------------------------------------------------------------------
--- Check some case alternatives.
---  This same code is used to check alternatives in term case expressions,
---  as well as in procedure case statements. In the latter case we set the
---  incoming mode to (Return ts), where ts is the return type vector for
---  the statement form.
---
-checkCaseAlts
+-- Check some case term alternatives.
+--  This is used when checking term-level case expressions.
+checkCaseTermAlts
         :: Annot a
         => a -> [Where a] -> Context a
         -> Term a               -- ^ Entire case term, for error reporting.
@@ -22,7 +18,7 @@ checkCaseAlts
         -> [Term a]             -- ^ Alternatives.
         -> IO ([Term a], [Type a], [Effect a])
 
-checkCaseAlts a wh ctx mCase tScrut nmgsScrut msAlts
+checkCaseTermAlts a wh ctx mCase tScrut nmgsScrut msAlts
  = do   checkCaseAltsPatterns a wh ctx tScrut nmgsScrut msAlts
         checkAlts msAlts [] Nothing []
  where
@@ -59,6 +55,54 @@ checkCaseAlts a wh ctx mCase tScrut nmgsScrut msAlts
 
 
 ---------------------------------------------------------------------------------------------------
+-- Check some case stmt alternatives.
+--   This is used when checking stmt-level case expressions,
+--   which may return from the enclosing procedure with a value vector.
+checkCaseStmtAlts
+        :: Annot a
+        => a -> [Where a] -> Context a
+        -> Term a               -- ^ Entire case term, for error reporting.
+        -> Type a               -- ^ Type of scrutinee, for error reporting.
+        -> [Type a]             -- ^ Type vector that may be produced via a 'return'.
+        -> [(Name, TypeArgs a)] -- ^ Names and types of scrutinee fields.
+        -> [Term a]             -- ^ Alternatives.
+        -> IO ([Term a], [Effect a])
+
+checkCaseStmtAlts a wh ctx mCase tScrut tsReturn nmgsScrut msAlts
+ = do   checkCaseAltsPatterns a wh ctx tScrut nmgsScrut msAlts
+        checkAlts msAlts [] []
+ where
+  checkAlts (MVarAlt nPat mpsPat mBody : msAltsRest)
+            msAltsChecked esAlt
+   | (_aPatBind, mpsPat_) <- unwrapTermParams a mpsPat
+   , Just btsPat          <- takeMPTerms mpsPat_
+   = do
+        -- Check the result in the context extended by the fields from the pattern.
+        -- Also ensure this alternative has the same result type as any others we
+        -- have checked before.
+        let aBody = fromMaybe a $ takeAnnotOfTerm mBody
+        let ctx'  = contextBindTermParams (MPTerms btsPat) ctx
+
+        (mBody', esStmt)
+         <- contextCheckStmt ctx' aBody wh ctx' tsReturn mBody
+
+        checkAlts msAltsRest
+            (MVarAlt nPat mpsPat mBody' : msAltsChecked)
+            (esStmt ++ esAlt)
+
+  checkAlts [] msAltsChecked esAlt
+   =    return  ( reverse msAltsChecked
+                , reverse esAlt)
+
+  -- There are either no alternatives or one of them is not a MVarAlt term.
+  checkAlts _ _ _
+     = throw $ ErrorTermMalformed a wh mCase
+
+
+---------------------------------------------------------------------------------------------------
+-- | Check that the patterns in some alternatives are well formed.
+--   We don't need the bodies of the alternatives for this,
+--   so can use this function for both the term and statement case forms.
 checkCaseAltsPatterns
         :: Annot a
         => a -> [Where a] -> Context a
@@ -97,6 +141,7 @@ checkCaseAltsPatterns a wh ctx tScrut ntgsScrut msAlt
 
 
 ---------------------------------------------------------------------------------------------------
+-- | Check the pattern in an alternative is well formed.
 checkCaseAltPattern
         :: Annot a
         => a -> [Where a] -> Context a

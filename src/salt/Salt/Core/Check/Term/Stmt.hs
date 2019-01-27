@@ -1,5 +1,6 @@
 
 module Salt.Core.Check.Term.Stmt where
+import Salt.Core.Check.Term.Case
 import Salt.Core.Check.Term.Base
 import Salt.Core.Codec.Text             ()
 import Text.Show.Pretty
@@ -27,6 +28,32 @@ checkTermStmt a wh ctx tsReturn (MStmtIf msCond msThen)
 
         return  ( MStmtIf msCond' msThen'
                 , esCond ++ concat essThen)
+
+
+-- (t-stmt-case) ------------------------------------------
+checkTermStmt a wh ctx tsReturn mCase@(MStmtCase mScrut msAlt)
+ = do
+        -- Check the scrutinee.
+        (mScrut', tScrut, esScrut)
+         <- checkTerm1 a wh (asExp ctx) Synth mScrut
+
+        -- The scrutinee needs to be a variant.
+        let aScrut = fromMaybe a $ takeAnnotOfTerm mScrut
+        (nsScrut, mgsScrut)
+         <- simplType aScrut ctx tScrut
+         >>= \case
+                TVariant ns mgs -> return (ns, mgs)
+                _ -> throw $ ErrorCaseScrutNotVariant aScrut wh tScrut
+
+        -- Check all alternatives in turn,
+        --  collecting up all the effects,
+        --  and ensuring all the alt result types match.
+        let nmgsScrut = zip nsScrut mgsScrut
+        (msAlt', esResult)
+         <- checkCaseStmtAlts a wh ctx mCase tScrut tsReturn nmgsScrut msAlt
+
+        return  ( MStmtCase mScrut' msAlt'
+                , esScrut ++ esResult)
 
 
 -- (t-stmt-loop) ------------------------------------------
