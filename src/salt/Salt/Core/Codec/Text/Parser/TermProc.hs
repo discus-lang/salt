@@ -108,7 +108,7 @@ pTermStmt pTerm pTermApp
                 return $ MStmtIf [mCond] [mThen]
          ]
 
- , do   -- 'case' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' Stmt)* '}'
+ , do   -- 'case' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' Stmt);* '}'
         pTok KCase
         mScrut <- pTerm         <?> "a term for the scrutinee"
         pTok KOf                <?> "a completed term, or 'of' to start the alternatives"

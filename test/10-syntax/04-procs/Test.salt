@@ -1,5 +1,5 @@
 -- Test syntax of procs.
-
+-- TODO: add exec tests to use the bindings.
 -- TODO: support nested procedures.
 -- TODO: procedure calls
 -- TODO: make 'proc Stmt' imply 'proc [] of Stmt'
@@ -107,4 +107,45 @@ proc if4 [n: #Nat, m: #Nat]: #Text ! #Console
             end
         seq if #nat'eq [n, 2]           then return "two"
         end with "whatever"
+
+
+-- case statements ------------------------------------------------------------
+-- TODO: end missing a value.
+-- TODO: also do form with 'case' as term at end.
+proc case1 [v: <foo: #Nat, bar: #Nat>]: #Nat
+ =      seq case v of
+                { foo [x: #Nat] → return x
+                ; bar [x: #Nat] → return x }
+        end
+
+
+-- Statement case does not need to be exhaustive as in the case of no match
+-- control continues to the next statement.
+proc case2 [v: <foo: #Nat, bar: #Nat>]: #Nat
+ =      seq case v of
+                { foo [x: #Nat] → return x }
+        end
+
+
+proc case3 [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
+ =      seq case v of
+                { foo [x: #Nat] → return x
+                ; bar [b: #Bool, x: #Nat, y: #Nat]
+                  → seq if b then return x
+                    seq return y
+                    end
+                ; baz [x: #Nat] → return x }
+        end
+
+
+-- loop statements ------------------------------------------------------------
+proc loop1 [n: #Nat]: []! #Console
+ =      seq loop
+            seq if #nat'gt [n, 10] then return []
+            seq #console'print "hello"
+            end
+        end
+
+
+
 

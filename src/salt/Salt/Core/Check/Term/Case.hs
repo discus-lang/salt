@@ -19,7 +19,7 @@ checkCaseTermAlts
         -> IO ([Term a], [Type a], [Effect a])
 
 checkCaseTermAlts a wh ctx mCase tScrut nmgsScrut msAlts
- = do   checkCaseAltsPatterns a wh ctx tScrut nmgsScrut msAlts
+ = do   checkCaseAltsPatterns a wh ctx tScrut nmgsScrut msAlts True
         checkAlts msAlts [] Nothing []
  where
   checkAlts (MVarAlt nPat mpsPat mBody : msAltsRest)
@@ -69,7 +69,7 @@ checkCaseStmtAlts
         -> IO ([Term a], [Effect a])
 
 checkCaseStmtAlts a wh ctx mCase tScrut tsReturn nmgsScrut msAlts
- = do   checkCaseAltsPatterns a wh ctx tScrut nmgsScrut msAlts
+ = do   checkCaseAltsPatterns a wh ctx tScrut nmgsScrut msAlts False
         checkAlts msAlts [] []
  where
   checkAlts (MVarAlt nPat mpsPat mBody : msAltsRest)
@@ -109,11 +109,15 @@ checkCaseAltsPatterns
         -> Type a                       -- ^ Type of scrutinee, for error messages.
         -> [(Name, TypeArgs a)]         -- ^ Name and args of scrutinee type.
         -> [Term a]                     -- ^ Alternatives to check.
+        -> Bool                         -- ^ Whether alternatives must be exhaustive.
         -> IO ()
 
-checkCaseAltsPatterns a wh ctx tScrut ntgsScrut msAlt
+checkCaseAltsPatterns a wh ctx tScrut ntgsScrut msAlt bExhaustive
  = do   checkNotOverlapping
-        checkNotInexhaustive
+
+        when bExhaustive
+         $ checkNotInexhaustive
+
         checkPatterns msAlt
  where
 
