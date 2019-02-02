@@ -78,6 +78,7 @@ proc seq'nest2 []: []! #Console
             end;
         yield []
 
+
 -- cell-introduction ----------------------------------------------------------
 -- TODO: allow type to be omitted, like with let bindings
 proc cell1 [x: #Nat, y: #Nat]: #Nat
