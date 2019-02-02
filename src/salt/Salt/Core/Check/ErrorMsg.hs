@@ -247,8 +247,8 @@ ppre c (ErrorRunSuspensionIsNot _a _wh ts)
 
 
 -- Procedure problems -------------------------------------
-ppre c (ErrorProcUpdateNotCel _a _wh t)
- = vcat [ text "Cannot update non-cel"
+ppre c (ErrorProcUpdateNotCell _a _wh t)
+ = vcat [ text "Value to update is not a cell"
         , text " of type" %% ppr c t ]
 
 

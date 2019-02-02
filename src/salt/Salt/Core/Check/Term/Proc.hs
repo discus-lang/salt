@@ -1,9 +1,9 @@
 
 module Salt.Core.Check.Term.Proc where
 -- import Salt.Core.Check.Term.Stmt
--- import Salt.Core.Check.Term.Params
+import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Base
--- import Salt.Core.Check.Type.Base
+import Salt.Core.Check.Type.Base
 import Salt.Core.Codec.Text             ()
 
 import Text.Show.Pretty
@@ -23,28 +23,21 @@ checkTermProc a wh ctx mode _ctxProc (MProcYield mResult)
                 , tsResult, esResult)
 
 
-
------------------------------------------------------------
--- We don't know how to check this sort of procedure
-checkTermProc _a _wh _ctx _mode _ctxProc  mm
- = error $ ppShow ("checkTermProc" :: String, mm)
-
-{-
--- (t-proc-seq) -------------------------------------------
-checkTermProc a wh ctx tsReturn (MProcSeq mStmt mRest)
+-- (t-proc-call) ------------------------------------------
+-- Checking of procedure calls is similar to checking term applications,
+-- except that the form of the arguments is restricted. We use the exising
+-- term application checker to check procedure calls.
+checkTermProc a wh ctx mode _ctxProc (MProcCall mFun mgssArg)
  = do
-        (mStmt', esStmt)
-         <- checkTermStmt a wh ctx tsReturn mStmt
+        (MAps mFun' mgssArg', tsResult, esCall)
+         <- checkTerm a wh (asExp ctx) mode (MAps mFun mgssArg)
 
-        (mRest', esRest)
-         <- checkTermProc a wh ctx tsReturn mRest
-
-        return  ( MProcSeq mStmt' mRest'
-                , esStmt ++ esRest)
+        return  ( MProcCall mFun' mgssArg'
+                , tsResult, esCall)
 
 
--- (t-proc-let) --------------------------------------------
-checkTermProc a wh ctx tsReturn (MProcLet mps mBind mRest)
+-- (t-proc-seq) --------------------------------------------
+checkTermProc a wh ctx mode ctxProc (MProcSeq mps mBind mRest)
  | (aParam, mps_) <- unwrapTermParams a mps
  , Just _bts      <- takeMPTerms mps_
  = do
@@ -52,8 +45,9 @@ checkTermProc a wh ctx tsReturn (MProcLet mps mBind mRest)
         mps' <- checkTermParams a wh ctx mps
 
         -- Check the bound expression.
+        -- TODO: pass down expected type if we have it on the binder.
         (mBind', tsBind, esBind)
-         <- checkTerm a wh (asExp ctx) Synth mBind
+         <- checkTermProc a wh (asExp ctx) Synth ctxProc mBind
 
         -- Check we have the same number of binders
         -- as values produced by the binding.
@@ -79,30 +73,61 @@ checkTermProc a wh ctx tsReturn (MProcLet mps mBind mRest)
         let bts'' = zip bs tsBind'
         let ctx'  = contextBindTermParams (MPTerms bts'') ctx
 
-        -- Check the rest of the.
-        (mRest', esResult)
-         <- checkTermProc a wh ctx' tsReturn mRest
+        -- Check the rest of the procedure.
+        (mRest', tsResult, esResult)
+         <- checkTermProc a wh ctx' mode ctxProc mRest
 
-        return  ( MLet mps' mBind' mRest'
-                , esBind ++ esResult)
+        return  ( MProcSeq mps' mBind' mRest'
+                , tsResult, esBind ++ esResult)
 
 
--- (t-proc-cel) -------------------------------------------
-checkTermProc a wh ctx tsReturn (MProcCel nCel tCel mBind mRest)
+-- (t-proc-cell) ------------------------------------------
+checkTermProc a wh ctx mode ctxProc (MProcCell nCell tCell mBind mRest)
  = do
-        tCel' <- checkTypeHas UKind a wh ctx TData tCel
+        tCell' <- checkTypeHas UKind a wh ctx TData tCell
 
         (mBind', _tBind, esBind)
-         <- checkTerm a wh (asExp ctx) (Check [tCel]) mBind
+         <- checkTerm a wh (asExp ctx) (Check [tCell]) mBind
 
-        let ctx' = contextBindTerm nCel (TCel tCel') ctx
-        (mRest', esRest)
-         <- checkTermProc a wh ctx' tsReturn mRest
+        let ctx' = contextBindTerm nCell (TCell tCell') ctx
+        (mRest', tsResult, esRest)
+         <- checkTermProc a wh ctx' mode ctxProc mRest
 
-        return  ( MProcCel nCel tCel' mBind' mRest'
-                , esBind ++ esRest)
+        return  ( MProcCell nCell tCell' mBind' mRest'
+                , tsResult, esBind ++ esRest)
 
 
+-- (t-proc-update) ----------------------------------------
+checkTermProc a wh ctx mode ctxProc (MProcUpdate nCell mNew mRest)
+ = do   let uCell = BoundWith nCell 0
+        tCell   <- contextResolveTermBound ctx uCell
+                >>= \case
+                        Nothing -> throw $ ErrorUnknownBound UTerm a wh uCell
+                        Just t  -> return t
+
+        tCell'  <- simplType a ctx tCell
+        tVal    <- case tCell' of
+                        TCell t -> return t
+                        _       -> throw $ ErrorProcUpdateNotCell a wh tCell'
+
+        (mNew', _tsNew, esNew)
+         <- checkTerm a wh (asExp ctx) (Check [tVal]) mNew
+
+        (mRest', tsResult, esRest)
+         <- checkTermProc a wh ctx mode ctxProc mRest
+
+        return  ( MProcUpdate nCell mNew' mRest'
+                , tsResult, esNew ++ esRest)
+
+
+
+
+-----------------------------------------------------------
+-- We don't know how to check this sort of procedure
+checkTermProc _a _wh _ctx _mode _ctxProc  mm
+ = error $ ppShow ("checkTermProc" :: String, mm)
+
+{-
 -- (t-proc-end-with) -------------------------------------
 checkTermProc a wh ctx tsReturn (MProcEndWith mResult)
  = do

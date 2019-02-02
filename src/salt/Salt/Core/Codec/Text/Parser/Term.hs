@@ -265,7 +265,7 @@ pTermBody
 pTermApp :: Parser (Term RL)
 pTermApp
  = P.choice
- [ do   -- Con TypeArg* TermArg*
+ [ do   -- Con TermArgs*
         (rCon, nCon)  <- pRanged pCon
         pTermAppArgsSat (MAnn rCon $ MCon nCon)
          <?> "arguments for the constructor application"

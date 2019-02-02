@@ -21,6 +21,7 @@ pattern MApv mFun mArg          = MKey   MKApp  [MGTerm  mFun, MGTerm  mArg]
 pattern MApm mFun msArg         = MKey   MKApp  [MGTerm  mFun, MGTerms msArg]
 pattern MApt mFun tsArg         = MKey   MKApp  [MGTerm  mFun, MGTypes tsArg]
 
+-- TODO: these are in wrong order.
 pattern MLet mps mBind mBod     = MKey   MKLet  [MGTerm mBod, MGTerm (MAbs mps mBind)]
 
 pattern MIf msCond msThen mElse = MKey   MKIf   [MGTerms msCond, MGTerms msThen, MGTerm mElse]
@@ -50,7 +51,9 @@ pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey
 pattern MProc mBody             = MKey MKProc       [MGTerm mBody]
 pattern MProcYield mExp         = MKey MKProcYield  [MGTerm mExp]
 pattern MProcCall mFun mgssArg  = MKey MKProcCall   (MGTerm mFun : mgssArg)
-pattern MProcSeq mStmt mRest    = MKey MKProcSeq    [MGTerm mStmt, MGTerm mRest]
+
+pattern MProcSeq mps mBind mBody
+ = MKey MKProcSeq    [MGTerm mBind, MGTerm (MAbs mps mBody)]
 
 pattern MProcLaunch tsRet mRest
  = MKey MKProcLaunch [MGTypes tsRet, MGTerm mRest]
@@ -61,8 +64,8 @@ pattern MProcReturn mRet
 pattern MProcCell nCell tCell mInit mRest
  = MKey MKProcCell   [MGTerm mInit, MGTerm (MAbs (MPTerms [(BindName nCell, tCell)]) mRest)]
 
-pattern MProcUpdate nCell mValue
- = MKey MKProcUpdate [MGTerm (MVar (Bound nCell)), MGTerm mValue]
+pattern MProcUpdate nCell mValue mRest
+ = MKey MKProcUpdate [MGTerm (MVar (Bound nCell)), MGTerm mValue, MGTerm mRest]
 
 pattern MProcWhen msCond msThen
  = MKey MKProcWhen   [MGTerms msCond, MGTerms msThen]

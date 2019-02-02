@@ -181,6 +181,15 @@ takeTFun tt
         _                       -> Nothing
 
 
+-------------------------------------------------------------------------------------------- Aps --
+takeMAps :: Term a -> Maybe (Term a, [TermArgs a])
+takeMAps mm
+ = case mm of
+        MAnn _a m               -> takeMAps m
+        MAps mFun mgssArg       -> Just (mFun, mgssArg)
+        _                       -> Nothing
+
+
 ---------------------------------------------------------------------------------------- Closure --
 -- | Unpack a Just wrapped closure, if this is one.
 takeVMaybeClosure :: Value a -> Maybe (Maybe (TermClosure a))

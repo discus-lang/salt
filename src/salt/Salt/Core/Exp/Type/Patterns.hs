@@ -34,6 +34,7 @@ infixr 3 :*>
 -- Primitive types.
 pattern TType           = TPrm "Type"
 pattern TData           = TPrm "Data"
+pattern TState          = TPrm "State"
 pattern TRegion         = TPrm "Region"
 pattern TEffect         = TPrm "Effect"
 pattern TUnit           = TPrm "Unit"
@@ -55,7 +56,7 @@ pattern TOption t       = TApt (TPrm "Option") [t]
 pattern TList t         = TApt (TPrm "List")   [t]
 pattern TSet t          = TApt (TPrm "Set")    [t]
 pattern TMap tk tv      = TApt (TPrm "Map")    [tk, tv]
-pattern TCel t          = TApt (TPrm "Cel")    [t]
+pattern TCell t         = TApt (TPrm "Cell")    [t]
 pattern TConsole        = TPrm "Console"
 pattern TSleep          = TPrm "Sleep"
 

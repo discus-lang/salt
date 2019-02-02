@@ -115,11 +115,11 @@ checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
 checkTermWith a wh ctx Synth m@(MVar u)
  =   contextResolveTermBound ctx u
  >>= \case
-        -- Cels referenced in statements are implicitly read.
-        --   The type 'Cel T' has kind #Cel, not #Data,
-        --   so we cannot produce the Cel type itself.
+        -- Cells referenced in statements are implicitly read.
+        --   The type 'Cell T' has kind #State, not #Data,
+        --   so we cannot produce the Cell type itself.
         --  TODO: only permit this within a Stmt Exp
-        Just (TCel t)
+        Just (TCell t)
          -> return (m, [t], [])
 
         Just t  -> return (m, [t], [])

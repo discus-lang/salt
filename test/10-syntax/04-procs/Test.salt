@@ -11,73 +11,90 @@ term decl1 []: []
 term decl2 [n: #Nat]: #Nat
  = proc yield n
 
--- term decl3 [n: #Nat]: [] ! #Console
---  = box proc
---         seq #console'print "hello";
---         end
+term decl3 [n: #Nat]: [] ! #Console
+ = box proc
+        seq call #console'print "hello";
+        yield []
 
--- term decl4 []: #Nat ! #Console
---  = box proc
---         seq #console'print "hello";
---         yield 5
+term decl4 []: #Nat ! #Console
+ = box proc
+        seq call #console'print "hello";
+        yield [5]
 
 
 -- sugar for the above.
--- proc decl1s []: #Nat
---  =      yield []
+proc decl1s []: #Nat
+ =      yield [4]
 
--- proc decl2s [n: #Nat]: []
---  =      yield n
+proc decl2s [n: #Nat]: []
+ =      yield []
 
--- proc decl3s [n: #Nat]: []! #Console
---  =      seq #console'print "hello";
---         end
+-- TODO: if drop effect annotation should get error.
+proc decl3s [n: #Nat]: []! #Console
+ =      seq call #console'print "hello";
+        yield []
 
--- proc decl4s []: #Nat ! #Console
---  =      seq #console'print "hello";
---         yield 5
+proc decl4s []: #Nat ! #Console
+ =      seq call #console'print "hello";
+        yield 5
+
+
+-- yield ----------------------------------------------------------------------
+term yield1 [x: #Nat]: #Nat
+ = proc yield [x]
+
+
+-- call -----------------------------------------------------------------------
+term call1 [x: #Nat]: #Nat
+ = proc call #nat'add [x, x]
+
 
 -- sequencing -----------------------------------------------------------------
 -- simple sequencing
--- proc seq1 []: []! #Console
---  =      seq #console'print "hello";
---         seq #console'print "world";
---         seq #console'print "derp";
---         end
+proc let1 [x: #Nat, y: #Nat]: #Nat
+ =      seq a = yield 2;
+        seq b = yield 3;
+        yield #nat'add [a, b]
+
+-- sugar where the vector of bindings is assumed to be empty.
+proc seq1 []: []! #Console
+ =      seq call #console'print "hello";
+        seq call #console'print "world";
+        seq call #console'print "derp";
+        yield []
+
+-- nested procedure.
+proc seq'nest1 []: []! #Console
+ =      seq call #console'print "good morning";
+        seq seq call #console'print "hello";
+            seq call #console'print "world";
+            yield [];
+        yield []
+
+-- doubly nested procedure.
+proc seq'nest2 []: []! #Console
+ =      seq call #console'print "good morning";
+        seq seq call #console'print "hello";
+            seq seq call #console'print "world";
+                yield [];
+            yield [];
+        yield []
 
 
--- let-binding ----------------------------------------------------------------
--- proc let1 [x: #Nat, y: #Nat]: #Nat
---  =      let a = #nat'add [x, y];
---         let b = #nat'add [a, a];
---         yield #nat'add [a, b]
-
-
--- cel-introduction -----------------------------------------------------------
+-- cell-introduction ----------------------------------------------------------
 -- TODO: allow type to be omitted, like with let bindings
--- proc cel1 [x: #Nat, y: #Nat]: #Nat
---  =      cel a: #Nat ← 4;
---         cel b: #Nat ← 5;
---         yield #nat'add [a, b]
+proc cell1 [x: #Nat, y: #Nat]: #Nat
+ =      cell a: #Nat ← 4;
+        cell b: #Nat ← 5;
+        yield #nat'add [a, b]
 
 
--- nested procedures ----------------------------------------------------------
--- TODO: need to be able to bind the result of a nested procedure.
--- proc nest1 []: []! #Console
---  =      seq #console'print "good morning";
---         seq seq #console'print "hello";
---             seq #console'print "world";
---             end
---         end
+-- cell update ----------------------------------------------------------------
+proc update1 [x: #Nat, y: #Nat]: #Nat
+ =      cell a: #Nat ← x;
+        update a ← y;
+        yield a
 
---
--- proc nest2 []: []! #Console
---  =      seq #console'print "good morning";
---         seq seq #console'print "hello";
---             seq seq #console'print "world";
---                 end
---             end
---         end
 
 
 -- when -----------------------------------------------------------------------

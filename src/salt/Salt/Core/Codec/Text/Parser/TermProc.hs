@@ -1,31 +1,70 @@
 
 -- TODO: check we still have expected text at intermediate points.
 module Salt.Core.Codec.Text.Parser.TermProc where
---import Salt.Core.Codec.Text.Parser.Type
+import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp
 
---import Text.Parsec                      ((<?>))
+import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
 
 
 --------------------------------------------------------------------------------------- TermProc --
 -- | Parser for a procedure.
 pTermProc :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
-pTermProc pTerm _pTermApp
+pTermProc pTerm pTermApp
  = P.choice
  [ do   -- 'yield' Exp
         pTok KYield
         mExp <- pTerm
         return $ MProcYield mExp
 
+ , do   -- 'call' Prm TermArgs*
+        -- 'call' Con TermArgs*
+        pTok KCall
+        mApp <- pTermApp
+        let Just (mFun, mgssArg) = takeMAps mApp
+        return $ MProcCall mFun mgssArg
 
+ , do   -- 'seq' '[' Var,* ']' '=' Proc ';' Proc
+        pTok KSeq
+        (mps, mBind) <- pProcBind pTerm pTermApp
+        pTok KSemi
+        mRest        <- pTermProc pTerm pTermApp
+        return $ MProcSeq mps mBind mRest
+
+ , do   -- 'cell' Var ':' Type '←' Term ';' Proc
+        pTok KCell
+        nCell   <- pVar
+        pTok KColon
+        tCell   <- pType
+        pLeft
+        mBind   <- pTerm
+        pTok KSemi
+        mRest   <- pTermProc pTerm pTermApp
+        return  $ MProcCell nCell tCell mBind mRest
+
+ , do   -- 'update' 'Var' '←' Term
+        pTok KUpdate
+        nCell   <- pVar
+        pLeft
+        mValue  <- pTerm
+        pTok KSemi
+        mRest   <- pTermProc pTerm pTermApp
+        return  $ MProcUpdate nCell mValue mRest
  ]
 
-{-
- , do   -- 'let' '[' Var,* ']' '=' Term Proc
-        pTok KLet
+
+--------------------------------------------------------------------------------------- ProcBind --
+pProcBind
+        :: Parser (Term RL) -> Parser (Term RL)
+        -> Parser (TermParams RL, Term RL)
+
+pProcBind pTerm pTermApp
+ = P.choice
+ [ P.try $ do
+        -- Binds '=' Proc
         (rBinds, bts)
          <- pRanged (P.choice
                 [ do    pSquared
@@ -49,27 +88,18 @@ pTermProc pTerm _pTermApp
                 <?> "some binders")
 
         pTok KEquals      <?> "a type annotation, or '=' to start the binding"
-        mBind <- pTerm    <?> "a term for the binding"
-        mRest <- pTermProc pTerm pTermApp
-        return  $ MProcLet (MPAnn rBinds (MPTerms bts)) mBind mRest
+        mBind <- pTermProc pTerm pTermApp
+                          <?> "a procedure for the binding"
+
+        return (MPAnn rBinds $ MPTerms bts, mBind)
+
+ , do   -- Proc
+        mBind <- pTermProc pTerm pTermApp
+        return (MPTerms [], mBind)
+ ]
 
 
- , do   -- 'seq' Stmt Proc
-        pTok KSeq
-        mStmt   <- pTermStmt pTerm pTermApp
-        mRest   <- pTermProc pTerm pTermApp
-        return  $ MProcSeq mStmt mRest
-
-
- , do   -- 'cel' Var ':' Type '←' Term Proc
-        pTok KCel
-        nCell   <- pVar
-        pTok KColon
-        tCell   <- pType
-        pLeft
-        mBind   <- pTerm
-        mRest   <- pTermProc pTerm pTermApp
-        return  $ MProcCel nCell tCell mBind mRest
+ {-}
 
 
  , do   -- 'end'

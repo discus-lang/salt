@@ -100,15 +100,6 @@ checkTermStmt a wh ctx _tsReturn (MStmtUpdate nCel mNew)
                 , esNew)
 
 
--- (t-stmt-call) ------------------------------------------
-checkTermStmt a wh ctx _tsReturn (MStmtCall mBody)
- = do   (mBody', _, esBody)
-         <- checkTerm a wh (asExp ctx) (Check []) mBody
-
-        return  ( MStmtReturn mBody'
-                , esBody)
-
-
 -- (t-stmt-break) -----------------------------------------
 -- TODO: check we are syntactically within a loop.
 checkTermStmt _a _wh _ctx _tsReturn m@MStmtBreak

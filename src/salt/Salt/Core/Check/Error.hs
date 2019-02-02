@@ -293,7 +293,7 @@ data Error a
         , errorTypes            :: [Type a] }
 
         -- Procedure problems -------------------
-        | ErrorProcUpdateNotCel
+        | ErrorProcUpdateNotCell
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorType             :: Type a }
