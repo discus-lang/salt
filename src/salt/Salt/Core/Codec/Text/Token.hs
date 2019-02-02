@@ -65,6 +65,7 @@ data Token
         | KCell         | KUpdate
         | KWhen         | KMatch
         | KLoop         | KBreak        | KContinue
+        | KEnd          | KDone
 
         | KBloc
 
@@ -144,12 +145,12 @@ showTokenAsSource kk
         KYield          -> "yield"
         KCall           -> "call"
         KWith           -> "with"
-        KSeq            -> "seq"
+        KSeq            -> "seq";       KEnd            -> "end"
         KLaunch         -> "launch"
         KReturn         -> "return"
         KCell           -> "cell"
         KUpdate         -> "update"
-        KWhen           -> "when"
+        KWhen           -> "when";      KDone           -> "done"
         KMatch          -> "match"
         KLoop           -> "loop"
         KBreak          -> "break"

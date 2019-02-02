@@ -33,8 +33,8 @@ instance StripAnnot DeclType where
 
 
 instance StripAnnot DeclTerm where
- stripAnnot (DeclTerm _ n mps tsResult mBody)
-  = DeclTerm () n (map stripAnnot mps) (map stripAnnot tsResult) (stripAnnot mBody)
+ stripAnnot (DeclTerm _ mode n mps tsResult mBody)
+  = DeclTerm () mode n (map stripAnnot mps) (map stripAnnot tsResult) (stripAnnot mBody)
 
 
 instance StripAnnot DeclTest where

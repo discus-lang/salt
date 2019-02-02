@@ -48,36 +48,44 @@ pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey
 
 
 ------------------------------------------------------------------------------------------- Proc --
-pattern MProc mBody             = MKey MKProc       [MGTerm mBody]
-pattern MProcYield mExp         = MKey MKProcYield  [MGTerm mExp]
-pattern MProcCall mFun mgssArg  = MKey MKProcCall   (MGTerm mFun : mgssArg)
+pattern MProc mBody
+ = MKey MKProc          [MGTerm mBody]
+
+pattern MProcYield mExp
+ = MKey MKProcYield     [MGTerm mExp]
+
+pattern MProcCall mFun mgssArg
+ = MKey MKProcCall      (MGTerm mFun : mgssArg)
 
 pattern MProcSeq mps mBind mBody
- = MKey MKProcSeq    [MGTerm mBind, MGTerm (MAbs mps mBody)]
+ = MKey MKProcSeq       [MGTerm mBind, MGTerm (MAbs mps mBody)]
 
 pattern MProcLaunch tsRet mRest
- = MKey MKProcLaunch [MGTypes tsRet, MGTerm mRest]
+ = MKey MKProcLaunch    [MGTypes tsRet, MGTerm mRest]
 
 pattern MProcReturn mRet
- = MKey MKProcReturn [MGTerm mRet]
+ = MKey MKProcReturn    [MGTerm mRet]
 
 pattern MProcCell nCell tCell mInit mRest
- = MKey MKProcCell   [MGTerm mInit, MGTerm (MAbs (MPTerms [(BindName nCell, tCell)]) mRest)]
+ = MKey MKProcCell      [MGTerm mInit, MGTerm (MAbs (MPTerms [(BindName nCell, tCell)]) mRest)]
 
 pattern MProcUpdate nCell mValue mRest
- = MKey MKProcUpdate [MGTerm (MVar (Bound nCell)), MGTerm mValue, MGTerm mRest]
+ = MKey MKProcUpdate    [MGTerm (MVar (Bound nCell)), MGTerm mValue, MGTerm mRest]
 
-pattern MProcWhen msCond msThen
- = MKey MKProcWhen   [MGTerms msCond, MGTerms msThen]
+pattern MProcWhen msCond msThen mRest
+ = MKey MKProcWhen      [MGTerms msCond, MGTerms msThen, MGTerm mRest]
 
-pattern MProcMatch mScrut msAlt
- = MKey MKProcMatch  [MGTerm mScrut, MGTerms msAlt]
+pattern MProcMatch mScrut msAlt mRest
+ = MKey MKProcMatch     [MGTerm mScrut, MGTerms msAlt, MGTerm mRest]
 
-pattern MProcLoop mBody
- = MKey MKProcLoop   [MGTerm mBody]
+pattern MProcLoop mBody mRest
+ = MKey MKProcLoop      [MGTerm mBody, MGTerm mRest]
 
-pattern MProcBreak              = MKey  MKProcBreak    []
-pattern MProcContinue           = MKey  MKProcContinue []
+pattern MProcBreak
+ = MKey  MKProcBreak    []
+
+pattern MProcContinue
+ = MKey  MKProcContinue []
 
 
 ------------------------------------------------------------------------------------------- Bloc --

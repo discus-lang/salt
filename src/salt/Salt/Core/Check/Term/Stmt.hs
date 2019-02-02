@@ -9,41 +9,6 @@ module Salt.Core.Check.Term.Stmt where
 
 -- checkTermStmt :: CheckTermStmt a
 {-
--- (t-stmt-proc) ------------------------------------------
-checkTermStmt a wh ctx _tsReturn (MStmtProc tsResult mBody)
- = do   tsResult'
-         <- checkTypesAreAll UType a wh ctx TData tsResult
-
-        (mProc', esProc)
-         <- contextCheckProc ctx a wh ctx tsResult' mBody
-
-        return  ( MStmtProc tsResult mProc'
-                , esProc)
-
-
--- (t-stmt-nest) ------------------------------------------
-checkTermStmt a wh ctx tsReturn (MStmtNest mProc)
- = do
-        (mProc', esProc)
-         <- contextCheckProc ctx a wh ctx tsReturn mProc
-
-        return  ( MStmtNest mProc'
-                , esProc)
-
-
--- (t-stmt-if) --------------------------------------------
-checkTermStmt a wh ctx tsReturn (MStmtIf msCond msThen)
- | length msCond == length msThen
- = do   (msCond', esCond)
-         <- checkTermsAreAll a wh (asExp ctx) TBool msCond
-
-        (msThen', essThen)
-         <- fmap unzip
-         $  mapM (checkTermStmt a wh ctx tsReturn)  msThen
-
-        return  ( MStmtIf msCond' msThen'
-                , esCond ++ concat essThen)
-
 
 -- (t-stmt-case) ------------------------------------------
 checkTermStmt a wh ctx tsReturn mCase@(MStmtCase mScrut msAlt)

@@ -1,6 +1,6 @@
 
 module Salt.Core.Check.Term.Proc where
--- import Salt.Core.Check.Term.Stmt
+import Salt.Core.Check.Term.Case
 import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Type.Base
@@ -80,6 +80,18 @@ checkTermProc a wh ctx mode ctxProc (MProcSeq mps mBind mRest)
         return  ( MProcSeq mps' mBind' mRest'
                 , tsResult, esBind ++ esResult)
 
+-- (t-proc-return) ----------------------------------------
+checkTermProc a wh ctx _mode _ctxProc (MProcReturn mBody)
+ = do
+        -- TODO: check we are in the scope of a launch,
+        -- and set the expected return type.
+        (mBody', _tsResult, esReturn)
+         <- checkTerm a wh (asExp ctx) Synth mBody
+
+        return  ( MProcReturn mBody'
+                , []
+                , esReturn)
+
 
 -- (t-proc-cell) ------------------------------------------
 checkTermProc a wh ctx mode ctxProc (MProcCell nCell tCell mBind mRest)
@@ -120,27 +132,71 @@ checkTermProc a wh ctx mode ctxProc (MProcUpdate nCell mNew mRest)
                 , tsResult, esNew ++ esRest)
 
 
+-- (t-proc-when) ------------------------------------------
+checkTermProc a wh ctx mode ctxProc (MProcWhen msCond msThen mRest)
+ | length msCond == length msThen
+ = do   (msCond', esCond)
+         <- checkTermsAreAll a wh (asExp ctx) TBool msCond
 
+        (msThen', _tsThen, essThen)
+         <- fmap unzip3
+         $  mapM (checkTermProc a wh ctx (Check []) ctxProc)  msThen
+
+        (mRest', tsResult, esRest)
+         <- checkTermProc a wh ctx mode ctxProc mRest
+
+        return  ( MProcWhen msCond' msThen' mRest'
+                , tsResult, esCond ++ concat essThen ++ esRest)
+
+
+-- (t-proc-match) -----------------------------------------
+checkTermProc a wh ctx mode ctxProc mCase@(MProcMatch mScrut msAlt mRest)
+ = do
+        -- Check the scrutinee.
+        (mScrut', tScrut, esScrut)
+         <- checkTerm1 a wh (asExp ctx) Synth mScrut
+
+        -- The scrutinee needs to be a variant.
+        let aScrut = fromMaybe a $ takeAnnotOfTerm mScrut
+        (nsScrut, mgsScrut)
+         <- simplType aScrut ctx tScrut
+         >>= \case
+                TVariant ns mgs -> return (ns, mgs)
+                _ -> throw $ ErrorCaseScrutNotVariant aScrut wh tScrut
+
+        -- Check all alternatives in turn,
+        --  collecting up all the effects,
+        --  and ensuring all the alt result types match.
+        let nmgsScrut = zip nsScrut mgsScrut
+        (msAlt', esAlt)
+         <- checkCaseProcAlts a wh ctx mCase tScrut ctxProc nmgsScrut msAlt
+
+        -- Check the rest of the procedure.
+        (mRest', tsResult, esRest)
+         <- checkTermProc a wh ctx mode ctxProc mRest
+
+        return  ( MProcMatch mScrut' msAlt' mRest'
+                , tsResult, esScrut ++ esAlt ++ esRest)
+
+
+-- (t-proc-loop) ------------------------------------------
+checkTermProc a wh ctx mode ctxProc (MProcLoop mBody mRest)
+ = do
+        -- Check the body of the loop.
+        let ctxProc' = CPLoop ctxProc
+        (mBody', _tsBody, esBody)
+         <- checkTermProc a wh ctx (Check []) ctxProc' mBody
+
+        -- Check the rest of the procedure.
+        (mRest', tsResult, esRest)
+         <- checkTermProc a wh ctx mode ctxProc mRest
+
+
+        return  ( MProcLoop mBody' mRest'
+                , tsResult, esBody ++ esRest)
 
 -----------------------------------------------------------
 -- We don't know how to check this sort of procedure
 checkTermProc _a _wh _ctx _mode _ctxProc  mm
  = error $ ppShow ("checkTermProc" :: String, mm)
 
-{-
--- (t-proc-end-with) -------------------------------------
-checkTermProc a wh ctx tsReturn (MProcEndWith mResult)
- = do
-        (mResult', _tsResult, esResult)
-         <- checkTerm a wh ctx (Check tsReturn) mResult
-
-        return  ( MProcEndWith mResult'
-                , esResult)
-
-
--- (t-proc-end) ------------------------------------------
-checkTermProc _a _wh _ctx _tsReturn MProcEnd
- = do
-        return  (MProcEnd, [])
-
--}

@@ -27,12 +27,23 @@ pTermProc pTerm pTermApp
         let Just (mFun, mgssArg) = takeMAps mApp
         return $ MProcCall mFun mgssArg
 
- , do   -- 'seq' '[' Var,* ']' '=' Proc ';' Proc
+ , do   -- 'seq' '[' Var,* ']' '=' Proc ('end' | ';' Proc)
         pTok KSeq
         (mps, mBind) <- pProcBind pTerm pTermApp
-        pTok KSemi
-        mRest        <- pTermProc pTerm pTermApp
-        return $ MProcSeq mps mBind mRest
+
+        P.choice
+         [ do   pTok KEnd
+                return $ MProcSeq mps mBind (MProcYield (MTerms []))
+
+         , do   pTok KSemi
+                P.choice
+                 [ do   pTok KEnd
+                        return $ MProcSeq mps mBind (MProcYield (MTerms []))
+
+                 , do   mRest        <- pTermProc pTerm pTermApp
+                        return $ MProcSeq mps mBind mRest
+                 ]
+         ]
 
  , do   -- 'cell' Var ':' Type '←' Term ';' Proc
         pTok KCell
@@ -45,7 +56,7 @@ pTermProc pTerm pTermApp
         mRest   <- pTermProc pTerm pTermApp
         return  $ MProcCell nCell tCell mBind mRest
 
- , do   -- 'update' 'Var' '←' Term
+ , do   -- 'update' 'Var' '←' Term ';' Proc
         pTok KUpdate
         nCell   <- pVar
         pLeft
@@ -53,6 +64,116 @@ pTermProc pTerm pTermApp
         pTok KSemi
         mRest   <- pTermProc pTerm pTermApp
         return  $ MProcUpdate nCell mValue mRest
+
+ , do   -- 'return'
+        pTok KReturn
+        mBody <- pTerm
+        return $ MProcReturn mBody
+
+ , do   --  'when' '{' (Term '→' TermProc);+ '}' (';' TermProc)?
+        --  'when' Term 'then' TermProc 'done'   (';' TermProc)?
+        pTok KWhen
+        P.choice
+         [ do   -- ... '{' (Term '→' TermProc);+ '}' (';' TermProc)?
+                pTok KCBra          <?> "a '{' to start the list of branches"
+                (msCond, msThen)
+                 <- fmap unzip $ flip P.sepEndBy (pTok KSemi)
+                 $  do  mCond <- pTerm      <?> "a term for a condition."
+                        pRight              <?> "a completed term, or '→' to start the body"
+
+                        mThen <- pTermProc pTerm pTermApp
+                         <?> "the body of the branch"
+
+                        return (mCond, mThen)
+                pTok KCKet
+
+                P.choice
+                 [ do   -- ... ';' TermProc
+                        pTok KSemi
+                        mRest   <- pTermProc pTerm pTermApp
+                        return  $ MProcWhen msCond msThen mRest
+
+                 , do   -- ...
+                        return $ MProcWhen msCond msThen (MProcYield (MTerms []))
+                 ]
+
+          , do  -- ... Term 'then' TermStmt 'done' (';' TermProc)?
+                mCond   <- pTerm        <?> "a term for the condition"
+                pTok KThen              <?> "a completed procedure, or 'then' to start the body"
+
+                mThen   <- pTermProc pTerm pTermApp
+                 <?> "the body of the 'then' branch"
+
+                pTok KDone
+
+                P.choice
+                 [ do   -- ... ';' TermProc
+                        pTok KSemi              <?> "a ';' to continue the procedure"
+                        mRest   <- pTermProc pTerm pTermApp
+                        return $ MProcWhen [mCond] [mThen] mRest
+
+                 , do   -- ...
+                        return $ MProcWhen [mCond] [mThen] (MProcYield (MTerms []))
+                 ]
+          ]
+
+ , do   -- 'match' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' Stmt);* '}' (';' TermProc?)
+        pTok KMatch
+        mScrut <- pTerm         <?> "a term for the scrutinee"
+        pTok KWith              <?> "a completed term, or 'of' to start the alternatives"
+        pTok KCBra              <?> "a '{' to start the list of alternatives"
+        msAlts
+         <- flip P.sepEndBy1 (pTok KSemi)
+         $  do  lAlt    <- pLbl <?> " a variant label"
+
+                (rPat, btsPat)
+                  <- pRanged (pSquared
+                        $  flip P.sepBy (pTok KComma)
+                        $  do   b <- pBind  <?> "a binder for a variant field"
+                                pTok KColon <?> "a ':' to specify the type of the field"
+                                t <- pType  <?> "the type of the field"
+                                return (b, t))
+                        <?> "binders for the payload of the variant"
+
+                pRight          <?> "a '→' to start the body"
+
+                mBody <- pTermProc pTerm pTermApp
+                 <?> "the body of the alternative"
+
+                return $ MVarAlt lAlt (MPAnn rPat $ MPTerms btsPat) mBody
+
+        pTok KCKet              <?> "a completed term, or '}' to end the alternatives"
+
+        P.choice
+         [ do   -- ... ';' TermProc
+                pTok KSemi
+                mRest <- pTermProc pTerm pTermApp
+                return $ MProcMatch mScrut msAlts mRest
+
+         , do   -- ...
+                return $ MProcMatch mScrut msAlts (MProcYield (MTerms []))
+         ]
+
+ , do   -- 'loop' Proc 'done' (';' TermProc)?
+        pTok KLoop
+        mBody   <- pTermProc pTerm pTermApp
+        pTok KDone
+
+        P.choice
+         [ do   -- ... ';' TermProc
+                pTok KSemi
+                mRest   <- pTermProc pTerm pTermApp
+                return $ MProcLoop mBody mRest
+
+         , do   -- ...
+                return $ MProcLoop mBody (MProcYield (MTerms []))
+         ]
+
+ , do   -- ( PROC )
+        pTok KRBra
+        mProc <- pTermProc pTerm pTermApp
+        pTok KRKet
+        return mProc
  ]
 
 
@@ -99,98 +220,12 @@ pProcBind pTerm pTermApp
  ]
 
 
- {-}
-
-
- , do   -- 'end'
-        -- 'end' 'with' Term
-        pTok KEnd
-        P.choice
-         [ do   pTok KWith
-                mResult <- pTerm
-                return  $  MProcEndWith mResult
-
-         , do   return  $  MProcEnd ]
- ]
--}
-
 --------------------------------------------------------------------------------------- TermStmt --
-{-}
+{-
 pTermStmt :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
 pTermStmt pTerm pTermApp
  = P.choice
- [ do   --  'if' '{' (Term '→' TermStmt);+ '}'
-        --  'if' Term 'then' TermStmt
-        pTok KIf
-        P.choice
-         [ do   -- ... '{' (Term '→' TermStmt);+ '}'
-                pTok KCBra          <?> "a '{' to start the list of branches"
-                (msCond, msThen)
-                 <- fmap unzip $ flip P.sepEndBy (pTok KSemi)
-                 $  do  mCond <- pTerm      <?> "a term for a condition."
-                        pRight              <?> "a completed term, or '→' to start the body"
-
-                        mThen <- pTermStmt pTerm pTermApp
-                         <?> "the body of the branch"
-
-                        return (mCond, mThen)
-                pTok KCKet
-
-                return  $ MStmtIf msCond msThen
-
-          , do  -- ... Term 'then' TermStmt
-                mCond   <- pTerm        <?> "a term for the condition"
-                pTok KThen              <?> "a completed procedure, or 'then' to start the body"
-
-                mThen   <- pTermStmt pTerm pTermApp
-                 <?> "the body of the 'then' branch"
-
-                return $ MStmtIf [mCond] [mThen]
-         ]
-
- , do   -- 'case' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' Stmt);* '}'
-        pTok KCase
-        mScrut <- pTerm         <?> "a term for the scrutinee"
-        pTok KOf                <?> "a completed term, or 'of' to start the alternatives"
-        pTok KCBra              <?> "a '{' to start the list of alternatives"
-        msAlts
-         <- flip P.sepEndBy1 (pTok KSemi)
-         $  do  lAlt    <- pLbl <?> " a variant label"
-
-                (rPat, btsPat)
-                  <- pRanged (pSquared
-                        $  flip P.sepBy (pTok KComma)
-                        $  do   b <- pBind  <?> "a binder for a variant field"
-                                pTok KColon <?> "a ':' to specify the type of the field"
-                                t <- pType  <?> "the type of the field"
-                                return (b, t))
-                        <?> "binders for the payload of the variant"
-
-                pRight          <?> "a '→' to start the body"
-
-                mBody <- pTermStmt pTerm pTermApp
-                 <?> "the body of the alternative"
-
-                return $ MVarAlt lAlt (MPAnn rPat $ MPTerms btsPat) mBody
-
-        pTok KCKet              <?> "a completed term, or '}' to end the alternatives"
-        return $ MStmtCase mScrut msAlts
-
- , do   -- 'loop' Stmt
-        pTok KLoop
-        mBody   <- pTermStmt pTerm pTermApp
-        return  $ MStmtLoop mBody
-
- , do   -- 'Var' '←' Term
-        P.lookAhead $ do
-                pVar; pLeft
-
-        nCell   <- pVar
-        pLeft
-        mValue  <- pTerm
-        return  $  MStmtUpdate nCell mValue
-
- , do   -- 'break'
+ [ do   -- 'break'
         pTok KBreak
         return MStmtBreak
 
@@ -198,10 +233,6 @@ pTermStmt pTerm pTermApp
         pTok KContinue
         return MStmtContinue
 
- , do   -- 'return'
-        pTok KReturn
-        mBody <- pTerm
-        return $ MStmtReturn mBody
 
  , do   -- 'proc' Types 'of' Proc
         pTok KProc

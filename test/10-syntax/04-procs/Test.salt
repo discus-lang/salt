@@ -1,8 +1,5 @@
 -- Test syntax of procs.
 -- TODO: add exec tests to use the bindings.
--- TODO: support nested procedures.
--- TODO: procedure calls
--- TODO: make 'proc Stmt' imply 'proc [] of Stmt'
 
 -- declarations ---------------------------------------------------------------
 term decl1 []: []
@@ -13,8 +10,8 @@ term decl2 [n: #Nat]: #Nat
 
 term decl3 [n: #Nat]: [] ! #Console
  = box proc
-        seq call #console'print "hello";
-        yield []
+        seq call #console'print "hello"
+        end
 
 term decl4 []: #Nat ! #Console
  = box proc
@@ -45,6 +42,7 @@ term yield1 [x: #Nat]: #Nat
 
 
 -- call -----------------------------------------------------------------------
+-- TODO: make 'call' keyword implicit.
 term call1 [x: #Nat]: #Nat
  = proc call #nat'add [x, x]
 
@@ -61,25 +59,24 @@ proc seq1 []: []! #Console
  =      seq call #console'print "hello";
         seq call #console'print "world";
         seq call #console'print "derp";
-        yield []
+        end
 
 -- nested procedure.
 proc seq'nest1 []: []! #Console
  =      seq call #console'print "good morning";
         seq seq call #console'print "hello";
             seq call #console'print "world";
-            yield [];
+            end;
         yield []
 
 -- doubly nested procedure.
 proc seq'nest2 []: []! #Console
  =      seq call #console'print "good morning";
         seq seq call #console'print "hello";
-            seq seq call #console'print "world";
-                yield [];
-            yield [];
+            seq seq call #console'print "world"
+                end
+            end;
         yield []
-
 
 -- cell-introduction ----------------------------------------------------------
 -- TODO: allow type to be omitted, like with let bindings
@@ -90,76 +87,101 @@ proc cell1 [x: #Nat, y: #Nat]: #Nat
 
 
 -- cell update ----------------------------------------------------------------
+-- TODO: make 'update' keyword implicit.
 proc update1 [x: #Nat, y: #Nat]: #Nat
  =      cell a: #Nat ← x;
         update a ← y;
         yield a
 
 
-
 -- when -----------------------------------------------------------------------
--- proc when1 [b: #Bool, x: #Nat, y: #Nat]: #Nat
---  =      when b then return x;
---         yield y
-
--- proc when2 [n: #Nat]: #Text ! #Console
---  =      when #nat'eq [n, 1] then return "one";
---         when #nat'eq [n, 2] then return "two";
---         when #nat'eq [n, 3] then return "three";
---         yield "dunno"
-
--- proc when3 [n: #Nat, m: #Nat]: #Text ! #Console
---  =      when #nat'eq [n, 1] then when #nat'eq [m, 1] then return "ones";;
---         when #nat'eq [m, 1] then return "ones";
---         when #nat'eq [n, 2] then return "two";
---         yield "whatever"
+proc when1 [b: #Bool, x: #Nat, y: #Nat]: #Nat
+ =      when b then return 5 done;
+        yield y
 
 
--- proc when4 [n: #Nat, m: #Nat]: #Text ! #Console
---  =      when #nat'eq [n, 1] then
---             when #nat'eq [m, 1] then return "one, one";
---             when #nat'eq [m, 2] then return "one, two";
---             end;
---         when #nat'eq [n, 2]      then return "two";
---         yield "whatever"
+proc when2 [n: #Nat]: #Text ! #Console
+ =      when #nat'eq [n, 1] then return "one" done;
+        when #nat'eq [n, 2] then return "two" done;
+        when #nat'eq [n, 3] then return "three" done;
+        yield "dunno"
 
 
--- case statements ------------------------------------------------------------
--- TODO: end missing a value.
--- TODO: also do form with 'case' as term at end.
--- proc case1 [v: <foo: #Nat, bar: #Nat>]: #Nat
---  =      case v of
---          { foo [x: #Nat] → return x
---          ; bar [x: #Nat] → return x };
---         end
+proc when3 [n: #Nat, m: #Nat]: #Text ! #Console
+ =      when #nat'eq [n, 1] then
+                when #nat'eq [n, 2] then
+                        return "derp"
+                done
+        done;
+        yield "whatever"
 
 
--- Statement case does not need to be exhaustive as in the case of no match
--- control continues to the next statement.
--- proc case2 [v: <foo: #Nat, bar: #Nat>]: #Nat
---  =      case v of
---          { foo [x: #Nat] → return x };
---         end
+proc when4 [n: #Nat, m: #Nat]: #Text ! #Console
+ =      when #nat'eq [n, 1] then
+                when #nat'eq [m, 1] then
+                        return "one, one"
+                done;
+                when #nat'eq [m, 2] then
+                        return "one, two"
+                done
+        done;
+        yield "whatever"
 
 
--- proc case3 [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
---  =      case v of
---          { foo [x: #Nat] → return x
---          ; bar [b: #Bool, x: #Nat, y: #Nat]
---            → if b then return x;
---              return y
---          ; baz [x: #Nat] → return x };
---         end
+proc when5 [n: #Nat, m: #Nat]: #Text ! #Console
+ =      when { #nat'eq [n, 1]
+                → when  { #nat'eq [m, 1] → return "one, one"
+                        ; #nat'eq [m, 2] → return "one, two" } };
+        yield "whatever"
 
 
--- loop statements ------------------------------------------------------------
--- proc loop1 [n: #Nat]: []! #Console
---  =      loop
---             if #nat'gt [n, 10] then return [];
---             seq #console'print "hello"
---             end;
---         end
+-- match ----------------------------------------------------------------------
+-- match does not need to be exhaustive because if we don't have
+-- and alt for the given value we continue to the rest of the procedure.
+proc match2 [v: <foo: #Nat, bar: #Nat>]: #Nat
+ =      match v with
+         { foo [x: #Nat] → return x };
+        yield [5]
 
+
+-- TODO: if the alts are exhaustive then the cont. is dead code,
+-- so we shouldn't need to provide the result value.
+proc match1 [v: <foo: #Nat, bar: #Nat>]: #Nat
+  =      match v with
+          { foo [x: #Nat] → return x
+          ; bar [x: #Nat] → return x };
+         yield [5]
+
+
+proc match3 [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
+ =      match v with
+         { foo [x: #Nat] → return x
+         ; bar [b: #Bool, x: #Nat, y: #Nat]
+           → when b then return x done;
+             return y
+         ; baz [x: #Nat] → return x };
+        yield 0
+
+
+-- loop -----------------------------------------------------------------------
+proc loop1 [n: #Nat]: []! #Console
+ =      loop    when #nat'gt [n, 10]
+                        then return []
+                done;
+                seq call #console'print "hello";
+                end
+        done
+
+
+-- proc foo
+--  =   enter   start []
+--      with  { start [x]    = seq call fac [2, 3]; end
+--            ; final []     = leave
+--            };
+--      seq call derp
+--      yield [5]
+--
+--
 
 
 
