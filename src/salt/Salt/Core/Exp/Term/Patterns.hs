@@ -47,53 +47,39 @@ pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey
 
 
 ------------------------------------------------------------------------------------------- Proc --
-pattern MProc tsReturn mBody
- = MKey MKProc       [MGTypes tsReturn, MGTerm mBody]
+pattern MProc mBody             = MKey MKProc       [MGTerm mBody]
+pattern MProcYield mExp         = MKey MKProcYield  [MGTerm mExp]
+pattern MProcCall mFun mgssArg  = MKey MKProcCall   (MGTerm mFun : mgssArg)
+pattern MProcSeq mStmt mRest    = MKey MKProcSeq    [MGTerm mStmt, MGTerm mRest]
 
-pattern MProcSeq mStmt mRest
- = MKey MKProcSeq    [MGTerm mStmt, MGTerm mRest]
+pattern MProcLaunch tsRet mRest
+ = MKey MKProcLaunch [MGTypes tsRet, MGTerm mRest]
 
-pattern MProcLet mps mBind mRest
- = MKey MKProcLet    [MGTerm mBind, MGTerm (MAbs mps mRest)]
+pattern MProcReturn mRet
+ = MKey MKProcReturn [MGTerm mRet]
 
-pattern MProcCel nCel tCel mBind mRest
- = MKey MKProcCel    [MGTerm mBind, MGTerm (MAbs (MPTerms [(BindName nCel, tCel)]) mRest)]
+pattern MProcCell nCell tCell mInit mRest
+ = MKey MKProcCell   [MGTerm mInit, MGTerm (MAbs (MPTerms [(BindName nCell, tCell)]) mRest)]
 
-pattern MProcEnd
- = MKey MKProcEnd    []
+pattern MProcUpdate nCell mValue
+ = MKey MKProcUpdate [MGTerm (MVar (Bound nCell)), MGTerm mValue]
 
-pattern MProcEndWith mResult
- = MKey MKProcEndWith [MGTerm mResult]
+pattern MProcWhen msCond msThen
+ = MKey MKProcWhen   [MGTerms msCond, MGTerms msThen]
 
+pattern MProcMatch mScrut msAlt
+ = MKey MKProcMatch  [MGTerm mScrut, MGTerms msAlt]
 
-------------------------------------------------------------------------------------------- Stmt --
-pattern MStmtProc tsReturn mBody
- = MKey MKStmtProc   [MGTypes tsReturn, MGTerm mBody]
+pattern MProcLoop mBody
+ = MKey MKProcLoop   [MGTerm mBody]
 
-pattern MStmtNest mBody
- = MKey MKStmtNest   [MGTerm mBody]
+pattern MProcBreak              = MKey  MKProcBreak    []
+pattern MProcContinue           = MKey  MKProcContinue []
 
-pattern MStmtIf msCond msThen
- = MKey MKStmtIf     [MGTerms msCond, MGTerms msThen]
-
-pattern MStmtCase mScrut msAlt
- = MKey MKStmtCase   [MGTerm mScrut, MGTerms msAlt]
-
-pattern MStmtLoop mBody
- = MKey MKStmtLoop   [MGTerm mBody]
-
-pattern MStmtUpdate nCel mValue
- = MKey MKStmtUpdate [MGTerm (MVar (Bound nCel)), MGTerm mValue]
-
-pattern MStmtCall mBody
- = MKey MKStmtCall   [MGTerm mBody]
-
-pattern MStmtBreak              = MKey  MKStmtBreak    []
-pattern MStmtContinue           = MKey  MKStmtContinue []
-pattern MStmtReturn mResult     = MKey  MKStmtReturn   [MGTerm mResult]
 
 ------------------------------------------------------------------------------------------- Bloc --
 pattern MBloc mBody             = MKey   MKBloc [MGTerm mBody]
+
 
 ------------------------------------------------------------------------------------------ Value --
 pattern MUnit                   = MRef  (MRVal VUnit)

@@ -5,146 +5,143 @@
 -- TODO: make 'proc Stmt' imply 'proc [] of Stmt'
 
 -- declarations ---------------------------------------------------------------
-term decl1 [n: #Nat]: #Nat
- = proc #Nat of end with 5
+term decl1 []: []
+ = proc yield []
 
-term decl2 [n: #Nat]: []
- = proc [] of end
+term decl2 [n: #Nat]: #Nat
+ = proc yield n
 
-term decl3 [n: #Nat]: []
- = proc [] of end with []
+-- term decl3 [n: #Nat]: [] ! #Console
+--  = box proc
+--         seq #console'print "hello";
+--         end
 
-term decl4 [n: #Nat]: [] ! #Console
- = box proc [] of seq #console'print "hello" end
+-- term decl4 []: #Nat ! #Console
+--  = box proc
+--         seq #console'print "hello";
+--         yield 5
 
-term decl5 []: #Nat ! #Console
- = box proc #Nat of seq #console'print "hello" end with 5
 
 -- sugar for the above.
-proc decl1s [n: #Nat]: #Nat
- = end with 5
+-- proc decl1s []: #Nat
+--  =      yield []
 
-proc decl2s [n: #Nat]: []
- = end
+-- proc decl2s [n: #Nat]: []
+--  =      yield n
 
-proc decl3s [n: #Nat]: []
- = end with []
+-- proc decl3s [n: #Nat]: []! #Console
+--  =      seq #console'print "hello";
+--         end
 
-proc decl4s [n: #Nat]: []! #Console
- = seq #console'print "hello" end
-
-proc decl5s []: #Nat ! #Console
- = seq #console'print "hello" end with 5
-
+-- proc decl4s []: #Nat ! #Console
+--  =      seq #console'print "hello";
+--         yield 5
 
 -- sequencing -----------------------------------------------------------------
 -- simple sequencing
-proc seq1 []: []! #Console
- =      seq #console'print "hello"
-        seq #console'print "world"
-        seq #console'print "derp"
-        end
+-- proc seq1 []: []! #Console
+--  =      seq #console'print "hello";
+--         seq #console'print "world";
+--         seq #console'print "derp";
+--         end
 
 
 -- let-binding ----------------------------------------------------------------
-proc let1 [x: #Nat, y: #Nat]: #Nat
- =      let a = #nat'add [x, y]
-        let b = #nat'add [a, a]
-        end with #nat'add [a, b]
+-- proc let1 [x: #Nat, y: #Nat]: #Nat
+--  =      let a = #nat'add [x, y];
+--         let b = #nat'add [a, a];
+--         yield #nat'add [a, b]
 
 
 -- cel-introduction -----------------------------------------------------------
 -- TODO: allow type to be omitted, like with let bindings
-proc cel1 [x: #Nat, y: #Nat]: #Nat
- =      cel a: #Nat ← 4
-        cel b: #Nat ← 5
-        end with #nat'add [a, b]
+-- proc cel1 [x: #Nat, y: #Nat]: #Nat
+--  =      cel a: #Nat ← 4;
+--         cel b: #Nat ← 5;
+--         yield #nat'add [a, b]
 
 
 -- nested procedures ----------------------------------------------------------
 -- TODO: need to be able to bind the result of a nested procedure.
-proc nest1 []: []! #Console
- =      seq #console'print "good morning"
-        seq proc [] of
-            seq #console'print "hello"
-            seq #console'print "world"
-            end
-        end
+-- proc nest1 []: []! #Console
+--  =      seq #console'print "good morning";
+--         seq seq #console'print "hello";
+--             seq #console'print "world";
+--             end
+--         end
+
+--
+-- proc nest2 []: []! #Console
+--  =      seq #console'print "good morning";
+--         seq seq #console'print "hello";
+--             seq seq #console'print "world";
+--                 end
+--             end
+--         end
 
 
-proc nest2 []: []! #Console
- =      seq #console'print "good morning"
-        seq proc [] of
-            seq #console'print "hello"
-            seq proc [] of
-                seq #console'print "world"
-                end
-            end
-        end
+-- when -----------------------------------------------------------------------
+-- proc when1 [b: #Bool, x: #Nat, y: #Nat]: #Nat
+--  =      when b then return x;
+--         yield y
+
+-- proc when2 [n: #Nat]: #Text ! #Console
+--  =      when #nat'eq [n, 1] then return "one";
+--         when #nat'eq [n, 2] then return "two";
+--         when #nat'eq [n, 3] then return "three";
+--         yield "dunno"
+
+-- proc when3 [n: #Nat, m: #Nat]: #Text ! #Console
+--  =      when #nat'eq [n, 1] then when #nat'eq [m, 1] then return "ones";;
+--         when #nat'eq [m, 1] then return "ones";
+--         when #nat'eq [n, 2] then return "two";
+--         yield "whatever"
 
 
--- if-statements --------------------------------------------------------------
-proc if1 [b: #Bool, x: #Nat, y: #Nat]: #Nat
- =      seq if b then return x
-        end with y
-
-proc if2 [n: #Nat]: #Text ! #Console
- =      seq if #nat'eq [n, 1] then return "one"
-        seq if #nat'eq [n, 2] then return "two"
-        seq if #nat'eq [n, 3] then return "three"
-        end with "dunno"
-
-proc if3 [n: #Nat, m: #Nat]: #Text ! #Console
- =      seq if #nat'eq [n, 1]
-                then if #nat'eq [m, 1]  then return "ones"
-        seq if #nat'eq [n, 2]           then return "two"
-        end with "whatever"
-
-proc if4 [n: #Nat, m: #Nat]: #Text ! #Console
- =      seq if #nat'eq [n, 1] then
-            seq if #nat'eq [m, 1]       then return "one, one"
-            seq if #nat'eq [m, 2]       then return "one, two"
-            end
-        seq if #nat'eq [n, 2]           then return "two"
-        end with "whatever"
+-- proc when4 [n: #Nat, m: #Nat]: #Text ! #Console
+--  =      when #nat'eq [n, 1] then
+--             when #nat'eq [m, 1] then return "one, one";
+--             when #nat'eq [m, 2] then return "one, two";
+--             end;
+--         when #nat'eq [n, 2]      then return "two";
+--         yield "whatever"
 
 
 -- case statements ------------------------------------------------------------
 -- TODO: end missing a value.
 -- TODO: also do form with 'case' as term at end.
-proc case1 [v: <foo: #Nat, bar: #Nat>]: #Nat
- =      seq case v of
-                { foo [x: #Nat] → return x
-                ; bar [x: #Nat] → return x }
-        end
+-- proc case1 [v: <foo: #Nat, bar: #Nat>]: #Nat
+--  =      case v of
+--          { foo [x: #Nat] → return x
+--          ; bar [x: #Nat] → return x };
+--         end
 
 
 -- Statement case does not need to be exhaustive as in the case of no match
 -- control continues to the next statement.
-proc case2 [v: <foo: #Nat, bar: #Nat>]: #Nat
- =      seq case v of
-                { foo [x: #Nat] → return x }
-        end
+-- proc case2 [v: <foo: #Nat, bar: #Nat>]: #Nat
+--  =      case v of
+--          { foo [x: #Nat] → return x };
+--         end
 
 
-proc case3 [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
- =      seq case v of
-                { foo [x: #Nat] → return x
-                ; bar [b: #Bool, x: #Nat, y: #Nat]
-                  → seq if b then return x
-                    seq return y
-                    end
-                ; baz [x: #Nat] → return x }
-        end
+-- proc case3 [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
+--  =      case v of
+--          { foo [x: #Nat] → return x
+--          ; bar [b: #Bool, x: #Nat, y: #Nat]
+--            → if b then return x;
+--              return y
+--          ; baz [x: #Nat] → return x };
+--         end
 
 
 -- loop statements ------------------------------------------------------------
-proc loop1 [n: #Nat]: []! #Console
- =      seq loop
-            seq if #nat'gt [n, 10] then return []
-            seq #console'print "hello"
-            end
-        end
+-- proc loop1 [n: #Nat]: []! #Console
+--  =      loop
+--             if #nat'gt [n, 10] then return [];
+--             seq #console'print "hello"
+--             end;
+--         end
 
 
 

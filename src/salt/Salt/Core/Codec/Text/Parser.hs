@@ -30,7 +30,7 @@ parseModule toks
                   | Token.At l k <- toks
                   , k & \case Token.KMetaComment _ -> False
                               _                    -> True]
-                ++ [Token.At rangeLast Token.KEnd]
+                ++ [Token.At rangeLast Token.KMetaEnd]
 
         -- Parse the module in the prefix,
         -- also returning any remaining unparsable tokens.

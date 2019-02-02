@@ -1,21 +1,30 @@
 
 -- TODO: check we still have expected text at intermediate points.
 module Salt.Core.Codec.Text.Parser.TermProc where
-import Salt.Core.Codec.Text.Parser.Type
+--import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp
 
-import Text.Parsec                      ((<?>))
+--import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
 
 
 --------------------------------------------------------------------------------------- TermProc --
 -- | Parser for a procedure.
 pTermProc :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
-pTermProc pTerm pTermApp
+pTermProc pTerm _pTermApp
  = P.choice
- [ do   -- 'let' '[' Var,* ']' '=' Term Proc
+ [ do   -- 'yield' Exp
+        pTok KYield
+        mExp <- pTerm
+        return $ MProcYield mExp
+
+
+ ]
+
+{-
+ , do   -- 'let' '[' Var,* ']' '=' Term Proc
         pTok KLet
         (rBinds, bts)
          <- pRanged (P.choice
@@ -73,9 +82,10 @@ pTermProc pTerm pTermApp
 
          , do   return  $  MProcEnd ]
  ]
-
+-}
 
 --------------------------------------------------------------------------------------- TermStmt --
+{-}
 pTermStmt :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
 pTermStmt pTerm pTermApp
  = P.choice
@@ -179,4 +189,4 @@ pTermStmt pTerm pTermApp
         return  $ MStmtCall mBody
 
  ]
-
+-}

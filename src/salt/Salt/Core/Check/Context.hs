@@ -36,11 +36,8 @@ data Context a
           -- | Function to check a term.
         , contextCheckTerm      :: CheckTerm a
 
-          -- | Function to check a procedure body.
+          -- | Function to check a procedure.
         , contextCheckProc      :: CheckTermProc a
-
-          -- | Function to check a procedure statement.
-        , contextCheckStmt      :: CheckTermStmt a
 
           -- | Kinds and bodies of top-level type bindings in the current module.
         , contextModuleType     :: Map Name (Kind a, Type a)
@@ -57,6 +54,12 @@ data Context a
         , contextTermMode       :: TermMode
         }
 
+data ContextProc a
+        = CPNone
+        | CPLaunch     [Type a] (ContextProc a)
+        | CPLoop       (ContextProc a)
+        deriving Show
+
 
 type CheckType a
         =  Annot a => a -> [Where a]
@@ -72,14 +75,9 @@ type CheckTerm a
 
 type CheckTermProc a
         =  Annot a => a -> [Where a]
-        -> Context a -> [Type a] -> Term a
-        -> IO (Term a, [Effect a])
+        -> Context a -> Mode a -> ContextProc a -> Term a
+        -> IO (Term a, [Type a], [Effect a])
 
-
-type CheckTermStmt a
-        =  Annot a => a -> [Where a]
-        -> Context a -> [Type a] -> Term a
-        -> IO (Term a, [Effect a])
 
 
 ---------------------------------------------------------------------------------------------------

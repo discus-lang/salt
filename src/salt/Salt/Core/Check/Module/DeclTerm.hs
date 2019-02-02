@@ -77,8 +77,9 @@ checkDeclTerm _a ctx
 
         -- Check the body.
         let ctx'' = ctx' { contextTermMode = TermModeProcBody }
-        (mBody', _esResult)
-         <- contextCheckProc ctx a wh ctx'' tsResult mBody
+        (mBody', _tsResult'', _esResult)
+         <- contextCheckProc ctx a wh ctx''
+                (Check tsResult') (CPLaunch tsResult' CPNone) mBody
 
         -- TODO: check proc effects against result type.
 

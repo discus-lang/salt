@@ -463,21 +463,17 @@ checkTermWith a wh ctx Synth (MIf msCond msThen mElse)
 
 
 -- (t-proc) -----------------------------------------------
-checkTermWith a wh ctx Synth (MProc tsReturn mBody)
+checkTermWith a wh ctx Synth (MProc mBody)
  = guardAnyTermMode a wh ctx
         "procedure"
         [TermModePlain, TermModeProcBody]
  $ do
-        -- TODO: these must have kind data.
-        (tsReturn', _)
-         <- checkTypes a wh ctx tsReturn
-
         let ctx' = ctx { contextTermMode = TermModeProcBody }
-        (mBody', esBody)
-         <- checkTermProc a wh ctx' tsReturn' mBody
+        (mBody', tsResult, esBody)
+         <- checkTermProc a wh ctx' Synth CPNone mBody
 
-        return  ( MProc tsReturn' mBody'
-                , tsReturn, esBody)
+        return  ( MProc mBody'
+                , tsResult, esBody)
 
 -- (t-bloc) -----------------------------------------------
 checkTermWith a wh ctx Synth (MBloc mBody)

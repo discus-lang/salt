@@ -58,22 +58,22 @@ checkCaseTermAlts a wh ctx mCase tScrut nmgsScrut msAlts
 -- Check some case stmt alternatives.
 --   This is used when checking stmt-level case expressions,
 --   which may return from the enclosing procedure with a value vector.
-checkCaseStmtAlts
+checkCaseProcAlts
         :: Annot a
         => a -> [Where a] -> Context a
         -> Term a               -- ^ Entire case term, for error reporting.
         -> Type a               -- ^ Type of scrutinee, for error reporting.
-        -> [Type a]             -- ^ Type vector that may be produced via a 'return'.
+        -> ContextProc a        -- ^ The procedural context we're in.
         -> [(Name, TypeArgs a)] -- ^ Names and types of scrutinee fields.
         -> [Term a]             -- ^ Alternatives.
         -> IO ([Term a], [Effect a])
 
-checkCaseStmtAlts a wh ctx mCase tScrut tsReturn nmgsScrut msAlts
+checkCaseProcAlts a wh ctx mCase tScrut ctxProc nmgsScrut msAlts
  = do   checkCaseAltsPatterns a wh ctx tScrut nmgsScrut msAlts False
         checkAlts msAlts [] []
  where
   checkAlts (MVarAlt nPat mpsPat mBody : msAltsRest)
-            msAltsChecked esAlt
+            msAltsChecked esAltsRest
    | (_aPatBind, mpsPat_) <- unwrapTermParams a mpsPat
    , Just btsPat          <- takeMPTerms mpsPat_
    = do
@@ -83,16 +83,16 @@ checkCaseStmtAlts a wh ctx mCase tScrut tsReturn nmgsScrut msAlts
         let aBody = fromMaybe a $ takeAnnotOfTerm mBody
         let ctx'  = contextBindTermParams (MPTerms btsPat) ctx
 
-        (mBody', esStmt)
-         <- contextCheckStmt ctx' aBody wh ctx' tsReturn mBody
+        (mBody', _tsBody, esBody)
+         <- contextCheckProc ctx' aBody wh ctx' (Check []) ctxProc mBody
 
         checkAlts msAltsRest
             (MVarAlt nPat mpsPat mBody' : msAltsChecked)
-            (esStmt ++ esAlt)
+            (esBody ++ esAltsRest)
 
-  checkAlts [] msAltsChecked esAlt
+  checkAlts [] msAltsChecked esAltsRest
    =    return  ( reverse msAltsChecked
-                , reverse esAlt)
+                , reverse esAltsRest)
 
   -- There are either no alternatives or one of them is not a MVarAlt term.
   checkAlts _ _ _

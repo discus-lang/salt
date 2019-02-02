@@ -5,7 +5,6 @@ module Salt.Core.Check
         , module Salt.Core.Check.Term
         , module Salt.Core.Check.Term.Base
         , module Salt.Core.Check.Term.Proc
-        , module Salt.Core.Check.Term.Stmt
         , module Salt.Core.Check.Module
         , module Salt.Core.Check.Error
         , module Salt.Core.Check.Context
@@ -17,7 +16,6 @@ import Salt.Core.Check.Type.Base
 import Salt.Core.Check.Term
 import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Term.Proc
-import Salt.Core.Check.Term.Stmt
 import Salt.Core.Check.Module
 import Salt.Core.Check.Error
 import Salt.Core.Check.ErrorMsg         ()
@@ -34,7 +32,6 @@ contextEmpty
         { contextCheckType      = checkTypeWith
         , contextCheckTerm      = checkTermWith
         , contextCheckProc      = checkTermProc
-        , contextCheckStmt      = checkTermStmt
         , contextModuleType     = Map.empty
         , contextModuleTerm     = Map.empty
         , contextLocal          = []

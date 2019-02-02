@@ -65,22 +65,19 @@ data TermKey
 
         -- Proc term formers.
         | MKProc                                -- ^ Define a procedure.
+        | MKProcYield                           -- ^ Yield the value of an expression.
+        | MKProcCall                            -- ^ Call another procedure.
+        | MKProcWith                            -- ^ Define nested procedures.
         | MKProcSeq                             -- ^ Procedural statement sequence.
-        | MKProcLet                             -- ^ Procedural let-binding.
-        | MKProcCel                             -- ^ Procedural cel-introduction.
-        | MKProcEnd                             -- ^ End a procedure without producing values.
-        | MKProcEndWith                         -- ^ End a procedure while producing some values.
-
-        | MKStmtProc                            -- ^ Embed a sub-procedure into a statement.
-        | MKStmtNest                            -- ^ Embed a sub-procedure body into a statement.
-        | MKStmtIf                              -- ^ Branch on boolean flags.
-        | MKStmtCase                            -- ^ Branch on variant constructor.
-        | MKStmtLoop                            -- ^ Loop construct.
-        | MKStmtUpdate                          -- ^ Update a cel with a new value.
-        | MKStmtCall                            -- ^ Call another procedure.
-        | MKStmtBreak                           -- ^ Break to the end of the enclosing loop.
-        | MKStmtContinue                        -- ^ Continue to the start of the enclosing loop.
-        | MKStmtReturn                          -- ^ Return from the enclosing procecure.
+        | MKProcLaunch                          -- ^ Define scope of a 'return' statement.
+        | MKProcReturn                          -- ^ Return to the enclosing 'launch' statement.
+        | MKProcCell                            -- ^ Define a new storage cell.
+        | MKProcUpdate                          -- ^ Update a storage cell.
+        | MKProcWhen                            -- ^ Branch on boolean.
+        | MKProcMatch                           -- ^ Branch on variants.
+        | MKProcLoop                            -- ^ Define a loop.
+        | MKProcBreak                           -- ^ Break to the end of the enclosing loop.
+        | MKProcContinue                        -- ^ Continue to the next loop iteration.
 
         -- Bloc term formers.
         | MKBloc                                -- ^ Define a bloc.

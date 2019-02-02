@@ -1,9 +1,9 @@
 
 module Salt.Core.Check.Term.Proc where
-import Salt.Core.Check.Term.Stmt
-import Salt.Core.Check.Term.Params
+-- import Salt.Core.Check.Term.Stmt
+-- import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Base
-import Salt.Core.Check.Type.Base
+-- import Salt.Core.Check.Type.Base
 import Salt.Core.Codec.Text             ()
 
 import Text.Show.Pretty
@@ -13,6 +13,23 @@ import Text.Show.Pretty
 --   Type errors are thrown as exceptions in the IO monad.
 checkTermProc :: CheckTermProc a
 
+-- (t-proc-yield) -----------------------------------------
+checkTermProc a wh ctx mode _ctxProc (MProcYield mResult)
+ = do
+        (mResult', tsResult, esResult)
+         <- checkTerm a wh (asExp ctx) mode mResult
+
+        return  ( MProcYield mResult'
+                , tsResult, esResult)
+
+
+
+-----------------------------------------------------------
+-- We don't know how to check this sort of procedure
+checkTermProc _a _wh _ctx _mode _ctxProc  mm
+ = error $ ppShow ("checkTermProc" :: String, mm)
+
+{-
 -- (t-proc-seq) -------------------------------------------
 checkTermProc a wh ctx tsReturn (MProcSeq mStmt mRest)
  = do
@@ -101,8 +118,4 @@ checkTermProc _a _wh _ctx _tsReturn MProcEnd
  = do
         return  (MProcEnd, [])
 
-
------------------------------------------------------------
--- We don't know how to check this sort of procedure
-checkTermProc _a _wh _ctx _tsResult mm
- = error $ ppShow ("procedure" :: String, mm)
+-}

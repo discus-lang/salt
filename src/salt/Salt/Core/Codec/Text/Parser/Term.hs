@@ -242,12 +242,10 @@ pTermBody
 
          , do   return  $ MVarCase mScrut msAlts [] ]
 
- , do   -- 'proc' Types 'of' Proc
+ , do   -- 'proc' Proc
         pTok KProc
-        tsReturn <- pTypes
-        pTok KOf
         mBody    <- pTermProc pTerm pTermApp
-        return $ MProc tsReturn mBody
+        return $ MProc mBody
 
  , do   -- 'bloc' BlocBody
         pTok KBloc

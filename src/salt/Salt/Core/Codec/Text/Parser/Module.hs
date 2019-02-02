@@ -11,6 +11,6 @@ import qualified Text.Parsec            as P
 pModule :: Parser (Module RL)
 pModule
  = do   decls   <- P.many pDecl
-        pTok KEnd
+        pTok KMetaEnd
         return  $ Module decls
 

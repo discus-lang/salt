@@ -1,14 +1,14 @@
 
 module Salt.Core.Check.Term.Stmt where
-import Salt.Core.Check.Term.Case
-import Salt.Core.Check.Term.Base
-import Salt.Core.Check.Type.Base
-import Salt.Core.Codec.Text             ()
-import Text.Show.Pretty
+-- import Salt.Core.Check.Term.Case
+-- import Salt.Core.Check.Term.Base
+-- import Salt.Core.Check.Type.Base
+-- import Salt.Core.Codec.Text             ()
+-- import Text.Show.Pretty
 
 
-checkTermStmt :: CheckTermStmt a
-
+-- checkTermStmt :: CheckTermStmt a
+{-
 -- (t-stmt-proc) ------------------------------------------
 checkTermStmt a wh ctx _tsReturn (MStmtProc tsResult mBody)
  = do   tsResult'
@@ -134,4 +134,4 @@ checkTermStmt a wh ctx tsReturn (MStmtReturn mBody)
 -- TODO: real error message.
 checkTermStmt _ _ _ _ mm
  = error $ "checkTermStmt: "  ++ ppShow mm
-
+-}

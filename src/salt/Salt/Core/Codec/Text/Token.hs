@@ -59,13 +59,14 @@ data Token
         | KSymExists    | KAsciiExists
 
         | KProc
-        | KSeq          | KEnd          | KWith
-        | KBreak        | KContinue     | KReturn
-        | KCel
-        | KLoop         | KWhile
+        | KYield        | KCall
+        | KSeq          | KWith
+        | KLaunch       | KReturn
+        | KCell         | KUpdate
+        | KWhen         | KMatch
+        | KLoop         | KBreak        | KContinue
 
         | KBloc
-
 
         -- Names
         | KVar  Text            -- Plain variable name, "foo"
@@ -140,15 +141,19 @@ showTokenAsSource kk
         KSymExists      -> "∃";         KAsciiForall    -> "forall"
 
         KProc           -> "proc"
-        KSeq            -> "seq"
-        KEnd            -> "end"
+        KYield          -> "yield"
+        KCall           -> "call"
         KWith           -> "with"
+        KSeq            -> "seq"
+        KLaunch         -> "launch"
+        KReturn         -> "return"
+        KCell           -> "cell"
+        KUpdate         -> "update"
+        KWhen           -> "when"
+        KMatch          -> "match"
+        KLoop           -> "loop"
         KBreak          -> "break"
         KContinue       -> "continue"
-        KReturn         -> "return"
-        KCel            -> "cel"
-        KLoop           -> "loop"
-        KWhile          -> "while"
 
         KBloc           -> "bloc"
 

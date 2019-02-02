@@ -157,15 +157,19 @@ scanner
                 "else"          -> Just KElse
 
                 "proc"          -> Just KProc
+                "yield"         -> Just KYield
+                "call"          -> Just KCall
                 "seq"           -> Just KSeq
-                "end"           -> Just KEnd
                 "with"          -> Just KWith
+                "launch"        -> Just KLaunch
+                "return"        -> Just KReturn
+                "cell"          -> Just KCell
+                "update"        -> Just KUpdate
+                "when"          -> Just KWhen
+                "match"         -> Just KMatch
+                "loop"          -> Just KLoop
                 "break"         -> Just KBreak
                 "continue"      -> Just KContinue
-                "return"        -> Just KReturn
-                "cel"           -> Just KCel
-                "loop"          -> Just KLoop
-                "while"         -> Just KWhile
 
                 "bloc"          -> Just KBloc
 

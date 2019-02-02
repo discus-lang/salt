@@ -7,7 +7,6 @@ import Salt.Core.Check.Module.Base
 import Salt.Core.Check.Type
 import Salt.Core.Check.Term
 import Salt.Core.Check.Term.Proc
-import Salt.Core.Check.Term.Stmt
 import Salt.Core.Check.Term.Base
 import qualified Data.Map       as Map
 import qualified Data.Either    as Either
@@ -35,7 +34,6 @@ checkModule a mm
          { contextCheckType     = checkTypeWith
          , contextCheckTerm     = checkTermWith
          , contextCheckProc     = checkTermProc
-         , contextCheckStmt     = checkTermStmt
          , contextModuleType    = Map.empty
          , contextModuleTerm    = Map.empty
          , contextLocal         = []
