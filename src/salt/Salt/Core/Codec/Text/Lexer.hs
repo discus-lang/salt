@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Salt.Core.Codec.Text.Lexer
         ( lexSource
@@ -19,6 +20,8 @@ import qualified Data.Text                as Text
 import qualified Data.Char                as Char
 import qualified Data.Either              as Either
 import qualified System.IO.Unsafe         as System
+import Text.Read                          (readMaybe)
+import Data.List                          (elemIndex)
 
 
 ---------------------------------------------------------------------------------------------------
@@ -177,17 +180,21 @@ scanner
 
                 _               -> Nothing
 
-          -- Names.
+         -- Literals.
+        , fmap (stamp (KText . Text.pack)) $ IW.scanHaskellString
+
+        , fmap (stamp KNat) scanNat
+        -- TODO FIXME will scanNat ever fail where scanInteger will pass?
+        --            do we have support for negative literals?
+        , fmap (stamp KInt) IW.scanInteger
+        , fmap (stamp id)   scanBoundedLiteral
+
+         -- Names.
         , fmap (stamp KVar) scanVarName
         , fmap (stamp KCon) scanConName
         , fmap (stamp KSym) scanSymName
         , fmap (stamp KPrm) scanPrmName
         , fmap (stamp id)   scanQuotedIdent
-
-          -- Literals.
-        , fmap (stamp KNat) $ scanNat
-        , fmap (stamp KInt) $ IW.scanInteger
-        , fmap (stamp (KText . Text.pack)) $ IW.scanHaskellString
         ]
  where  -- Stamp a token with source location information.
         stamp k (range, t)
@@ -280,11 +287,74 @@ scanQuotedIdent
    = (loc, klass $ Text.pack ident)
 {-# INLINE scanQuotedIdent #-}
 
-
 scanNat :: Monad m => IW.Scanner m loc [Char] (IW.Range loc, Integer)
 scanNat
  = IW.munchPred Nothing match accept
  where  match _ c = Char.isDigit c
         accept cs = Just (read cs)
 {-# INLINE scanNat #-}
+
+scanBoundedLiteral :: Monad m => IW.Scanner m loc [Char] (IW.Range loc, Token)
+scanBoundedLiteral
+ = IW.munchPred Nothing match acceptBounded
+ where -- a bounded number is of the form
+       -- #w8'12
+       -- #i16'-34
+       -- and so we require the first character is #, and then allow any of
+       --   '
+       --   alpha
+       --   num
+       --   -
+       --   +
+       match 0 '#'  = True
+       match _ '\'' = True
+       match _ '-'  = True
+       match _ '+'  = True
+       match _ c    = Char.isAlphaNum c
+
+acceptBounded :: String -> Maybe Token
+acceptBounded str = do
+    (name, num) <- breakApart str
+    case name of
+         -- TODO FIXME support negative integer literals
+        "#int'"    -> fmap KInt    (constructNat num)
+        "#nat'"    -> fmap KNat    (constructNat num)
+        "#word'"   -> fmap KWord    (constructNat num)
+
+        "#int8'"   -> fmap KInt8   (constructBounded num)
+        "#int16'"  -> fmap KInt16  (constructBounded num)
+        "#int32'"  -> fmap KInt32  (constructBounded num)
+        "#int64'"  -> fmap KInt64  (constructBounded num)
+
+        "#word8'"  -> fmap KWord8  (constructBounded num)
+        "#word16'" -> fmap KWord16 (constructBounded num)
+        "#word32'" -> fmap KWord32 (constructBounded num)
+        "#word64'" -> fmap KWord64 (constructBounded num)
+        _       -> Nothing
+
+splitOn :: Char -> String -> Maybe (String, String)
+splitOn ch str = do
+    index <- elemIndex ch str
+    let (l, r) = splitAt (index+1) str
+    return (l, r)
+
+breakApart :: String -> Maybe (String, Integer)
+breakApart str = do
+    (name, str') <- splitOn '\'' str
+    val <- (readMaybe str') :: Maybe Integer
+    return (name, val)
+
+constructNat:: Integer -> Maybe Integer
+constructNat i | i >= 0 = Just i
+constructNat _          = Nothing
+
+-- TODO FIXME this should fail with an error message when out of bounds,
+--            it currently just silently emits a Nothing.
+constructBounded :: forall b. Integral b => Bounded b => Integer -> Maybe b
+constructBounded val
+ = if (val < (fromIntegral (minBound :: b))) ||
+       (val > (fromIntegral (maxBound :: b)))
+        -- TODO FIXME should report out of bounds error
+        then Nothing
+        else Just (fromIntegral val)
 

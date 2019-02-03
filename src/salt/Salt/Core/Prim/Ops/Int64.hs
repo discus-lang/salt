@@ -4,12 +4,7 @@ import Salt.Core.Prim.Ops.Base
 
 
 primOpsInt64
- = [ PP { name  = "int64"
-        , tsig  = [TNat] :-> [TInt64]
-        , step  = \[NVs [VNat n]] -> [VInt64 $ fromIntegral n]
-        , docs  = "Integer constructor." }
-
-   , PP { name  = "int64'add"
+ = [ PP { name  = "int64'add"
         , tsig  = [TInt64, TInt64] :-> [TInt64]
         , step  = \[NVs [VInt64 n1, VInt64 n2]] -> [VInt64 $ n1 + n2]
         , docs  = "Integer addition." }

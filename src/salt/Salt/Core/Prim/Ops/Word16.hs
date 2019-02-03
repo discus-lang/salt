@@ -4,12 +4,7 @@ import Salt.Core.Prim.Ops.Base
 
 
 primOpsWord16
- = [ PP { name  = "word16"
-        , tsig  = [TNat] :-> [TWord16]
-        , step  = \[NVs [VNat n]] -> [VWord16 $ fromIntegral n]
-        , docs  = "Word constructor." }
-
-   , PP { name  = "word16'add"
+ = [ PP { name  = "word16'add"
         , tsig  = [TWord16, TWord16] :-> [TWord16]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VWord16 $ n1 + n2]
         , docs  = "Word addition." }

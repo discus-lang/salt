@@ -4,12 +4,7 @@ import Salt.Core.Prim.Ops.Base
 
 
 primOpsInt16
- = [ PP { name  = "int16"
-        , tsig  = [TNat] :-> [TInt16]
-        , step  = \[NVs [VNat n]] -> [VInt16 $ fromIntegral n]
-        , docs  = "Integer constructor." }
-
-   , PP { name  = "int16'add"
+ = [ PP { name  = "int16'add"
         , tsig  = [TInt16, TInt16] :-> [TInt16]
         , step  = \[NVs [VInt16 n1, VInt16 n2]] -> [VInt16 $ n1 + n2]
         , docs  = "Integer addition." }
