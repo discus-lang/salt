@@ -1,6 +1,6 @@
 
 module Salt.Core.Codec.Text.Parser.Term where
-import Salt.Core.Codec.Text.Parser.TermProc
+import Salt.Core.Codec.Text.Parser.Proc
 import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Lexer
@@ -244,7 +244,7 @@ pTermBody
 
  , do   -- 'proc' Proc
         pTok KProc
-        mBody    <- pTermProc pTerm pTermApp
+        mBody    <- pProc pTerm pTermApp
         return $ MProc mBody
 
  , do   -- 'bloc' BlocBody

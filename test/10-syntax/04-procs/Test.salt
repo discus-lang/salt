@@ -31,9 +31,17 @@ proc decl3s [n: #Nat]: []! #Console
  =      seq call #console'print "hello";
         yield []
 
+proc decl3ss [n: #Nat]: []! #Console
+ = do   { call #console'print "hello"
+        ; yield [] }
+
 proc decl4s []: #Nat ! #Console
  =      seq call #console'print "hello";
         yield 5
+
+proc decl4ss []: #Nat ! #Console
+ = do   { call #console'print "hello"
+        ; yield 5 }
 
 
 -- yield ----------------------------------------------------------------------
@@ -42,17 +50,25 @@ term yield1 [x: #Nat]: #Nat
 
 
 -- call -----------------------------------------------------------------------
--- TODO: make 'call' keyword implicit.
+-- TODO: allow 'call' keyword to be implicit.
 term call1 [x: #Nat]: #Nat
  = proc call #nat'add [x, x]
+
+term call1s [x: #Nat]: #Nat
+ = proc do { call #nat'add [x, x] }
 
 
 -- sequencing -----------------------------------------------------------------
 -- simple sequencing
-proc let1 [x: #Nat, y: #Nat]: #Nat
+proc seq0 [x: #Nat, y: #Nat]: #Nat
  =      seq a = yield 2;
         seq b = yield 3;
         yield #nat'add [a, b]
+
+proc seq0s [x: #Nat, y: #Nat]: #Nat
+ = do   { seq a = yield 2
+        ; seq b = yield 3
+        ; yield #nat'add [a, b] }
 
 -- sugar where the vector of bindings is assumed to be empty.
 proc seq1 []: []! #Console
@@ -61,6 +77,11 @@ proc seq1 []: []! #Console
         seq call #console'print "derp";
         end
 
+proc seq1s []: []! #Console
+ = do   { call #console'print ["hello"]
+        ; call #console'print "world"
+        ; call #console'print "derp" }
+
 -- nested procedure.
 proc seq'nest1 []: []! #Console
  =      seq call #console'print "good morning";
@@ -68,6 +89,12 @@ proc seq'nest1 []: []! #Console
             seq call #console'print "world";
             end;
         end
+
+proc seq'nest1s []: []! #Console
+ = do   { call #console'print "good morning"
+        ; do    { call #console'print "hello"
+                ; call #console'print "world" }
+        }
 
 -- doubly nested procedure.
 proc seq'nest2 []: []! #Console
@@ -78,11 +105,19 @@ proc seq'nest2 []: []! #Console
             end;
         end
 
--- as above, but with implicit process end.
-proc seq'nest3 []: []! #Console
+-- as above, but with explicit seqs and implicit process end.
+proc seq'nest2n []: []! #Console
  =      seq call #console'print "good morning";
         seq seq call #console'print "hello";
             seq seq call #console'print "world"
+
+-- as above, but with do syntax.
+proc seq'nest2s []: []! #Console
+ = do   { call #console'print "good morning"
+        ; do    { call #console'print "hello"
+                ; do    { call #console'print "world" }
+        }
+ }
 
 
 -- cell-introduction ----------------------------------------------------------
@@ -92,13 +127,23 @@ proc cell1 [x: #Nat, y: #Nat]: #Nat
         cell b: #Nat ← 5;
         yield #nat'add [a, b]
 
+proc cell1s [x: #Nat, y: #Nat]: #Nat
+ = do   { cell a: #Nat ← 4
+        ; cell b: #Nat ← 5
+        ; yield #nat'add [a, b] }
+
 
 -- cell update ----------------------------------------------------------------
--- TODO: make 'update' keyword implicit.
+-- TODO: allow 'update' keyword to be implicit.
 proc update1 [x: #Nat, y: #Nat]: #Nat
  =      cell a: #Nat ← x;
         update a ← y;
         yield a
+
+proc update1s [x: #Nat, y: #Nat]: #Nat
+ = do   { cell a: #Nat ← x
+        ; update a ← y
+        ; yield a }
 
 
 -- when -----------------------------------------------------------------------
@@ -106,12 +151,22 @@ proc when1 [b: #Bool, x: #Nat, y: #Nat]: #Nat
  =      when b then return 5 done;
         yield y
 
+proc when1s [b: #Bool, x: #Nat, y: #Nat]: #Nat
+ = do   { when b then return 5 done
+        ; yield y }
+
 
 proc when2 [n: #Nat]: #Text ! #Console
  =      when #nat'eq [n, 1] then return "one" done;
         when #nat'eq [n, 2] then return "two" done;
         when #nat'eq [n, 3] then return "three" done;
         yield "dunno"
+
+proc when2s [n: #Nat]: #Text ! #Console
+ = do   { when #nat'eq [n, 1] then return "one" done
+        ; when #nat'eq [n, 2] then return "two" done
+        ; when #nat'eq [n, 3] then return "three" done
+        ; yield "dunno" }
 
 
 proc when3 [n: #Nat, m: #Nat]: #Text ! #Console
@@ -121,6 +176,22 @@ proc when3 [n: #Nat, m: #Nat]: #Text ! #Console
                 done
         done;
         yield "whatever"
+
+proc when3s [n: #Nat, m: #Nat]: #Text ! #Console
+ = do   { when #nat'eq [n, 1] then
+                when #nat'eq [n, 2] then do
+                        { return "derp" }
+                done
+         done
+        ; yield "whatever" }
+
+proc when3ss [n: #Nat, m: #Nat]: #Text ! #Console
+ = do   { when #nat'eq [n, 1] do
+                { when #nat'eq [n, 2] do
+                        { return "derp" }
+                }
+        ; yield "whatever"
+        }
 
 
 proc when4 [n: #Nat, m: #Nat]: #Text ! #Console
@@ -133,6 +204,28 @@ proc when4 [n: #Nat, m: #Nat]: #Text ! #Console
                 done
         done;
         yield "whatever"
+
+proc when4s [n: #Nat, m: #Nat]: #Text ! #Console
+ = do   { when #nat'eq [n, 1] then
+          do    { when #nat'eq [m, 1] then
+                        return "one, one"
+                  done
+                ; when #nat'eq [m, 2] then
+                        return "one, two"
+                  done
+                }
+          done
+        ; yield "whatever" }
+
+proc when4ss [n: #Nat, m: #Nat]: #Text ! #Console
+ = do   { when #nat'eq [n, 1] do
+                { when #nat'eq [m, 1] do
+                        { return "one, one" }
+                ; when #nat'eq [m, 2] do
+                        { return "one, two" }
+                }
+        ; yield "whatever"
+        }
 
 
 proc when5 [n: #Nat, m: #Nat]: #Text ! #Console
@@ -170,6 +263,17 @@ proc match3 [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
         yield 0
 
 
+proc match3s [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
+ = do   { match v with
+                { foo [x: #Nat] → return x
+                ; bar [b: #Bool, x: #Nat, y: #Nat]
+                  → do  { when b do { return x }
+                        ; return y
+                        }
+                ; baz [x: #Nat] → return x }
+        ; yield 0 }
+
+
 -- loop -----------------------------------------------------------------------
 proc loop1 [n: #Nat]: []! #Console
  =      loop    when #nat'gt [n, 10]
@@ -177,6 +281,12 @@ proc loop1 [n: #Nat]: []! #Console
                 done;
                 call #console'print "hello"
         done
+
+proc loop1s [n: #Nat]: []! #Console
+ =      loop do
+        { when #nat'gt [n, 10] do
+                { return [] }
+        ; call #console'print "hello" }
 
 
 -- proc foo
