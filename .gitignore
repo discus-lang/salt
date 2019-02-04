@@ -2,10 +2,14 @@
 *.hi
 *.dyn_o
 *.dyn_hi
-bin/*
-make/config-override.mk
+
 war-*
+make/config-override.mk
+
 .cabal-sandbox/
 .stack-work/
+dist/
+bin/
+
 ghcid.txt
 cabal.sandbox.config
