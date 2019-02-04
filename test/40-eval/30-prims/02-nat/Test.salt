@@ -1,6 +1,7 @@
 
 test assert nat'eq1     = #nat'eq   [1, 1]
-test assert nat'eq2     = #bool'not [#nat'eq [1, 2]]
+test assert nat'eq2     = #nat'eq   [#nat'1, #nat'1]
+test assert nat'eq3     = #bool'not [#nat'eq [1, 2]]
 test assert nat'neq     = #nat'neq  [1, 2]
 test assert nat'add     = #nat'eq   [3, #nat'add [1, 2]]
 test assert nat'sub     = #nat'eq   [3, #nat'sub [7, 4]]

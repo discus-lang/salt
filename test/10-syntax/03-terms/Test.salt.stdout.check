@@ -5,6 +5,17 @@
 * bool'false2: #Bool
 * nat1: #Nat
 * nat1234: #Nat
+* nat'2: #Nat
+* int'1: #Int
+* word'1: #Word
+* int8'127: #Int8
+* int16'32767: #Int16
+* int32'2147483647: #Int32
+* int64'1: #Int64
+* word8'255: #Word8
+* word16'65535: #Word16
+* word32'4294967295: #Word32
+* word64'1: #Word64
 * symbol: #Symbol
 * symbol2: #Symbol
 * vec: [#Nat,#Nat,#Nat]

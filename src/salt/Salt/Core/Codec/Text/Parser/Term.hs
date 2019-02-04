@@ -383,6 +383,30 @@ pTermArg
  , do   -- Nat
         pNat    >>= return . MNat
 
+ , do   -- Int
+        pInt    >>= return . MInt
+
+ , do   -- Word
+        pWord    >>= return . MWord
+
+ , do   -- Int8
+        pInt8     >>= return . MInt8
+ , do   -- Int16
+        pInt16    >>= return . MInt16
+ , do   -- Int32
+        pInt32    >>= return . MInt32
+ , do   -- Int64
+        pInt64    >>= return . MInt64
+
+ , do   -- Word8
+        pWord8     >>= return . MWord8
+ , do   -- Word16
+        pWord16    >>= return . MWord16
+ , do   -- Word32
+        pWord32    >>= return . MWord32
+ , do   -- Word64
+        pWord64    >>= return . MWord64
+
  , do   -- Text
         pText   >>= return . MText
 
@@ -582,6 +606,14 @@ pValue
  , do   pSym    >>= return . VSymbol
  , do   pNat    >>= return . VNat
  , do   pInt    >>= return . VInt
+ , do   pInt8    >>= return . VInt8
+ , do   pInt16    >>= return . VInt16
+ , do   pInt32    >>= return . VInt32
+ , do   pInt64    >>= return . VInt64
+ , do   pWord8    >>= return . VWord8
+ , do   pWord16    >>= return . VWord16
+ , do   pWord32    >>= return . VWord32
+ , do   pWord64    >>= return . VWord64
  , do   pText   >>= return . VText
  , do   pTermValueRecord ]
 

@@ -14,22 +14,22 @@ checkValue
 
 checkValue a wh ctx v
  = case v of
-        VUnit     -> return TUnit
-        VSymbol{} -> return TSymbol
-        VText{}   -> return TText
-        VBool{}   -> return TBool
-        VNat{}    -> return TNat
-        VInt{}    -> return TInt
-        VInt8{}   -> return TInt8
-        VInt16{}  -> return TInt16
-        VInt32{}  -> return TInt32
-        VInt64{}  -> return TInt64
-        VWord{}   -> return TWord
-        VWord8{}  -> return TWord8
-        VWord16{} -> return TWord16
-        VWord32{} -> return TWord32
-        VWord64{} -> return TWord64
-        VNone t   -> return $ TOption t
+        VUnit      -> return TUnit
+        VSymbol{}  -> return TSymbol
+        VText{}    -> return TText
+        VBool{}    -> return TBool
+        VNat{}     -> return TNat
+        VInt{}     -> return TInt
+        VWord{}    -> return TWord
+        VInt8{}    -> return TInt8
+        VInt16{}   -> return TInt16
+        VInt32{}   -> return TInt32
+        VInt64{}   -> return TInt64
+        VWord8{}   -> return TWord8
+        VWord16{}  -> return TWord16
+        VWord32{}  -> return TWord32
+        VWord64{}  -> return TWord64
+        VNone t    -> return $ TOption t
 
         VData n ts vs
          -> do  -- Use the term checker to check the applications.

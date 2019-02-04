@@ -11,6 +11,20 @@ test type bool'false2   = #bool'false
 test type nat1          = 1
 test type nat1234       = 1234
 
+test type nat'2         = #nat'2
+test type int'1         = #int'1
+test type word'1        = #word'1
+
+test type int8'127          = #int8'127
+test type int16'32767       = #int16'32767
+test type int32'2147483647  = #int32'2147483647
+test type int64'1           = #int64'1
+
+test type word8'255         = #word8'255
+test type word16'65535      = #word16'65535
+test type word32'4294967295 = #word32'4294967295
+test type word64'1          = #word64'1
+
 test type symbol        = 'Foo
 test type symbol2       = 'Bar1234
 

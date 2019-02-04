@@ -4,12 +4,7 @@ import Salt.Core.Prim.Ops.Base
 
 
 primOpsWord32
- = [ PP { name  = "word32"
-        , tsig  = [TNat] :-> [TWord32]
-        , step  = \[NVs [VNat n]] -> [VWord32 $ fromIntegral n]
-        , docs  = "Word constructor." }
-
-   , PP { name  = "word32'add"
+ = [ PP { name  = "word32'add"
         , tsig  = [TWord32, TWord32] :-> [TWord32]
         , step  = \[NVs [VWord32 n1, VWord32 n2]] -> [VWord32 $ n1 + n2]
         , docs  = "Word addition." }

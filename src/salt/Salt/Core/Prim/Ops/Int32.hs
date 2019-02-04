@@ -4,12 +4,7 @@ import Salt.Core.Prim.Ops.Base
 
 
 primOpsInt32
- = [ PP { name  = "int32"
-        , tsig  = [TNat] :-> [TInt32]
-        , step  = \[NVs [VNat n]] -> [VInt32 $ fromIntegral n]
-        , docs  = "Integer constructor." }
-
-   , PP { name  = "int32'add"
+ = [ PP { name  = "int32'add"
         , tsig  = [TInt32, TInt32] :-> [TInt32]
         , step  = \[NVs [VInt32 n1, VInt32 n2]] -> [VInt32 $ n1 + n2]
         , docs  = "Integer addition." }

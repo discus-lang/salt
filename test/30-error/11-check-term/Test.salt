@@ -19,6 +19,8 @@ test type #map'insert
 -- Error: unsaturated primitive constructor.
 test type #None
 
+-- Error: out of bounds literal.
+test type #word8'256
 
 -- (t-con) --------------------------------------------------------------------
 -- Error: unknown term constructor.

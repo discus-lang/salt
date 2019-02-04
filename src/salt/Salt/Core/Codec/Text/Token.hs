@@ -9,6 +9,8 @@ module Salt.Core.Codec.Text.Token
 where
 import qualified Text.Lexer.Inchworm.Source     as IW
 import Data.Text        as T
+import Data.Int         as I
+import Data.Word        as W
 
 
 -- | A thing with attached location information.
@@ -76,11 +78,23 @@ data Token
         | KPrm  Text            -- Primitive name       "#foo"
 
         -- Literals
-        | KNat  Integer
-        | KInt  Integer
-        | KText Text
-        deriving (Show, Eq)
+        | KText    Text
 
+        | KInt     Integer
+        | KNat     Integer        -- Nat is an arbitrary sized natural number.
+        | KWord    Integer
+
+        | KInt8    I.Int8
+        | KInt16   I.Int16
+        | KInt32   I.Int32
+        | KInt64   I.Int64
+
+        | KWord8   W.Word8
+        | KWord16  W.Word16
+        | KWord32  W.Word32
+        | KWord64  W.Word64
+
+        deriving (Show, Eq)
 
 -- | Show the token in source in source format.
 --   This is used when printing tokens back in parse error messages.
@@ -165,9 +179,21 @@ showTokenAsSource kk
         KPrm  tx        -> "#" ++ T.unpack tx
 
         -- Literals
-        KNat  i         -> show i
-        KInt  i         -> show i
-        KText tx        -> show tx
+        KText    tx        -> show tx
+
+        KNat     n         -> show n
+        KInt     i         -> "#int'"    ++ show i
+        KWord    i         -> "#word'"   ++ show i
+
+        KInt8    i         -> "#int8'"   ++ show i
+        KInt16   i         -> "#int16'"  ++ show i
+        KInt32   i         -> "#int32'"  ++ show i
+        KInt64   i         -> "#int64'"  ++ show i
+
+        KWord8   w         -> "#word8'"  ++ show w
+        KWord16  w         -> "#word16'" ++ show w
+        KWord32  w         -> "#word32'" ++ show w
+        KWord64  w         -> "#word64'" ++ show w
 
 
 -- | Get a range covering the location from the start of the first token,

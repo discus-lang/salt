@@ -96,14 +96,14 @@ data Value a
         = VUnit                                 -- ^ Unit value.
         | VBool     Bool                        -- ^ Boolean value.
         | VNat      Integer                     -- ^ Natural value.
-
         | VInt      Integer                     -- ^ Integer value.
+        | VWord     Integer                     -- ^ Word value.
+
         | VInt8     Int.Int8                    -- ^ 8 bit Integer value.
         | VInt16    Int.Int16                   -- ^ 16 bit Integer value.
         | VInt32    Int.Int32                   -- ^ 32 bit Integer value.
         | VInt64    Int.Int64                   -- ^ 64 bit Integer value.
 
-        | VWord     Word.Word                   -- ^ Word value.
         | VWord8    Word.Word8                  -- ^ 8 bit Word value.
         | VWord16   Word.Word16                 -- ^ 16 bit Word value.
         | VWord32   Word.Word32                 -- ^ 32 bit Word value.

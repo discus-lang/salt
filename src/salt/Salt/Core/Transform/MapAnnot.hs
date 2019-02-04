@@ -156,11 +156,11 @@ instance MapAnnot Value where
         VBool b         -> VBool b
         VNat n          -> VNat n
         VInt i          -> VInt i
+        VWord i         -> VWord i
         VInt8 i         -> VInt8 i
         VInt16 i        -> VInt16 i
         VInt32 i        -> VInt32 i
         VInt64 i        -> VInt64 i
-        VWord i         -> VWord i
         VWord8 i        -> VWord8 i
         VWord16 i       -> VWord16 i
         VWord32 i       -> VWord32 i

@@ -112,14 +112,14 @@ upsApplyValue upsT upsM vv
         VUnit           -> vv
         VBool{}         -> vv
         VNat{}          -> vv
-
         VInt{}          -> vv
+        VWord{}         -> vv
+
         VInt8{}         -> vv
         VInt16{}        -> vv
         VInt32{}        -> vv
         VInt64{}        -> vv
 
-        VWord{}         -> vv
         VWord8{}        -> vv
         VWord16{}       -> vv
         VWord32{}       -> vv

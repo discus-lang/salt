@@ -9,6 +9,8 @@ import qualified Salt.Data.Pretty               as Pretty
 import qualified Text.Lexer.Inchworm.Source     as IW
 import qualified Text.Parsec                    as P
 import qualified Text.Parsec.Pos                as P
+import qualified Data.Int                       as I
+import qualified Data.Word                      as W
 
 
 ------------------------------------------------------------------------------------------ Types --
@@ -155,6 +157,42 @@ pNat    = pTokOf $ \case { KNat i -> Just i; _ -> Nothing }
 -- | Parser for an integer.
 pInt :: Parser Integer
 pInt    = pTokOf $ \case { KInt i -> Just i; _ -> Nothing }
+
+-- | Parser for a word.
+pWord :: Parser Integer
+pWord    = pTokOf $ \case { KWord i -> Just i; _ -> Nothing }
+
+-- | Parser for an int8.
+pInt8 :: Parser I.Int8
+pInt8    = pTokOf $ \case { KInt8 i -> Just i; _ -> Nothing }
+
+-- | Parser for an int16.
+pInt16 :: Parser I.Int16
+pInt16    = pTokOf $ \case { KInt16 i -> Just i; _ -> Nothing }
+
+-- | Parser for an int32.
+pInt32 :: Parser I.Int32
+pInt32    = pTokOf $ \case { KInt32 i -> Just i; _ -> Nothing }
+
+-- | Parser for an int64.
+pInt64 :: Parser I.Int64
+pInt64    = pTokOf $ \case { KInt64 i -> Just i; _ -> Nothing }
+
+-- | Parser for a Word8.
+pWord8 :: Parser W.Word8
+pWord8    = pTokOf $ \case { KWord8 i -> Just i; _ -> Nothing }
+
+-- | Parser for a Word16.
+pWord16 :: Parser W.Word16
+pWord16    = pTokOf $ \case { KWord16 i -> Just i; _ -> Nothing }
+
+-- | Parser for a Word32.
+pWord32 :: Parser W.Word32
+pWord32    = pTokOf $ \case { KWord32 i -> Just i; _ -> Nothing }
+
+-- | Parser for a Word64.
+pWord64 :: Parser W.Word64
+pWord64    = pTokOf $ \case { KWord64 i -> Just i; _ -> Nothing }
 
 -- | Parser for a Haskell-style string.
 pText :: Parser Text
