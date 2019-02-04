@@ -10,7 +10,7 @@ term decl2 [n: #Nat]: #Nat
 
 term decl3 [n: #Nat]: [] ! #Console
  = box proc
-        seq call #console'print "hello"
+        seq call #console'print "hello";
         end
 
 term decl4 []: #Nat ! #Console
@@ -67,16 +67,22 @@ proc seq'nest1 []: []! #Console
         seq seq call #console'print "hello";
             seq call #console'print "world";
             end;
-        yield []
+        end
 
 -- doubly nested procedure.
 proc seq'nest2 []: []! #Console
  =      seq call #console'print "good morning";
         seq seq call #console'print "hello";
-            seq seq call #console'print "world"
-                end
+            seq seq call #console'print "world";
+                end;
             end;
-        yield []
+        end
+
+-- as above, but with implicit process end.
+proc seq'nest3 []: []! #Console
+ =      seq call #console'print "good morning";
+        seq seq call #console'print "hello";
+            seq seq call #console'print "world"
 
 
 -- cell-introduction ----------------------------------------------------------
@@ -169,8 +175,7 @@ proc loop1 [n: #Nat]: []! #Console
  =      loop    when #nat'gt [n, 10]
                         then return []
                 done;
-                seq call #console'print "hello";
-                end
+                call #console'print "hello"
         done
 
 
