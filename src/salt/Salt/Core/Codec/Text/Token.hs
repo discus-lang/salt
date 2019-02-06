@@ -22,7 +22,8 @@ data At a
 -- | A source token.
 data Token
         -- Meta
-        = KMetaEnd              -- signal end of input.
+        = KMetaStart            -- signal start of input
+        | KMetaEnd              -- signal end of input.
         | KMetaComment Text     -- comment text
 
         -- Punctuation
@@ -102,6 +103,7 @@ showTokenAsSource :: Token -> String
 showTokenAsSource kk
  = case kk of
         -- Meta
+        KMetaStart      -> "START"
         KMetaEnd        -> "END"
         KMetaComment tx -> "--" ++ T.unpack tx
 

@@ -11,16 +11,38 @@ import qualified Text.Parsec                    as P
 import qualified Text.Parsec.Pos                as P
 import qualified Data.Int                       as I
 import qualified Data.Word                      as W
+import Debug.Trace
 
 
 ------------------------------------------------------------------------------------------ Types --
 -- | Generic type of parsers.
-type Parser a   = P.Parsec [At Token] IW.Location a
+type Parser a   = P.Parsec [At Token] State a
 type RL         = IW.Range IW.Location
+
+data State
+        = State
+        { -- | The location of the previously parsed token.
+          statePrev             :: At Token
+
+          -- | Synthetic tokens injected into the front of the stream.
+        , stateInjected         :: [At Token]
+
+          -- | The context that we are in when managing the offside rule.
+        , stateContext          :: [Context] }
+        deriving Show
+
+
+data Context
+        = ContextImplicit
+        { contextColumn         :: Int
+        , contextTokenStart     :: Token
+        , contextTokenSep       :: Token
+        , contextTokenEnd       :: Token }
+        deriving Show
 
 
 ------------------------------------------------------------------------------ Location Handling --
--- | Get the current positino in the source stream.
+-- | Get the current position in the source stream.
 locHere :: Parser IW.Location
 locHere
  = do   sp      <- P.getPosition
@@ -31,7 +53,8 @@ locHere
 -- | Get the position of the end of the last token.
 locPrev :: Parser IW.Location
 locPrev
- = do   loc     <- P.getState
+ = do   At (Range loc _) _
+         <- fmap statePrev P.getState
         return  $ loc
 
 
@@ -44,22 +67,128 @@ locOfTok (At (IW.Range (Location l c) _) _)
 ------------------------------------------------------------------------------ Primitive Parsers --
 -- | Parse the given token.
 pTok :: Token -> Parser ()
-pTok t
- = do   Range _ lEnd
-         <- P.token showTokenForError locOfTok
-         $ \(At r t') -> if t == t' then Just r else Nothing
-        P.putState lEnd
+pTok tMatch
+ = pTokOf $ \tNext -> if tNext == tMatch then Just () else Nothing
+
 
 -- | Parse a token that matches the given function.
 pTokOf :: (Token -> Maybe a) -> Parser a
-pTokOf f
- = do   (Range _ lEnd, x)
-         <- P.token showTokenForError locOfTok
-         $ \(At r tok) -> case f tok of
-                                Nothing -> Nothing
-                                Just x  -> Just (r, x)
-        P.putState lEnd
+pTokOf fMatch
+ = do   pInjectForContext
+        fmap stateInjected P.getState
+         >>= \case []  -> pTokOfInput fMatch
+                   ats -> pTokOfInjected fMatch ats
+
+
+-- | Parse a token from the input stream.
+pTokOfInput :: (Token -> Maybe a) -> Parser a
+pTokOfInput fMatch
+ = do   (aTok, x)
+         <- P.token showTokenForError locOfTok $ \aTok@(At _r tok)
+         -> case fMatch tok of
+               Nothing -> Nothing
+               Just x  -> Just (aTok, x)
+
+        P.modifyState $ \s -> s
+                { statePrev = aTok }
         return x
+
+
+-- | Parse a token that has been injected into the state.
+pTokOfInjected :: (Token -> Maybe a) -> [At Token] -> Parser a
+pTokOfInjected fMatch (aTok@(At _ tMagic) : atsRest)
+ | Just x <- fMatch tMagic
+ = do   P.modifyState $ \s -> s
+                { statePrev     = aTok
+                , stateInjected = atsRest }
+        return x
+
+pTokOfInjected _ _
+ = P.parserZero
+
+
+-- | Inject tokens for an implicit context.
+pInjectForContext :: Parser ()
+pInjectForContext
+ = goStart
+ where  -- See if we are in an implicit block context.
+        goStart
+         = do ctx <- fmap stateContext  P.getState
+              case ctx of
+               ContextImplicit nCol _tStart tSep tEnd : ctxRest
+                 -> goImplicit nCol tSep tEnd ctxRest
+               _ -> return ()
+
+        -- Inject tokens for an implicit block context.
+        goImplicit nCol tSep tEnd ctxRest
+         = do   At (Range (Location nLinePrev _) _) _
+                  <- fmap statePrev P.getState
+
+                At (Range lHere@(Location nLineHere nColHere) _) tNext
+                 <- P.lookAhead P.anyToken
+
+                let rHere = Range lHere lHere
+
+                -- On a new line at the block column, inject the separator.
+                if      (nLineHere > nLinePrev) && (nColHere == nCol)
+                 then P.modifyState $ \s -> s
+                        { stateInjected = stateInjected s ++ [At rHere tSep]}
+
+                -- On a new line to the left of the block column, inject the closing token.
+                -- The new line may end multiple contexts, so after popping the first one
+                -- try any others that might be on the stack.
+                else if (nLineHere > nLinePrev) && (nColHere <  nCol)
+                 then do
+                        P.modifyState $ \s -> s
+                         { stateInjected = stateInjected s ++ [At rHere tEnd]
+                         , stateContext  = ctxRest }
+                        goStart
+
+                -- Also end blocks if we hit the end of the file.
+                else if tNext == KMetaEnd
+                 then do
+                        P.modifyState $ \s -> s
+                         { stateInjected = stateInjected s ++ [At rHere tEnd]
+                         , stateContext  = ctxRest }
+                        goStart
+
+                else    return ()
+
+pDumpState :: Parser ()
+pDumpState
+ = do   atPrev  <- fmap statePrev    P.getState
+        ctx     <- fmap stateContext P.getState
+        ts      <- fmap stateInjected P.getState
+        trace (unlines
+                [ show atPrev
+                , show ctx
+                , show ts ]) $ return ()
+
+
+-- | Enter into a possibly implicit block context.
+--
+--   We take the usual start, separator and end tokens.
+--
+--   If the next token in the stream is the same as the block start token
+--   then this treat this as an explicit block and continue as normal.
+--
+--   Otherwise, push an implicit context record into the state so we know
+--   that we now need to inject synthetic separator and block end tokens
+--   based on layout.
+--
+pTokBlock :: Token -> Token -> Token -> Parser ()
+pTokBlock tStart tSep tEnd
+ = do
+        -- Peek at the next token to see if we're entering the context explicitly.
+        tok@(At (Range (Location _ col) _) tNext)
+         <- P.lookAhead P.anyToken
+
+        if tNext == tStart
+        then    pTok tStart
+        else do let ctx = ContextImplicit col tStart tSep tEnd
+                P.modifyState $ \s -> s
+                        { statePrev     = tok
+                        , stateContext  = ctx : stateContext s }
 
 
 -- | Parse a thing, and also return its range in the source file.
@@ -69,6 +198,7 @@ pRanged p
         x       <- p
         lPrev   <- locPrev
         return  $ (Range lHere lPrev, x)
+
 
 
 --------------------------------------------------------------------------------------- Wrapping --

@@ -83,7 +83,7 @@ pProcDo    :: Parser (Term RL) -> Parser (Term RL)
 pProcDo pTerm pTermApp
  = do   -- 'do' '{' ProcStmt; ... ProcFinal }
         pTok KDo
-        pTok KCBra
+        pTokBlock KCBra KSemi KCKet
         mBody <- pProcDoStmts pTerm pTermApp
         pTok KCKet
         return mBody

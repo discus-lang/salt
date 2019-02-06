@@ -39,7 +39,10 @@ parseModule toks
                 (do result <- pModule
                     rest <- P.getInput
                     return (result, rest))
-                (Location 0 0)
+               (State
+                { statePrev     = At (Range (Location 0 0) (Location 0 0)) KMetaStart
+                , stateContext  = []
+                , stateInjected = []})
                 "sourceName"
                 toks'
 
