@@ -148,10 +148,7 @@ pTermBody
         --   all bindings to have a name, as we execute some for their
         --   actions only.
         pTok KDo
-
-        -- Handle the KBra/KKet explicitly so we can detect missing final
-        -- term before we get to the end of the block of statements.
-        pTok KCBra
+        pTokBlock KCBra KSemi KCKet
          <?> "a '{' to start the do-block"
 
         binds   <- (flip P.sepEndBy (pTok KSemi)
@@ -214,9 +211,9 @@ pTermBody
 
  , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}' ('else' Term)?
         pTok KCase
-        mScrut <- pTerm         <?> "a term for the scrutinee"
-        pTok KOf                <?> "a completed term, or 'of' to start the alternatives"
-        pTok KCBra              <?> "a '{' to start the list of alternatives"
+        mScrut <- pTerm                 <?> "a term for the scrutinee"
+        pTok KOf                        <?> "a completed term, or 'of' to start the alternatives"
+        pTokBlock KCBra KSemi KCKet     <?> "a '{' to start the list of alternatives"
         msAlts
          <- flip P.sepEndBy1 (pTok KSemi)
          $  do  lAlt    <- pLbl <?> " a variant label"

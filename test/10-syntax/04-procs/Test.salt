@@ -321,7 +321,7 @@ proc match3ss [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
  = do   match v with
          foo [x: #Nat] → return x
          bar [b: #Bool, x: #Nat, y: #Nat]
-           → do when b then return x done
+          → do  when b then return x done
                 return y
          baz [x: #Nat] → return x
 

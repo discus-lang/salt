@@ -128,18 +128,18 @@ test type ifs'three'else
 
 -- Do blocks ------------------------------------------------------------------
 test type do'fst
- = do { [x, y] = (λ[x: #Bool] → [x, 5]) [#true];
-        x }
+ = do   [x, y] = (λ[x: #Bool] → [x, 5]) [#true]
+        x
 
 test type do'some
- = do { a = 2; b = 3;
-        #nat'add [a, b] }
+ = do   a = 2; b = 3
+        #nat'add [a, b]
 
 test type do'things
- = do { a       = 2;
-        [b, c]  = [2, 3];
-        d       = #nat'add [a, b];
-        #nat'add [a, #nat'add [b, #nat'add [c, d]]]; }
+ = do   a       = 2
+        [b, c]  = [2, 3]
+        d       = #nat'add [a, b]
+        #nat'add [a, #nat'add [b, #nat'add [c, d]]]
 
 
 -- Records --------------------------------------------------------------------
@@ -171,15 +171,15 @@ test type variant2      = the <foo: [#Nat, #Nat]> of `foo [1, 2]
 test type case0
  = λ[xx: <none: #Unit, some: #Nat>]
  → case xx of
-        { none [u: #Unit] → 0
-        ; some [n: #Nat]  → n }
+        none [u: #Unit] → 0
+        some [n: #Nat]  → n
 
 test type case1
  = λ[xx: <none: [], one: #Nat, two: [#Nat, #Nat]>]
  → case xx of
-        { none []                 → 0
-        ; one  [x: #Nat]          → x
-        ; two  [x: #Nat, y: #Nat] → #nat'add [x, y] }
+        none []                 → 0
+        one  [x: #Nat]          → x
+        two  [x: #Nat, y: #Nat] → #nat'add [x, y]
 
 
 -- Option-----------------------------------------------------------------------
