@@ -76,40 +76,6 @@ pProcFinal pTerm pTermApp
  ]
 
 
------------------------------------------------------------------------------------------ ProcDo --
--- | Parser for a 'do' construct.
-pProcDo    :: Parser (Term RL) -> Parser (Term RL)
-           -> Parser (Term RL)
-pProcDo pTerm pTermApp
- = do   -- 'do' '{' ProcStmt; ... ProcFinal }
-        pTok KDo
-        pTokBlock KCBra KSemi KCKet
-        mBody <- pProcDoStmts pTerm pTermApp
-        pTok KCKet
-        return mBody
-
-
--- | Parser for the statements in the body of a 'do' construct.
-pProcDoStmts :: Parser (Term RL) -> Parser (Term RL)
-           -> Parser (Term RL)
-pProcDoStmts pTerm pTermApp
- = P.choice
- [ do   mkStmt  <- pProcStmt pTerm pTermApp
-        P.choice
-         [ do   pTok KSemi
-                mRest <- pProcDoStmts pTerm pTermApp
-                return $ mkStmt mRest
-         , do   return $ MProcYield (MTerms []) ]
-
- , do   mFinal  <- pProcFinal pTerm pTermApp
-        P.choice
-         [ do   pTok KSemi
-                mRest <- pProcDoStmts pTerm pTermApp
-                return $ MProcSeq (MPTerms []) mFinal mRest
-         , do   return $ mFinal ]
- ]
-
-
 --------------------------------------------------------------------------------------- ProcStmt --
 -- | Parse a procedure which has a tail.
 --   We produce a function that takes the tail and builds the
@@ -139,20 +105,17 @@ pProcStmt pTerm pTermApp
         mValue  <- pTerm
         return  $ \mRest -> MProcUpdate nCell mValue mRest
 
- , do   -- 'when' Term 'then' Proc 'done' ...
-        -- 'when' Term ProcDo ..
+ , do   -- 'when' Term (ProcStmt | ProcFinal)
         pTok KWhen
         mCond   <- pTerm        <?> "a term for the condition"
         P.choice
-         [ do   pTok KThen      <?> "a completed procedure, or 'then' to start the body"
-
-                mThen   <- pProc pTerm pTermApp
+         [ do   mkThen <- pProcStmt pTerm pTermApp
                  <?> "the body of the 'then' branch"
-
-                pTok KDone
+                let mThen = mkThen (MProcYield (MTerms []))
                 return $ \mRest -> MProcWhen [mCond] [mThen] mRest
 
-          , do  mThen   <- pProcDo pTerm pTermApp
+         , do   mThen   <- pProcFinal pTerm pTermApp
+                 <?> "the body of the 'then' branch"
                 return $ \mRest -> MProcWhen [mCond] [mThen] mRest
          ]
 
@@ -204,17 +167,52 @@ pProcStmt pTerm pTermApp
         pTok KCKet              <?> "a completed term, or '}' to end the alternatives"
         return $ \mRest -> MProcMatch mScrut msAlts mRest
 
- , do   -- 'loop' Proc 'done' ...
-        -- 'loop' Proc ProcDo ...
+ , do   -- 'loop' Proc (ProcStmt | ProcFinal) ...
         pTok KLoop
         P.choice
-         [ do   mBody   <- pProcDo pTerm pTermApp
-                return $ \mRest -> MProcLoop mBody mRest
+         [ do   mkThen <- pProcStmt pTerm pTermApp
+                 <?> "the body of the 'then' branch"
+                let mThen = mkThen (MProcYield (MTerms []))
+                return $ \mRest -> MProcLoop mThen mRest
 
-         , do   mBody   <- pProc pTerm pTermApp
-                pTok KDone
-                return $ \mRest -> MProcLoop mBody mRest
+         , do   mThen   <- pProcFinal pTerm pTermApp
+                 <?> "the body of the 'then' branch"
+                return $ \mRest -> MProcLoop mThen mRest
          ]
+ ]
+
+
+----------------------------------------------------------------------------------------- ProcDo --
+-- | Parser for a 'do' construct.
+pProcDo    :: Parser (Term RL) -> Parser (Term RL)
+           -> Parser (Term RL)
+pProcDo pTerm pTermApp
+ = do   -- 'do' '{' ProcStmt; ... ProcFinal }
+        pTok KDo
+        pTokBlock KCBra KSemi KCKet
+        mBody <- pProcDoStmts pTerm pTermApp
+        pTok KCKet
+        return mBody
+
+
+-- | Parser for the statements in the body of a 'do' construct.
+pProcDoStmts :: Parser (Term RL) -> Parser (Term RL)
+           -> Parser (Term RL)
+pProcDoStmts pTerm pTermApp
+ = P.choice
+ [ do   mkStmt  <- pProcStmt pTerm pTermApp
+        P.choice
+         [ do   pTok KSemi
+                mRest <- pProcDoStmts pTerm pTermApp
+                return $ mkStmt mRest
+         , do   return $ MProcYield (MTerms []) ]
+
+ , do   mFinal  <- pProcFinal pTerm pTermApp
+        P.choice
+         [ do   pTok KSemi
+                mRest <- pProcDoStmts pTerm pTermApp
+                return $ MProcSeq (MPTerms []) mFinal mRest
+         , do   return $ mFinal ]
  ]
 
 

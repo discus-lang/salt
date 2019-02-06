@@ -10,8 +10,8 @@ test exec hello
 -- Sugared version of above.
 term hello2 : []! #Console
  = box do
-        { #console'print   "hello "
-        ; #console'println "world" }
+        #console'print   "hello "
+        #console'println "world"
 
 test exec hello2
 

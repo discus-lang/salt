@@ -175,7 +175,6 @@ scanner
                 "break"         -> Just KBreak
                 "continue"      -> Just KContinue
                 "end"           -> Just KEnd
-                "done"          -> Just KDone
 
                 "bloc"          -> Just KBloc
 

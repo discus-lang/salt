@@ -68,7 +68,7 @@ data Token
         | KCell         | KUpdate
         | KWhen         | KWhens        | KMatch
         | KLoop         | KBreak        | KContinue
-        | KEnd          | KDone
+        | KEnd
 
         | KBloc
 
@@ -168,7 +168,6 @@ showTokenAsSource kk
         KUpdate         -> "update"
         KWhen           -> "when"
         KWhens          -> "whens"
-        KDone           -> "done"
         KMatch          -> "match"
         KLoop           -> "loop"
         KBreak          -> "break"

@@ -153,24 +153,24 @@ proc update1s [x: #Nat, y: #Nat]: #Nat
 
 -- when -----------------------------------------------------------------------
 proc when1 [b: #Bool, x: #Nat, y: #Nat]: #Nat
- =      when b then return 5 done;
+ =      when b return 5;
         yield y
 
 proc when1s [b: #Bool, x: #Nat, y: #Nat]: #Nat
- = do   { when b then return 5 done
+ = do   { when b return 5
         ; yield y }
 
 
 proc when2 [n: #Nat]: #Text ! #Console
- =      when #nat'eq [n, 1] then return "one" done;
-        when #nat'eq [n, 2] then return "two" done;
-        when #nat'eq [n, 3] then return "three" done;
+ =      when #nat'eq [n, 1] return "one";
+        when #nat'eq [n, 2] return "two";
+        when #nat'eq [n, 3] return "three";
         yield "dunno"
 
 proc when2s [n: #Nat]: #Text ! #Console
- = do   when #nat'eq [n, 1] then return "one" done
-        when #nat'eq [n, 2] then return "two" done
-        when #nat'eq [n, 3] then return "three" done
+ = do   when #nat'eq [n, 1] return "one"
+        when #nat'eq [n, 2] return "two"
+        when #nat'eq [n, 3] return "three"
         yield "dunno"
 
 
@@ -183,50 +183,39 @@ proc whens2s [n: #Nat]: #Text ! #Console
 
 
 proc when3 [n: #Nat, m: #Nat]: #Text ! #Console
- =      when #nat'eq [n, 1] then
-                when #nat'eq [n, 2] then
+ = do   { when #nat'eq [n, 1]
+                when #nat'eq [n, 2]
                         return "derp"
-                done
-        done;
-        yield "whatever"
-
-proc when3s [n: #Nat, m: #Nat]: #Text ! #Console
- = do   { when #nat'eq [n, 1] then
-                when #nat'eq [n, 2] then do
-                        { return "derp" }
-                done
-         done
         ; yield "whatever" }
 
-proc when3ss [n: #Nat, m: #Nat]: #Text ! #Console
- = do   when #nat'eq [n, 1] do
-                { when #nat'eq [n, 2] do
+proc when3s [n: #Nat, m: #Nat]: #Text ! #Console
+ = do   when #nat'eq [n, 1]
+                when #nat'eq [n, 2]
                         return "derp"
-                }
+        yield "whatever"
+
+proc when3sd [n: #Nat, m: #Nat]: #Text ! #Console
+ = do   when #nat'eq [n, 1] do
+                when #nat'eq [n, 2] do
+                        return "derp"
         yield "whatever"
 
 
 proc when4 [n: #Nat, m: #Nat]: #Text ! #Console
- =      when #nat'eq [n, 1] then
-                when #nat'eq [m, 1] then
-                        return "one, one"
-                done;
-                when #nat'eq [m, 2] then
-                        return "one, two"
-                done
-        done;
+ =      when #nat'eq [n, 1]
+                when #nat'eq [m, 1]
+                        return "one, one";
+                when #nat'eq [m, 2]
+                        return "one, two";
         yield "whatever"
 
 proc when4s [n: #Nat, m: #Nat]: #Text ! #Console
- = do   { when #nat'eq [n, 1] then
-          do    { when #nat'eq [m, 1] then
+ = do   { when #nat'eq [n, 1]
+          do    { when #nat'eq [m, 1]
                         return "one, one"
-                  done
-                ; when #nat'eq [m, 2] then
+                ; when #nat'eq [m, 2]
                         return "one, two"
-                  done
                 }
-          done
         ; yield "whatever" }
 
 proc when4ss [n: #Nat, m: #Nat]: #Text ! #Console
@@ -241,9 +230,9 @@ proc when4ss [n: #Nat, m: #Nat]: #Text ! #Console
 
 proc when4sss [n: #Nat, m: #Nat]: #Text ! #Console
  = do   when #nat'eq [n, 1] do
-                when #nat'eq [m, 1] do
+                when #nat'eq [m, 1]
                         return "one, one"
-                when #nat'eq [m, 2] do
+                when #nat'eq [m, 2]
                         return "one, two"
         yield "whatever"
 
@@ -300,7 +289,7 @@ proc match3 [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
  =      match v with
          { foo [x: #Nat] → return x
          ; bar [b: #Bool, x: #Nat, y: #Nat]
-           → when b then return x done;
+           → when b return x;
              return y
          ; baz [x: #Nat] → return x };
         yield 0
@@ -321,7 +310,7 @@ proc match3ss [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
  = do   match v with
          foo [x: #Nat] → return x
          bar [b: #Bool, x: #Nat, y: #Nat]
-          → do  when b then return x done
+          → do  when b return x
                 return y
          baz [x: #Nat] → return x
 
@@ -330,23 +319,20 @@ proc match3ss [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
 
 -- loop -----------------------------------------------------------------------
 proc loop1 [n: #Nat]: []! #Console
- =      loop    when #nat'gt [n, 10]
-                        then return []
-                done;
-                call #console'print "hello"
-        done
-
+ = loop when #nat'gt [n, 10]
+                return [];
+        call #console'print "hello"
 
 proc loop1s [n: #Nat]: []! #Console
  = loop do
-        { when #nat'gt [n, 10] do
-                { return [] }
+        { when #nat'gt [n, 10]
+                return []
         ; call #console'print "hello" }
 
 
 proc loop1ss [n: #Nat]: []! #Console
  = loop do
-        when #nat'gt [n, 10] do
+        when #nat'gt [n, 10]
                 return []
         call #console'print "hello"
 

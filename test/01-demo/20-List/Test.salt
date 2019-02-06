@@ -3,8 +3,8 @@
 -- Length
 term length @[a: #Data] [xx: #List a]: #Nat
  = case #list'case @a xx of
-        { nil  [] → 0
-        ; cons [head: a, tail: #List a] → #nat'add [1, length @a tail] }
+        nil  [] → 0
+        cons [head: a, tail: #List a] → #nat'add [1, length @a tail]
 
 test eval length5
  = length @#Nat [list #Nat| 10, 11, 12, 13, 14]
@@ -13,9 +13,9 @@ test eval length5
 -- Append
 term append @[a: #Data] [xx: #List a, yy: #List a]: #List a
  = case #list'case @a xx of
-        { nil   [] → yy
-        ; cons  [x: a, xs: #List a]
-           → #list'cons @a [x, append @a [xs, yy]] }
+        nil   [] → yy
+        cons  [x: a, xs: #List a]
+         → #list'cons @a [x, append @a [xs, yy]]
 
 test eval append
  = append @#Nat [[list #Nat| 10, 11, 12], [list #Nat| 13, 14, 15]]
@@ -24,9 +24,9 @@ test eval append
 -- Reverse
 term reverse @[a: #Data] [xx: #List a]: #List a
  = case #list'case @a xx of
-        { nil  [] → [list a|]
-        ; cons [x: a, xs: #List a]
-           → append @a [reverse @a xs, #list'one @a x] }
+        nil  [] → [list a|]
+        cons [x: a, xs: #List a]
+         → append @a [reverse @a xs, #list'one @a x]
 
 test eval reverse
  = reverse @#Nat [list #Nat| 10, 12, 13, 14]
