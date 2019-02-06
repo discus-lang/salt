@@ -99,6 +99,14 @@ THREAD          = 3
 GHC             = cabal v1-exec -- ghc
 GHC_FLAGS       = -Werror -O0 -j3
 
+
+# Installer to use for dependencies -------------------------------------------
+# Use Cabal by default:
+DEPS_INSTALLER = cabal
+# If you prefer stack:
+# DEPS_INSTALLER = stack
+
+
 # Override config with local config if it exists.
 #  If you want to change the THREADs or GHC variables then add local
 #  make/config-override.mk file which is not under version control.

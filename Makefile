@@ -18,12 +18,13 @@ allWithConfig :
 	@make bin/waves
 
 
+include make/target/clean.mk
+include make/target/setup.mk
 include make/target/bin-salt.mk
 include make/target/bin-war.mk
 include make/target/bin-waves.mk
-include make/target/clean.mk
-include make/target/test.mk
 include make/target/war.mk
+include make/target/test.mk
 include make/target/waves.mk
 
 
