@@ -1,4 +1,4 @@
-# Salt Intermediate Language
+# Salt Intermediate Language [![Build Status](https://travis-ci.com/discus-lang/salt.svg?branch=master)](https://travis-ci.com/discus-lang/salt)
 
 Salt is what you get when you leave C out in the sun for too long.
 

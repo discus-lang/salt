@@ -61,7 +61,7 @@ before_install:
 
     # put ghc and cabal on the path
     - export PATH=/opt/ghc/${GHC}/bin:/opt/cabal/${CABAL}/bin:$PATH
-    - cabal update
+    - cabal v1-update
 
     # sanity check
     - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
@@ -77,5 +77,6 @@ script:
     - make clean
     - make
     - make war
+    - make waves
 
 # vim: nospell sw=4
