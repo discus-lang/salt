@@ -52,3 +52,9 @@ proc when4sss [n: #Nat, m: #Nat]: #Text ! #Console
                         return "one, two"
         yield "whatever"
 
+
+proc match1 [v: <foo: #Nat, bar: #Nat>]: #Nat
+  =  do  match v with
+          foo [x: #Nat] → return x
+          bar [x: #Nat] → return x
+         yield [5]

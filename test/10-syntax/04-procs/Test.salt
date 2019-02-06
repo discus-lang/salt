@@ -231,13 +231,21 @@ proc when4ss [n: #Nat, m: #Nat]: #Text ! #Console
         ; yield "whatever"
         }
 
-
 proc when4sss [n: #Nat, m: #Nat]: #Text ! #Console
  = do   when #nat'eq [n, 1] do
                 when #nat'eq [m, 1] do
                         return "one, one"
                 when #nat'eq [m, 2] do
                         return "one, two"
+        yield "whatever"
+
+
+proc when4ssss [n: #Nat, m: #Nat]: #Text ! #Console
+ = do   when #nat'eq [n, 1]
+         do     when #nat'eq [m, 1]
+                 do     return "one, one"
+                when #nat'eq [m, 2]
+                 do     return "one, two"
         yield "whatever"
 
 
@@ -260,10 +268,17 @@ proc match2 [v: <foo: #Nat, bar: #Nat>]: #Nat
 -- TODO: if the alts are exhaustive then the cont. is dead code,
 -- so we shouldn't need to provide the result value.
 proc match1 [v: <foo: #Nat, bar: #Nat>]: #Nat
-  =      match v with
+ =      match v with
           { foo [x: #Nat] → return x
           ; bar [x: #Nat] → return x };
          yield [5]
+
+
+proc match1s [v: <foo: #Nat, bar: #Nat>]: #Nat
+ = do   match v with
+         foo [x: #Nat] → return x
+         bar [x: #Nat] → return x
+        yield [5]
 
 
 proc match3 [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
@@ -287,6 +302,17 @@ proc match3s [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
         ; yield 0 }
 
 
+proc match3ss [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
+ = do   match v with
+         foo [x: #Nat] → return x
+         bar [b: #Bool, x: #Nat, y: #Nat]
+           → do when b then return x done
+                return y
+         baz [x: #Nat] → return x
+
+        yield 0
+
+
 -- loop -----------------------------------------------------------------------
 proc loop1 [n: #Nat]: []! #Console
  =      loop    when #nat'gt [n, 10]
@@ -295,11 +321,19 @@ proc loop1 [n: #Nat]: []! #Console
                 call #console'print "hello"
         done
 
+
 proc loop1s [n: #Nat]: []! #Console
  =      loop do
         { when #nat'gt [n, 10] do
                 { return [] }
         ; call #console'print "hello" }
+
+
+proc loop1ss [n: #Nat]: []! #Console
+ = loop do
+        when #nat'gt [n, 10] do
+                return []
+        call #console'print "hello"
 
 
 -- proc foo

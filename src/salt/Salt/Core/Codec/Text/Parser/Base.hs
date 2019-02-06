@@ -136,7 +136,7 @@ pInjectForContext
 
                 -- On a new line to the left of the block column, inject the closing token.
                 -- The new line may end multiple contexts, so after popping the first one
-                -- try any others that might be on the stack.
+                -- try any others that might still be on the stack.
                 else if (nLineHere > nLinePrev) && (nColHere <  nCol)
                  then do
                         P.modifyState $ \s -> s

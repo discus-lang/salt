@@ -179,7 +179,10 @@ pProcStmt pTerm pTermApp
         pTok KMatch
         mScrut <- pTerm         <?> "a term for the scrutinee"
         pTok KWith              <?> "a completed term, or 'of' to start the alternatives"
-        pTok KCBra              <?> "a '{' to start the list of alternatives"
+
+        pTokBlock KCBra KSemi KCKet
+         <?> "a '{' to start the list of alternatives"
+
         msAlts
          <- flip P.sepEndBy1 (pTok KSemi)
          $  do  lAlt    <- pLbl <?> " a variant label"
