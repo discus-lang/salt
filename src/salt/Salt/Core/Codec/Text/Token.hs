@@ -66,7 +66,7 @@ data Token
         | KSeq          | KWith
         | KLaunch       | KReturn
         | KCell         | KUpdate
-        | KWhen         | KMatch
+        | KWhen         | KWhens        | KMatch
         | KLoop         | KBreak        | KContinue
         | KEnd          | KDone
 
@@ -166,7 +166,9 @@ showTokenAsSource kk
         KReturn         -> "return"
         KCell           -> "cell"
         KUpdate         -> "update"
-        KWhen           -> "when";      KDone           -> "done"
+        KWhen           -> "when"
+        KWhens          -> "whens"
+        KDone           -> "done"
         KMatch          -> "match"
         KLoop           -> "loop"
         KBreak          -> "break"

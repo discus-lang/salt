@@ -139,41 +139,39 @@ pProcStmt pTerm pTermApp
         mValue  <- pTerm
         return  $ \mRest -> MProcUpdate nCell mValue mRest
 
- , do   --  'when' '{' (Term '→' Proc);+ '}' ...
-        --  'when' Term 'then' Proc 'done' ...
+ , do   -- 'when' Term 'then' Proc 'done' ...
+        -- 'when' Term ProcDo ..
         pTok KWhen
+        mCond   <- pTerm        <?> "a term for the condition"
         P.choice
-         [ do   -- ... '{' (Term '→' Proc);+ '}' ...
-                pTok KCBra          <?> "a '{' to start the list of branches"
-                (msCond, msThen)
-                 <- fmap unzip $ flip P.sepEndBy (pTok KSemi)
-                 $  do  mCond <- pTerm  <?> "a term for a condition."
-                        pRight          <?> "a completed term, or '→' to start the body"
+         [ do   pTok KThen      <?> "a completed procedure, or 'then' to start the body"
 
-                        mThen <- pProc pTerm pTermApp
-                         <?> "the body of the branch"
+                mThen   <- pProc pTerm pTermApp
+                 <?> "the body of the 'then' branch"
 
-                        return (mCond, mThen)
-                pTok KCKet
-                return $ \mRest -> MProcWhen msCond msThen mRest
+                pTok KDone
+                return $ \mRest -> MProcWhen [mCond] [mThen] mRest
 
-          , do  -- ... Term 'then' TermStmt 'done' ...
-                -- ... Term ProcDo ...
-                mCond   <- pTerm        <?> "a term for the condition"
+          , do  mThen   <- pProcDo pTerm pTermApp
+                return $ \mRest -> MProcWhen [mCond] [mThen] mRest
+         ]
 
-                P.choice
-                 [ do   pTok KThen      <?> "a completed procedure, or 'then' to start the body"
+ , do   --  'whens' '{' (Term '→' Proc);+ '}' ...
+        pTok KWhens
+        pTokBlock KCBra KSemi KCKet
+         <?> "a '{' to start the list of branches"
 
-                        mThen   <- pProc pTerm pTermApp
-                         <?> "the body of the 'then' branch"
+        (msCond, msThen)
+         <- fmap unzip $ flip P.sepEndBy (pTok KSemi)
+         $  do  mCond <- pTerm  <?> "a term for a condition."
+                pRight          <?> "a completed term, or '→' to start the body"
 
-                        pTok KDone
-                        return $ \mRest -> MProcWhen [mCond] [mThen] mRest
+                mThen <- pProc pTerm pTermApp
+                                <?> "the body of the branch"
+                return (mCond, mThen)
+        pTok KCKet
+        return $ \mRest -> MProcWhen msCond msThen mRest
 
-                 , do   mThen   <- pProcDo pTerm pTermApp
-                        return $ \mRest -> MProcWhen [mCond] [mThen] mRest
-                 ]
-          ]
 
  , do   -- 'match' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' Stmt);* '}' ...
         pTok KMatch

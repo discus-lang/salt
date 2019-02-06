@@ -169,6 +169,7 @@ scanner
                 "cell"          -> Just KCell
                 "update"        -> Just KUpdate
                 "when"          -> Just KWhen
+                "whens"         -> Just KWhens
                 "match"         -> Just KMatch
                 "loop"          -> Just KLoop
                 "break"         -> Just KBreak
