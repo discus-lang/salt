@@ -1,0 +1,81 @@
+# language `ghc` drags in old ghc versions
+# language `generic` drags in too many others deps
+# language `c` is lighter weight, and is fine since we declare most of our own deps
+language: c
+
+# https://docs.travis-ci.com/user/reference/overview/#Virtualisation-Environment-vs-Operating-System
+sudo: required
+dist: trusty
+
+# this will attempt to cache the contents of the specified directories between
+# runs to speed up install times
+cache:
+    directories:
+        - $HOME/.cabal
+        - $HOME/.ghc
+
+# clean up anything we don't want to cache
+# log and index files aren't worth caching
+# Note: this should be safe as cabal should still do an install
+#       if a newer version of a dependency is available
+before_cache:
+    - rm -f $HOME/.cabal/logs/*.log
+    - rm -f $HOME/.cabal/packages/00-index*
+    - rm -f $HOME/.cabal/packages/01-index*
+    - rm -f $HOME/.cabal/packages/build-reports.log
+
+# using ghc and cabal-install from
+#   https://launchpad.net/~hvr/+archive/ubuntu/ghc
+# llvm from
+#   http://apt.llvm.org
+addons:
+  apt:
+    sources: &apt_sources
+      - hvr-ghc
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-trusty
+      - llvm-toolchain-trusty-5.0
+      - llvm-toolchain-trusty-6.0
+
+    packages: &apt_packages
+      - cabal-install-1.24
+
+compiler:
+  - GHC-8.4.1
+  - GHC-8.2.2
+
+env:
+  global:
+    - CABAL=1.24
+  matrix:
+    - LLVM=6.0.0
+    - LLVM=5.0.1
+
+# Install GHC and LLVM. We could do this via the build matrix configuration
+# without requiring sudo, but this method is easier to set up a cartesean
+# product of 'compiler x matrix' build configurations.
+before_install:
+    - export GHC=${CC:4}
+    - unset CC
+    - sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install ghc-${GHC} llvm-${LLVM:0:3}-dev
+
+    # put ghc and cabal on the path
+    - export PATH=/opt/ghc/${GHC}/bin:/opt/cabal/${CABAL}/bin:$PATH
+    - cabal update
+
+    # sanity check
+    - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+    - cabal --version
+    - llc-${LLVM:0:3} --version; true
+    - opt-${LLVM:0:3} --version; true
+
+# install necessary library dependencies
+install:
+    - make setup
+
+script:
+    - make clean
+    - make
+    - make war
+
+# vim: nospell sw=4
