@@ -169,43 +169,42 @@ pTermBody
         return m
 
 
- , do   -- 'if' '{' (Term '→' Term);* '}' else Term
-        -- 'if' '{' (Term '→' Term);* 'else' '→' Term '}'
-        -- 'if' Term 'then' Term 'else' Term
+ , do   -- 'if' Term 'then' Term 'else' Term
         pTok KIf
+        mCond   <- pTerm    <?> "a term for the condition"
+        pTok KThen          <?> "a completed term, or 'then' to start the body"
+        mThen   <- pTerm    <?> "the body of the 'then' branch"
+        pTok KElse          <?> "a completed term, or 'else' to start the body"
+        mElse   <- pTerm    <?> "the body of the 'else' branch"
+        return  $ MIf [mCond] [mThen] mElse
+
+
+ , do   -- 'ifs' '{' (Term '→' Term);* '}' else Term
+        -- 'ifs' '{' (Term '→' Term);* 'else' '→' Term '}'
+        pTok KIfs
+        pTokBlock KCBra KSemi KCKet     <?> "a '{' to start the list of alternatives"
+        (msCond, msThen)
+         <- fmap unzip $ flip P.sepEndBy (pTok KSemi)
+         $  do  mCond <- pTerm
+                 <?> "a term for a condition, or 'else' for the final branch"
+                pRight                  <?> "a completed term, or '→' to start the body"
+                mThen <- pTerm          <?> "the body of the branch"
+                return (mCond, mThen)
+
         P.choice
-         [ do   pTok KCBra          <?> "a '{' to start the list of branches"
-                (msCond, msThen)
-                 <- fmap unzip $ flip P.sepEndBy (pTok KSemi)
-                 $  do  mCond <- pTerm
-                         <?> "a term for a condition, or 'else' for the final branch"
-                        pRight            <?> "a completed term, or '→' to start the body"
-                        mThen <- pTerm    <?> "the body of the branch"
-                        return (mCond, mThen)
+         [ do   -- ... 'else' → Term '}'
+                pTok KElse
+                pRight
+                mElse <- pTerm    <?> "the body of the branch"
+                P.optional (pTok KSemi)
+                pTok KCKet
+                return $ MIf msCond msThen mElse
 
-                P.choice
-                 [ do   -- ... 'else' → Term '}'
-                        pTok KElse
-                        pRight
-                        mElse <- pTerm    <?> "the body of the branch"
-                        P.optional (pTok KSemi)
-                        pTok KCKet
-                        return $ MIf msCond msThen mElse
-
-                 , do   -- ... '}' else Term
-                        pTok KCKet
-                        pTok KElse
-                        mElse  <- pTerm     <?> "the body of the branch"
-
-                        return $ MIf msCond msThen mElse
-                 ]
-
-          , do  mCond   <- pTerm    <?> "a term for the condition"
-                pTok KThen          <?> "a completed term, or 'then' to start the body"
-                mThen   <- pTerm    <?> "the body of the 'then' branch"
-                pTok KElse          <?> "a completed term, or 'else' to start the body"
-                mElse   <- pTerm    <?> "the body of the 'else' branch"
-                return  $ MIf [mCond] [mThen] mElse
+         , do   -- ... '}' else Term
+                pTok KCKet
+                pTok KElse
+                mElse  <- pTerm     <?> "the body of the branch"
+                return $ MIf msCond msThen mElse
          ]
 
 

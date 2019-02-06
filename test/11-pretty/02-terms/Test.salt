@@ -20,8 +20,8 @@ test eval box the <foo: [#Nat, #Symbol]> of `foo [5, 'derp]
 test eval
  box    λ[x: <foo: [#Nat, #Symbol], bar: [#Symbol]>] →
         case x of
-        { foo [y: #Nat, z: #Symbol] → z
-        ; bar [z: #Symbol] → z }
+         foo [y: #Nat, z: #Symbol] → z
+         bar [z: #Symbol] → z
 
 test eval box λ[x: [#Nat]!pure] → run x
 test eval box box #nat'add [2, 3]

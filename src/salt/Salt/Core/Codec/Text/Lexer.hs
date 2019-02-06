@@ -155,9 +155,10 @@ scanner
                 "where"         -> Just KWhere
 
                 "if"            -> Just KIf
-                "case"          -> Just KCase
+                "ifs"           -> Just KIfs
                 "then"          -> Just KThen
                 "else"          -> Just KElse
+                "case"          -> Just KCase
 
                 "proc"          -> Just KProc
                 "yield"         -> Just KYield

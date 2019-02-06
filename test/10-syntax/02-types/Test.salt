@@ -102,7 +102,7 @@ test kind susp6         = []! sync
 
 
 -- Quoted identifiers
-test kind quoted1 = fun [##Var"x" : #Data] => x
-test kind quoted2 = fun [##Var"x" : ##Prm"Data"] => ##Var"x"
-test kind quoted3 = fun [##Var"->" : #Data => #Data] => ##Var"->"
+test kind quoted1       = fun [##Var"x" : #Data] => x
+test kind quoted2       = fun [##Var"x" : ##Prm"Data"] => ##Var"x"
+test kind quoted3       = fun [##Var"->" : #Data => #Data] => ##Var"->"
 

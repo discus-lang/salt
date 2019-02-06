@@ -72,7 +72,7 @@ test eval evm'vnt
 type vnt: #Data = <foo: [#Nat, #Nat]>
 term vnt: vnt = the vnt of `foo [2, 3]
 test eval evm'case
- = case vnt of { foo [x: #Nat, y: #Nat] → #nat'add [x, y] }
+ = case vnt of foo [x: #Nat, y: #Nat] → #nat'add [x, y]
 
 
 -- (evm-box) ----------------------------------------------

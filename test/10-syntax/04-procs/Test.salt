@@ -57,6 +57,9 @@ term call1 [x: #Nat]: #Nat
 term call1s [x: #Nat]: #Nat
  = proc do { call #nat'add [x, x] }
 
+term call1ss [x: #Nat]: #Nat
+ = proc do call #nat'add [x, x]
+
 
 -- sequencing -----------------------------------------------------------------
 -- simple sequencing
@@ -235,7 +238,6 @@ proc when4sss [n: #Nat, m: #Nat]: #Text ! #Console
                 when #nat'eq [m, 2]
                         return "one, two"
         yield "whatever"
-
 
 proc when4ssss [n: #Nat, m: #Nat]: #Text ! #Console
  = do   when #nat'eq [n, 1]

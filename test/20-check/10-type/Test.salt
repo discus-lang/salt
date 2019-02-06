@@ -41,5 +41,5 @@ test type the vntx of `foo 3
 
 -- (t-cse) look through synonym to see type of scrutinee.
 type vnty: #Data = <foo: #Nat, bar: #Nat>
-test type λ[x: vnty] → case x of { foo [x: #Nat] → x; bar [y: #Nat] → y }
+test type λ[x: vnty] → case x of foo [x: #Nat] → x; bar [y: #Nat] → y
 
