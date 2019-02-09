@@ -1,5 +1,4 @@
 -- Test syntax of procs.
--- TODO: add exec tests to use the bindings.
 
 -- declarations ---------------------------------------------------------------
 term decl1 []: []
@@ -72,15 +71,36 @@ proc seq0 [x: #Nat, y: #Nat]: #Nat
         seq b = yield 3;
         yield #nat'add [a, b]
 
-proc seq0s [x: #Nat, y: #Nat]: #Nat
+proc seq0s1 [x: #Nat, y: #Nat]: #Nat
  = do   seq a = yield 2
         seq b = yield 3
         yield #nat'add [a, b]
 
-proc seq0ss [x: #Nat, y: #Nat]: #Nat
+proc seq0s2 [x: #Nat, y: #Nat]: #Nat
  = do   seq a = yield 2
         seq b = yield 3
         #nat'add [a, b]
+
+proc seq0s3 []: #Nat
+ =      a = yield 2;
+        b = yield 3;
+        yield #nat'add [a, b]
+
+proc seq0s4 []: #Nat
+ =      let a = 2;
+        let b = 2;
+        yield #nat'add [a, b]
+
+proc seq0s5 []: #Nat
+ = do   a = yield 2
+        b = yield 3
+        yield #nat'add [a, b]
+
+proc seq0s6 []: #Nat
+ = do   let a = 2
+        let b = 3
+        yield #nat'add [a, b]
+
 
 -- sugar where the vector of bindings is assumed to be empty.
 proc seq1 []: []! #Console
@@ -98,8 +118,6 @@ proc seq1s2 []: []! #Console
  = do   #console'print ["hello"]
         #console'print "world"
         #console'print "derp"
-
--- TODO: add do form with seq binding, but with implicit seq keyword.
 
 
 -- nested procedure.
@@ -298,13 +316,13 @@ proc match2 [v: <foo: #Nat, bar: #Nat>]: #Nat
         yield [5]
 
 
--- TODO: if the alts are exhaustive then the cont. is dead code,
--- so we shouldn't need to provide the result value.
+-- TODO: allow case at top level of final term.
+-- These match is exhaustive, so yield at end is dead code.
 proc match1 [v: <foo: #Nat, bar: #Nat>]: #Nat
  =      match v with
           { foo [x: #Nat] → return x
           ; bar [x: #Nat] → return x };
-         yield [5]
+        yield [5]
 
 
 proc match1s [v: <foo: #Nat, bar: #Nat>]: #Nat
@@ -365,6 +383,9 @@ proc loop1ss [n: #Nat]: []! #Console
                 return []
         call #console'print "hello"
 
+
+-- enter ----------------------------------------------------------------------
+-- TODO: add enter form.
 
 -- proc foo
 --  =   enter   start []

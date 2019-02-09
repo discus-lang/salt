@@ -191,14 +191,30 @@ pProcStmt pTerm pTermApp
                 return $ \mRest -> MProcLoop mThen mRest
          ]
 
+  , do  -- 'let' Binds '=' Term ...
+        pTok KLet
+        mps     <- pProcBinds
+        pTok KEquals
+        mBind   <- pTerm
+        return  $ \mRest -> MProcSeq mps (MProcYield mBind) mRest
+
+  , P.try $ do
+        -- Binds '=' Proc ...
+        --   Seq without an initial keyword.
+        --   We know this is a seq when we get to the '='
+        mps     <- pProcBinds
+        pTok KEquals
+        mBind   <- pProcFinal pTerm pTermApp
+        return  $ \mRest -> MProcSeq mps mBind mRest
+
  , P.try $ do
-        -- Var' '←' Term ...
+        -- Var '←' Term ...
         --   Update form without an initial keyword.
         --   We know this is an update when we get to the '←'.
         nCell   <- pVar
         pLeft
-        mValue  <- pTerm
-        return  $ \mRest -> MProcUpdate nCell mValue mRest
+        mBind   <- pTerm
+        return  $ \mRest -> MProcUpdate nCell mBind mRest
  ]
 
 
@@ -244,6 +260,20 @@ pProcBind pTerm pTermApp
  = P.choice
  [ P.try $ do
         -- Binds '=' Proc
+        mps   <- pProcBinds
+        pTok KEquals      <?> "a type annotation, or '=' to start the binding"
+        mBind <- pProc pTerm pTermApp
+                          <?> "a procedure for the binding"
+        return (mps, mBind)
+
+ , do   -- Proc
+        mBind <- pProc pTerm pTermApp
+        return (MPTerms [], mBind)
+ ]
+
+pProcBinds :: Parser (TermParams RL)
+pProcBinds
+ = do
         (rBinds, bts)
          <- pRanged (P.choice
                 [ do    pSquared
@@ -266,13 +296,4 @@ pProcBind pTerm pTermApp
                 ]
                 <?> "some binders")
 
-        pTok KEquals      <?> "a type annotation, or '=' to start the binding"
-        mBind <- pProc pTerm pTermApp
-                          <?> "a procedure for the binding"
-
-        return (MPAnn rBinds $ MPTerms bts, mBind)
-
- , do   -- Proc
-        mBind <- pProc pTerm pTermApp
-        return (MPTerms [], mBind)
- ]
+        return $ MPAnn rBinds (MPTerms bts)
