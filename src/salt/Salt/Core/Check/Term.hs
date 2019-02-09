@@ -1,7 +1,4 @@
 
--- TODO: split out the stmt checker into its own function,
---       the TermMode thing in the context isn't really working.
---
 module Salt.Core.Check.Term where
 import Salt.Core.Check.Term.Proc
 import Salt.Core.Check.Term.App
@@ -17,7 +14,6 @@ import qualified Salt.Data.List         as List
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 
-import Text.Show.Pretty
 
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
@@ -531,7 +527,6 @@ checkTermWith a wh ctx (Check tsExpected) m
  = checkTermIs a wh ctx tsExpected m
 
 -- We don't know how to check this sort of term.
-checkTermWith _a _wh _ctx mode mm
- = error $ ppShow (mode, mm)
- -- throw $ ErrorTermMalformed a wh mm
+checkTermWith a wh _ctx _mode mm
+ = throw $ ErrorTermMalformed a wh mm
 
