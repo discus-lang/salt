@@ -35,4 +35,4 @@ contextEmpty
         , contextModuleType     = Map.empty
         , contextModuleTerm     = Map.empty
         , contextLocal          = []
-        , contextTermMode       = TermModePlain }
+        , contextFragment       = FragTerm }

@@ -19,7 +19,7 @@ ppre c (ErrorTypeMalformed uni _a _wh _k)
 ppre _c (ErrorTermMalformed _a _wh _m)
  = vcat [ text "Malformed term."]
 
-ppre  c (ErrorTermNotMode _a _wh mode txWhat)
+ppre  c (ErrorTermNotFragment _a _wh mode txWhat)
  = vcat [ text txWhat %% text "cannot appear in a" %% ppr c mode % text "."]
 
 -- Module level problems ----------------------------------

@@ -49,9 +49,9 @@ data Context a
           --   This is used for bindings within a single top-level declaration.
         , contextLocal          :: [Elem a]
 
-          -- | The mode of this term,
+          -- | The language fragment we are checking.
           --   whether it is a plain functional term, a proc or a bloc.
-        , contextTermMode       :: TermMode
+        , contextFragment       :: Fragment
         }
 
 data ContextProc a
@@ -263,36 +263,34 @@ contextResolveDataCtor nCtor _ctx
 
 ---------------------------------------------------------------------------------------------------
 -- | Check if the context has the given term mode.
-guardOnlyTermMode
+guardOnlyFragment
         :: Annot a => a -> [Where a] -> Context a
-        -> Text -> TermMode -> IO b -> IO b
+        -> Text -> Fragment -> IO b -> IO b
 
-guardOnlyTermMode a wh ctx txBlame mode thing
- = if contextTermMode ctx == mode
+guardOnlyFragment a wh ctx txBlame frag thing
+ = if contextFragment ctx == frag
          then thing
-         else throw $ ErrorTermNotMode a wh (contextTermMode ctx) txBlame
+         else throw $ ErrorTermNotFragment a wh (contextFragment ctx) txBlame
 
 
 -- | Check if the context has any of the given term modes.
-guardAnyTermMode
+guardAnyFragment
         :: Annot a => a -> [Where a] -> Context a
-        -> Text -> [TermMode] -> IO b -> IO b
+        -> Text -> [Fragment] -> IO b -> IO b
 
-guardAnyTermMode a wh ctx txBlame modes thing
- = if elem (contextTermMode ctx) modes
+guardAnyFragment a wh ctx txBlame frags thing
+ = if elem (contextFragment ctx) frags
          then thing
-         else throw $ ErrorTermNotMode a wh (contextTermMode ctx) txBlame
+         else throw $ ErrorTermNotFragment a wh (contextFragment ctx) txBlame
 
 
 -- | Set the term mode in the given context to the expression
 --   form of what it is right now.
 asExp   :: Context a -> Context a
 asExp ctx
- = case contextTermMode ctx of
-        TermModePlain    -> ctx
-        TermModeProcBody -> ctx { contextTermMode = TermModeProcExp }
-        TermModeProcStmt -> ctx { contextTermMode = TermModeProcExp }
-        TermModeProcExp  -> ctx
-        TermModeBlocBody -> ctx { contextTermMode = TermModeBlocExp }
-        TermModeBlocExp  -> ctx
+ = case contextFragment ctx of
+        FragTerm         -> ctx
+        FragProcBody     -> ctx { contextFragment = FragProcExp }
+        FragProcYield    -> ctx { contextFragment = FragProcExp }
+        FragProcExp      -> ctx
 

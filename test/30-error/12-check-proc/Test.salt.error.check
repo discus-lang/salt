@@ -1,0 +1,65 @@
+test/30-error/12-check-proc/Test.salt:15:13
+  if-expression cannot appear in a proc exp.
+
+  14:11  In test
+
+test/30-error/12-check-proc/Test.salt:19:13
+  case-expression cannot appear in a proc exp.
+
+  18:11  In test
+
+test/30-error/12-check-proc/Test.salt:26:36
+  Not enough terms.
+   Actual   types []
+   Expected kind '#Data'
+
+  26:11  In test
+
+test/30-error/12-check-proc/Test.salt:33:11
+  Actual type '#Nat'
+   does not match
+   expected type '#Bool'
+
+  33:11  In test
+
+test/30-error/12-check-proc/Test.salt:44:38
+  Actual type '#Bool'
+   does not match
+   expected type '#Nat'
+
+  44:11  In test
+
+test/30-error/12-check-proc/Test.salt:51:21
+  Actual type '#Nat'
+   does not match
+   expected type '#Bool'
+
+  51:11  In test
+
+test/30-error/12-check-proc/Test.salt:54:33
+  Too many terms.
+   Actual   type '#Nat'
+   Expected types []
+
+  54:11  In test
+
+test/30-error/12-check-proc/Test.salt:63:11
+  Alternative 'foo' is not in scrutinee type.
+   '∑[bar: #Nat]'
+
+  63:11  In test
+
+test/30-error/12-check-proc/Test.salt:70:27
+  Too many terms.
+   Actual   type '#Nat'
+   Expected kinds []
+
+  68:11  In test
+
+test/30-error/12-check-proc/Test.salt:77:27
+  Too many terms.
+   Actual   type '#Nat'
+   Expected kinds []
+
+  77:11  In test
+

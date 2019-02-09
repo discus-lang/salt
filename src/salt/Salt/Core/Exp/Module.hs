@@ -54,18 +54,6 @@ data DeclTermMode
         deriving (Show, Eq)
 
 
--- | Mode of the term declaration.
---   TODO: kill this, it's only being used by the checker.
-data TermMode
-        = TermModePlain         -- ^ A plain term declaration.
-        | TermModeProcBody      -- ^ A proc body.
-        | TermModeProcStmt      -- ^ A proc statement.
-        | TermModeProcExp       -- ^ A proc expression.
-        | TermModeBlocBody      -- ^ A bloc body.
-        | TermModeBlocExp       -- ^ A bloc expression.
-        deriving (Show, Eq)
-
-
 -- | Test declaration.
 data DeclTest a
         -- Print the kind of a type.

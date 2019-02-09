@@ -33,15 +33,13 @@ instance Pretty c Ups where
   =     braced (map pprBump bs)
 
 
-instance Pretty c TermMode where
+instance Pretty c Fragment where
  ppr _ mm
   = case mm of
-        TermModePlain           -> text "term"
-        TermModeProcBody        -> text "proc body"
-        TermModeProcStmt        -> text "proc stmt"
-        TermModeProcExp         -> text "proc exp"
-        TermModeBlocBody        -> text "bloc body"
-        TermModeBlocExp         -> text "bloc exp"
+        FragTerm        -> text "term"
+        FragProcBody    -> text "proc body"
+        FragProcExp     -> text "proc exp"
+        FragProcYield   -> text "proc yield"
 
 
 braced ds

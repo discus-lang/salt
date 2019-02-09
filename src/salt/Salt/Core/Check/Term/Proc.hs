@@ -16,8 +16,9 @@ checkTermProc :: CheckTermProc a
 -- (t-proc-yield) -----------------------------------------
 checkTermProc a wh ctx mode _ctxProc (MProcYield mResult)
  = do
+        let ctx' = ctx { contextFragment = FragProcYield }
         (mResult', tsResult, esResult)
-         <- checkTerm a wh (asExp ctx) mode mResult
+         <- checkTerm a wh ctx' mode mResult
 
         return  ( MProcYield mResult'
                 , tsResult, esResult)
@@ -44,8 +45,7 @@ checkTermProc a wh ctx mode ctxProc (MProcSeq mps mBind mRest)
         -- Check kinds of binder annotations.
         mps' <- checkTermParams a wh ctx mps
 
-        -- Check the bound expression.
-        -- TODO: pass down expected type if we have it on the binder.
+        -- Check the bound procedure.
         (mBind', tsBind, esBind)
          <- checkTermProc a wh (asExp ctx) Synth ctxProc mBind
 
@@ -79,6 +79,7 @@ checkTermProc a wh ctx mode ctxProc (MProcSeq mps mBind mRest)
 
         return  ( MProcSeq mps' mBind' mRest'
                 , tsResult, esBind ++ esResult)
+
 
 -- (t-proc-return) ----------------------------------------
 checkTermProc a wh ctx _mode _ctxProc (MProcReturn mBody)

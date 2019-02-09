@@ -1,0 +1,77 @@
+
+-- yield ----------------------------------------------------------------------
+test type proc yield []
+test type proc yield 5
+test type proc yield #nat'add [2, 3]
+
+-- control flow restrictions
+test type proc yield (if #true then 2 else 3)
+
+test type proc yield
+ (case the <derp: #Nat> of `derp 5 of { derp [x: #Nat] → x})
+
+-- Error: if cannot appear as a proc expression.
+test type proc yield
+ (#nat'add [if #true then 2 else 3, 4])
+
+-- Error: case cannot appear as a proc expression.
+test type proc yield
+ (#nat'add [case the <derp: #Nat> of `derp 5 of { derp [x: #Nat] → x}, 4])
+
+
+-- call ----------------------------------------------------------------------
+test type proc call #console'print ["derp"]
+
+-- Error: not enough terms.
+test type proc call #console'print []
+
+
+-- seq ------------------------------------------------------------------------
+test type proc seq a: #Nat = #nat'add [2, 3]
+
+-- Error: binding type does not match annotation.
+test type proc seq a: #Bool = #nat'add [2, 3]
+
+
+-- launch / return  -----------------------------------------------------------
+-- TODO: check launch/return types match up.
+
+
+-- cell / update  -------------------------------------------------------------
+test type proc cell a: #Nat ← 5; a ← 6; yield a
+
+-- Error: type of cell does not match the type it is being updated at.
+test type proc cell a: #Nat ← 5; a ← #true; yield a
+
+
+-- when -----------------------------------------------------------------------
+test type proc when #true return []
+
+-- Error: scrutinee is not a boolean.
+test type proc when 5 return []
+
+-- Error: body yields a value.
+test type proc when #true yield 5
+
+
+-- match ----------------------------------------------------------------------
+test type proc
+ match the <foo: #Nat> of `foo [5] with
+  { foo [x: #Nat] → return [x]}
+
+-- Error: scrutinee type does not match alt type.
+test type proc
+ match the <bar: #Nat> of `bar [5] with
+  { foo [x: #Nat] → return [x]}
+
+-- Error: body yields a value
+test type proc
+ match the <foo: #Nat> of `foo [5] with
+  { foo [x: #Nat] → yield [x]}
+
+
+-- loop -----------------------------------------------------------------------
+test type proc loop #console'print "meep"
+
+-- Error: body yields a value.
+test type proc loop yield [5]

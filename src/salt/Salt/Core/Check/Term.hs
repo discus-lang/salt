@@ -45,7 +45,7 @@ checkTermWith a wh ctx Synth (MThe ts m)
 
 -- (t-box) ------------------------------------------------
 checkTermWith a wh ctx Synth (MBox m)
- = guardOnlyTermMode a wh ctx "Explicit box" TermModePlain
+ = guardOnlyFragment a wh ctx "Explicit box" FragTerm
  $ do   (m', ts, es) <- checkTerm a wh ctx Synth m
         tEff <- simplType a ctx (TSum es)
         return  (MBox m', [TSusp ts tEff], [])
@@ -53,7 +53,7 @@ checkTermWith a wh ctx Synth (MBox m)
 
 -- (t-run) ------------------------------------------------
 checkTermWith a wh ctx Synth (MRun mBody)
- = guardOnlyTermMode a wh ctx "Explicit run" TermModePlain
+ = guardOnlyFragment a wh ctx "Explicit run" FragTerm
  $ do
         -- Check the body.
         (mBody', tsSusp', es)
@@ -101,7 +101,9 @@ checkTermWith a wh ctx Synth m@(MRef (MRPrm nPrim))
 
 -- (t-con) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
- =  contextResolveDataCtor nCon ctx
+ = guardAnyFragment a wh ctx "Constructor"
+        [FragTerm, FragProcYield, FragProcExp]
+ $  contextResolveDataCtor nCon ctx
  >>= \case
         Nothing
          -> throw $ ErrorUnknownCtor UTerm a wh nCon
@@ -113,7 +115,9 @@ checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
 
 -- (t-var) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MVar u)
- =   contextResolveTermBound ctx u
+ = guardAnyFragment a wh ctx "Variable reference"
+        [FragTerm, FragProcYield, FragProcExp]
+ $   contextResolveTermBound ctx u
  >>= \case
         -- Cells referenced in statements are implicitly read.
         --   The type 'Cell T' has kind #State, not #Data,
@@ -129,7 +133,7 @@ checkTermWith a wh ctx Synth m@(MVar u)
 -- (t-abt) ------------------------------------------------
 checkTermWith a wh ctx Synth (MAbs mps m)
  | Just bks <- takeMPTypes mps
- = guardOnlyTermMode a wh ctx "Type abstraction" TermModePlain
+ = guardOnlyFragment a wh ctx "Type abstraction" FragTerm
  $ do
         -- Check the parameters and bind into the context.
         mps' <- checkTermParams a wh ctx mps
@@ -156,7 +160,7 @@ checkTermWith a wh ctx Synth (MAbs mps m)
 -- (t-abm) ------------------------------------------------
 checkTermWith a wh ctx Synth (MAbs mps m)
  | Just bts <- takeMPTerms mps
- = guardOnlyTermMode a wh ctx "Term abstraction" TermModePlain
+ = guardOnlyFragment a wh ctx "Term abstraction" FragTerm
  $ do
         -- Check the parameters and bind them into the context.
         mps' <- checkTermParams a wh ctx mps
@@ -177,7 +181,8 @@ checkTermWith a wh ctx Synth (MAbs mps m)
 -- (t-aps) ------------------------------------------------
 -- This handles (t-apt), (t-apm) and (t-apv) from the docs.
 checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
- = do
+ = guardAnyFragment a wh ctx "application" [FragTerm, FragProcExp, FragProcYield]
+ $ do
         -- If this an effectful primitive then also add the effects
         -- we get from applying it.
         (mFun1, tFun1, esFun1)
@@ -294,7 +299,9 @@ checkTermWith a wh ctx modeBody (MLet mps mBind mBody)
 
 -- (t-rec) ------------------------------------------------
 checkTermWith a wh ctx mode mm@(MRecord ns ms)
- = do
+ = guardAnyFragment a wh ctx "record constructor"
+        [FragTerm, FragProcExp, FragProcYield]
+ $ do
         mode'   <- simplMode a ctx mode
         case mode' of
          Return{} -> error "TODO: return a value"
@@ -347,7 +354,9 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
 
 -- (t-prj) ------------------------------------------------
 checkTermWith a wh ctx Synth (MProject nLabel mRecord)
- = do
+ = guardAnyFragment a wh ctx "record projection"
+        [FragTerm, FragProcExp, FragProcYield]
+ $ do
         -- Check the body expression.
         let aRecord = fromMaybe a $ takeAnnotOfTerm mRecord
         (mRecord', tRecord, esRecord)
@@ -372,7 +381,9 @@ checkTermWith a wh ctx Synth (MProject nLabel mRecord)
 
 -- (t-vnt) ------------------------------------------------
 checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
- = do
+ = guardAnyFragment a wh ctx "variant constructor"
+        [FragTerm, FragProcExp, FragProcYield]
+ $ do
         -- Check annotation is well kinded.
         checkType a wh ctx tVariant
 
@@ -402,9 +413,7 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
 checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
  | length msAlt  >= 1
  , length msElse <= 1
- = guardAnyTermMode a wh ctx
-        "case-expression"
-        [TermModePlain, TermModeProcStmt, TermModeBlocBody]
+ = guardAnyFragment a wh ctx "case-expression"  [FragTerm, FragProcYield]
  $ do
         -- Check the scrutinee.
         (mScrut', tScrut, esScrut)
@@ -443,9 +452,7 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
 -- (t-ifs) ------------------------------------------------
 checkTermWith a wh ctx Synth (MIf msCond msThen mElse)
  | length msCond == length msThen
- = guardAnyTermMode a wh ctx
-        "if-expression"
-        [TermModePlain, TermModeProcBody, TermModeBlocBody]
+ = guardAnyFragment a wh ctx "if-expression" [FragTerm, FragProcYield]
  $ do
         (msCond', esCond)
          <- checkTermsAreAll a wh (asExp ctx) TBool msCond
@@ -464,11 +471,9 @@ checkTermWith a wh ctx Synth (MIf msCond msThen mElse)
 
 -- (t-proc) -----------------------------------------------
 checkTermWith a wh ctx Synth (MProc mBody)
- = guardAnyTermMode a wh ctx
-        "procedure"
-        [TermModePlain, TermModeProcBody]
+ = guardAnyFragment a wh ctx "procedure" [FragTerm, FragProcYield]
  $ do
-        let ctx' = ctx { contextTermMode = TermModeProcBody }
+        let ctx' = ctx { contextFragment = FragProcBody }
         (mBody', tsResult, esBody)
          <- checkTermProc a wh ctx' Synth CPNone mBody
 
@@ -477,35 +482,34 @@ checkTermWith a wh ctx Synth (MProc mBody)
 
 -- (t-bloc) -----------------------------------------------
 checkTermWith a wh ctx Synth (MBloc mBody)
- = guardAnyTermMode a wh ctx
-        "Bloc definition"
-        [TermModePlain, TermModeProcBody, TermModeBlocBody]
+ = guardOnlyFragment a wh ctx "bloc definition" FragTerm
  $ do
-        let ctx' = ctx { contextTermMode = TermModeBlocBody }
-
         (mBody', tsBody, esBody)
-         <- checkTerm a wh ctx' Synth mBody
+         <- checkTerm a wh ctx Synth mBody
 
         return  ( MBloc mBody'
                 , tsBody, esBody)
 
 -- (t-lst) ------------------------------------------------
 checkTermWith a wh ctx Synth (MList t ms)
- = do   t' <- checkTypeHas UKind a wh ctx TData t
+ = guardOnlyFragment a wh ctx "list" FragTerm
+ $ do   t' <- checkTypeHas UKind a wh ctx TData t
         (ms', es) <- checkTermsAreAll a wh (asExp ctx) t' ms
         return  (MList t' ms', [TList t], es)
 
 
 -- (t-set) ------------------------------------------------
 checkTermWith a wh ctx Synth (MSet t ms)
- = do   t' <- checkTypeHas UKind a wh ctx TData t
+ = guardOnlyFragment a wh ctx "set" FragTerm
+ $ do   t' <- checkTypeHas UKind a wh ctx TData t
         (ms', es) <- checkTermsAreAll a wh (asExp ctx) t' ms
         return (MSet t ms', [TSet t], es)
 
 
 -- (t-map) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
- = do
+ = guardOnlyFragment a wh ctx "map" FragTerm
+ $ do
         when (not $ length msk == length msv)
          $ throw $ ErrorTermMalformed a wh m
 

@@ -31,7 +31,7 @@ checkDeclTerm _a ctx0
         (DTerm (DeclTerm a mode@DeclTermModePlain nDecl mpss tsResult mBody))
  = do
         let wh  = [WhereTermDecl a nDecl]
-        let ctx = ctx0 { contextTermMode = TermModePlain }
+        let ctx = ctx0 { contextFragment = FragTerm }
 
         -- Check the parameter type annotations.
         mpss'     <- checkTermParamss a wh ctx mpss
@@ -76,7 +76,7 @@ checkDeclTerm _a ctx
         tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
 
         -- Check the body.
-        let ctx'' = ctx' { contextTermMode = TermModeProcBody }
+        let ctx'' = ctx' { contextFragment = FragProcBody }
         (mBody', _tsResult'', esResult')
          <- contextCheckProc ctx a wh ctx''
                 (Check tsResult') (CPLaunch tsResult' CPNone) mBody

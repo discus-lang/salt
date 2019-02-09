@@ -20,10 +20,10 @@ data Error a
         , errorWhere            :: [Where a]
         , errorTerm             :: Term a }
 
-        | ErrorTermNotMode
+        | ErrorTermNotFragment
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
-        , errorTermMode         :: TermMode
+        , errorFragment         :: Fragment
         , errorWhat             :: Text }
 
         -- Module level problems ----------------
