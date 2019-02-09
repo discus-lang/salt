@@ -15,10 +15,7 @@ import qualified Text.Parsec            as P
 pProc :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
 pProc pTerm pTermApp
  = P.choice
- [ do   -- ProcFinal
-        pProcFinal pTerm pTermApp
-
- , do   -- ProcFinal (';' Proc) | ε
+ [ do   -- ProcFinal (';' Proc) | ε
         mkProc <- pProcStmt pTerm pTermApp
         P.choice
          [ do   pTok KSemi
@@ -26,6 +23,9 @@ pProc pTerm pTermApp
                 return  $ mkProc mRest
 
          , do   return  $ mkProc $ MProcYield (MTerms []) ]
+
+ , do   -- ProcFinal
+        pProcFinal pTerm pTermApp
  ]
 
 
@@ -73,6 +73,17 @@ pProcFinal pTerm pTermApp
 
  , do   -- ProcDo
         pProcDo pTerm pTermApp
+
+ , do   -- Prm TermArgs*
+        -- Con TermArgs*
+        -- TODO: check we have at least one arg.
+        mApp <- pTermApp
+        (mFun, mgssArg)
+         <- case takeMAps mApp of
+                Just (mFun, mgssArg) -> return (mFun, mgssArg)
+                _ -> P.parserZero
+
+        return $ MProcCall mFun mgssArg
  ]
 
 
@@ -179,6 +190,15 @@ pProcStmt pTerm pTermApp
                  <?> "the body of the 'then' branch"
                 return $ \mRest -> MProcLoop mThen mRest
          ]
+
+ , P.try $ do
+        -- Var' '←' Term ...
+        --   Update form without an initial keyword.
+        --   We know this is an update when we get to the '←'.
+        nCell   <- pVar
+        pLeft
+        mValue  <- pTerm
+        return  $ \mRest -> MProcUpdate nCell mValue mRest
  ]
 
 
