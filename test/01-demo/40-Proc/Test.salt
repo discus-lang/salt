@@ -18,7 +18,7 @@ term derps [n: #Nat]: #Nat ! #Console
    when #nat'eq [x, 0] return 3
    cell n: #Nat ← 0
    loop call #console'print "derp"
-   yield [3]
+   yield [n]
 
 
 -- term derp [n: #Nat]: #Nat ! #Console

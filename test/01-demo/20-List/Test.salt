@@ -4,7 +4,8 @@
 term length @[a: #Data] [xx: #List a]: #Nat
  = case #list'case @a xx of
         nil  [] → 0
-        cons [head: a, tail: #List a] → #nat'add [1, length @a tail]
+        cons [head: a, tail: #List a]
+         → #nat'add [1, length @a tail]
 
 test eval length5
  = length @#Nat [list #Nat| 10, 11, 12, 13, 14]

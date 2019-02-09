@@ -13,6 +13,21 @@ test/30-error/30-check-term-sigs/Test.salt:11:12
 
   11:6   In term declaration "term3"
 
+test/30-error/30-check-term-sigs/Test.salt:25:16
+  Unknown type primitive '#Derp'
+
+  25:6   In term declaration "proc1"
+
+test/30-error/30-check-term-sigs/Test.salt:28:23
+  Unknown type primitive '#Derp'
+
+  28:6   In term declaration "proc2"
+
+test/30-error/30-check-term-sigs/Test.salt:31:12
+  Conflicting term binders for 'x'
+
+  31:6   In term declaration "proc3"
+
 test/30-error/30-check-term-sigs/Test.salt:14:6
   Rebound term name 'term4'
 
@@ -23,9 +38,35 @@ test/30-error/30-check-term-sigs/Test.salt:15:6
 
   15:6   In term declaration "term4"
 
+test/30-error/30-check-term-sigs/Test.salt:34:6
+  Rebound term name 'proc4'
+
+  34:6   In term declaration "proc4"
+
+test/30-error/30-check-term-sigs/Test.salt:35:6
+  Rebound term name 'proc4'
+
+  35:6   In term declaration "proc4"
+
 test/30-error/30-check-term-sigs/Test.salt:18:6
   Polymorphic term abstraction does not produce a value.
    Parameters [@[a: #Data]]
 
   18:6   In term declaration "term5"
+
+test/30-error/30-check-term-sigs/Test.salt:22:6
+  Empty term declaration 'term6'
+
+  22:6   In term declaration "term6"
+
+test/30-error/30-check-term-sigs/Test.salt:38:6
+  Polymorphic term abstraction does not produce a value.
+   Parameters [@[a: #Data]]
+
+  38:6   In term declaration "proc5"
+
+test/30-error/30-check-term-sigs/Test.salt:43:6
+  Proc declaration 'proc6' has no parameters
+
+  43:6   In term declaration "proc6"
 

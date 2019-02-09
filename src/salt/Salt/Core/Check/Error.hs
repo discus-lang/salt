@@ -43,6 +43,16 @@ data Error a
         , errorName             :: Name
         , errorEffect           :: Type a }
 
+        | ErrorTermDeclEmpty
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name }
+
+        | ErrorTermDeclProcNoParams
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorName             :: Name }
+
         | ErrorTestDeclRebound
         { errorAnnot            :: a
         , errorWhere            :: [Where a]

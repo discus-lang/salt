@@ -26,7 +26,6 @@ proc decl1s []: #Nat
 proc decl2s [n: #Nat]: []
  =      yield []
 
--- TODO: if drop effect annotation should get error.
 proc decl3s [n: #Nat]: []! #Console
  =      seq call #console'print "hello";
         yield []
@@ -164,20 +163,20 @@ proc when1s [b: #Bool, x: #Nat, y: #Nat]: #Nat
         ; yield y }
 
 
-proc when2 [n: #Nat]: #Text ! #Console
+proc when2 [n: #Nat]: #Text
  =      when #nat'eq [n, 1] return "one";
         when #nat'eq [n, 2] return "two";
         when #nat'eq [n, 3] return "three";
         yield "dunno"
 
-proc when2s [n: #Nat]: #Text ! #Console
+proc when2s [n: #Nat]: #Text
  = do   when #nat'eq [n, 1] return "one"
         when #nat'eq [n, 2] return "two"
         when #nat'eq [n, 3] return "three"
         yield "dunno"
 
 
-proc whens2s [n: #Nat]: #Text ! #Console
+proc whens2s [n: #Nat]: #Text
  = do   whens
          #nat'eq [n, 1] → return "one"
          #nat'eq [n, 2] → return "two"
@@ -185,26 +184,26 @@ proc whens2s [n: #Nat]: #Text ! #Console
         yield "dunno"
 
 
-proc when3 [n: #Nat, m: #Nat]: #Text ! #Console
+proc when3 [n: #Nat, m: #Nat]: #Text
  = do   { when #nat'eq [n, 1]
                 when #nat'eq [n, 2]
                         return "derp"
         ; yield "whatever" }
 
-proc when3s [n: #Nat, m: #Nat]: #Text ! #Console
+proc when3s [n: #Nat, m: #Nat]: #Text
  = do   when #nat'eq [n, 1]
                 when #nat'eq [n, 2]
                         return "derp"
         yield "whatever"
 
-proc when3sd [n: #Nat, m: #Nat]: #Text ! #Console
+proc when3sd [n: #Nat, m: #Nat]: #Text
  = do   when #nat'eq [n, 1] do
                 when #nat'eq [n, 2] do
                         return "derp"
         yield "whatever"
 
 
-proc when4 [n: #Nat, m: #Nat]: #Text ! #Console
+proc when4 [n: #Nat, m: #Nat]: #Text
  =      when #nat'eq [n, 1]
                 when #nat'eq [m, 1]
                         return "one, one";
@@ -212,7 +211,7 @@ proc when4 [n: #Nat, m: #Nat]: #Text ! #Console
                         return "one, two";
         yield "whatever"
 
-proc when4s [n: #Nat, m: #Nat]: #Text ! #Console
+proc when4s [n: #Nat, m: #Nat]: #Text
  = do   { when #nat'eq [n, 1]
           do    { when #nat'eq [m, 1]
                         return "one, one"
@@ -221,7 +220,7 @@ proc when4s [n: #Nat, m: #Nat]: #Text ! #Console
                 }
         ; yield "whatever" }
 
-proc when4ss [n: #Nat, m: #Nat]: #Text ! #Console
+proc when4ss [n: #Nat, m: #Nat]: #Text
  = do   { when #nat'eq [n, 1] do
                 { when #nat'eq [m, 1] do
                         { return "one, one" }
@@ -231,7 +230,7 @@ proc when4ss [n: #Nat, m: #Nat]: #Text ! #Console
         ; yield "whatever"
         }
 
-proc when4sss [n: #Nat, m: #Nat]: #Text ! #Console
+proc when4sss [n: #Nat, m: #Nat]: #Text
  = do   when #nat'eq [n, 1] do
                 when #nat'eq [m, 1]
                         return "one, one"
@@ -239,7 +238,7 @@ proc when4sss [n: #Nat, m: #Nat]: #Text ! #Console
                         return "one, two"
         yield "whatever"
 
-proc when4ssss [n: #Nat, m: #Nat]: #Text ! #Console
+proc when4ssss [n: #Nat, m: #Nat]: #Text
  = do   when #nat'eq [n, 1]
          do     when #nat'eq [m, 1]
                  do     return "one, one"
@@ -248,14 +247,14 @@ proc when4ssss [n: #Nat, m: #Nat]: #Text ! #Console
         yield "whatever"
 
 
-proc when5 [n: #Nat, m: #Nat]: #Text ! #Console
+proc when5 [n: #Nat, m: #Nat]: #Text
  =      whens { #nat'eq [n, 1]
                 → whens { #nat'eq [m, 1] → return "one, one"
                         ; #nat'eq [m, 2] → return "one, two" } };
         yield "whatever"
 
 
-proc whens5 [n: #Nat, m: #Nat]: #Text ! #Console
+proc whens5 [n: #Nat, m: #Nat]: #Text
  = do   whens #nat'eq [n, 1]
                 → whens #nat'eq [m, 1] → return "one, one"
                         #nat'eq [m, 2] → return "one, two"

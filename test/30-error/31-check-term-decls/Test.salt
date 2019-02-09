@@ -8,3 +8,4 @@ term term1: #Nat = #true
 term term2: #Nat
  = do { #console'print "hello"
       ; 5 }
+

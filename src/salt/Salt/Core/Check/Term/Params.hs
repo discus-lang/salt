@@ -18,8 +18,8 @@ checkTermParams a wh ctx (MPTypes bks)
  = do   let (bs, ks) = unzip bks
 
         -- Check for duplicate binder names.
-        let ns          = [ n | BindName n <- bs]
-        let nsDup       = List.duplicates ns
+        let ns    = [ n | BindName n <- bs]
+        let nsDup = List.duplicates ns
         when (not $ null nsDup)
          $ throw $ ErrorAbsConflict UType a wh nsDup
 
@@ -28,11 +28,11 @@ checkTermParams a wh ctx (MPTypes bks)
         return  $ MPTypes $ zip bs ks'
 
 checkTermParams a wh ctx (MPTerms bts)
- = do   let (bs, ts)    = unzip bts
+ = do   let (bs, ts) = unzip bts
 
         -- Check for duplicate binder names.
-        let ns          = [n | BindName n <- bs]
-        let nsDup       = List.duplicates ns
+        let ns    = [n | BindName n <- bs]
+        let nsDup = List.duplicates ns
         when (not $ null nsDup)
          $ throw $ ErrorAbsConflict UTerm a wh nsDup
 

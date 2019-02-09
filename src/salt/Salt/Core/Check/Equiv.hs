@@ -100,10 +100,16 @@ checkTypeEquiv ctx aL psL tL aR psR tR
                 Just t' -> normalize a ps t'
                 Nothing -> return $ Right (a, tt)
 
+         | TSum []   <- tt
+         = normalize a ps TPure
+
+         | TSum [t'] <- tt
+         = normalize a ps t'
+
          | TSum{} <- tt
          = case flattenType tt of
-                Just t' -> normalize a ps t'
-                Nothing -> return $ Right (a, tt)
+                Just t'          -> normalize a ps t'
+                Nothing          -> return $ Right (a, tt)
 
          | otherwise
          = return $ Right (a, tt)

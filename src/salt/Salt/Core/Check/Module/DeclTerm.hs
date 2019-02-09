@@ -65,7 +65,7 @@ checkDeclTerm _a ctx
         mpss'     <- checkTermParamss a wh ctx mpss
 
         -- Check the result type annotation.
-        (tsResult, _esResult)
+        (tsResult, esResult)
          <- simplTypes a ctx tsResult0
          >>= \case
                 [TSusp tsResult tEffect]
@@ -77,21 +77,17 @@ checkDeclTerm _a ctx
 
         -- Check the body.
         let ctx'' = ctx' { contextTermMode = TermModeProcBody }
-        (mBody', _tsResult'', _esResult)
+        (mBody', _tsResult'', esResult')
          <- contextCheckProc ctx a wh ctx''
                 (Check tsResult') (CPLaunch tsResult' CPNone) mBody
 
-        -- TODO: check proc effects against result type.
-
---         eBody_red <- simplType a ctx' (TSum esResult)
---         when (not $ isTPure eBody_red)
---          $ case reverse mpss of
---             mps : _
---              | Just _ <- takeMPTypes mps -> throw $ ErrorAbsImpure UType a wh eBody_red
---              | Just _ <- takeMPTerms mps -> throw $ ErrorAbsImpure UTerm a wh eBody_red
---             _ -> throw $ ErrorTermDeclImpure a wh nDecl eBody_red
-
-        return  $ DTerm $ DeclTerm a mode nDecl mpss' tsResult' mBody'
+        -- Check result effects against the annotation.
+        eActual   <- simplType a ctx' $ TSum esResult'
+        eExpected <- simplType a ctx' $ TSum esResult
+        mErr <- checkTypeEquiv ctx a [] eExpected a [] eActual
+        case mErr of
+         Just _  -> throw $ ErrorMismatch UType a wh eActual eExpected
+         Nothing -> return $ DTerm $ DeclTerm a mode nDecl mpss' tsResult' mBody'
 
 checkDeclTerm _ _ decl
  = return decl
@@ -129,11 +125,35 @@ checkDeclTermRebound decls
 makeTypeOfDeclTerm :: Decl a -> Either (Error a) [(Name, Type a)]
 makeTypeOfDeclTerm decl
  = case decl of
-        DTerm (DeclTerm a _mode n pss0 tsResult _mBody)
-         -> case loop tsResult pss0 of
-                [t] -> Right [(n, t)]
-                _   -> Left $ ErrorAbsTermNoValueForForall a
-                                [ WhereTermDecl a n ] pss0
+        DTerm (DeclTerm a mode n pss0 tsResult _mBody)
+         -- A procedure declaration must have at least an empty parameter list,
+         -- otherwise it is a CAF rather than representing a block of code
+         -- that we can execute.
+         | []           <- pss0
+         , DeclTermModeProc <- mode
+         -> Left $ ErrorTermDeclProcNoParams a [WhereTermDecl a n] n
+
+         -- Term declaration has no parameters, but binds a single term.
+         -- This is a CAF, which is fine.
+         | []           <- pss0
+         , [tResult]    <- tsResult
+         -> Right [(n, tResult)]
+
+         -- Term declaration has no parameters or result types,
+         -- so doesn't really declare anything.
+         | []           <- pss0
+         , []           <- tsResult
+         -> Left $ ErrorTermDeclEmpty a [WhereTermDecl a n] n
+
+         -- Build the functional type for the declaration.
+         |  [tResult]   <- loop tsResult pss0
+         -> Right [(n, tResult)]
+
+         -- We have a binding with type parameters but no term paramters,
+         -- so can't build a well kinded forall type for it.
+         | otherwise
+         -> Left $ ErrorAbsTermNoValueForForall a [WhereTermDecl a n] pss0
+
         DType{} -> Right []
         DTest{} -> Right []
 

@@ -1,23 +1,23 @@
 
 -- Test offside rule handling in the parser framework.
 
-proc do'explicit []: []
+proc do'explicit []: [] ! #Console
  = do   { call #console'print "hello"
         ; yield [] }
 
 
-proc do'same []: []
+proc do'same []: [] ! #Console
  = do   call #console'print "hello"
         yield []
 
 
-proc do'next []: []
+proc do'next []: [] ! #Console
  = do
         call #console'print "hello"
         yield []
 
 
-proc do'head []: [] = do
+proc do'head []: [] ! #Console  = do
         call #console'print "hello"
         yield []
 
@@ -37,14 +37,14 @@ proc do'nest'head []: []! #Console = do
            call #console'print "world"
 
 
-proc when3ss [n: #Nat, m: #Nat]: #Text ! #Console
+proc when3ss [n: #Nat, m: #Nat]: #Text
  = do   when #nat'eq [n, 1] do
                 when #nat'eq [n, 2] do
                         return "derp"
         yield "whatever"
 
 
-proc when4sss [n: #Nat, m: #Nat]: #Text ! #Console
+proc when4sss [n: #Nat, m: #Nat]: #Text
  = do   when #nat'eq [n, 1] do
                 when #nat'eq [m, 1] do
                         return "one, one"

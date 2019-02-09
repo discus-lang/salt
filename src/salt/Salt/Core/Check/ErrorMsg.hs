@@ -40,6 +40,12 @@ ppre c  (ErrorTermDeclImpure  _a _wh nDecl tEffect)
  = vcat [ text "Impure term declaration" %% squotes (pprVar nDecl)
         , text " has effect"    %% squotes (ppr c tEffect) ]
 
+ppre _c (ErrorTermDeclEmpty   _a _wh nDecl)
+ = vcat [ text "Empty term declaration" %% squotes (pprVar nDecl) ]
+
+ppre _c (ErrorTermDeclProcNoParams _a _wh nDecl)
+ = vcat [ text "Proc declaration" %% squotes (pprVar nDecl) %% text "has no parameters" ]
+
 ppre c  (ErrorTestDeclImpure  _a _wh mnDecl tEffect)
  = vcat [ text "Impure test declaration" %% maybe empty (squotes . pprVar) mnDecl
         , text " has effect"    %% squotes (ppr c tEffect) ]

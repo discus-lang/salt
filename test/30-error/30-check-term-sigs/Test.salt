@@ -18,3 +18,26 @@ term term4: #Nat = 2
 term term5 @[a: #Data]: [] = []
 test type term5 = term5
 
+-- Error: Term declaration does not bind a value.
+term term6: [] = []
+
+-- Error: Malformed type annotations on proc declaration.
+proc proc1 [x: #Derp]: #Nat = yield 5
+
+-- Error: Malformed result type.
+proc proc2 [x: #Nat]: #Derp = yield 5
+
+-- Error: Proc declaration has duplicate parameters.
+proc proc3 [x: #Nat, x: #Nat]: #Nat = yield x
+
+-- Error: Proc declaration is rebound
+proc proc4 []: #Nat = yield 1
+proc proc4 []: #Nat = yield 2
+
+-- Error: Proc declaration does not produce a value.
+proc proc5 @[a: #Data]: [] = yield []
+test type term5 = term5
+
+-- Error: Proc declaration does not have parameters.
+-- TODO: should be an error.
+proc proc6: #Nat = yield 5
