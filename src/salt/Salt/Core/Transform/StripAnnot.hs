@@ -105,6 +105,8 @@ instance StripAnnot Term where
         MRef r          -> MRef (stripAnnot r)
         MVar u          -> MVar u
         MAbs p m        -> MAbs (stripAnnot p) (stripAnnot m)
+        MRec bts ms m   -> MRec [(b, stripAnnot t) | (b, t) <- bts]
+                                (map stripAnnot ms) (stripAnnot m)
         MKey k ms       -> MKey k (map stripAnnot ms)
 
 
