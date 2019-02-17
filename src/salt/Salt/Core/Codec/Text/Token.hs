@@ -56,7 +56,7 @@ data Token
         | KPure         | KSync
         | KThe          | KOf
         | KBox          | KRun
-        | KLet          | KDo           | KWhere
+        | KLet          | KRec          | KDo           | KWhere
         | KIf           | KIfs          | KThen         | KElse
         | KCase
         | KSymForall    | KAsciiForall
@@ -69,6 +69,7 @@ data Token
         | KCell         | KUpdate
         | KWhen         | KWhens        | KMatch
         | KLoop         | KBreak        | KContinue
+        | KEnter        | KLeave
         | KEnd
 
         | KBloc
@@ -149,6 +150,7 @@ showTokenAsSource kk
         KBox            -> "box"
         KRun            -> "run"
         KLet            -> "let"
+        KRec            -> "rec"
         KDo             -> "do"
         KWhere          -> "where"
         KIf             -> "if"
@@ -174,6 +176,8 @@ showTokenAsSource kk
         KLoop           -> "loop"
         KBreak          -> "break"
         KContinue       -> "continue"
+        KEnter          -> "enter"
+        KLeave          -> "leave"
 
         KBloc           -> "bloc"
 

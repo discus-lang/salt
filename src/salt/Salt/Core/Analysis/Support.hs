@@ -162,6 +162,11 @@ instance HasSupport (Term a) where
                  -> mappend (mconcat $ map supportOf $ map snd bts)
                         (supportBindTerms (map fst bts) $ supportOf m)
 
+        MRec bts msBind mBody
+         -> supportBindTerms (map fst bts)
+          $ mappend (mconcat $ map supportOf msBind)
+                    (supportOf mBody)
+
         MKey mk ms      -> mconcat (supportOf mk : map supportOf ms)
 
 

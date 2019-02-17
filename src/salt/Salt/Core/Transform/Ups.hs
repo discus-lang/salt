@@ -57,6 +57,7 @@ upsApplyTerm upsT upsM mm
         -- Apply the ups to the term bound.
         MVar u   -> MVar $ upsApplyBound upsM u
 
+        -- Apply to abstractions.
         MAbs mps mBody
          -> case takeTermParams mps of
                 -- Carry ups under type abstractions.
@@ -72,6 +73,14 @@ upsApplyTerm upsT upsM mm
                         bts'    = [ (b, upsApplyType upsT t) | (b, t) <- bts ]
                         upsM'   = upsBumpNames nsBind upsM
                     in  MAbs (MPTerms bts') $ upsApplyTerm upsT upsM' mBody
+
+        -- Apply ups to recursive bindings.
+        MRec bts msBind mBody
+         -> let nsBind   = [n | (BindName n, _) <- bts]
+                upsM'    = upsBumpNames nsBind upsM
+                msBind'  = map (upsApplyTerm upsT upsM') msBind
+                mBody'   = upsApplyTerm upsT upsM' mBody
+            in  MRec bts msBind' mBody'
 
         -- Apply ups to other terms generically.
         MKey k mgss
