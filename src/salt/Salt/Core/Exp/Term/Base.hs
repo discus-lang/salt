@@ -10,20 +10,26 @@ import qualified Data.Word      as Word
 
 -- | Annotated Term.
 data Term a
-        = MAnn  a (Term a)                              -- ^ An annotated term.
-        | MRef  (TermRef a)                             -- ^ Term reference.
-        | MVar  Bound                                   -- ^ Term variable.
-        | MAbs  (TermParams a)  (Term a)                -- ^ Term abstraction.
-        | MRec  [(Bind, Type a)] [Term a] (Term a)      -- ^ Recursive binding.
-        | MKey  TermKey [TermArgs a]                    -- ^ Term keyword application.
+        = MAnn  a (Term a)                      -- ^ An annotated term.
+        | MRef  (TermRef a)                     -- ^ Term reference.
+        | MVar  Bound                           -- ^ Term variable.
+        | MAbs  (TermParams a) (Term a)         -- ^ Term abstraction.
+        | MRec  [TermBind a]   (Term a)         -- ^ Term recursion.
+        | MKey  TermKey [TermArgs a]            -- ^ Term keyword application.
+        deriving (Show, Eq, Ord)
+
+
+-- | Term binding.
+data TermBind a
+        = MBind Bind [TermParams a] (Type a) (Term a)
         deriving (Show, Eq, Ord)
 
 
 -- | Term Reference.
 data TermRef a
-        = MRPrm     Name                        -- ^ Primitive reference.
-        | MRCon     Name                        -- ^ Data constructor reference.
-        | MRVal     (Value a)                   -- ^ Value reference.
+        = MRPrm Name                            -- ^ Primitive reference.
+        | MRCon Name                            -- ^ Data constructor reference.
+        | MRVal (Value a)                       -- ^ Value reference.
         deriving (Show, Eq, Ord)
 
 

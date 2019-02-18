@@ -56,7 +56,7 @@ data Token
         | KPure         | KSync
         | KThe          | KOf
         | KBox          | KRun
-        | KLet          | KRec          | KDo           | KWhere
+        | KLet          | KRec          | KIn           | KDo           | KWhere
         | KIf           | KIfs          | KThen         | KElse
         | KCase
         | KSymForall    | KAsciiForall
@@ -151,6 +151,7 @@ showTokenAsSource kk
         KRun            -> "run"
         KLet            -> "let"
         KRec            -> "rec"
+        KIn             -> "in"
         KDo             -> "do"
         KWhere          -> "where"
         KIf             -> "if"

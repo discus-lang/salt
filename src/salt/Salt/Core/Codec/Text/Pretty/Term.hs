@@ -19,18 +19,9 @@ instance Pretty c (Term a) where
         MAbs p m
          -> text "λ" % ppr c p %% text "→" %% ppr c m
 
-        MRec bts msBind mBody
-         |  length bts == length msBind
-         -> text "rec"
-          % vcat [ ppr c b % text ":" %% ppr c t %% text "=" %% ppr c m
-                 | (b, t) <- bts | m <- msBind]
-          % text "in" %% ppr c mBody
-
-         | otherwise
-         -> text "##rec"
-          % (braced [ ppr c b % text ":" %% ppr c t | (b, t) <- bts])
-          % (braced [ ppr c m | m <- msBind ])
-          % (parens $ ppr c mBody)
+        MRec bms mBody
+         ->  text "rec" %% braced (map (ppr c) bms)
+          %% text "in"  %% ppr c mBody
 
         MTerms ms
          -> squared (map (ppr c) ms)
@@ -157,6 +148,14 @@ pprMAlt c mm
                 %% ppr c mBody
 
         _ -> parens (ppr c mm)
+
+
+instance Pretty c (TermBind a) where
+ ppr c (MBind b mpss tResult mBind)
+  =  ppr c b
+  %% hcat (map (ppr c) mpss)
+  %  text ":" %% ppr c tResult
+  %% text "=" %% ppr c mBind
 
 
 instance Pretty c (TermRef a) where

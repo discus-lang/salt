@@ -4,6 +4,8 @@ import Salt.Core.Exp.Type
 import Salt.Core.Exp.Term
 import Salt.Core.Exp.Ups
 import Salt.Core.Exp.Name
+
+import Data.Maybe
 import qualified Data.Map       as Map
 import qualified Data.Set       as Set
 
@@ -75,16 +77,29 @@ upsApplyTerm upsT upsM mm
                     in  MAbs (MPTerms bts') $ upsApplyTerm upsT upsM' mBody
 
         -- Apply ups to recursive bindings.
-        MRec bts msBind mBody
-         -> let nsBind   = [n | (BindName n, _) <- bts]
-                upsM'    = upsBumpNames nsBind upsM
-                msBind'  = map (upsApplyTerm upsT upsM') msBind
-                mBody'   = upsApplyTerm upsT upsM' mBody
-            in  MRec bts msBind' mBody'
+        MRec bms mBody
+         -> let bms'    = map (upsApplyTermBind upsT upsM) bms
+                nsBind  = mapMaybe takeNameOfTermBind bms
+                upsM'   = upsBumpNames nsBind upsM
+                mBody'  = upsApplyTerm upsT upsM' mBody
+            in  MRec bms' mBody'
 
         -- Apply ups to other terms generically.
         MKey k mgss
          -> MKey k $ map (upsApplyTermArgs upsT upsM) mgss
+
+
+-- | Apply type and term `Ups` to a `TermBind`.
+upsApplyTermBind :: Ups -> Ups -> TermBind a -> TermBind a
+upsApplyTermBind upsT upsM (MBind b mpss t mBind)
+ = let  mpss'   = map (upsApplyTermParams upsT) mpss
+        t'      = upsApplyType upsT t
+        nsT     = concatMap typeNamesOfTermParams mpss
+        nsM     = concatMap termNamesOfTermParams mpss
+        upsT'   = upsBumpNames nsT upsT
+        upsM'   = upsBumpNames nsM upsM
+        mBind'  = upsApplyTerm upsT' upsM' mBind
+   in   MBind b mpss' t' mBind'
 
 
 -- | Apply type `Ups` to some `TermParams`.

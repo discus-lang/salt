@@ -47,9 +47,41 @@ pTerm
 pTermBody  :: Parser (Term RL)
 pTermBody
  = pMAnn $ P.choice
- [ do   -- 'the' Type 'of' '`' Lbl TermArg
+ [ do   -- 'λ' TermParams+ '->' Term
+        pFun
+        mps  <- P.many1 $ (pTermParams
+             <?> "some parameters, or a '→' to start the body")
+        pRight           <?> "more paramaters, or a '→' to start the body"
+        mBody <- pTerm   <?> "a body for the function"
+        return  $ foldr MAbs mBody mps
+
+
+ , do   -- 'let' '[' Var,* ']' '=' Term ';' Term
+        pTok KLet
+        (rBinds, bts) <- pTermBinds
+        pTok KEquals    <?> "a type annotation, or '=' to start the binding"
+        mBind <- pTerm  <?> "a term for the binding"
+        pTok KSemi      <?> "a completed term, or ';' to start the body"
+        mBody <- pTerm  <?> "a body term"
+        return  $ MLet (MPAnn rBinds $ MPTerms bts) mBind mBody
+
+  , do  -- 'rec' '{' (Bind TermParams* ':' Type '=' Term);+ '}' 'in' Term
+        pTok KRec
+        bms     <- pBraced $ flip P.sepEndBy1 (pTok KSemi)
+                $ do    b       <- pBind
+                        mps     <- P.many pTermParams
+                        pTok KColon
+                        t       <- pType
+                        pTok KEquals
+                        m       <- pTerm
+                        return $ MBind b mps t m
+        pTok KIn
+        mBody   <- pTerm
+        return  $ MRec bms mBody
+
+        -- 'the' Type 'of' '`' Lbl TermArg
         -- 'the' Type 'of' Term
-        pTok KThe
+  , do  pTok KThe
         TGTypes ts <- pTypesHead
          <?> "a type to ascribe"
 
@@ -101,46 +133,6 @@ pTermBody
         pTok KRun
         m  <- pTerm <?> "a term to run"
         return  $ MRun m
-
-
- , do   -- 'λ' TermParams+ '->' Term
-        pFun
-        mps  <- P.many1 $ (pTermParams
-             <?> "some parameters, or a '→' to start the body")
-        pRight           <?> "more paramaters, or a '→' to start the body"
-        mBody <- pTerm   <?> "a body for the function"
-        return  $ foldr MAbs mBody mps
-
-
- , do   -- 'let' '[' Var,* ']' '=' Term ';' Term
-        pTok KLet
-        (rBinds, bts)
-         <- pRanged (P.choice
-                [ do    pSquared
-                         $ flip P.sepBy (pTok KComma)
-                         $ do   b  <- pBind <?> "a binder"
-                                P.choice
-                                 [ do   pTok KColon
-                                        t <- pType <?> "a type for the binder"
-                                        return (b, t)
-                                 , do   return (b, THole) ]
-                                 <?> "a binder"
-
-                , do    b       <- pBind
-                        P.choice
-                         [ do   pTok KColon
-                                t <- pType <?> "a type for the binder"
-                                return [(b, t)]
-
-                         , do   return [(b, THole)]]
-                ]
-                <?> "some binders")
-
-        pTok KEquals    <?> "a type annotation, or '=' to start the binding"
-        mBind <- pTerm  <?> "a term for the binding"
-        pTok KSemi      <?> "a completed term, or ';' to start the body"
-        mBody <- pTerm  <?> "a body term"
-        return  $ MLet (MPAnn rBinds (MPTerms bts)) mBind mBody
 
 
   , do  -- 'do' '{' Stmt;* '}'
@@ -498,6 +490,34 @@ pTermParams
                         return (b, t)
         return  $ MPTerms bts
  ]
+
+
+----------------------------------------------------------------------------------------- Binder --
+pTermBinds :: Parser (RL, [(Bind, Type RL)])
+pTermBinds
+ = do   (rBinds, bts)
+         <- pRanged (P.choice
+                [ do    pSquared
+                         $ flip P.sepBy (pTok KComma)
+                         $ do   b  <- pBind <?> "a binder"
+                                P.choice
+                                 [ do   pTok KColon
+                                        t <- pType <?> "a type for the binder"
+                                        return (b, t)
+                                 , do   return (b, THole) ]
+                                 <?> "a binder"
+
+                , do    b       <- pBind
+                        P.choice
+                         [ do   pTok KColon
+                                t <- pType <?> "a type for the binder"
+                                return [(b, t)]
+
+                         , do   return [(b, THole)]]
+                ]
+                <?> "some binders")
+
+        return (rBinds, bts)
 
 
 -- | Parser for a term binding.

@@ -151,6 +151,8 @@ scanner
                 "run"           -> Just KRun
 
                 "let"           -> Just KLet
+                "rec"           -> Just KRec
+                "in"            -> Just KIn
                 "do"            -> Just KDo
                 "where"         -> Just KWhere
 

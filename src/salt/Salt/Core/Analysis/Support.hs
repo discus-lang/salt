@@ -76,6 +76,7 @@ supportBindType (BindName n) (Support nsType nsTerm)
  =      Support (Set.fromList $ mapMaybe (lowerBoundOfName n)   $ Set.toList nsType)
                 nsTerm
 
+
 -- | Drop a set of type binds from a support set.
 supportBindTypes :: [Bind] -> Support -> Support
 supportBindTypes bs (Support nsType nsTerm)
@@ -93,8 +94,8 @@ supportBoundTerm u = Support (Set.singleton u) Set.empty
 supportBindTerm :: Bind -> Support -> Support
 supportBindTerm BindNone support = support
 supportBindTerm (BindName n) (Support nsType nsTerm)
- =       Support nsType
-                (Set.fromList $ mapMaybe (lowerBoundOfName n)  $ Set.toList nsTerm)
+ = Support nsType
+          (Set.fromList $ mapMaybe (lowerBoundOfName n) $ Set.toList nsTerm)
 
 
 -- | Drop a set of term binds from a support set.
@@ -103,6 +104,23 @@ supportBindTerms bs (Support nsType nsTerm)
  = let  ns      = Set.fromList [ n | BindName n <- bs ]
    in   Support nsType
                 (Set.fromList $ mapMaybe (lowerBoundOfNames ns) $ Set.toList nsTerm)
+
+
+-- | Drop the names bound by some `TermParams` from a support set.
+supportBindTermParams :: TermParams a -> Support -> Support
+supportBindTermParams mps support
+ = case mps of
+        MPAnn _ mps'    -> supportBindTermParams mps' support
+        MPTypes bks     -> supportBindTypes (map fst bks) support
+        MPTerms bts     -> supportBindTerms (map fst bts) support
+
+
+-- | Drop all the names bound by some `TermParams`, inside out.
+supportBindTermParamss :: [TermParams a] -> Support -> Support
+supportBindTermParamss mpss support
+ = case mpss of
+        []          -> support
+        mps : mpss' -> supportBindTermParams mps $ supportBindTermParamss mpss' support
 
 
 ---------------------------------------------------------------------------------------------------
@@ -115,10 +133,7 @@ instance HasSupport (Type a) where
         TAnn _ t        -> supportOf t
         TRef r          -> supportOf r
         TVar u          -> supportBoundType u
-
-        TAbs tps t
-         -> supportBindTypes (map fst $ takeTPTypes tps) $ supportOf t
-
+        TAbs tps t      -> supportBindTypes (map fst $ takeTPTypes tps) $ supportOf t
         TKey tk ts      -> mconcat (supportOf tk : map supportOf ts)
 
 
@@ -152,22 +167,27 @@ instance HasSupport (Term a) where
         MRef r          -> supportOf r
         MVar u          -> supportBoundTerm u
 
-        MAbs mps m
-         -> case mps of
-                MPAnn _a mps'  -> supportOf mps'
-                MPTypes bks
-                 -> mappend (mconcat $ map supportOf $ map snd bks)
-                        (supportBindTypes (map fst bks) $ supportOf m)
-                MPTerms bts
-                 -> mappend (mconcat $ map supportOf $ map snd bts)
-                        (supportBindTerms (map fst bts) $ supportOf m)
+        MAbs mps mBody
+         -> mappend (supportOf mps)
+                    (supportBindTermParams mps $ supportOf mBody)
 
-        MRec bts msBind mBody
-         -> supportBindTerms (map fst bts)
-          $ mappend (mconcat $ map supportOf msBind)
-                    (supportOf mBody)
+        -- TODO: test that the bound indices work with recursive binding.
+        -- what happens if a recursive binder has the same name as a fn parameter?
+        MRec bms mBody
+         -> let nsBind  = map BindName $ mapMaybe takeNameOfTermBind bms
+            in  mappend (supportBindTerms nsBind $ mconcat $ map supportOf bms)
+                        (supportBindTerms nsBind $ supportOf mBody)
 
         MKey mk ms      -> mconcat (supportOf mk : map supportOf ms)
+
+
+-- TODO: test this. make sure the right things are in scope.
+instance HasSupport (TermBind a) where
+ supportOf (MBind _b mpss tResult mBind)
+  = mconcat
+  [ mconcat $ map supportOf mpss
+  , supportOf tResult
+  , supportBindTermParamss mpss $ supportOf mBind]
 
 
 instance HasSupport (TermRef a) where

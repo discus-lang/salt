@@ -35,6 +35,15 @@ takeMPrm mm
         _               -> Nothing
 
 
+------------------------------------------------------------------------------------------- Bind --
+-- | Take the name of a `TermBind`.
+takeNameOfTermBind :: TermBind a -> Maybe Name
+takeNameOfTermBind (MBind b _mps _t _m)
+ = case b of
+        BindName n      -> Just n
+        BindNone        -> Nothing
+
+
 ----------------------------------------------------------------------------------------- Params --
 -- | Take the contents of a `TermParams`, looking through any annotations,
 --   producing either a list of type or term binders.
@@ -90,6 +99,24 @@ takeAnnMPTerms a mps
         MPAnn a' mps'   -> takeAnnMPTypes a' mps'
         MPTerms bts     -> Just (a, bts)
         _               -> Nothing
+
+
+-- | Take the list of type names bound by a `TermParams`.
+typeNamesOfTermParams :: TermParams a -> [Name]
+typeNamesOfTermParams mps
+ = case mps of
+        MPAnn _ mps'    -> typeNamesOfTermParams mps'
+        MPTypes _       -> []
+        MPTerms bts     -> [ n | BindName n <- map fst bts ]
+
+
+-- | Take the list of term names bound by a `TermParams`.
+termNamesOfTermParams :: TermParams a -> [Name]
+termNamesOfTermParams mps
+ = case mps of
+        MPAnn _ mps'    -> termNamesOfTermParams mps'
+        MPTypes bts     -> [ n | BindName n <- map fst bts ]
+        MPTerms _       -> []
 
 
 ------------------------------------------------------------------------------------------- Args --

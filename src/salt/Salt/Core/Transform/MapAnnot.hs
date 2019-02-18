@@ -119,9 +119,13 @@ instance MapAnnot Term where
         MRef r          -> MRef (mapAnnot f r)
         MVar u          -> MVar u
         MAbs p m        -> MAbs (mapAnnot f p) (mapAnnot f m)
-        MRec bts ms m   -> MRec [(b, mapAnnot f t) | (b, t) <- bts]
-                                (map (mapAnnot f) ms) (mapAnnot f m)
+        MRec bms m      -> MRec (map (mapAnnot f) bms) (mapAnnot f m)
         MKey k gs       -> MKey k (map (mapAnnot f) gs)
+
+
+instance MapAnnot TermBind where
+ mapAnnot f (MBind b mpss tResult mBody)
+  = MBind b (map (mapAnnot f) mpss) (mapAnnot f tResult) (mapAnnot f mBody)
 
 
 instance MapAnnot TermRef where
