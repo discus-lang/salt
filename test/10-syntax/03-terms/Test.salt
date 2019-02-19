@@ -71,10 +71,10 @@ test type abm5'sugar    = fun [] -> []
 
 
 -- Recursive bindings ---------------------------------------------------------
--- test type rec1
---  = rec  { f [x: #Nat]: #Nat = if #nat'gt [x, 0] then g [#nat'sub [x, 1]] else 0
---         ; g [x: #Nat]: #Nat = f [x] }
---    in   f [5]
+test type rec1
+ = rec { f [x: #Nat]: #Nat = if #nat'gt [x, 0] then g [#nat'sub [x, 1]] else 0
+       ; g [x: #Nat]: #Nat = f [x] }
+   in  f [5]
 
 
 -- Term/Term application ------------------------------------------------------

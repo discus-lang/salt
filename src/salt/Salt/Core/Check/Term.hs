@@ -3,6 +3,7 @@ module Salt.Core.Check.Term where
 import Salt.Core.Check.Term.Proc
 import Salt.Core.Check.Term.App
 import Salt.Core.Check.Term.Case
+import Salt.Core.Check.Term.Bind
 import Salt.Core.Check.Term.Params
 import Salt.Core.Check.Term.Value
 import Salt.Core.Check.Term.Base
@@ -294,6 +295,26 @@ checkTermWith a wh ctx modeBody (MLet mps mBind mBody)
 
 
 -- (t-rec) ------------------------------------------------
+checkTermWith a wh ctx mode (MRec bms mBody)
+ = guardAnyFragment a wh ctx "recursive binding"
+        [FragTerm]
+ $ do
+        let tsBind  = map makeTypeOfTermBind bms
+        tsBind' <- checkTypesAreAll UKind a wh ctx TData tsBind
+
+        let btsBind = [ (bindOfTermBind bm, t) | bm <- bms | t <- tsBind']
+        let ntsBind = [ (n, t) | (BindName n, t) <- btsBind ]
+        let ctx'    = contextBindTerms ntsBind ctx
+        bms'    <- mapM (checkTermBind a wh ctx') bms
+
+        (mBody', tsResult, esResult)
+         <- checkTermWith a wh ctx' mode mBody
+
+        return  ( MRec bms' mBody'
+                , tsResult, esResult)
+
+
+-- (t-rcd) ------------------------------------------------
 checkTermWith a wh ctx mode mm@(MRecord ns ms)
  = guardAnyFragment a wh ctx "record constructor"
         [FragTerm, FragProcExp, FragProcYield]
@@ -345,7 +366,6 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
                  return  ( MRecord ns ms'
                          , [TRecord ns (map TGTypes tss')]
                          , concat ess')
-
 
 
 -- (t-prj) ------------------------------------------------

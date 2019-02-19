@@ -36,6 +36,12 @@ takeMPrm mm
 
 
 ------------------------------------------------------------------------------------------- Bind --
+-- | Take the binder of a `TermBind`.
+bindOfTermBind :: TermBind a -> Bind
+bindOfTermBind (MBind b _mps _t _m)
+ = b
+
+
 -- | Take the name of a `TermBind`.
 takeNameOfTermBind :: TermBind a -> Maybe Name
 takeNameOfTermBind (MBind b _mps _t _m)

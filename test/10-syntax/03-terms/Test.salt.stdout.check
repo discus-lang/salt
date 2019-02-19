@@ -42,6 +42,7 @@
 * abm3'sugar: [#Bool, #Nat] → [#Bool, #Nat]
 * abm4'sugar: [#Bool, #Nat] → []
 * abm5'sugar: [] → []
+* rec1: #Nat
 * appm'not: #Bool
 * appm'not'1: #Bool
 * appm'and: #Bool

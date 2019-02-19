@@ -65,6 +65,7 @@ pTermBody
         mBody <- pTerm  <?> "a body term"
         return  $ MLet (MPAnn rBinds $ MPTerms bts) mBind mBody
 
+
   , do  -- 'rec' '{' (Bind TermParams* ':' Type '=' Term);+ '}' 'in' Term
         pTok KRec
         bms     <- pBraced $ flip P.sepEndBy1 (pTok KSemi)
@@ -78,6 +79,7 @@ pTermBody
         pTok KIn
         mBody   <- pTerm
         return  $ MRec bms mBody
+
 
         -- 'the' Type 'of' '`' Lbl TermArg
         -- 'the' Type 'of' Term

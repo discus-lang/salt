@@ -46,14 +46,14 @@ checkTermParams a wh ctx (MPTerms bts)
 --   when checking types annotating term variables later in the list.
 checkTermParamss
         :: Annot a => a -> [Where a]
-        -> Context a -> [TermParams a] -> IO [TermParams a]
+        -> Context a -> [TermParams a] -> IO (Context a, [TermParams a])
 
-checkTermParamss _a _wh _ctx []
- = return []
+checkTermParamss _a _wh ctx []
+ = return (ctx, [])
 
 checkTermParamss a wh ctx (tps : tpss)
  = do   tps'  <- checkTermParams  a wh ctx  tps
         let ctx'  = contextBindTermParams tps' ctx
-        tpss' <- checkTermParamss a wh ctx' tpss
-        return $ tps' : tpss'
+        (ctx'', tpss') <- checkTermParamss a wh ctx' tpss
+        return (ctx'', tps' : tpss')
 

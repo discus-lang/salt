@@ -13,10 +13,8 @@ import qualified Data.Set       as Set
 checkDeclTermSig :: CheckDecl a
 checkDeclTermSig _a ctx (DTerm (DeclTerm a mode n mpss tsResult mBody))
  = do   let wh  = [WhereTermDecl a n]
-        mpss'     <- checkTermParamss a wh ctx mpss
-
-        let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
-        tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
+        (ctx', mpss') <- checkTermParamss a wh ctx mpss
+        tsResult'     <- checkTypesAreAll UType a wh ctx' TData tsResult
         return  $ DTerm $ DeclTerm a mode n mpss' tsResult' mBody
 
 checkDeclTermSig _ _ decl
@@ -34,10 +32,9 @@ checkDeclTerm _a ctx0
         let ctx = ctx0 { contextFragment = FragTerm }
 
         -- Check the parameter type annotations.
-        mpss'     <- checkTermParamss a wh ctx mpss
+        (ctx', mpss') <- checkTermParamss a wh ctx mpss
 
         -- Check the result type annotation.
-        let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
         tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
 
         -- Check the body.
@@ -62,18 +59,18 @@ checkDeclTerm _a ctx
         let wh  = [WhereTermDecl a nDecl]
 
         -- Check the parameter type annotations.
-        mpss'     <- checkTermParamss a wh ctx mpss
+        (ctx', mpss') <- checkTermParamss a wh ctx mpss
 
         -- Check the result type annotation.
         (tsResult, esResult)
-         <- simplTypes a ctx tsResult0
+         <- simplTypes a ctx' tsResult0
          >>= \case
                 [TSusp tsResult tEffect]
                   -> return (tsResult, [tEffect])
                 t -> return (t, [])
 
-        let ctx' =  foldl (flip contextBindTermParams) ctx mpss'
-        tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
+        tsResult'
+         <- checkTypesAreAll UType a wh ctx' TData tsResult
 
         -- Check the body.
         let ctx'' = ctx' { contextFragment = FragProcBody }
