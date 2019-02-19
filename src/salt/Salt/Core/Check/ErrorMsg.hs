@@ -186,6 +186,15 @@ ppre c (ErrorLetWrongArity _a _wh tsActual bsExpected)
         , text " Values " %% squared (map (ppr c) tsActual) ]
 
 
+-- Rec bindings -------------------------------------------
+ppre c (ErrorRecValueRecursion _a _wh b)
+ = vcat [ text "Unsupported value recursion in binding" %% ppr c b ]
+
+ppre _c (ErrorRecConflict _a _wh ns)
+ = vcat [ text "Conflicting term" %% text "binders for"
+                %% squoted (map pprVar ns)  ]
+
+
 -- Record problems ----------------------------------------
 ppre c (ErrorRecordProjectIsNot _a _wh t n)
  = vcat [ text "Cannot take field" %% pprLbl n %% text "from non-record"

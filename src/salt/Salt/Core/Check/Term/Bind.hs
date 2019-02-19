@@ -11,16 +11,28 @@ checkTermBind
         -> Context a -> TermBind a -> IO (TermBind a)
 
 checkTermBind a wh ctx (MBind b mpss tResult mBody)
- = do   (ctx', mpss')
+ = do   -- Check the parameters.
+        (ctx', mpss')
          <- checkTermParamss a wh ctx mpss
 
+        -- There must be at least one vector of term parameters,
+        -- as we do not support value recursion in the evaluator.
+        when (not $ any isJust $ map takeMPTerms mpss)
+         $ throw $ ErrorRecValueRecursion a wh b
+
+        -- Check the result type annotation.
         tResult'
          <- checkTypeHas UKind a wh ctx' TData tResult
 
-        (mBody', _tsResult, _esResult)
+        -- The body must have type as specified by the result annotation.
+        (mBody', _tsResult, esBody)
          <- checkTerm a wh ctx' (Check [tResult]) mBody
 
-        -- TODO: check binding is pure.
+        -- The body must be pure.
+        let aBody  = fromMaybe a $ takeAnnotOfTerm mBody
+        eBody_red  <- simplType aBody ctx' (TSum esBody)
+        when (not $ isTPure eBody_red)
+         $ throw $ ErrorAbsImpure UTerm aBody wh eBody_red
 
         return $ MBind b mpss' tResult' mBody'
 

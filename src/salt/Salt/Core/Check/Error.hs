@@ -214,6 +214,17 @@ data Error a
         , errorTypesActual      :: [Type a]
         , errorBinds            :: [Bind] }
 
+        -- Rec bindings -------------------------
+        | ErrorRecConflict
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorNames            :: [Name] }
+
+        | ErrorRecValueRecursion
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorBind             :: Bind  }
+
         -- Record problems ----------------------
         | ErrorRecordProjectIsNot
         { errorAnnot            :: a

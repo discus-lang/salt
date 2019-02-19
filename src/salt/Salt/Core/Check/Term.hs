@@ -296,12 +296,19 @@ checkTermWith a wh ctx modeBody (MLet mps mBind mBody)
 
 -- (t-rec) ------------------------------------------------
 checkTermWith a wh ctx mode (MRec bms mBody)
- = guardAnyFragment a wh ctx "recursive binding"
-        [FragTerm]
+ = guardAnyFragment a wh ctx "recursive binding" [FragTerm]
  $ do
+        -- Check the type annotations on each of the binders.
         let tsBind  = map makeTypeOfTermBind bms
         tsBind' <- checkTypesAreAll UKind a wh ctx TData tsBind
 
+        -- Check for duplicate recursive binders.
+        let nsBind  = mapMaybe takeNameOfTermBind bms
+        let nsDup   = List.duplicates nsBind
+        when (not $ null nsDup)
+         $ throw $ ErrorRecConflict a wh nsDup
+
+        -- Check the bindings, with the types of each in scope.
         let btsBind = [ (bindOfTermBind bm, t) | bm <- bms | t <- tsBind']
         let ntsBind = [ (n, t) | (BindName n, t) <- btsBind ]
         let ctx'    = contextBindTerms ntsBind ctx

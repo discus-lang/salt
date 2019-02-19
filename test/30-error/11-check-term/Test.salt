@@ -140,6 +140,24 @@ test type let [x, x] = [#true, #true]; x
 
 
 -- (t-rec) --------------------------------------------------------------------
+-- Error: ill kinded parameter annotation.
+test type rec { f [x: #Derp]: #Nat = #nat'add [x, 1] } in f [5]
+
+-- Error: ill kinded result type annotation.
+test type rec { f [x: #Nat]: #Derp = #nat'add [x, 1] } in f [5]
+
+-- Error: body type does not match result type annotation.
+test type rec { f [x: #Nat]: #Nat = #true } in f [5]
+
+-- Error: no parameters, value recursion not supported.
+test type rec { x: #Nat = #nat'add [x, 1] } in x
+
+-- Error: duplicate binders at same level.
+test type rec { f [x: #Nat]: #Nat = x
+              ; f [x: #Nat]: #Nat = #nat'add [x, 1] } in f 5
+
+
+-- (t-rcd) --------------------------------------------------------------------
 -- Error: field type does not match expected type.
 test type the [x: #Bool, y: #Nat] of [x = #true, y = #false]
 

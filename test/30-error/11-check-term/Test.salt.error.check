@@ -242,252 +242,279 @@ test/30-error/11-check-term/Test.salt:139:15
 
   139:11 In test
 
-test/30-error/11-check-term/Test.salt:144:54
-  Actual type '#Bool'
-   does not match
-   expected type '#Nat'
+test/30-error/11-check-term/Test.salt:144:23
+  Unknown type primitive '#Derp'
 
-  144:38 In field "y" of type [#Nat]
   144:11 In test
 
-test/30-error/11-check-term/Test.salt:147:23
-  Actual type '∏[x: #Bool, y: #Bool]'
-   does not match
-   expected type '#Nat'
+test/30-error/11-check-term/Test.salt:147:30
+  Unknown type primitive '#Derp'
 
   147:11 In test
 
-test/30-error/11-check-term/Test.salt:150:11
-  Duplicate fields 'x' in record.
+test/30-error/11-check-term/Test.salt:150:37
+  Actual type '#Bool'
+   does not match
+   expected type '#Nat'
 
   150:11 In test
 
 test/30-error/11-check-term/Test.salt:153:11
-  Duplicate fields 'x, y' in record.
+  Unsupported value recursion in binding x
 
   153:11 In test
 
-test/30-error/11-check-term/Test.salt:156:16
-  Cannot apply non-function
-   of type '#Bool'
+test/30-error/11-check-term/Test.salt:156:11
+  Conflicting term binders for 'f'
 
   156:11 In test
 
-test/30-error/11-check-term/Test.salt:161:35
+test/30-error/11-check-term/Test.salt:162:54
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  161:23 In field "y" of type [#Nat]
-  161:11 In test
+  162:38 In field "y" of type [#Nat]
+  162:11 In test
 
-test/30-error/11-check-term/Test.salt:166:11
+test/30-error/11-check-term/Test.salt:165:23
+  Actual type '∏[x: #Bool, y: #Bool]'
+   does not match
+   expected type '#Nat'
+
+  165:11 In test
+
+test/30-error/11-check-term/Test.salt:168:11
+  Duplicate fields 'x' in record.
+
+  168:11 In test
+
+test/30-error/11-check-term/Test.salt:171:11
+  Duplicate fields 'x, y' in record.
+
+  171:11 In test
+
+test/30-error/11-check-term/Test.salt:174:16
+  Cannot apply non-function
+   of type '#Bool'
+
+  174:11 In test
+
+test/30-error/11-check-term/Test.salt:179:35
+  Actual type '#Bool'
+   does not match
+   expected type '#Nat'
+
+  179:23 In field "y" of type [#Nat]
+  179:11 In test
+
+test/30-error/11-check-term/Test.salt:184:11
   Cannot take field x from non-record
    of type '#Bool'.
 
-  166:11 In test
+  184:11 In test
 
-test/30-error/11-check-term/Test.salt:169:11
+test/30-error/11-check-term/Test.salt:187:11
   Record does not have field 'y'.
    Actual type  ∏[x: #Nat]
 
-  169:11 In test
+  187:11 In test
 
-test/30-error/11-check-term/Test.salt:172:11
+test/30-error/11-check-term/Test.salt:190:11
   Too many terms.
    Actual   types [#Nat, #Nat]
    Expected kind '#Data'
 
-  172:11 In test
+  190:11 In test
 
-test/30-error/11-check-term/Test.salt:177:15
+test/30-error/11-check-term/Test.salt:195:15
   Cannot apply type
    of kind '#Data'
 
-  177:11 In test
+  195:11 In test
 
-test/30-error/11-check-term/Test.salt:180:15
+test/30-error/11-check-term/Test.salt:198:15
   Variant annotation does not have variant type.
    Actual type '#Nat'
 
-  180:11 In test
+  198:11 In test
 
-test/30-error/11-check-term/Test.salt:183:35
+test/30-error/11-check-term/Test.salt:201:35
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  183:11 In test
+  201:11 In test
 
-test/30-error/11-check-term/Test.salt:186:48
+test/30-error/11-check-term/Test.salt:204:48
   Actual type '#Nat'
    does not match
    expected type '#Bool'
 
-  186:11 In test
+  204:11 In test
 
-test/30-error/11-check-term/Test.salt:189:15
+test/30-error/11-check-term/Test.salt:207:15
   Variant annotation is missing specified alternative.
    Type  '∑[bar: #Nat]'
    Lacks 'foo'
 
-  189:11 In test
+  207:11 In test
 
-test/30-error/11-check-term/Test.salt:194:16
+test/30-error/11-check-term/Test.salt:212:16
   Cannot apply non-function
    of type '#Nat'
 
-  194:11 In test
+  212:11 In test
 
-test/30-error/11-check-term/Test.salt:197:16
+test/30-error/11-check-term/Test.salt:215:16
   Scrutinee does not have variant type.
    Actual type '#Nat'
 
-  197:11 In test
+  215:11 In test
 
-test/30-error/11-check-term/Test.salt:200:11
+test/30-error/11-check-term/Test.salt:218:11
   Case has missing alternatives 'foo'
    Scrutinee type '∑[foo: #Nat]'
 
-  200:11 In test
+  218:11 In test
 
-test/30-error/11-check-term/Test.salt:203:53
+test/30-error/11-check-term/Test.salt:221:53
   Pattern does not match scrutinee type.
    In alternative 'foo'
    Pattern type   '#Bool'
    Scrutinee type '#Nat'
 
-  203:11 In test
+  221:11 In test
 
-test/30-error/11-check-term/Test.salt:206:11
+test/30-error/11-check-term/Test.salt:224:11
   Overlapping alternatives 'foo'
 
-  206:11 In test
+  224:11 In test
 
-test/30-error/11-check-term/Test.salt:210:11
+test/30-error/11-check-term/Test.salt:228:11
   Case has missing alternatives 'bar'
    Scrutinee type '∑[foo: #Nat, bar: #Nat]'
 
-  210:11 In test
+  228:11 In test
 
-test/30-error/11-check-term/Test.salt:215:15
+test/30-error/11-check-term/Test.salt:233:15
   Not enough binders in pattern.
    with field types [#Nat]
 
-  214:11 In test
+  232:11 In test
 
-test/30-error/11-check-term/Test.salt:219:15
+test/30-error/11-check-term/Test.salt:237:15
   Not enough binders in pattern.
    with field types [#Nat, #Nat]
 
-  218:11 In test
+  236:11 In test
 
-test/30-error/11-check-term/Test.salt:223:15
+test/30-error/11-check-term/Test.salt:241:15
   Too many binders in pattern.
    with field types [#Nat, #Nat]
 
-  222:11 In test
+  240:11 In test
 
-test/30-error/11-check-term/Test.salt:227:15
+test/30-error/11-check-term/Test.salt:245:15
   Duplicate binders in pattern 'x'
 
-  226:11 In test
+  244:11 In test
 
-test/30-error/11-check-term/Test.salt:232:14
+test/30-error/11-check-term/Test.salt:250:14
   Cannot apply non-function
    of type '#Nat'
 
-  232:11 In test
+  250:11 In test
 
-test/30-error/11-check-term/Test.salt:235:14
+test/30-error/11-check-term/Test.salt:253:14
   Actual type '#Nat'
    does not match
    expected type '#Bool'
 
-  235:11 In test
+  253:11 In test
 
-test/30-error/11-check-term/Test.salt:238:25
+test/30-error/11-check-term/Test.salt:256:25
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  238:11 In test
+  256:11 In test
 
-test/30-error/11-check-term/Test.salt:243:18
+test/30-error/11-check-term/Test.salt:261:18
   Cannot apply type
    of kind '#Data'
 
-  243:11 In test
+  261:11 In test
 
-test/30-error/11-check-term/Test.salt:246:17
+test/30-error/11-check-term/Test.salt:264:17
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  246:11 In test
+  264:11 In test
 
-test/30-error/11-check-term/Test.salt:249:23
+test/30-error/11-check-term/Test.salt:267:23
   Cannot apply non-function
    of type '#Nat'
 
-  249:11 In test
+  267:11 In test
 
-test/30-error/11-check-term/Test.salt:252:23
+test/30-error/11-check-term/Test.salt:270:23
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  252:11 In test
+  270:11 In test
 
-test/30-error/11-check-term/Test.salt:257:17
+test/30-error/11-check-term/Test.salt:275:17
   Cannot apply type
    of kind '#Data'
 
-  257:11 In test
+  275:11 In test
 
-test/30-error/11-check-term/Test.salt:260:16
+test/30-error/11-check-term/Test.salt:278:16
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  260:11 In test
+  278:11 In test
 
-test/30-error/11-check-term/Test.salt:263:22
+test/30-error/11-check-term/Test.salt:281:22
   Cannot apply non-function
    of type '#Nat'
 
-  263:11 In test
+  281:11 In test
 
-test/30-error/11-check-term/Test.salt:266:22
+test/30-error/11-check-term/Test.salt:284:22
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  266:11 In test
+  284:11 In test
 
-test/30-error/11-check-term/Test.salt:271:17
+test/30-error/11-check-term/Test.salt:289:17
   Cannot apply type
    of kind '#Data'
 
-  271:11 In test
+  289:11 In test
 
-test/30-error/11-check-term/Test.salt:274:16
+test/30-error/11-check-term/Test.salt:292:16
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  274:11 In test
+  292:11 In test
 
-test/30-error/11-check-term/Test.salt:277:27
+test/30-error/11-check-term/Test.salt:295:27
   Cannot apply non-function
    of type '#Nat'
 
-  277:11 In test
+  295:11 In test
 
-test/30-error/11-check-term/Test.salt:280:32
+test/30-error/11-check-term/Test.salt:298:32
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  280:11 In test
+  298:11 In test
 
