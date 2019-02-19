@@ -179,7 +179,7 @@ instance StripAnnot TermEnv where
 instance StripAnnot TermEnvBinds where
  stripAnnot eb
   = case eb of
-        TermEnvTypes  ts    -> TermEnvTypes  (Map.map stripAnnot ts)
-        TermEnvValues vs    -> TermEnvValues (Map.map stripAnnot vs)
-
+        TermEnvTypes  ts    -> TermEnvTypes     (Map.map stripAnnot ts)
+        TermEnvValues vs    -> TermEnvValues    (Map.map stripAnnot vs)
+        TermEnvValuesRec vs -> TermEnvValuesRec (Map.map stripAnnot vs)
 
