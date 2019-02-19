@@ -193,6 +193,6 @@ instance MapAnnot TermEnv where
 instance MapAnnot TermEnvBinds where
  mapAnnot f eb
   = case eb of
-        TermEnvTypes  ts    -> TermEnvTypes  (Map.map (mapAnnot f) ts)
-        TermEnvValues vs    -> TermEnvValues (Map.map (mapAnnot f) vs)
-
+        TermEnvTypes  ts    -> TermEnvTypes     (Map.map (mapAnnot f) ts)
+        TermEnvValues vs    -> TermEnvValues    (Map.map (mapAnnot f) vs)
+        TermEnvValuesRec vs -> TermEnvValuesRec (Map.map (mapAnnot f) vs)

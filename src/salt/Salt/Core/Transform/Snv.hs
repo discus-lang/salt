@@ -53,6 +53,6 @@ snvOfTermEnvTypes (TermEnv bs)
         takeBinds (TermEnvTypes mp)
          = [ ((n, 0), t) | (n, t) <- Map.toList mp ]
 
-        takeBinds (TermEnvValues{})
-         = []
+        takeBinds TermEnvValues{}    = []
+        takeBinds TermEnvValuesRec{} = []
 

@@ -150,8 +150,9 @@ data TermEnv a
 
 -- | Bindings in environments.
 data TermEnvBinds a
-        = TermEnvTypes  (Map Name (Type a))
-        | TermEnvValues (Map Name (Value a))
+        = TermEnvTypes          (Map Name (Type a))
+        | TermEnvValues         (Map Name (Value a))
+        | TermEnvValuesRec      (Map Name (TermClosure a))
         deriving (Show, Eq, Ord)
 
 

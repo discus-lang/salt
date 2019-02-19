@@ -221,3 +221,9 @@ upsApplyTermEnvBinds upsT upsM eb
                 [ (n, upsApplyValue upsT upsM v)
                 | (n, v) <- Map.toList nvs ]
 
+        TermEnvValuesRec ncs
+         -> let ns      = Map.keys ncs
+                upsM'    = upsBumpNames ns upsM
+            in TermEnvValuesRec $ Map.fromList
+                [ (n, upsApplyTermClosure upsT upsM' c)
+                | (n, c) <- Map.toList ncs ]

@@ -255,6 +255,10 @@ instance Pretty c (TermEnvBinds a) where
         TermEnvValues nvs
          -> squared [ pprVar n %% text "=" %% ppr c v | (n, v) <- Map.toList nvs ]
 
+        TermEnvValuesRec ncs
+         -> text "μ"
+         %  squared [ pprVar n %% text "=" %% ppr c v | (n, v) <- Map.toList ncs ]
+
 
 instance Pretty c (Value a) where
  ppr c

@@ -42,6 +42,13 @@ menvExtendValues bvs1 (TermEnv bs2)
    in   TermEnv (TermEnvValues nvs : bs2)
 
 
+-- | Extend an environemnt with some new values that recursively reference the new environment.
+menvExtendValuesRec :: [(Bind, TermClosure a)] -> TermEnv a -> TermEnv a
+menvExtendValuesRec bvs1 (TermEnv bs2)
+ = let  ncs  = Map.fromList [ (n, clo) | (BindName n, clo) <- bvs1 ]
+   in   TermEnv (TermEnvValuesRec ncs : bs2)
+
+
 -- | Slice out the type portion of a `TermEnv` to produce a `TypeEnv`
 menvSliceTypeEnv :: TermEnv a -> TypeEnv a
 menvSliceTypeEnv (TermEnv evs)
@@ -50,8 +57,8 @@ menvSliceTypeEnv (TermEnv evs)
         goSlice (TermEnvTypes nts : rest)
          = TypeEnvTypes nts : goSlice rest
 
-        goSlice (TermEnvValues{}  : rest)
-         = goSlice rest
+        goSlice (TermEnvValues{}    : rest) = goSlice rest
+        goSlice (TermEnvValuesRec{} : rest) = goSlice rest
 
         goSlice [] = []
 

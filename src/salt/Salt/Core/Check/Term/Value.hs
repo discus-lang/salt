@@ -136,6 +136,9 @@ contextBindTermEnv a wh (TermEnv bs0) ctx0
                 let nts' = zip ns ts'
                 go (contextBindTerms nts' ctx) bs
 
+        go _ctx (TermEnvValuesRec _ncs : _bts)
+         = error "TODO: check recursive term envs"
+
         go ctx []
          = return $ ctx
 

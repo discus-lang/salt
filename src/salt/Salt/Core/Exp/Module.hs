@@ -6,7 +6,8 @@ import Salt.Core.Exp.Type
 import Salt.Core.Exp.Term
 import Salt.Core.Exp.Name
 import Data.Maybe
-import qualified Data.Map       as Map
+import qualified Data.Map               as Map
+
 
 ---------------------------------------------------------------------------------------------------
 -- | Modules.
@@ -219,13 +220,17 @@ data TypeDef a
 ---------------------------------------------------------------------------------------------------
 -- | Lookup a term from a module and local environment.
 resolveTermBound
-        :: Module a -> TermEnv a -> Bound
+        :: Show a => Module a -> TermEnv a -> Bound
         -> IO (Maybe (TermDef a))
 
 resolveTermBound mm (TermEnv bs0) (BoundWith n d0)
  = goEnv d0 upsEmpty upsEmpty bs0
  where
         -- Look through the local environment.
+        goEnv d upsT upsM (TermEnvTypes nts : rest)
+         = let  upsT' = upsCombine upsT (upsOfNames $ Map.keys nts)
+           in   goEnv d upsT' upsM rest
+
         goEnv d upsT upsM (TermEnvValues nvs : rest)
          | d < 0     = return Nothing
          | otherwise
@@ -233,12 +238,23 @@ resolveTermBound mm (TermEnv bs0) (BoundWith n d0)
            case Map.lookup n nvs of
                 Nothing      -> goEnv d upsT upsM' rest
                 Just v
-                 | d == 0    -> return $ Just $ TermDefLocal (upsApplyValue upsT upsM' v)
-                 | otherwise -> goEnv (d - 1) upsT upsM' rest
+                 | d /= 0    -> goEnv (d - 1) upsT upsM' rest
+                 | otherwise
+                 -> return $ Just $ TermDefLocal
+                           $ upsApplyValue upsT upsM' v
 
-        goEnv d upsT upsM (TermEnvTypes nts : rest)
-         = let  upsT' = upsCombine upsT (upsOfNames $ Map.keys nts)
-           in   goEnv d upsT' upsM rest
+        goEnv d upsT upsM (tvb@(TermEnvValuesRec ncs) : rest)
+         | d < 0    = return Nothing
+         | otherwise
+         = let  upsM' = upsCombine upsM (upsOfNames $ Map.keys ncs) in
+           case Map.lookup n ncs of
+                Nothing      -> goEnv d upsT upsM' rest
+                Just (TermClosure (TermEnv tvbs) mps m)
+                 | d /= 0 -> goEnv (d - 1) upsT upsM' rest
+                 | otherwise
+                 -> return $ Just $ TermDefLocal
+                           $ upsApplyValue upsT upsM
+                           $ VClosure $ TermClosure (TermEnv (tvb : tvbs)) mps m
 
         goEnv d upsT upsM []
          | d == 0    = goGlobal upsT upsM

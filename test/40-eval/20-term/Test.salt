@@ -53,6 +53,15 @@ test eval evm'let
 
 -- (evm-rec) ----------------------------------------------
 test eval evm'rec
+ = rec { fac [n: #Nat]: #Nat
+          = if #nat'eq [n, 0]
+              then 1
+              else #nat'add [n, fac [#nat'sub [n, 1]]] }
+   in fac [5]
+
+
+-- (evm-rcd) ----------------------------------------------
+test eval evm'rcd
  = [ x = [#nat'add [2, 3], 5]
    , y = [#nat'add [4, 5], 9] ]
 

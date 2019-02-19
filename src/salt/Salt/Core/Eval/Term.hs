@@ -58,6 +58,7 @@ evalTerm _s _a env (MAbs mps mBody)
         Left bks  -> return [VClosure (TermClosure env (MPTypes bks) mBody)]
         Right bts -> return [VClosure (TermClosure env (MPTerms bts) mBody)]
 
+
 -- (evm-mmm) -----------------------------------------------
 evalTerm s a env (MTerms ms)
  = evalTerms s a env ms
@@ -141,6 +142,29 @@ evalTerm s a env (MLet mps mBind mBody)
          else throw $ ErrorWrongTermArity a nWanted vsBind
 
 
+-- (evm-rec) -----------------------------------------------
+evalTerm s a env mRec@(MRec bms mBody)
+ = do
+        -- Helper to build an abstraction that wraps the body
+        -- with any remaining parameters.
+        let wrap []   m = m
+            wrap mpss m = foldr MAbs m mpss
+
+        -- Make a closure for each of the bindings.
+        -- Later, when we look the closure up from the environment we'll re-add
+        -- the values in the recursive group back to its own environment.
+        let makeClosure (MBind _ [] _ _)
+             = throw $ ErrorInvalidTerm a mRec
+
+            makeClosure (MBind b (mps : mpss) _tResult mBody')
+             = case takeTermParams mps of
+                Left  bks -> (b, TermClosure env (MPTypes bks) $ wrap mpss mBody')
+                Right bts -> (b, TermClosure env (MPTerms bts) $ wrap mpss mBody')
+
+        let env' = menvExtendValuesRec (map makeClosure bms) env
+        evalTerm s a env' mBody
+
+
 -- (evm-ifs) -----------------------------------------------
 evalTerm s a env mm@(MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
  = loop msCond msThen
@@ -162,7 +186,7 @@ evalTerm s a env mm@(MKey MKIf [MGTerms msCond, MGTerms msThen, MGTerm mElse])
          = throw $ ErrorInvalidTerm a mm
 
 
--- (evm-rec) -----------------------------------------------
+-- (evm-rcd) -----------------------------------------------
 evalTerm s a env (MRecord nsField msArg)
  | length nsField == length msArg
  = do   vssArg <- mapM (evalTerm s a env) msArg
