@@ -124,8 +124,11 @@ instance MapAnnot Term where
 
 
 instance MapAnnot TermBind where
- mapAnnot f (MBind b mpss tResult mBody)
-  = MBind b (map (mapAnnot f) mpss) (mapAnnot f tResult) (mapAnnot f mBody)
+ mapAnnot f (MBind b mpss tsResult mBody)
+  = MBind b
+        (map (mapAnnot f) mpss)
+        (map (mapAnnot f) tsResult)
+        (mapAnnot f mBody)
 
 
 instance MapAnnot TermRef where

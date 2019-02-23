@@ -21,7 +21,7 @@ data Term a
 
 -- | Term binding.
 data TermBind a
-        = MBind Bind [TermParams a] (Type a) (Term a)
+        = MBind Bind [TermParams a] [Type a] (Term a)
         deriving (Show, Eq, Ord)
 
 
@@ -85,6 +85,8 @@ data TermKey
         | MKProcLoop                            -- ^ Define a loop.
         | MKProcBreak                           -- ^ Break to the end of the enclosing loop.
         | MKProcContinue                        -- ^ Continue to the next loop iteration.
+        | MKProcEnter                           -- ^ Enter a recursive procedure.
+        | MKProcLeave                           -- ^ Leave a recursive procedure.
 
         -- Bloc term formers.
         | MKBloc                                -- ^ Define a bloc.

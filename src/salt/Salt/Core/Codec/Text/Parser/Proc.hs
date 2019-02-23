@@ -1,6 +1,7 @@
 
 -- TODO: check we still have expected text at intermediate points.
 module Salt.Core.Codec.Text.Parser.Proc where
+import Salt.Core.Codec.Text.Parser.Params
 import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Token
@@ -70,6 +71,10 @@ pProcFinal pTerm pTermApp
  , do   -- 'continue'
         pTok KContinue
         return MProcContinue
+
+ , do   -- 'leave'
+        pTok KLeave
+        return MProcLeave
 
  , do   -- ProcDo
         pProcDo pTerm pTermApp
@@ -198,6 +203,23 @@ pProcStmt pTerm pTermApp
         mBind   <- pTerm
         return  $ \mRest -> MProcSeq mps (MProcYield mBind) mRest
 
+  , do  -- 'enter' Name 'with' '{' ProcTermBind+ '}' ...
+        pTok KEnter
+        mEnter  <- pTermApp
+        pTok KWith      <?> "'with' to start the list of bindings"
+        pTokBlock KCBra KSemi KCKet
+         <?> "a '{' to start the list of bindings"
+        bms     <- flip P.sepEndBy1 (pTok KSemi)
+                $  do   b       <- pBind
+                        mps     <- P.many pTermParams
+                        pTok KColon
+                        ts      <- pTypes
+                        pTok KEquals
+                        m       <- pProc pTerm pTermApp
+                        return  $  MBind b mps ts m
+        pTok KCKet
+        return  $ \mRest -> MProcEnter mEnter bms mRest
+
   , P.try $ do
         -- Binds '=' Proc ...
         --   Seq without an initial keyword.
@@ -297,3 +319,5 @@ pProcBinds
                 <?> "some binders")
 
         return $ MPAnn rBinds (MPTerms bts)
+
+

@@ -385,17 +385,15 @@ proc loop1ss [n: #Nat]: []! #Console
 
 
 -- enter ----------------------------------------------------------------------
--- TODO: add enter form.
-
--- proc foo
---  =   enter   start []
---      with  { start [x]    = seq call fac [2, 3]; end
---            ; final []     = leave
---            };
---      seq call derp
---      yield [5]
---
---
-
+proc rec1 [n: #Nat]: #Nat
+ = do   cell acc: #Nat ← n
+        cell x:   #Nat ← n
+        enter fac []
+         with fac []: [] = do
+                when #nat'eq [x, 0] do leave
+                acc ← #nat'mul [acc, x]
+                x   ← #nat'sub [x,   1]
+                fac []
+        yield acc
 
 

@@ -3,6 +3,7 @@ module Salt.Core.Codec.Text.Parser.Decl where
 import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Term
 import Salt.Core.Codec.Text.Parser.Proc
+import Salt.Core.Codec.Text.Parser.Params
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Token
 import Salt.Core.Exp

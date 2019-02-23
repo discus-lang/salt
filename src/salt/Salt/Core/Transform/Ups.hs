@@ -91,15 +91,15 @@ upsApplyTerm upsT upsM mm
 
 -- | Apply type and term `Ups` to a `TermBind`.
 upsApplyTermBind :: Ups -> Ups -> TermBind a -> TermBind a
-upsApplyTermBind upsT upsM (MBind b mpss t mBind)
+upsApplyTermBind upsT upsM (MBind b mpss ts mBind)
  = let  mpss'   = map (upsApplyTermParams upsT) mpss
-        t'      = upsApplyType upsT t
+        ts'     = map (upsApplyType upsT) ts
         nsT     = concatMap typeNamesOfTermParams mpss
         nsM     = concatMap termNamesOfTermParams mpss
         upsT'   = upsBumpNames nsT upsT
         upsM'   = upsBumpNames nsM upsM
         mBind'  = upsApplyTerm upsT' upsM' mBind
-   in   MBind b mpss' t' mBind'
+   in   MBind b mpss' ts' mBind'
 
 
 -- | Apply type `Ups` to some `TermParams`.

@@ -2,9 +2,11 @@
 module Salt.Core.Check.Term.Proc where
 import Salt.Core.Check.Term.Case
 import Salt.Core.Check.Term.Params
+import Salt.Core.Check.Term.Bind
 import Salt.Core.Check.Term.Base
 import Salt.Core.Check.Type.Base
 import Salt.Core.Codec.Text             ()
+import qualified Salt.Data.List         as List
 
 import Text.Show.Pretty
 
@@ -192,12 +194,85 @@ checkTermProc a wh ctx mode ctxProc (MProcLoop mBody mRest)
         (mRest', tsResult, esRest)
          <- checkTermProc a wh ctx mode ctxProc mRest
 
-
         return  ( MProcLoop mBody' mRest'
                 , tsResult, esBody ++ esRest)
+
+
+-- (t-proc-enter) -----------------------------------------
+checkTermProc a wh ctx mode ctxProc (MProcEnter mEnter bms mRest)
+ = do
+        -- Check the type annotations on each of the binders.
+        let tsBind  = map makeTypeOfTermBind bms
+        tsBind' <- checkTypesAreAll UKind a wh ctx TData tsBind
+
+        -- Check for duplicate recursive binders.
+        let nsBind  = mapMaybe takeNameOfTermBind bms
+        let nsDup   = List.duplicates nsBind
+        when (not $ null nsDup)
+         $ throw $ ErrorRecConflict a wh nsDup
+
+        -- Check the bindings, with the types of each in scope.
+        let btsBind = [ (bindOfTermBind bm, t) | bm <- bms | t <- tsBind']
+        let ntsBind = [ (n, t) | (BindName n, t) <- btsBind ]
+        let ctx'    = contextBindTerms ntsBind ctx
+        bms'    <- mapM (checkTermProcBind a wh ctx' ctxProc) bms
+
+        -- Check the entry expression, with the binders in scope.
+        let ctxt    = ctx' { contextFragment = FragTerm }
+        (mEnter', _tsEnter, esEnter)
+         <- checkTermIs a wh ctxt [] mEnter
+
+        -- Check the rest of the procedure.
+        (mRest', tsResult, esRest)
+         <- checkTermProc a wh ctx mode ctxProc mRest
+
+        return  ( MProcEnter mEnter' bms' mRest'
+                , tsResult, esEnter ++ esRest)
+
+
+-- (t-proc-leave) -----------------------------------------
+checkTermProc _a _wh _ctx _mode _ctxProc MProcLeave
+ = do
+        -- TODO: check we are in scope of an 'enter'
+        return  ( MProcLeave
+                , [], [])
+
 
 -----------------------------------------------------------
 -- We don't know how to check this sort of procedure
 checkTermProc _a _wh _ctx _mode _ctxProc  mm
  = error $ ppShow ("checkTermProc" :: String, mm)
 
+
+
+----------------------------------------------------------------------------------- TermProcBind --
+-- | Check a `TermProcBind`.
+checkTermProcBind
+        :: Annot a => a -> [Where a]
+        -> Context a -> ContextProc a -> TermBind a -> IO (TermBind a)
+
+checkTermProcBind a wh ctx ctxProc (MBind b mpss tResult mBody)
+ = do   -- Check the parameters.
+        (ctx', mpss')
+         <- checkTermParamss a wh ctx mpss
+
+        -- There must be at least one vector of term parameters,
+        -- as we do not support value recursion in the evaluator.
+        when (not $ any isJust $ map takeMPTerms mpss)
+         $ throw $ ErrorRecValueRecursion a wh b
+
+        -- Check the result type annotation.
+        tsResult'
+         <- checkTypesAreAll UKind a wh ctx' TData tResult
+
+        -- The body must have type as specified by the result annotation.
+        (mBody', _tsResult, esBody)
+         <- checkTermProc a wh ctx' (Check tsResult') ctxProc mBody
+
+        -- The body must be pure.
+        let aBody  = fromMaybe a $ takeAnnotOfTerm mBody
+        eBody_red  <- simplType aBody ctx' (TSum esBody)
+        when (not $ isTPure eBody_red)
+         $ throw $ ErrorAbsImpure UTerm aBody wh eBody_red
+
+        return $ MBind b mpss' tsResult' mBody'

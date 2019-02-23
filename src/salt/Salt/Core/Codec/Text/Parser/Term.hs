@@ -1,5 +1,6 @@
 
 module Salt.Core.Codec.Text.Parser.Term where
+import Salt.Core.Codec.Text.Parser.Params
 import Salt.Core.Codec.Text.Parser.Proc
 import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Base
@@ -27,6 +28,7 @@ pTerms
 
 ------------------------------------------------------------------------------------------- Term --
 -- | Parse a term, and wrap the result in a source location annotation.
+--   TODO: we're getting too many repeated annotations in the result AST.
 pTerm  :: Parser (Term RL)
 pTerm
  = pMAnn
@@ -66,16 +68,16 @@ pTermBody
         return  $ MLet (MPAnn rBinds $ MPTerms bts) mBind mBody
 
 
-  , do  -- 'rec' '{' (Bind TermParams* ':' Type '=' Term);+ '}' 'in' Term
+  , do  -- 'rec' '{' (Bind TermParams* ':' Types '=' Term);+ '}' 'in' Term
         pTok KRec
         bms     <- pBraced $ flip P.sepEndBy1 (pTok KSemi)
                 $ do    b       <- pBind
                         mps     <- P.many pTermParams
                         pTok KColon
-                        t       <- pType
+                        ts      <- pTypes
                         pTok KEquals
                         m       <- pTerm
-                        return $ MBind b mps t m
+                        return $ MBind b mps ts m
         pTok KIn
         mBody   <- pTerm
         return  $ MRec bms mBody
@@ -470,30 +472,6 @@ pTermArg
  ]
 
 
------------------------------------------------------------------------------------------ Params --
--- | Parser for some term parameters.
-pTermParams :: Parser (TermParams RL)
-pTermParams
- = pMPAnn $ P.choice
- [ do   -- '@' '[' (Var ':' Type)+ ']'
-        pTok KAt
-        bts     <- pSquared $ flip P.sepEndBy1 (pTok KComma)
-                $  do   b <- pBind  <?> "a binder for the parameter"
-                        pTok KColon <?> "a ':' to give the kind of the parameter"
-                        t <- pType  <?> "the kind of the parameter"
-                        return (b, t)
-        return  $ MPTypes bts
-
- , do   -- '[' (Var ':' Type)* ']'
-        bts     <- pSquared $ flip P.sepEndBy  (pTok KComma)
-                $  do   b <- pBind  <?> "a binder for the parameter"
-                        pTok KColon <?> "a ':' to give the type of the parameter"
-                        t <- pType  <?> "the type of the parameter"
-                        return (b, t)
-        return  $ MPTerms bts
- ]
-
-
 ----------------------------------------------------------------------------------------- Binder --
 pTermBinds :: Parser (RL, [(Bind, Type RL)])
 pTermBinds
@@ -663,24 +641,4 @@ pTermValueRecord
         pTok KSKet
         return $ VRecord lvs
 
-
-------------------------------------------------------------------------------------- Annotation --
-pMAnn :: Parser (Term RL) -> Parser (Term RL)
-pMAnn p
- = do   (r, m) <- pRanged p
-        return $ MAnn r m
-
-
--- | Parse some type parameters wrapped in source range annotations.
-pMPAnn :: Parser (TermParams RL) -> Parser (TermParams RL)
-pMPAnn p
- = do   (r, tgs) <- pRanged p
-        return $ MPAnn r tgs
-
-
--- | Parse some type arguments wrapped in source range annotations.
-pMGAnn :: Parser (TermArgs RL) -> Parser (TermArgs RL)
-pMGAnn p
- = do   (r, tgs) <- pRanged p
-        return $ MGAnn r tgs
 

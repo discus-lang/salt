@@ -224,6 +224,8 @@ instance Pretty c TermKey where
         MKProcLoop      -> text "##proc'loop"
         MKProcBreak     -> text "##proc'break"
         MKProcContinue  -> text "##proc'continue"
+        MKProcEnter     -> text "##proc'enter"
+        MKProcLeave     -> text "##proc'leave"
 
         MKBloc          -> text "##bloc"
 

@@ -183,10 +183,10 @@ instance HasSupport (Term a) where
 
 -- TODO: test this. make sure the right things are in scope.
 instance HasSupport (TermBind a) where
- supportOf (MBind _b mpss tResult mBind)
+ supportOf (MBind _b mpss tsResult mBind)
   = mconcat
   [ mconcat $ map supportOf mpss
-  , supportOf tResult
+  , mconcat $ map supportOf tsResult
   , supportBindTermParamss mpss $ supportOf mBind]
 
 

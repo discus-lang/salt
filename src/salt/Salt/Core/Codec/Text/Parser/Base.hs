@@ -347,3 +347,25 @@ showBind BindNone       = "_"
 showTokenForError :: At Token -> String
 showTokenForError (At _ k)
  = "'" ++ showTokenAsSource k ++ "'"
+
+
+------------------------------------------------------------------------------------- Annotation --
+pMAnn :: Parser (Term RL) -> Parser (Term RL)
+pMAnn p
+ = do   (r, m) <- pRanged p
+        return $ MAnn r m
+
+
+-- | Parse some type parameters wrapped in source range annotations.
+pMPAnn :: Parser (TermParams RL) -> Parser (TermParams RL)
+pMPAnn p
+ = do   (r, tgs) <- pRanged p
+        return $ MPAnn r tgs
+
+
+-- | Parse some type arguments wrapped in source range annotations.
+pMGAnn :: Parser (TermArgs RL) -> Parser (TermArgs RL)
+pMGAnn p
+ = do   (r, tgs) <- pRanged p
+        return $ MGAnn r tgs
+

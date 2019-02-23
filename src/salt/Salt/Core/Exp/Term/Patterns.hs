@@ -82,10 +82,17 @@ pattern MProcLoop mBody mRest
  = MKey MKProcLoop      [MGTerm mBody, MGTerm mRest]
 
 pattern MProcBreak
- = MKey  MKProcBreak    []
+ = MKey MKProcBreak    []
 
 pattern MProcContinue
- = MKey  MKProcContinue []
+ = MKey MKProcContinue []
+
+pattern MProcEnter mEnter bms mRest
+ = MKey MKProcEnter     [MGTerm mEnter, MGTerm (MRec bms mRest)]
+
+pattern MProcLeave
+ = MKey MKProcLeave     []
+
 
 
 ------------------------------------------------------------------------------------------- Bloc --

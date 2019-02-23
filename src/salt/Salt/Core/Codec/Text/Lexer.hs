@@ -178,6 +178,8 @@ scanner
                 "break"         -> Just KBreak
                 "continue"      -> Just KContinue
                 "end"           -> Just KEnd
+                "enter"         -> Just KEnter
+                "leave"         -> Just KLeave
 
                 "bloc"          -> Just KBloc
 

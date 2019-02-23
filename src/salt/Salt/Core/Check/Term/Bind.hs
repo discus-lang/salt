@@ -10,7 +10,7 @@ checkTermBind
         :: Annot a => a -> [Where a]
         -> Context a -> TermBind a -> IO (TermBind a)
 
-checkTermBind a wh ctx (MBind b mpss tResult mBody)
+checkTermBind a wh ctx (MBind b mpss tsResult mBody)
  = do   -- Check the parameters.
         (ctx', mpss')
          <- checkTermParamss a wh ctx mpss
@@ -21,12 +21,12 @@ checkTermBind a wh ctx (MBind b mpss tResult mBody)
          $ throw $ ErrorRecValueRecursion a wh b
 
         -- Check the result type annotation.
-        tResult'
-         <- checkTypeHas UKind a wh ctx' TData tResult
+        tsResult'
+         <- checkTypesAreAll UKind a wh ctx' TData tsResult
 
         -- The body must have type as specified by the result annotation.
         (mBody', _tsResult, esBody)
-         <- checkTerm a wh ctx' (Check [tResult]) mBody
+         <- checkTerm a wh ctx' (Check tsResult) mBody
 
         -- The body must be pure.
         let aBody  = fromMaybe a $ takeAnnotOfTerm mBody
@@ -34,22 +34,35 @@ checkTermBind a wh ctx (MBind b mpss tResult mBody)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsImpure UTerm aBody wh eBody_red
 
-        return $ MBind b mpss' tResult' mBody'
+        return $ MBind b mpss' tsResult' mBody'
+
 
 
 -- | Make the type of a `TermBind`.
+--   TODO: handle errors as with makeTypeOfDeclTerm
 makeTypeOfTermBind :: TermBind a -> Type a
-makeTypeOfTermBind (MBind _b mpss tResult _mBody)
- = loop mpss
+makeTypeOfTermBind (MBind _b mpss0 tsResult _mBody)
+ | []           <- mpss0
+ , [tResult]    <- tsResult
+ = tResult
+
+ | [tResult]    <- loop mpss0
+ = tResult
+
+ | otherwise
+ = error "TODO: cannot build type of term binding"
+
  where
-        loop [] = tResult
+        loop [] = tsResult
 
         loop (MPAnn _ mps' : pss')
          = loop (mps' : pss')
 
         loop (MPTerms bts : pss')
-         = TFun (map snd bts) [loop pss']
+         = [TFun (map snd bts) (loop pss')]
 
         loop (MPTypes bts : pss')
-         = TForall (TPTypes bts) $ loop pss'
+         = case loop pss' of
+                [t]     -> [TForall (TPTypes bts) t]
+                _       -> []
 
