@@ -110,8 +110,8 @@ instance StripAnnot Term where
 
 
 instance StripAnnot TermBind where
- stripAnnot (MBind b mpss t m)
-  = MBind b (map stripAnnot mpss) (stripAnnot t) (stripAnnot m)
+ stripAnnot (MBind b mpss ts m)
+  = MBind b (map stripAnnot mpss) (map stripAnnot ts) (stripAnnot m)
 
 
 instance StripAnnot TermRef where
