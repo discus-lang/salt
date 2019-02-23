@@ -1,8 +1,8 @@
 
 -- Effectful term using let-expressions.
 term hello : []! #Console
- = box  let []  = #console'print   "hello ";
-        #console'println "world"
+ = box  let []  = #console'print   "hello "
+        in  #console'println "world"
 
 test exec hello
 

@@ -56,12 +56,12 @@ pTermBody
         return  $ foldr MAbs mBody mps
 
 
- , do   -- 'let' '[' Var,* ']' '=' Term ';' Term
+ , do   -- 'let' '[' Var,* ']' '=' Term 'in' Term
         pTok KLet
         (rBinds, bts) <- pTermBinds
         pTok KEquals    <?> "a type annotation, or '=' to start the binding"
         mBind <- pTerm  <?> "a term for the binding"
-        pTok KSemi      <?> "a completed term, or ';' to start the body"
+        pTok KIn        <?> "a completed term, or 'in' to start the body"
         mBody <- pTerm  <?> "a body term"
         return  $ MLet (MPAnn rBinds $ MPTerms bts) mBind mBody
 

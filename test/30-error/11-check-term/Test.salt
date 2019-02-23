@@ -118,25 +118,25 @@ test type #map'insert @[#Nat, #Nat]
 
 -- (t-let) --------------------------------------------------------------------
 -- Error: ill-kinded annotation.
-test type let x: #Derp = #true; #true
+test type let x: #Derp = #true in #true
 
 -- Error: ill-typed bound expression.
-test type let x = #true #true; #true
+test type let x = #true #true in #true
 
 -- Error: wrong arity in binding.
-test type let [] = [#true]; #true
+test type let [] = [#true] in #true
 
 -- Error: wrong arity in binding.
-test type let x = [#true, #true]; #true
+test type let x = [#true, #true] in #true
 
 -- Error: binder annotation does not match bound value.
-test type let x: #Nat = #true; #true
+test type let x: #Nat = #true in #true
 
 -- Error: body term is ill-typed.
-test type let x = #true; #true #true
+test type let x = #true in #true #true
 
 -- Error: duplicate binder names.
-test type let [x, x] = [#true, #true]; x
+test type let [x, x] = [#true, #true] in x
 
 
 -- (t-rec) --------------------------------------------------------------------

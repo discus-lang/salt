@@ -109,12 +109,12 @@ test type appt'app      = (λ@[a: #Data, b: #Data] [f: a → b, x: a] → f x)
 
 
 -- Let bindings ---------------------------------------------------------------
-test type let'fst       = let [x, y] = (λ[x: #Bool] → [x, 5]) [#true]; x
-test type let'snd       = let [x, y] = (λ[x: #Bool] → [5, x]) [#true]; x
+test type let'fst       = let [x, y] = (λ[x: #Bool] → [x, 5]) [#true] in x
+test type let'snd       = let [x, y] = (λ[x: #Bool] → [5, x]) [#true] in x
 
-test type let'one       = let x = 5; #nat'add [x, x]
+test type let'one       = let x = 5 in #nat'add [x, x]
 
-test type let'some      = let a = 2; let b = 3; #nat'add [a, b]
+test type let'some      = let a = 2 in let b = 3 in #nat'add [a, b]
 
 
 -- If expressions -------------------------------------------------------------

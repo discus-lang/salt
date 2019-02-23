@@ -231,7 +231,7 @@ test/30-error/11-check-term/Test.salt:133:25
 
   133:11 In test
 
-test/30-error/11-check-term/Test.salt:136:26
+test/30-error/11-check-term/Test.salt:136:28
   Cannot apply non-function
    of type '#Bool'
 

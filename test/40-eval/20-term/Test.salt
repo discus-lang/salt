@@ -47,8 +47,8 @@ test eval evm'aps'bump1
 
 -- (evm-let) ----------------------------------------------
 test eval evm'let
- = let [x, y] = [2, 3];
-   #nat'add [x, y]
+ = let [x, y] = [2, 3]
+   in  #nat'add [x, y]
 
 
 -- (evm-rec) ----------------------------------------------

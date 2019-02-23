@@ -8,7 +8,7 @@ test eval box the [#Nat, #Symbol] of [3, 'foo]
 
 test eval box (λ@[a: #Data] → λ[x: a] → x) @#Nat 5
 
-test eval box let x = 2; let y = 3; #nat'add [2, 3]
+test eval box let x = 2 in let y = 3 in #nat'add [2, 3]
 
 test eval box ∏[]
 test eval box ∏[x = 1, y = 'foo]
