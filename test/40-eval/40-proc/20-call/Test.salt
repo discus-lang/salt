@@ -1,0 +1,7 @@
+
+proc add [x:#Nat, y: #Nat]: #Nat
+ = yield #nat'add [x, y]
+
+test eval proc call add [2, 3]
+
+

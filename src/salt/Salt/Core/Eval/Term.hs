@@ -86,45 +86,7 @@ evalTerm s a env (MAps mFun mgssArg)
 
 -- (evm-aps) -----------------------------------------------
 evalTerm s a env (MApp mFun mgs)
- = do   vsCloTerm <- evalTerm s a env mFun
-        case vsCloTerm of
-         [VClosure (TermClosure env' mps@(MPTerms bts) mBody)]
-          -> case unwrapTermArgs a mgs of
-                (a', MGTerm m)
-                 -> do  let bs  = map fst bts
-                        vsArg   <- evalTerm s a env m
-                        when (not $ length vsArg == length bs)
-                         $ throw $ ErrorWrongTermArity a' (length bs) vsArg
-
-                        let env'' = menvExtendValues (zip bs vsArg) env'
-                        evalTerm s a env'' mBody
-
-                (a', MGTerms ms)
-                 -> do  let bs  = map fst bts
-                        vsArg   <- mapM (evalTerm1 s a env) ms
-                        when (not $ length vsArg == length bs)
-                         $ throw $ ErrorWrongTermArity a' (length bs) vsArg
-
-                        let env'' = menvExtendValues (zip bs vsArg) env'
-                        evalTerm s a env'' mBody
-
-                _ -> throw $ ErrorAppTermWrongArgs a mps mgs
-
-         [VClosure (TermClosure env' mps@(MPTypes bks) mBody)]
-          -> case unwrapTermArgs a mgs of
-                (a', MGTypes ts)
-                 -> do  let bs   = map fst bks
-                        let tenv = menvSliceTypeEnv env
-                        tsArg   <- mapM (evalType s a' tenv) ts
-                        when (not $ length tsArg == length bs)
-                         $ throw $ ErrorWrongTypeArity a' (length bs) tsArg
-
-                        let env'' = menvExtendTypes (zip bs tsArg) env'
-                        evalTerm s a env'' mBody
-
-                _ -> throw $ ErrorAppTermWrongArgs a mps mgs
-
-         _  -> throw $ ErrorAppTermBadClosure a vsCloTerm
+ = evalTermApp s a env (mFun, mgs, [])
 
 
 -- (evm-let) -----------------------------------------------
@@ -304,10 +266,84 @@ evalTerm s a env mm@(MMap tk tv msk msv)
         evalPairs _ _   = throw $ ErrorInvalidTerm a mm
 
 
+-- (evm-proc) --------------------------------------------
+evalTerm s a env (MProc m)
+ = evalTerm s a env m
+
+-- (evm-proc-yield) ---------------------------------------
+evalTerm s a env (MProcYield m)
+ = evalTerm s a env m
+
+-- (evm-proc-call) ----------------------------------------
+evalTerm s a env (MProcCall mFun mgssArgs)
+ | mgs : mgssRest <- mgssArgs
+ = evalTermApp s a env (mFun, mgs, mgssRest)
+
+-- (evm-proc-seq) -----------------------------------------
+evalTerm s a env (MProcSeq mps mBind mRest)
+ = evalTerm s a env (MLet mps mBind mRest)
+
+
 -----------------------------------------------------------
 -- No match.
 evalTerm _s a _env mm
  =      throw $ ErrorInvalidTerm a mm
+
+
+-- App --------------------------------------------------------------------------------------------
+evalTermApp :: EvalTerm a (Term a, TermArgs a, [TermArgs a]) [Value a]
+evalTermApp s a env (mFun, mgs, mgssRest)
+ = do   vsCloTerm <- evalTerm s a env mFun
+        case vsCloTerm of
+         [VClosure (TermClosure env' mps@(MPTerms bts) mBody)]
+          -> case unwrapTermArgs a mgs of
+                (a', MGTerm m)
+                 -> do  let bs  = map fst bts
+                        vsArg   <- evalTerm s a env m
+                        when (not $ length vsArg == length bs)
+                         $ throw $ ErrorWrongTermArity a' (length bs) vsArg
+
+                        let env''  = menvExtendValues (zip bs vsArg) env'
+                        let mBody' = case mgssRest of
+                                        []      -> mBody
+                                        _       -> MAps mBody mgssRest
+
+                        evalTerm s a env'' mBody'
+
+                (a', MGTerms ms)
+                 -> do  let bs  = map fst bts
+                        vsArg   <- mapM (evalTerm1 s a env) ms
+                        when (not $ length vsArg == length bs)
+                         $ throw $ ErrorWrongTermArity a' (length bs) vsArg
+
+                        let env'' = menvExtendValues (zip bs vsArg) env'
+                        let mBody' = case mgssRest of
+                                        []      -> mBody
+                                        _       -> MAps mBody mgssRest
+                        evalTerm s a env'' mBody'
+
+                _ -> throw $ ErrorAppTermWrongArgs a mps mgs
+
+         [VClosure (TermClosure env' mps@(MPTypes bks) mBody)]
+          -> case unwrapTermArgs a mgs of
+                (a', MGTypes ts)
+                 -> do  let bs   = map fst bks
+                        let tenv = menvSliceTypeEnv env
+                        tsArg   <- mapM (evalType s a' tenv) ts
+                        when (not $ length tsArg == length bs)
+                         $ throw $ ErrorWrongTypeArity a' (length bs) tsArg
+
+                        let env'' = menvExtendTypes (zip bs tsArg) env'
+                        let mBody' = case mgssRest of
+                                        []      -> mBody
+                                        _       -> MAps mBody mgssRest
+                        evalTerm s a env'' mBody'
+
+                _ -> throw $ ErrorAppTermWrongArgs a mps mgs
+
+         _  -> throw $ ErrorAppTermBadClosure a vsCloTerm
+
+
 
 
 ---------------------------------------------------------------------------------------------------

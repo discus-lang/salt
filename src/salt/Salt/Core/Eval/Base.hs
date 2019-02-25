@@ -52,3 +52,11 @@ type EvalType a x y
 type EvalTerm a x y
         = Annot a => State a -> a -> TermEnv a -> x -> IO y
 
+
+-- | Values thrown during interpreter evaluation.
+--
+--   We use the exception mechanism of the meta language (Haskell)
+--   to implement object language (Salt) control effects.
+data EvalControl a
+        = EvalControlReturn [Value a]
+        deriving (Show, Typeable)
