@@ -29,37 +29,37 @@ test/30-error/12-check-proc/Test.salt:44:38
 
   44:11  In test
 
-test/30-error/12-check-proc/Test.salt:51:21
+test/30-error/12-check-proc/Test.salt:53:7
   Actual type '#Nat'
    does not match
    expected type '#Bool'
 
-  51:11  In test
+  52:11  In test
 
-test/30-error/12-check-proc/Test.salt:54:33
+test/30-error/12-check-proc/Test.salt:57:19
   Too many terms.
    Actual   type '#Nat'
    Expected types []
 
-  54:11  In test
+  56:11  In test
 
-test/30-error/12-check-proc/Test.salt:63:11
+test/30-error/12-check-proc/Test.salt:66:11
   Alternative 'foo' is not in scrutinee type.
    '∑[bar: #Nat]'
 
-  63:11  In test
+  66:11  In test
 
-test/30-error/12-check-proc/Test.salt:70:27
+test/30-error/12-check-proc/Test.salt:73:27
   Too many terms.
    Actual   type '#Nat'
    Expected kinds []
 
-  68:11  In test
+  71:11  In test
 
-test/30-error/12-check-proc/Test.salt:77:27
+test/30-error/12-check-proc/Test.salt:80:27
   Too many terms.
    Actual   type '#Nat'
    Expected kinds []
 
-  77:11  In test
+  80:11  In test
 

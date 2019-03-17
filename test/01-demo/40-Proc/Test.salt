@@ -1,6 +1,6 @@
 
 term derp [n: #Nat]: #Nat ! #Console
- = box proc
+ = box proc launch #Nat of
    seq x = yield 5;
    seq y = yield the <foo: #Nat> of `foo 4;
    seq call #console'print "derp";
@@ -11,7 +11,7 @@ term derp [n: #Nat]: #Nat ! #Console
 
 
 term derps [n: #Nat]: #Nat ! #Console
- = box proc do
+ = box proc launch #Nat of do
    seq x = yield 5
    seq y = yield the <foo: #Nat> of `foo 4
    seq call #console'print "derp"

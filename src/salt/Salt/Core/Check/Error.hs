@@ -314,6 +314,10 @@ data Error a
         , errorTypes            :: [Type a] }
 
         -- Procedure problems -------------------
+        | ErrorProcReturnNoLaunch
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a] }
+
         | ErrorProcUpdateNotCell
         { errorAnnot            :: a
         , errorWhere            :: [Where a]

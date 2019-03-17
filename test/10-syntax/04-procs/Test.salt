@@ -366,7 +366,8 @@ proc match3ss [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
 
 -- loop -----------------------------------------------------------------------
 proc loop1 [n: #Nat]: []! #Console
- = loop when #nat'gt [n, 10]
+ = launch [] of
+   loop when #nat'gt [n, 10]
                 return [];
         call #console'print "hello"
 
@@ -378,7 +379,8 @@ proc loop1s [n: #Nat]: []! #Console
 
 
 proc loop1ss [n: #Nat]: []! #Console
- = loop do
+ = launch [] of
+   loop do
         when #nat'gt [n, 10]
                 return []
         call #console'print "hello"

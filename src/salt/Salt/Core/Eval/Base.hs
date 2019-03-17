@@ -10,9 +10,11 @@ module Salt.Core.Eval.Base
         , State(..)
         , Config(..), configDefault
         , EvalType
-        , EvalTerm)
+        , EvalTerm
+        , EvalControl (..))
 where
 import Salt.Core.Exp
+import Control.Exception
 import Data.Function
 import Data.Maybe
 import Data.Word
@@ -60,3 +62,6 @@ type EvalTerm a x y
 data EvalControl a
         = EvalControlReturn [Value a]
         deriving (Show, Typeable)
+
+instance (Show a, Typeable a)
+      => Exception (EvalControl a)

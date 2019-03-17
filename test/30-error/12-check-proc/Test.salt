@@ -45,24 +45,27 @@ test type proc cell a: #Nat ← 5; a ← #true; yield a
 
 
 -- when -----------------------------------------------------------------------
-test type proc when #true return []
+test type proc launch [] of
+ when #true return []
 
 -- Error: scrutinee is not a boolean.
-test type proc when 5 return []
+test type proc launch [] of
+ when 5 return []
 
 -- Error: body yields a value.
-test type proc when #true yield 5
+test type proc
+ when #true yield 5
 
 
 -- match ----------------------------------------------------------------------
-test type proc
+test type proc launch [] of
  match the <foo: #Nat> of `foo [5] with
-  { foo [x: #Nat] → return [x]}
+  { foo [x: #Nat] → return []}
 
 -- Error: scrutinee type does not match alt type.
-test type proc
+test type proc launch [] of
  match the <bar: #Nat> of `bar [5] with
-  { foo [x: #Nat] → return [x]}
+  { foo [x: #Nat] → return []}
 
 -- Error: body yields a value
 test type proc

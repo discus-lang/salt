@@ -79,6 +79,15 @@ type CheckTermProc a
         -> IO (Term a, [Type a], [Effect a])
 
 
+---------------------------------------------------------------------------------------------------
+-- | Take the types of the innermost `Launch` context, if there is one.
+takeInnerLaunch :: ContextProc a -> Maybe [Type a]
+takeInnerLaunch cp
+ = case cp of
+        CPNone          -> Nothing
+        CPLaunch ts _   -> Just ts
+        CPLoop ctx      -> takeInnerLaunch ctx
+
 
 ---------------------------------------------------------------------------------------------------
 -- | Bind a single type variable into the context.

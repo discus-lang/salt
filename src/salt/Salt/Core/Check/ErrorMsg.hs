@@ -262,6 +262,9 @@ ppre c (ErrorRunSuspensionIsNot _a _wh ts)
 
 
 -- Procedure problems -------------------------------------
+ppre _c (ErrorProcReturnNoLaunch _a _wh)
+ = vcat [ text "Return statement not in the scope of a launch"]
+
 ppre c (ErrorProcUpdateNotCell _a _wh t)
  = vcat [ text "Value to update is not a cell"
         , text " of type" %% ppr c t ]

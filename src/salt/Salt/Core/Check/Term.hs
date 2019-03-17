@@ -359,7 +359,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
          -- The expected type we have doesn't cover all the fields of the record
          -- being constructed. We call the default checker and let that fail.
          Check tsExpected
-          -> checkTermIs a wh ctx tsExpected mm
+          -> checkTermHas a wh ctx tsExpected mm
 
          -- Synthesise a type for the record.
          Synth
@@ -553,7 +553,7 @@ checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
 --  so synthesise result types for it then compare the expected types
 --  against the synthesised types.
 checkTermWith a wh ctx (Check tsExpected) m
- = checkTermIs a wh ctx tsExpected m
+ = checkTermHas a wh ctx tsExpected m
 
 -- We don't know how to check this sort of term.
 checkTermWith _a _wh _ctx _mode mm

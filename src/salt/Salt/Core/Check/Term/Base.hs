@@ -14,7 +14,7 @@ module Salt.Core.Check.Term.Base
         , module Data.Maybe
         , checkTerm
         , checkTerm1
-        , checkTermIs
+        , checkTermHas
         , checkTerms
         , checkTermsAreAll)
 where
@@ -57,12 +57,12 @@ checkTerm1 a wh ctx mode m
 -- (t-check) --------------------------------------------------------------------------------------
 -- | Synthesise the actual types of a term,
 --   then check it against the expected types.
-checkTermIs
+checkTermHas
         :: Annot a => a -> [Where a]
         -> Context a -> [Type a] -> Term a
         -> IO (Term a, [Type a], [Effect a])
 
-checkTermIs a wh ctx tsExpected m
+checkTermHas a wh ctx tsExpected m
  = do
         (m', tsActual, esActual)
          <- checkTerm a wh ctx Synth m

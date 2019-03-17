@@ -83,13 +83,34 @@ checkTermProc a wh ctx mode ctxProc (MProcSeq mps mBind mRest)
                 , tsResult, esBind ++ esResult)
 
 
--- (t-proc-return) ----------------------------------------
-checkTermProc a wh ctx _mode _ctxProc (MProcReturn mBody)
+-- (t-proc-launch) ----------------------------------------
+checkTermProc a wh ctx _mode ctxProc (MProcLaunch tsResult mBody)
  = do
-        -- TODO: check we are in the scope of a launch,
-        -- and set the expected return type.
+        tsResult'
+         <- checkTypesAreAll UType a wh ctx TData tsResult
+
+        (mBody', _tsResult, esResult)
+         <- checkTermProc a wh ctx
+                (Check tsResult')
+                (CPLaunch tsResult' ctxProc)
+                mBody
+
+        return  ( MProcLaunch tsResult' mBody'
+                , tsResult, esResult)
+
+
+-- (t-proc-return) ----------------------------------------
+checkTermProc a wh ctx _mode ctxProc (MProcReturn mBody)
+ = do
+        -- Get the expected type from the enclosing launch constructor,
+        --  or error if there isn't one.
+        tsResult
+         <- case takeInnerLaunch ctxProc of
+                Just tsResult -> return tsResult
+                _  -> throw $ ErrorProcReturnNoLaunch a wh
+
         (mBody', _tsResult, esReturn)
-         <- checkTerm a wh (asExp ctx) Synth mBody
+         <- checkTermHas a wh (asExp ctx) tsResult mBody
 
         return  ( MProcReturn mBody'
                 , []
@@ -220,7 +241,7 @@ checkTermProc a wh ctx mode ctxProc (MProcEnter mEnter bms mRest)
         -- Check the entry expression, with the binders in scope.
         let ctxt    = ctx' { contextFragment = FragTerm }
         (mEnter', _tsEnter, esEnter)
-         <- checkTermIs a wh ctxt [] mEnter
+         <- checkTermHas a wh ctxt [] mEnter
 
         -- Check the rest of the procedure.
         (mRest', tsResult, esRest)

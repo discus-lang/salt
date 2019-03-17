@@ -1,2 +1,7 @@
 
--- test eval launch #Nat of return 5
+test eval proc launch #Nat of return 5
+
+test eval proc launch #Nat of
+ do     when #false return 2
+        when #true  return 3
+        return 5

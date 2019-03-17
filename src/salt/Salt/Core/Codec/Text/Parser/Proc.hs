@@ -59,6 +59,13 @@ pProcFinal pTerm pTermApp
         let Just (mFun, mgssArg) = takeMAps mApp
         return $ MProcCall mFun mgssArg
 
+ , do   -- 'launch' Types of ...
+        pTok KLaunch
+        tsRet   <- pTypes
+        pTok KOf
+        mRest   <- pProc pTerm pTermApp
+        return  $ MProcLaunch tsRet mRest
+
  , do   -- 'return' Exp
         pTok KReturn
         mBody <- pTerm

@@ -23,7 +23,7 @@ import qualified Data.Set               as Set
 --   apply `Ups` variable lifting maps when the expressions are carried under
 --   binders. A fast, production interpreter would be written differently.
 --
-evalTerm :: EvalTerm a (Term a) [Value a]
+evalTerm :: forall a. EvalTerm a (Term a) [Value a]
 
 -- (evm-ann) -----------------------------------------------
 evalTerm s _a env (MAnn a' m)
@@ -270,18 +270,57 @@ evalTerm s a env mm@(MMap tk tv msk msv)
 evalTerm s a env (MProc m)
  = evalTerm s a env m
 
+
 -- (evm-proc-yield) ---------------------------------------
 evalTerm s a env (MProcYield m)
  = evalTerm s a env m
+
 
 -- (evm-proc-call) ----------------------------------------
 evalTerm s a env (MProcCall mFun mgssArgs)
  | mgs : mgssRest <- mgssArgs
  = evalTermApp s a env (mFun, mgs, mgssRest)
 
+
 -- (evm-proc-seq) -----------------------------------------
 evalTerm s a env (MProcSeq mps mBind mRest)
  = evalTerm s a env (MLet mps mBind mRest)
+
+
+-- (evm-proc-launch) --------------------------------------
+evalTerm s a env (MProcLaunch _tsRet mBody)
+ = catch eval handle'
+ where
+        eval
+         = do   evalTerm s a env mBody
+
+        handle' (e :: EvalControl a)
+         = case e of
+                EvalControlReturn vs -> return vs
+
+
+-- (evm-proc-return) --------------------------------------
+evalTerm s a env (MProcReturn mBody)
+ = do   vs <- evalTerm s a env mBody
+        throw (EvalControlReturn vs)
+
+
+-- (evm-proc-when) ----------------------------------------
+evalTerm s a env mm@(MProcWhen msCond msThen mRest)
+ = go msCond msThen
+ where
+        go [] []
+         = evalTerm s a env mRest
+
+        go (mCond : msCond') (mThen : msThen')
+         = do   v <- evalTerm s a env mCond
+                case v of
+                 [VBool b]
+                  | b           -> evalTerm s a env mThen
+                  | otherwise   -> go msCond' msThen'
+                 _              -> throw $ ErrorInvalidTerm a mm
+
+        go _ _ = throw $ ErrorInvalidTerm a mm
 
 
 -----------------------------------------------------------
@@ -342,8 +381,6 @@ evalTermApp s a env (mFun, mgs, mgssRest)
                 _ -> throw $ ErrorAppTermWrongArgs a mps mgs
 
          _  -> throw $ ErrorAppTermBadClosure a vsCloTerm
-
-
 
 
 ---------------------------------------------------------------------------------------------------
