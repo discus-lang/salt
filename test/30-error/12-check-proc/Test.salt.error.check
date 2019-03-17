@@ -70,3 +70,13 @@ test/30-error/12-check-proc/Test.salt:83:27
 
   83:11  In test
 
+test/30-error/12-check-proc/Test.salt:89:11
+  break statement does not have an enclosing loop
+
+  89:11  In test
+
+test/30-error/12-check-proc/Test.salt:95:11
+  continue statement does not have an enclosing loop
+
+  95:11  In test
+

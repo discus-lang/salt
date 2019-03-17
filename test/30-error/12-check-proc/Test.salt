@@ -81,3 +81,15 @@ test type proc loop #console'print "meep"
 
 -- Error: body yields a value.
 test type proc loop yield [5]
+
+test type proc loop break
+
+-- Error: break appears outside the scope of a loop
+-- TODO: better error location.
+test type proc break
+
+test type proc loop continue
+
+-- Error: continue appears outside the scope of a loop
+-- TODO: better error location.
+test type proc continue

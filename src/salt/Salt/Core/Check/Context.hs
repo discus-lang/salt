@@ -89,6 +89,14 @@ takeInnerLaunch cp
         CPLoop ctx      -> takeInnerLaunch ctx
 
 
+hasInnerLoop :: ContextProc a -> Bool
+hasInnerLoop cp
+ = case cp of
+        CPNone          -> False
+        CPLaunch _ ctx  -> hasInnerLoop ctx
+        CPLoop _        -> True
+
+
 ---------------------------------------------------------------------------------------------------
 -- | Bind a single type variable into the context.
 contextBindType :: Name -> Type a -> Context a -> Context a

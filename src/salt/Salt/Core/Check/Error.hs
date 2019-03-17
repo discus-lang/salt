@@ -318,6 +318,14 @@ data Error a
         { errorAnnot            :: a
         , errorWhere            :: [Where a] }
 
+        | ErrorProcBreakNoLoop
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a] }
+
+        | ErrorProcContinueNoLoop
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a] }
+
         | ErrorProcUpdateNotCell
         { errorAnnot            :: a
         , errorWhere            :: [Where a]

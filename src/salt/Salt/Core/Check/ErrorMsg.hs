@@ -263,7 +263,13 @@ ppre c (ErrorRunSuspensionIsNot _a _wh ts)
 
 -- Procedure problems -------------------------------------
 ppre _c (ErrorProcReturnNoLaunch _a _wh)
- = vcat [ text "Return statement not in the scope of a launch"]
+ = vcat [ text "return statement does not have an enclosing launch"]
+
+ppre _c (ErrorProcBreakNoLoop _a _wh)
+ = vcat [ text "break statement does not have an enclosing loop" ]
+
+ppre _c (ErrorProcContinueNoLoop _a _wh)
+ = vcat [ text "continue statement does not have an enclosing loop" ]
 
 ppre c (ErrorProcUpdateNotCell _a _wh t)
  = vcat [ text "Value to update is not a cell"

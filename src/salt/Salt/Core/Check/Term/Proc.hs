@@ -219,6 +219,20 @@ checkTermProc a wh ctx mode ctxProc (MProcLoop mBody mRest)
                 , tsResult, esBody ++ esRest)
 
 
+-- (t-proc-break) -----------------------------------------
+checkTermProc a wh _ctx _mode ctxProc MProcBreak
+ = if hasInnerLoop ctxProc
+    then return (MProcBreak, [], [])
+    else throw $ ErrorProcBreakNoLoop a wh
+
+
+-- (t-proc-continue) -------------------------------------
+checkTermProc a wh _ctx _mode ctxProc MProcContinue
+ = if hasInnerLoop ctxProc
+    then return (MProcContinue, [], [])
+    else throw $ ErrorProcContinueNoLoop a wh
+
+
 -- (t-proc-enter) -----------------------------------------
 checkTermProc a wh ctx mode ctxProc (MProcEnter mEnter bms mRest)
  = do
