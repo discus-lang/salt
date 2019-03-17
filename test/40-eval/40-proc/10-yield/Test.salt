@@ -1,3 +1,11 @@
 
 test eval proc yield 5
 test eval proc yield (if #true then 2 else 3)
+
+test eval #nat'add [proc yield 2, 3]
+
+test eval proc yield #nat'add [2, 3]
+
+test eval proc yield #nat'add [proc yield 2, 3]
+
+

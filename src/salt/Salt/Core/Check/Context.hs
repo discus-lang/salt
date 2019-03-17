@@ -301,13 +301,14 @@ guardAnyFragment a wh ctx txBlame frags thing
          else throw $ ErrorTermNotFragment a wh (contextFragment ctx) txBlame
 
 
--- | Set the term mode in the given context to the expression
---   form of what it is right now.
+-- | Set the language fragment for the given context to the expression form
+--   of what is is right now.
 asExp   :: Context a -> Context a
 asExp ctx
  = case contextFragment ctx of
         FragTerm         -> ctx
         FragProcBody     -> ctx { contextFragment = FragProcExp }
-        FragProcYield    -> ctx { contextFragment = FragProcExp }
         FragProcExp      -> ctx
+
+
 

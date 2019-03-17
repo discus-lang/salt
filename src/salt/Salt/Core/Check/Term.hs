@@ -101,7 +101,7 @@ checkTermWith a wh ctx Synth m@(MRef (MRPrm nPrim))
 -- (t-con) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
  = guardAnyFragment a wh ctx "Constructor"
-        [FragTerm, FragProcYield, FragProcExp]
+        [FragTerm, FragProcExp]
  $  contextResolveDataCtor nCon ctx
  >>= \case
         Nothing
@@ -115,7 +115,7 @@ checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
 -- (t-var) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MVar u)
  = guardAnyFragment a wh ctx "Variable reference"
-        [FragTerm, FragProcYield, FragProcExp]
+        [FragTerm, FragProcExp]
  $   contextResolveTermBound ctx u
  >>= \case
         -- Cells referenced in statements are implicitly read.
@@ -180,7 +180,8 @@ checkTermWith a wh ctx Synth (MAbs mps m)
 -- (t-aps) ------------------------------------------------
 -- This handles (t-apt), (t-apm) and (t-apv) from the docs.
 checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
- = guardAnyFragment a wh ctx "application" [FragTerm, FragProcExp, FragProcYield]
+ = guardAnyFragment a wh ctx "application"
+        [FragTerm, FragProcExp]
  $ do
         -- If this an effectful primitive then also add the effects
         -- we get from applying it.
@@ -326,7 +327,7 @@ checkTermWith a wh ctx mode (MRec bms mBody)
 -- (t-rcd) ------------------------------------------------
 checkTermWith a wh ctx mode mm@(MRecord ns ms)
  = guardAnyFragment a wh ctx "record constructor"
-        [FragTerm, FragProcExp, FragProcYield]
+        [FragTerm, FragProcExp]
  $ do
         mode'   <- simplMode a ctx mode
         case mode' of
@@ -380,7 +381,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
 -- (t-prj) ------------------------------------------------
 checkTermWith a wh ctx Synth (MProject nLabel mRecord)
  = guardAnyFragment a wh ctx "record projection"
-        [FragTerm, FragProcExp, FragProcYield]
+        [FragTerm, FragProcExp]
  $ do
         -- Check the body expression.
         let aRecord = fromMaybe a $ takeAnnotOfTerm mRecord
@@ -407,7 +408,7 @@ checkTermWith a wh ctx Synth (MProject nLabel mRecord)
 -- (t-vnt) ------------------------------------------------
 checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
  = guardAnyFragment a wh ctx "variant constructor"
-        [FragTerm, FragProcExp, FragProcYield]
+        [FragTerm, FragProcExp]
  $ do
         -- Check annotation is well kinded.
         checkType a wh ctx tVariant
@@ -438,7 +439,7 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
 checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
  | length msAlt  >= 1
  , length msElse <= 1
- = guardAnyFragment a wh ctx "case-expression"  [FragTerm, FragProcYield]
+ = guardAnyFragment a wh ctx "case-expression"  [FragTerm]
  $ do
         -- Check the scrutinee.
         (mScrut', tScrut, esScrut)
@@ -477,7 +478,7 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
 -- (t-ifs) ------------------------------------------------
 checkTermWith a wh ctx Synth (MIf msCond msThen mElse)
  | length msCond == length msThen
- = guardAnyFragment a wh ctx "if-expression" [FragTerm, FragProcYield]
+ = guardAnyFragment a wh ctx "if-expression" [FragTerm]
  $ do
         (msCond', esCond)
          <- checkTermsAreAll a wh (asExp ctx) TBool msCond
@@ -496,7 +497,7 @@ checkTermWith a wh ctx Synth (MIf msCond msThen mElse)
 
 -- (t-proc) -----------------------------------------------
 checkTermWith a wh ctx Synth (MProc mBody)
- = guardAnyFragment a wh ctx "procedure" [FragTerm, FragProcYield]
+ = guardAnyFragment a wh ctx "procedure" [FragTerm]
  $ do
         let ctx' = ctx { contextFragment = FragProcBody }
         (mBody', tsResult, esBody)

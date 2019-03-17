@@ -39,7 +39,6 @@ instance Pretty c Fragment where
         FragTerm        -> text "term"
         FragProcBody    -> text "proc body"
         FragProcExp     -> text "proc exp"
-        FragProcYield   -> text "proc yield"
 
 
 braced ds

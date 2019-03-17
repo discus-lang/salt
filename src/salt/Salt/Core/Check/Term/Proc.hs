@@ -18,7 +18,7 @@ checkTermProc :: CheckTermProc a
 -- (t-proc-yield) -----------------------------------------
 checkTermProc a wh ctx mode _ctxProc (MProcYield mResult)
  = do
-        let ctx' = ctx { contextFragment = FragProcYield }
+        let ctx' = ctx { contextFragment = FragTerm }
         (mResult', tsResult, esResult)
          <- checkTerm a wh ctx' mode mResult
 
