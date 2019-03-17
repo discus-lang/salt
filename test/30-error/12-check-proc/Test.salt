@@ -34,7 +34,10 @@ test type proc seq a: #Bool = #nat'add [2, 3]
 
 
 -- launch / return  -----------------------------------------------------------
--- TODO: check launch/return types match up.
+test type proc launch #Nat of return 5
+
+-- Error: value produced by 'return' does not match type of launch.
+test type proc launch #Nat of return #true
 
 
 -- cell / update  -------------------------------------------------------------
