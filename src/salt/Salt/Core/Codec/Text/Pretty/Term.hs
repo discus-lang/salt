@@ -197,6 +197,8 @@ instance Pretty c TermKey where
         MKThe           -> text "##the"
         MKApp           -> text "##app"
         MKLet           -> text "##let"
+        MKPrivate       -> text "##private"
+        MKExtend        -> text "##extend"
         MKCon n         -> text "##con"     %% pprCon n
         MKRecord ns     -> text "##record"  %% braced (map pprCon ns)
         MKProject n     -> text "##project" %% pprLbl n

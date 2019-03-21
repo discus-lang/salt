@@ -548,6 +548,57 @@ checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
                 , [TMap tk tv]
                 , esKeys ++ esVals)
 
+
+-- (t-private) ------------------------------------------------
+checkTermWith a wh ctx Synth (MPrivate bksR btwS mBody)
+ = do
+        -- TODO keep unpacking and repacking using MPTypes/MPTerms
+        --      instead we should just change MPrivate type
+
+        (MPTypes bksR') <- checkTermParams a wh ctx (MPTypes bksR)
+
+        -- introduce region to context
+        let ctx'  = contextBindTermParams (MPTypes bksR') ctx
+
+        -- check region witnesses
+        (MPTerms btwS') <- checkTermParams a wh ctx' (MPTerms btwS)
+
+        -- introduce capability witnesses to context
+        let ctx'' = contextBindTermParams (MPTerms btwS') ctx'
+
+        -- check the body term in new ctx
+        (mBody', tsResult, esResult)
+         <- checkTerm a wh ctx'' Synth mBody
+
+        return (MPrivate bksR' btwS' mBody', tsResult, esResult)
+
+-- (t-extend) ------------------------------------------------
+checkTermWith a wh ctx Synth (MExtend r1 bksR btwS mBody)
+ = do
+        -- TODO keep unpacking and repacking using MPTypes/MPTerms
+        --      instead we should just change MExtend type
+
+        -- check from region
+        checkType a wh ctx r1
+
+        -- check region bindings
+        (MPTypes bksR') <- checkTermParams a wh ctx (MPTypes bksR)
+
+        -- introduce region to context
+        let ctx'  = contextBindTermParams (MPTypes bksR') ctx
+
+        -- check region witnesses
+        (MPTerms btwS') <- checkTermParams a wh ctx' (MPTerms btwS)
+
+        -- introduce capability witnesses to context
+        let ctx'' = contextBindTermParams (MPTerms btwS') ctx'
+
+        -- check the body term in new ctx
+        (mBody', tsResult, esResult)
+         <- checkTerm a wh ctx'' Synth mBody
+
+        return (MExtend r1 bksR' btwS' mBody', tsResult, esResult)
+
 -- (t-check) ----------------------------------------------
 -- Switch modes in bidirectional type checking.
 --  We don't have an explicit check rule for this term,

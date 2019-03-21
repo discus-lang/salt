@@ -24,6 +24,12 @@ pattern MApt mFun tsArg         = MKey   MKApp  [MGTerm  mFun, MGTypes tsArg]
 -- TODO: these are in wrong order.
 pattern MLet mps mBind mBod     = MKey   MKLet  [MGTerm mBod, MGTerm (MAbs mps mBind)]
 
+pattern MPrivate bksR btsW mBody
+ = MKey MKPrivate [MGTerm (MAbs (MPTypes bksR) (MAbs (MPTerms btsW) mBody))]
+
+pattern MExtend r1 bksR btsW mBody
+ = MKey MKExtend [MGTypes [r1], MGTerm (MAbs (MPTypes bksR) (MAbs (MPTerms btsW) mBody))]
+
 pattern MIf msCond msThen mElse = MKey   MKIf   [MGTerms msCond, MGTerms msThen, MGTerm mElse]
 
 pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]

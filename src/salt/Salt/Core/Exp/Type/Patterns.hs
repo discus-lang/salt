@@ -59,5 +59,7 @@ pattern TMap tk tv      = TApt (TPrm "Map")    [tk, tv]
 pattern TCell t         = TApt (TPrm "Cell")    [t]
 pattern TConsole        = TPrm "Console"
 pattern TSleep          = TPrm "Sleep"
-
+pattern TAlloc r        = TApt (TPrm "Alloc") [r]
+pattern TRead r         = TApt (TPrm "Read")  [r]
+pattern TWrite r        = TApt (TPrm "Write") [r]
 

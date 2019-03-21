@@ -97,3 +97,5 @@
 * map'some: #Map [#Nat, #Symbol]
 * map'size: #Nat
 * map'insert: #Map [#Nat, #Symbol]
+* region'private: #Nat
+* region'extend: #Nat

@@ -67,6 +67,30 @@ pTermBody
         mBody <- pTerm  <?> "a body term"
         return  $ MLet (MPAnn rBinds $ MPTerms bts) mBind mBody
 
+  , do  -- 'private' Var 'with' '{' Cap;* '}' 'in' Term
+        pTok KPrivate
+        rName <- pVar        <?> "region name to bind"
+        let rBound = BoundWith rName 0
+        pTok KWith           <?> "'with' to start capability list"
+        btsW <- pCaps rBound <?> "capability list"
+        pTok KIn             <?> "'in' to start the body"
+        mBody <- pTerm       <?> "a body term"
+        let rBinding = (BindName rName, TRegion)
+        return $ MPrivate [rBinding] btsW mBody
+
+  , do  -- 'extend' Var 'using' Var 'with' '{' Cap;* '}' 'in' Term
+        pTok KExtend
+        rName1 <- pVar          <?> "existing region name to extend"
+        pTok KUsing             <?> "'using' to start second region"
+        rName2 <- pVar          <?> "new region name to introduce"
+        pTok KWith              <?> "'with' to start capability list"
+        let rBound2 = BoundWith rName2 0
+        btsW <- pCaps rBound2   <?> "capability list"
+        pTok KIn                <?> "'in' to start the body"
+        mBody <- pTerm          <?> "a body term"
+        let rBound1 = TVar $ BoundWith rName1 0
+        let rBinding2 = (BindName rName2, TRegion)
+        return $ MExtend rBound1 [rBinding2] btsW mBody
 
   , do  -- 'rec' '{' (Bind TermParams* ':' Types '=' Term);+ '}' 'in' Term
         pTok KRec
@@ -590,6 +614,20 @@ pTermRecord
         return $ MRecord ls ms
  ]
 
+------------------------------------------------------------------------------------------ Capabilities --
+-- | Parser for a bracketed list of capabilities
+pCaps :: Bound -> Parser [(Bind, Type a)]
+pCaps rBound
+ = pBraced $ flip P.sepEndBy (pTok KSemi) $ P.choice
+     [ do   pTok KAlloc
+            return (BindNone, TAlloc (TVar rBound))
+
+     , do   pTok KRead
+            return (BindNone, TRead (TVar rBound))
+
+     , do   pTok KWrite
+            return (BindNone, TWrite (TVar rBound))
+     ]
 
 ------------------------------------------------------------------------------------------ Value --
 -- | Parser for a single value.
@@ -626,7 +664,6 @@ pValues
         v <- pValue
         return [v]
  ]
-
 
 -- | Parser for a record value.
 pTermValueRecord :: Parser (Value Location)

@@ -69,6 +69,8 @@ data TermKey
         | MKList                                -- ^ List constructor.
         | MKSet                                 -- ^ Set constructor.
         | MKMap                                 -- ^ Map constructor.
+        | MKPrivate                             -- ^ Region introduction.
+        | MKExtend                              -- ^ Region extension.
 
         -- Proc term formers.
         | MKProc                                -- ^ Define a procedure.

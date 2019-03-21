@@ -214,3 +214,13 @@ test type map'some      = [map #Nat #Symbol| 3 := 'three, 5 := 'five]
 test type map'size      = #map'size   @[#Nat, #Symbol] [map #Nat #Symbol|]
 test type map'insert    = #map'insert @[#Nat, #Symbol] [4, 'Derp, [map #Nat #Symbol|]]
 
+-- Regions -------------------------------------------------------------------
+
+test type region'private
+ = private r with {Alloc; Write; Read} in 1
+
+test type region'extend
+ = private r1 with {Alloc; Write; Read} in
+     extend r1 using r2 with {Read; Write; Alloc} in do
+       1
+

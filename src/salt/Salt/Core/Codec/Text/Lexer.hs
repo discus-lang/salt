@@ -155,6 +155,8 @@ scanner
                 "in"            -> Just KIn
                 "do"            -> Just KDo
                 "where"         -> Just KWhere
+                "private"       -> Just KPrivate
+                "extend"        -> Just KExtend
 
                 "if"            -> Just KIf
                 "ifs"           -> Just KIfs
@@ -167,6 +169,7 @@ scanner
                 "call"          -> Just KCall
                 "seq"           -> Just KSeq
                 "with"          -> Just KWith
+                "using"         -> Just KUsing
                 "launch"        -> Just KLaunch
                 "return"        -> Just KReturn
                 "cell"          -> Just KCell
@@ -180,6 +183,10 @@ scanner
                 "end"           -> Just KEnd
                 "enter"         -> Just KEnter
                 "leave"         -> Just KLeave
+
+                "Alloc"         -> Just KAlloc
+                "Write"         -> Just KWrite
+                "Read"          -> Just KRead
 
                 "bloc"          -> Just KBloc
 

@@ -57,6 +57,8 @@ data Token
         | KThe          | KOf
         | KBox          | KRun
         | KLet          | KRec          | KIn           | KDo           | KWhere
+        | KPrivate      | KExtend       | KUsing
+        | KAlloc        | KRead         | KWrite
         | KIf           | KIfs          | KThen         | KElse
         | KCase
         | KSymForall    | KAsciiForall
@@ -150,6 +152,11 @@ showTokenAsSource kk
         KBox            -> "box"
         KRun            -> "run"
         KLet            -> "let"
+        KPrivate        -> "private"
+        KExtend         -> "extend"
+        KAlloc          -> "Alloc"
+        KRead           -> "Read"
+        KWrite          -> "Write"
         KRec            -> "rec"
         KIn             -> "in"
         KDo             -> "do"
@@ -166,6 +173,7 @@ showTokenAsSource kk
         KYield          -> "yield"
         KCall           -> "call"
         KWith           -> "with"
+        KUsing          -> "using"
         KSeq            -> "seq";       KEnd            -> "end"
         KLaunch         -> "launch"
         KReturn         -> "return"
