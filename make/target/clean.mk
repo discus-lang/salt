@@ -3,7 +3,7 @@
 .PHONY	: clean
 clean	:
 	@echo "* Cleaning up"
-	@find . -name "*.o" -o -name "*.hi" -o -name "war-std" -follow \
+	@find . \( -name "*.o" -o -name "*.hi" -o -name "war-std" \) -follow -not -path "./.stack-work/*" \
 		| xargs -n 1 rm -rf
 	@rm -f make/deps/*
 	@rm -f bin/*
