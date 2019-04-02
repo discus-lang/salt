@@ -560,8 +560,10 @@ checkTermWith a wh ctx Synth (MPrivate bksR btwS mBody)
         -- introduce region to context
         let ctx'  = contextBindTermParams (MPTypes bksR') ctx
 
-        -- check region witnesses
-        (MPTerms btwS') <- checkTermParams a wh ctx' (MPTerms btwS)
+        -- Check that all witness bindings have type TProp
+        let (bs, ts) = unzip btwS
+        ts' <- checkTypesAre UType a wh ctx' (replicate (length ts) TProp) ts
+        let btwS' = zip bs ts'
 
         -- introduce capability witnesses to context
         let ctx'' = contextBindTermParams (MPTerms btwS') ctx'
@@ -587,8 +589,10 @@ checkTermWith a wh ctx Synth (MExtend r1 bksR btwS mBody)
         -- introduce region to context
         let ctx'  = contextBindTermParams (MPTypes bksR') ctx
 
-        -- check region witnesses
-        (MPTerms btwS') <- checkTermParams a wh ctx' (MPTerms btwS)
+        -- Check that all witness bindings have type TProp
+        let (bs, ts) = unzip btwS
+        ts' <- checkTypesAre UType a wh ctx' (replicate (length ts) TProp) ts
+        let btwS' = zip bs ts'
 
         -- introduce capability witnesses to context
         let ctx'' = contextBindTermParams (MPTerms btwS') ctx'
