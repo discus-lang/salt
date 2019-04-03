@@ -6,6 +6,7 @@ import Data.Map                 (Map)
 import Data.Set                 (Set)
 import qualified Data.Int       as Int
 import qualified Data.Word      as Word
+import qualified Foreign.Ptr    as FPtr
 
 
 -- | Annotated Term.
@@ -137,6 +138,8 @@ data Value a
         | VMap      (Type a) (Type a) (Map (Value ()) (Value a))
                                                 -- ^ Map value.
         | VClosure  (TermClosure a)             -- ^ Closure.
+        | VAddr     FPtr.WordPtr                -- ^ Raw memory address.
+        | VPtr      (Type a) (Type a) FPtr.WordPtr -- ^ Ptr with Region and Value types.
         deriving (Show, Eq, Ord)
 
 

@@ -31,6 +31,9 @@ checkValue a wh ctx v
         VWord64{}  -> return TWord64
         VNone t    -> return $ TOption t
 
+        VAddr _    -> return TAddr
+        VPtr r t _ -> return $ TPtr r t
+
         VData n ts vs
          -> do  -- Use the term checker to check the applications.
                 (_m, tResult, [])

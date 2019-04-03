@@ -181,6 +181,8 @@ instance MapAnnot Value where
         VSet  t vs      -> VSet       (mapAnnot f t)  vs
         VMap  tk tv kvs -> VMap       (mapAnnot f tk) (mapAnnot f tv) (Map.map (mapAnnot f) kvs)
         VClosure clo    -> VClosure   (mapAnnot f clo)
+        VAddr a         -> VAddr a
+        VPtr r t a      -> VPtr     (mapAnnot f r) (mapAnnot f t) a
 
 
 instance MapAnnot TermClosure where

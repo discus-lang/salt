@@ -217,10 +217,13 @@ test type map'insert    = #map'insert @[#Nat, #Symbol] [4, 'Derp, [map #Nat #Sym
 -- Regions -------------------------------------------------------------------
 
 test type region'private
- = private r with {Alloc; Write; Read} in 1
+ = private r with {Alloc; Write; Read} in
+     let p = #allocPtr @[r, #Word8] in
+       #freePtr @[r, #Word8] p
 
 test type region'extend
  = private r1 with {Alloc; Write; Read} in
-     extend r1 using r2 with {Read; Write; Alloc} in do
-       1
+     extend r1 using r2 with {Read; Write; Alloc} in
+       let p = #allocPtr @[r2, #Word8] in
+         #freePtr @[r2, #Word8] p
 

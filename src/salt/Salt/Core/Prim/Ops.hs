@@ -19,6 +19,7 @@ import Salt.Core.Prim.Ops.Int32
 import Salt.Core.Prim.Ops.Int64
 import Salt.Core.Prim.Ops.List
 import Salt.Core.Prim.Ops.Map
+import Salt.Core.Prim.Ops.Memory
 import Salt.Core.Prim.Ops.Nat
 import Salt.Core.Prim.Ops.Set
 import Salt.Core.Prim.Ops.Symbol
@@ -37,6 +38,7 @@ primOps
         , primOpsWord, primOpsWord8, primOpsWord16, primOpsWord32, primOpsWord64
         , primOpsSymbol
         , primOpsList,   primOpsSet,  primOpsMap
+        , primOpsMemory
         , primOpsDebug
         , primOpsConsole ]
 

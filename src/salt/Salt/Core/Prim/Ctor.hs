@@ -36,11 +36,14 @@ primTypeCtors
         , ("Alloc",     [TRegion] :=> TProp)
         , ("Read",      [TRegion] :=> TProp)
         , ("Write",     [TRegion] :=> TProp)
+        , ("Addr",      TData)
+        , ("Ptr",       [TRegion, TType] :=> TData)
         , ("Option",    [TData] :=> TData)
         , ("List",      [TData] :=> TData)
         , ("Set",       [TData] :=> TData)
         , ("Map",       [TData, TData] :=> TData)
         , ("Console",   TEffect)
+        , ("Memory",    TEffect)
         , ("Sleep",     TEffect) ]
 
 

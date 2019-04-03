@@ -320,6 +320,14 @@ instance Pretty c (Value a) where
 
         VClosure clo    -> ppr c clo
 
+        VAddr a
+         -> brackets
+                $ text "address" % string (show a)
+
+        VPtr r t a
+         -> brackets
+                $ text "pointer" %% pprTArg c r %% pprTArg c t % string (show a)
+
 pprVArg c vv
  = case vv of
         VData{}         -> parens $ ppr c vv
