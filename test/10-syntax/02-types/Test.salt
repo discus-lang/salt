@@ -90,6 +90,7 @@ test kind effect3       = #Console
 test kind effect4       = #Console + #Sleep
 test kind effect5       = pure + #Console + (#Sleep + sync)
 test kind effect6       = (pure + #Console) + (#Sleep + sync)
+test kind effect7       = #Memory
 
 
 -- Suspension types.
