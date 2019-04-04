@@ -19,3 +19,5 @@
 * evm'list: [[list #Nat| 5, 5]]
 * evm'set: [[set #Nat| 5, 6]]
 * evm'map: [[map #Nat #Symbol| 5 := 'Derp]]
+* region'private'nat: [1]
+* region'extend'nat: [1]

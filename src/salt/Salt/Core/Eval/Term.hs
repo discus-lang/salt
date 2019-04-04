@@ -322,6 +322,15 @@ evalTerm s a env mm@(MProcWhen msCond msThen mRest)
 
         go _ _ = throw $ ErrorInvalidTerm a mm
 
+-- (evm-private) -----------------------------------------
+-- TODO FIXME no-op MPrivate eval
+evalTerm s a env (MPrivate _ _ mBody)
+ = evalTerm s a env mBody
+
+-- (evm-extend) ------------------------------------------
+-- TODO FIXME no-op MExtend eval
+evalTerm s a env (MExtend _ _ _ mBody)
+ = evalTerm s a env mBody
 
 -----------------------------------------------------------
 -- No match.

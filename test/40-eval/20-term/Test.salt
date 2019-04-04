@@ -117,3 +117,13 @@ term someMap  @[tk: #Data, tv: #Data] [k: tk, v: tv]: #Map [tk, tv]
 test eval evm'map
  = someMap @[#Nat, #Symbol] [5, 'Derp]
 
+-- (evm-private) ----------------------------------------------
+test eval region'private'nat
+ = private r1 with {Alloc; Write; Read} in
+       1
+
+-- (evm-extend) ----------------------------------------------
+test eval region'extend'nat
+ = private r1 with {Alloc; Write; Read} in
+     extend r1 using r2 with {Alloc; Read} in
+       1
