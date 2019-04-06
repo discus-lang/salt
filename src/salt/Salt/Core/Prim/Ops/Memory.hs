@@ -1,12 +1,27 @@
 
 module Salt.Core.Prim.Ops.Memory where
 import Salt.Core.Prim.Ops.Base
-import qualified Data.Word as Word
+import qualified Data.Int              as Int
+import qualified Data.Word             as Word
 import qualified Foreign.Marshal.Alloc as Alloc
-import qualified Foreign.Ptr as Ptr
+import qualified Foreign.Ptr           as Ptr
+import qualified Foreign.Storable      as Storable
 
 primSizeOf :: Type a -> Word.Word64
-primSizeOf _ = error "primSizeOf unimplemented"
+primSizeOf TBool       = fromIntegral $ Storable.sizeOf (undefined :: Bool)
+primSizeOf TInt8       = fromIntegral $ Storable.sizeOf (undefined :: Int.Int8)
+primSizeOf TInt16      = fromIntegral $ Storable.sizeOf (undefined :: Int.Int16)
+primSizeOf TInt32      = fromIntegral $ Storable.sizeOf (undefined :: Int.Int32)
+primSizeOf TInt64      = fromIntegral $ Storable.sizeOf (undefined :: Int.Int64)
+primSizeOf TWord8      = fromIntegral $ Storable.sizeOf (undefined :: Word.Word8)
+primSizeOf TWord16     = fromIntegral $ Storable.sizeOf (undefined :: Word.Word16)
+primSizeOf TWord32     = fromIntegral $ Storable.sizeOf (undefined :: Word.Word32)
+primSizeOf TWord64     = fromIntegral $ Storable.sizeOf (undefined :: Word.Word64)
+primSizeOf TAddr       = fromIntegral $ Storable.sizeOf (undefined :: Ptr.WordPtr)
+primSizeOf (TPtr _ _)  = fromIntegral $ Storable.sizeOf (undefined :: Ptr.WordPtr)
+primSizeOf (TPrm name) = error $ "I do not know how to size type: " ++ (show name)
+primSizeOf (TAnn _ t)  = primSizeOf t
+primSizeOf _           = error "primSizeOf unimplemented"
 
 --           size
 primAlloc :: Word.Word64 -> IO Ptr.WordPtr
@@ -31,7 +46,7 @@ primFree wp = do let p = Ptr.wordPtrToPtr wp
                  return []
 
 primOpsMemory
- = [ PP { name  = "sizeof"
+ = [ PP { name  = "sizeOf"
         , tsig  = [("a", TData)] :*> TWord64
         , step  = \[NTs [t]] -> do let s = primSizeOf t
                                    return $ VWord64 s

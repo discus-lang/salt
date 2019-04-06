@@ -1,0 +1,13 @@
+test eval sizeOf'bool   = #sizeOf @[#Bool]
+
+test eval sizeOf'int8   = #sizeOf @[#Int8]
+test eval sizeOf'int16  = #sizeOf @[#Int16]
+test eval sizeOf'int32  = #sizeOf @[#Int32]
+test eval sizeOf'int64  = #sizeOf @[#Int64]
+
+test eval sizeOf'word8  = #sizeOf @[#Word8]
+test eval sizeOf'word16 = #sizeOf @[#Word16]
+test eval sizeOf'word32 = #sizeOf @[#Word32]
+test eval sizeOf'word64 = #sizeOf @[#Word64]
+
+test eval sizeOf'addr   = #sizeOf @[#Addr]
