@@ -37,7 +37,7 @@ primTypeCtors
         , ("Read",      [TRegion] :=> TProp)
         , ("Write",     [TRegion] :=> TProp)
         , ("Addr",      TData)
-        , ("Ptr",       [TRegion, TType] :=> TData)
+        , ("Ptr",       [TRegion, TData] :=> TData)
         , ("Option",    [TData] :=> TData)
         , ("List",      [TData] :=> TData)
         , ("Set",       [TData] :=> TData)
