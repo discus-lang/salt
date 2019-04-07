@@ -54,25 +54,25 @@ primOpsMemory
 
    , PO { name  = "allocAddr"
         , tsig  = [TWord64] :-> [TAddr]
-        , teff  = []
+        , teff  = [TPrm "Memory"]
         , exec  = \[NVs [VWord64 s]] -> primAllocAddr s
         , docs  = "Allocate a raw address." }
 
    , PO { name  = "freeAddr"
         , tsig  = [TAddr] :-> []
-        , teff  = []
+        , teff  = [TPrm "Memory"]
         , exec  = \[NVs [VAddr a]] -> primFree a
         , docs  = "Free an Addr." }
 
    , PO { name  = "allocPtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> TPtr "r" "t"
-        , teff  = []
+        , teff  = [TPrm "Memory"]
         , exec  = \[NTs [r, t]] -> primAllocPtr r t
         , docs  = "Allocate a ptr." }
 
    , PO { name  = "freePtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t"] :-> []
-        , teff  = []
+        , teff  = [TPrm "Memory"]
         -- TODO FIXME check NTs and VPtr region and type are the same.
         , exec  = \[NTs [_, _], NVs [VPtr _ _ a]] -> primFree a
         , docs  = "Free a Ptr." }

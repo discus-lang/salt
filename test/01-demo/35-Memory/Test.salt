@@ -1,0 +1,14 @@
+term addr'allocandfree : []! #Memory
+ = box private r with {} in
+     let s = #sizeOf @[#Word8] in
+       let p = #allocAddr s in
+         #freeAddr p
+
+test exec addr'allocandfree
+
+term ptr'allocandfree : []! #Memory
+ = box private r with {Alloc; Write; Read} in
+     let p = #allocPtr @[r, #Word8] in
+       #freePtr @[r, #Word8] p
+
+test exec ptr'allocandfree
