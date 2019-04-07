@@ -12,3 +12,18 @@ term ptr'allocandfree : []! #Memory
        #freePtr @[r, #Word8] p
 
 test exec ptr'allocandfree
+
+term sizeOf'metley : []! #Console
+ = box do
+     #console'println (#word64'show (#sizeOf @[#Bool]))
+     #console'println (#word64'show (#sizeOf @[#Int8]))
+     #console'println (#word64'show (#sizeOf @[#Int16]))
+     #console'println (#word64'show (#sizeOf @[#Int32]))
+     #console'println (#word64'show (#sizeOf @[#Int64]))
+     #console'println (#word64'show (#sizeOf @[#Word8]))
+     #console'println (#word64'show (#sizeOf @[#Word16]))
+     #console'println (#word64'show (#sizeOf @[#Word32]))
+     #console'println (#word64'show (#sizeOf @[#Word64]))
+     #console'println (#word64'show (#sizeOf @[#Addr]))
+
+test exec sizeOf'metley

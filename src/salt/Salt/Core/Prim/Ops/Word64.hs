@@ -1,10 +1,16 @@
 
 module Salt.Core.Prim.Ops.Word64 where
 import Salt.Core.Prim.Ops.Base
+import Data.Text (pack)
 
 
 primOpsWord64
- = [ PP { name  = "word64'add"
+ = [ PP { name  = "word64'show"
+        , tsig  = [TWord64] :-> [TText]
+        , step  = \[NVs [VWord64 n]] -> [VText $ pack $ show n]
+        , docs  = "Convert word to text." }
+
+   , PP { name  = "word64'add"
         , tsig  = [TWord64, TWord64] :-> [TWord64]
         , step  = \[NVs [VWord64 n1, VWord64 n2]] -> [VWord64 $ n1 + n2]
         , docs  = "Word addition." }
