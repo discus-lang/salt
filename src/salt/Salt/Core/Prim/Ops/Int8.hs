@@ -1,10 +1,16 @@
 
 module Salt.Core.Prim.Ops.Int8 where
 import Salt.Core.Prim.Ops.Base
+import Data.Text (pack)
 
 
 primOpsInt8
- = [ PP { name  = "int8'add"
+ = [ PP { name  = "int8'show"
+        , tsig  = [TInt8] :-> [TText]
+        , step  = \[NVs [VInt8 n]] -> [VText $ pack $ show n]
+        , docs  = "Convert int to text." }
+
+   , PP { name  = "int8'add"
         , tsig  = [TInt8, TInt8] :-> [TInt8]
         , step  = \[NVs [VInt8 n1, VInt8 n2]] -> [VInt8 $ n1 + n2]
         , docs  = "Integer addition." }

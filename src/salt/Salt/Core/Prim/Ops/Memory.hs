@@ -25,7 +25,7 @@ primSizeOf (TAnn _ t)   = primSizeOf t
 -- unwrap simple type applications
 primSizeOf (TKey TKApp [TGTypes [a], _])    = primSizeOf a
 primSizeOf (TPrm name) = error $ "I do not know how to size type: " ++ (show name)
-primSizeOf _           = error "primSizeOf unimplemented"
+primSizeOf _           = error "primSizeOf unimplemented for requested type"
 
 --           size
 primAlloc :: Word.Word64 -> IO Ptr.WordPtr
@@ -50,15 +50,72 @@ primFree wp = do let p = Ptr.wordPtrToPtr wp
                  return []
 
 primWrite :: Type a -> Ptr.WordPtr -> Value a -> IO [Value a]
+primWrite _ wp (VBool   v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+                                return []
+primWrite _ wp (VInt8   v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+                                return []
+primWrite _ wp (VInt16  v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+                                return []
+primWrite _ wp (VInt32  v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+                                return []
+primWrite _ wp (VInt64  v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+                                return []
+primWrite _ wp (VWord8  v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+                                return []
+primWrite _ wp (VWord16 v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+                                return []
+primWrite _ wp (VWord32 v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+                                return []
 primWrite _ wp (VWord64 v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+                                return []
+primWrite _ wp (VAddr   v) = do let p = Ptr.wordPtrToPtr wp
                                 Storable.poke p v
                                 return []
 primWrite _ _  _           = error "primWrite unimplemented for requested type"
 
 primRead :: Type a -> Ptr.WordPtr -> IO [Value a]
-primRead TWord64 wp = do let p = Ptr.wordPtrToPtr wp :: Ptr.Ptr Word.Word64
+primRead TBool   wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VBool v]
+primRead TInt8   wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VInt8 v]
+primRead TInt16  wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VInt16 v]
+primRead TInt32  wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VInt32 v]
+primRead TInt64  wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VInt64 v]
+primRead TWord8  wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VWord8 v]
+primRead TWord16 wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VWord16 v]
+primRead TWord32 wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VWord32 v]
+primRead TWord64 wp = do let p = Ptr.wordPtrToPtr wp
                          v <- Storable.peek p
                          return [VWord64 v]
+primRead TAddr   wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VAddr v]
+primRead TAddr   wp = do let p = Ptr.wordPtrToPtr wp
+                         v <- Storable.peek p
+                         return [VAddr v]
 primRead _ _         = error "primRead unimplemented for requested type"
 
 primOpsMemory

@@ -45,3 +45,21 @@ term sizeOf'ptr : []! #Console
 
 test exec sizeOf'ptr
 
+term addr'indirection : []! #Console + #Memory
+ = box do
+     -- p1 is the address of our underlying data, an int8
+     p1 = #allocAddr (#sizeOf @[#Int8])
+     #writeAddr @[#Int8] [p1, #int8'1]
+
+     -- p2 refers to p1
+     p2 = #allocAddr (#sizeOf @[#Addr])
+     #writeAddr @[#Addr] [p2, p1]
+
+     v1 = #readAddr @[#Int8] (#readAddr @[#Addr] p2)
+     #writeAddr @[#Int8] [p1, #int8'100]
+     v2 = #readAddr @[#Int8] (#readAddr @[#Addr] p2)
+
+     #console'println (#int8'show v1)
+     #console'println (#int8'show v2)
+
+test exec addr'indirection
