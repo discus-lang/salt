@@ -8,19 +8,23 @@ import qualified Foreign.Ptr           as Ptr
 import qualified Foreign.Storable      as Storable
 
 primSizeOf :: Type a -> Word.Word64
-primSizeOf TBool       = fromIntegral $ Storable.sizeOf (undefined :: Bool)
-primSizeOf TInt8       = fromIntegral $ Storable.sizeOf (undefined :: Int.Int8)
-primSizeOf TInt16      = fromIntegral $ Storable.sizeOf (undefined :: Int.Int16)
-primSizeOf TInt32      = fromIntegral $ Storable.sizeOf (undefined :: Int.Int32)
-primSizeOf TInt64      = fromIntegral $ Storable.sizeOf (undefined :: Int.Int64)
-primSizeOf TWord8      = fromIntegral $ Storable.sizeOf (undefined :: Word.Word8)
-primSizeOf TWord16     = fromIntegral $ Storable.sizeOf (undefined :: Word.Word16)
-primSizeOf TWord32     = fromIntegral $ Storable.sizeOf (undefined :: Word.Word32)
-primSizeOf TWord64     = fromIntegral $ Storable.sizeOf (undefined :: Word.Word64)
-primSizeOf TAddr       = fromIntegral $ Storable.sizeOf (undefined :: Ptr.WordPtr)
-primSizeOf (TPtr _ _)  = fromIntegral $ Storable.sizeOf (undefined :: Ptr.WordPtr)
+primSizeOf TBool        = fromIntegral $ Storable.sizeOf (undefined :: Bool)
+primSizeOf TInt8        = fromIntegral $ Storable.sizeOf (undefined :: Int.Int8)
+primSizeOf TInt16       = fromIntegral $ Storable.sizeOf (undefined :: Int.Int16)
+primSizeOf TInt32       = fromIntegral $ Storable.sizeOf (undefined :: Int.Int32)
+primSizeOf TInt64       = fromIntegral $ Storable.sizeOf (undefined :: Int.Int64)
+primSizeOf TWord8       = fromIntegral $ Storable.sizeOf (undefined :: Word.Word8)
+primSizeOf TWord16      = fromIntegral $ Storable.sizeOf (undefined :: Word.Word16)
+primSizeOf TWord32      = fromIntegral $ Storable.sizeOf (undefined :: Word.Word32)
+primSizeOf TWord64      = fromIntegral $ Storable.sizeOf (undefined :: Word.Word64)
+primSizeOf TAddr        = fromIntegral $ Storable.sizeOf (undefined :: Ptr.WordPtr)
+primSizeOf (TPtr _ _)   = fromIntegral $ Storable.sizeOf (undefined :: Ptr.WordPtr)
+primSizeOf (TPrm "Ptr") = fromIntegral $ Storable.sizeOf (undefined :: Ptr.WordPtr)
+-- unwrap type annotations
+primSizeOf (TAnn _ t)   = primSizeOf t
+-- unwrap simple type applications
+primSizeOf (TKey TKApp [TGTypes [a], _])    = primSizeOf a
 primSizeOf (TPrm name) = error $ "I do not know how to size type: " ++ (show name)
-primSizeOf (TAnn _ t)  = primSizeOf t
 primSizeOf _           = error "primSizeOf unimplemented"
 
 --           size

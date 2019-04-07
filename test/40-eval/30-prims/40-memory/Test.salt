@@ -11,3 +11,6 @@ test eval sizeOf'word32 = #sizeOf @[#Word32]
 test eval sizeOf'word64 = #sizeOf @[#Word64]
 
 test eval sizeOf'addr   = #sizeOf @[#Addr]
+
+test eval sizeOf'ptr
+ = private r with {} in #sizeOf @[#Ptr [r, #Word8]]

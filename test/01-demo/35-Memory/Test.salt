@@ -27,3 +27,10 @@ term sizeOf'metley : []! #Console
      #console'println (#word64'show (#sizeOf @[#Addr]))
 
 test exec sizeOf'metley
+
+term sizeOf'ptr : []! #Console
+ = box private r with {Alloc; Read; Write} in
+     let s = #sizeOf @[#Ptr [r, #Word8]] in
+       #console'println (#word64'show s)
+
+test exec sizeOf'ptr
