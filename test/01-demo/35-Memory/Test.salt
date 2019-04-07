@@ -36,16 +36,26 @@ term sizeOf'ptr : []! #Console
 test exec sizeOf'ptr
 
 term addr'endtoend : []! #Console + #Memory
- = box private r with {Alloc; Read; Write} in do
+ = box do
      s = #sizeOf @[#Word64]
      p = #allocAddr s
+     #writeAddr @[#Word64] [p, #word64'0]
      v1 = #readAddr @[#Word64] p
-     #writeAddr @[#Word64] [p, #word64'12]
-     v2 = #readAddr @[#Word64] p
      #writeAddr @[#Word64] [p, #word64'143]
-     v3 = #readAddr @[#Word64] p
+     v2 = #readAddr @[#Word64] p
      #console'println (#word64'show v1)
      #console'println (#word64'show v2)
-     #console'println (#word64'show v3)
 
 test exec addr'endtoend
+
+term ptr'endtoend : []! #Console + #Memory
+ = box private r with {Alloc; Read; Write} in do
+     p = #allocPtr @[r, #Word64]
+     #writePtr @[r, #Word64] [p, #word64'0]
+     v1 = #readPtr @[r, #Word64] p
+     #writePtr @[r, #Word64] [p, #word64'143]
+     v2 = #readPtr @[r, #Word64] p
+     #console'println (#word64'show v1)
+     #console'println (#word64'show v2)
+
+test exec ptr'endtoend
