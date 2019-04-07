@@ -158,7 +158,6 @@ primOpsMemory
    , PO { name  = "freePtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t"] :-> []
         , teff  = [TPrm "Memory"]
-        -- TODO FIXME check NTs and VPtr region and type are the same.
         , exec  = \[NTs [_, _], NVs [VPtr _ _ a]] -> primFree a
         , docs  = "Free a Ptr." }
 
