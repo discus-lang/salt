@@ -123,7 +123,7 @@ primOpsMemory
         , tsig  = [("a", TData)] :*> TWord64
         , step  = \[NTs [t]] -> do let s = primSizeOf t
                                    return $ VWord64 s
-        , docs  = "Find sizeof a type." }
+        , docs  = "Find the underlying storage size of a type." }
 
    , PO { name  = "allocAddr"
         , tsig  = [TWord64] :-> [TAddr]
@@ -135,47 +135,47 @@ primOpsMemory
         , tsig  = [TAddr] :-> []
         , teff  = [TPrm "Memory"]
         , exec  = \[NVs [VAddr a]] -> primFree a
-        , docs  = "Free an Addr." }
+        , docs  = "Free an address." }
 
    , PO { name  = "writeAddr"
         , tsig  = [("t", TData)] :*> [TAddr, "t"] :-> []
         , teff  = [TPrm "Memory"]
         , exec  = \[NTs [t], NVs [VAddr a, v]] -> primWrite t a v
-        , docs  = "Free an Addr." }
+        , docs  = "Write through an address." }
 
    , PO { name  = "readAddr"
         , tsig  = [("t", TData)] :*> [TAddr] :-> ["t"]
         , teff  = [TPrm "Memory"]
         , exec  = \[NTs [t], NVs [VAddr a]] -> primRead t a
-        , docs  = "Free an Addr." }
+        , docs  = "Read through an address." }
 
    , PO { name  = "allocPtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> TPtr "r" "t"
         , teff  = [TPrm "Memory"]
         , exec  = \[NTs [r, t]] -> primAllocPtr r t
-        , docs  = "Allocate a ptr." }
+        , docs  = "Allocate a pointer." }
 
    , PO { name  = "freePtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t"] :-> []
         , teff  = [TPrm "Memory"]
         , exec  = \[NTs [_, _], NVs [VPtr _ _ a]] -> primFree a
-        , docs  = "Free a Ptr." }
+        , docs  = "Free a pointer." }
 
    , PO { name  = "writePtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t", "t"] :-> []
         , teff  = [TPrm "Memory"]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a, v]] -> primWrite t a v
-        , docs  = "Free an Addr." }
+        , docs  = "Write through a pointer." }
 
    , PO { name  = "readPtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t"] :-> ["t"]
         , teff  = [TPrm "Memory"]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a]] -> primRead t a
-        , docs  = "Free an Addr." }
+        , docs  = "Read through a pointer." }
 
    , PP { name  = "castPtr"
         , tsig  = [("r", TRegion), ("t1", TData), ("t2", TData)] :*> [TPtr "r" "t1"] :-> [TPtr "r" "t2"]
         , step  = \[NTs [_, _, t2], NVs [VPtr r _ a]] -> [VPtr r t2 a]
-        , docs  = "Find sizeof a type." }
+        , docs  = "Cast a pointer to that of a different type." }
 
    ]
