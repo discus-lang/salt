@@ -49,6 +49,21 @@ primFree wp = do let p = Ptr.wordPtrToPtr wp
                  Alloc.free p
                  return []
 
+primWrite :: Type a -> Ptr.WordPtr -> Value a -> IO ()
+primWrite _ wp (VWord64 v) = do let p = Ptr.wordPtrToPtr wp
+                                Storable.poke p v
+primWrite _ _  _           = error "primWrite unimplemented for requested type"
+
+primWriteAddr :: Type a -> Ptr.WordPtr -> Value a -> IO [Value a]
+primWriteAddr t wp v = do primWrite t wp v
+                          return []
+
+primRead :: Type a -> Ptr.WordPtr -> IO [Value a]
+primRead TWord64 wp = do let p = Ptr.wordPtrToPtr wp :: Ptr.Ptr Word.Word64
+                         v <- Storable.peek p
+                         return [VWord64 v]
+primRead _ _         = error "primRead unimplemented for requested type"
+
 primOpsMemory
  = [ PP { name  = "sizeOf"
         , tsig  = [("a", TData)] :*> TWord64
@@ -66,6 +81,18 @@ primOpsMemory
         , tsig  = [TAddr] :-> []
         , teff  = [TPrm "Memory"]
         , exec  = \[NVs [VAddr a]] -> primFree a
+        , docs  = "Free an Addr." }
+
+   , PO { name  = "writeAddr"
+        , tsig  = [("a", TData)] :*> [TAddr, "a"] :-> []
+        , teff  = [TPrm "Memory"]
+        , exec  = \[NTs [t], NVs [VAddr a, v]] -> primWriteAddr t a v
+        , docs  = "Free an Addr." }
+
+   , PO { name  = "readAddr"
+        , tsig  = [("a", TData)] :*> [TAddr] :-> ["a"]
+        , teff  = [TPrm "Memory"]
+        , exec  = \[NTs [t], NVs [VAddr a]] -> primRead t a
         , docs  = "Free an Addr." }
 
    , PO { name  = "allocPtr"

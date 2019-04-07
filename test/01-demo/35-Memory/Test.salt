@@ -34,3 +34,18 @@ term sizeOf'ptr : []! #Console
      #console'println (#word64'show s)
 
 test exec sizeOf'ptr
+
+term addr'endtoend : []! #Console + #Memory
+ = box private r with {Alloc; Read; Write} in do
+     s = #sizeOf @[#Word64]
+     p = #allocAddr s
+     v1 = #readAddr @[#Word64] p
+     #writeAddr @[#Word64] [p, #word64'12]
+     v2 = #readAddr @[#Word64] p
+     #writeAddr @[#Word64] [p, #word64'143]
+     v3 = #readAddr @[#Word64] p
+     #console'println (#word64'show v1)
+     #console'println (#word64'show v2)
+     #console'println (#word64'show v3)
+
+test exec addr'endtoend
