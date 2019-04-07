@@ -14,3 +14,9 @@ test eval sizeOf'addr   = #sizeOf @[#Addr]
 
 test eval sizeOf'ptr
  = private r with {} in #sizeOf @[#Ptr [r, #Word8]]
+
+test type castPtr
+ = private r with {} in do
+     p1 = #allocPtr @[r, #Word8]
+     p2 = #castPtr @[r, #Word8, #Bool] p1
+     #freePtr @[r, #Bool] p2

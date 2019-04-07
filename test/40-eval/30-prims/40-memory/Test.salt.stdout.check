@@ -9,3 +9,4 @@
 * sizeOf'word64: [8]
 * sizeOf'addr: [8]
 * sizeOf'ptr: [8]
+* castPtr: []

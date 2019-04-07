@@ -172,4 +172,10 @@ primOpsMemory
         , teff  = [TPrm "Memory"]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a]] -> primRead t a
         , docs  = "Free an Addr." }
+
+   , PP { name  = "castPtr"
+        , tsig  = [("r", TRegion), ("t1", TData), ("t2", TData)] :*> [TPtr "r" "t1"] :-> [TPtr "r" "t2"]
+        , step  = \[NTs [_, _, t2], NVs [VPtr r _ a]] -> [VPtr r t2 a]
+        , docs  = "Find sizeof a type." }
+
    ]
