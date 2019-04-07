@@ -1,40 +1,3 @@
-term addr'allocandfree : []! #Memory
- = box private r with {} in do
-     s = #sizeOf @[#Word8]
-     p = #allocAddr s
-     #freeAddr p
-
-test exec addr'allocandfree
-
-term ptr'allocandfree : []! #Memory
- = box private r with {Alloc; Write; Read} in do
-     p = #allocPtr @[r, #Word8]
-     #freePtr @[r, #Word8] p
-
-test exec ptr'allocandfree
-
-term sizeOf'metley : []! #Console
- = box do
-     #console'println (#word64'show (#sizeOf @[#Bool]))
-     #console'println (#word64'show (#sizeOf @[#Int8]))
-     #console'println (#word64'show (#sizeOf @[#Int16]))
-     #console'println (#word64'show (#sizeOf @[#Int32]))
-     #console'println (#word64'show (#sizeOf @[#Int64]))
-     #console'println (#word64'show (#sizeOf @[#Word8]))
-     #console'println (#word64'show (#sizeOf @[#Word16]))
-     #console'println (#word64'show (#sizeOf @[#Word32]))
-     #console'println (#word64'show (#sizeOf @[#Word64]))
-     #console'println (#word64'show (#sizeOf @[#Addr]))
-
-test exec sizeOf'metley
-
-term sizeOf'ptr : []! #Console
- = box private r with {Alloc; Read; Write} in do
-     s = #sizeOf @[#Ptr [r, #Word8]]
-     #console'println (#word64'show s)
-
-test exec sizeOf'ptr
-
 term addr'endtoend : []! #Console + #Memory
  = box do
      s = #sizeOf @[#Word64]
@@ -59,3 +22,26 @@ term ptr'endtoend : []! #Console + #Memory
      #console'println (#word64'show v2)
 
 test exec ptr'endtoend
+
+term sizeOf'metley : []! #Console
+ = box do
+     #console'println (#word64'show (#sizeOf @[#Bool]))
+     #console'println (#word64'show (#sizeOf @[#Int8]))
+     #console'println (#word64'show (#sizeOf @[#Int16]))
+     #console'println (#word64'show (#sizeOf @[#Int32]))
+     #console'println (#word64'show (#sizeOf @[#Int64]))
+     #console'println (#word64'show (#sizeOf @[#Word8]))
+     #console'println (#word64'show (#sizeOf @[#Word16]))
+     #console'println (#word64'show (#sizeOf @[#Word32]))
+     #console'println (#word64'show (#sizeOf @[#Word64]))
+     #console'println (#word64'show (#sizeOf @[#Addr]))
+
+test exec sizeOf'metley
+
+term sizeOf'ptr : []! #Console
+ = box private r with {Alloc; Read; Write} in do
+     s = #sizeOf @[#Ptr [r, #Word8]]
+     #console'println (#word64'show s)
+
+test exec sizeOf'ptr
+
