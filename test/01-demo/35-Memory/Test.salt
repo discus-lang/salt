@@ -8,6 +8,7 @@ term addr'endtoend : []! #Console + #Memory
      v2 = #readAddr @[#Word64] p
      #console'println (#word64'show v1)
      #console'println (#word64'show v2)
+     #freeAddr p
 
 test exec addr'endtoend
 
@@ -20,6 +21,7 @@ term ptr'endtoend : []! #Console + #Memory
      v2 = #readPtr @[r, #Word64] p
      #console'println (#word64'show v1)
      #console'println (#word64'show v2)
+     #freePtr @[r, #Word64] p
 
 test exec ptr'endtoend
 
@@ -61,5 +63,8 @@ term addr'indirection : []! #Console + #Memory
 
      #console'println (#int8'show v1)
      #console'println (#int8'show v2)
+
+     #freeAddr p1
+     #freeAddr p2
 
 test exec addr'indirection
