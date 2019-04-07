@@ -518,3 +518,24 @@ test/30-error/11-check-term/Test.salt:298:32
 
   298:11 In test
 
+test/30-error/11-check-term/Test.salt:306:31
+  Actual type '#Word8'
+   does not match
+   expected type '#Bool'
+
+  303:11 In test "freePtr'mismatch'type"
+
+test/30-error/11-check-term/Test.salt:312:33
+  Actual type '#Word8'
+   does not match
+   expected type '#Word16'
+
+  309:11 In test "readPtr'mismatch'type"
+
+test/30-error/11-check-term/Test.salt:319:35
+  Actual type 'r1'
+   does not match
+   expected type 'r2'
+
+  315:11 In test "readPtr'mismatch'region"
+

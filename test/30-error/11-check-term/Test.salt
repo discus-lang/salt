@@ -296,3 +296,24 @@ test type [map #Nat #Nat| 3 3 := 3]
 
 -- | Error: element type does not match annotation.
 test type [map #Nat #Nat| 3 := #true]
+
+
+-- (t-ptr) -------------------------------------------------------------------
+-- | Error: supplied type doesn't match ptr type
+test type freePtr'mismatch'type
+ = box private r with {Alloc; Read; Write} in do
+         p = #allocPtr @[r, #Word8]
+         #freePtr @[r, #Bool] p
+
+-- | Error: supplied type doesn't match ptr type
+test type readPtr'mismatch'type
+ = box private r with {Alloc; Read; Write} in do
+         p = #allocPtr @[r, #Word8]
+         #readPtr @[r, #Word16] p
+
+-- | Error: supplied region doesn't match ptr type
+test type readPtr'mismatch'region
+ = box private r1 with {Alloc; Read; Write} in
+         private r2 with {Alloc; Read; Write} in do
+           p = #allocPtr @[r1, #Word8]
+           #readPtr @[r2, #Word8] p
