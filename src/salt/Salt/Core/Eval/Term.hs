@@ -323,14 +323,28 @@ evalTerm s a env mm@(MProcWhen msCond msThen mRest)
         go _ _ = throw $ ErrorInvalidTerm a mm
 
 -- (evm-private) -----------------------------------------
--- TODO FIXME no-op MPrivate eval
-evalTerm s a env (MPrivate _ _ mBody)
- = evalTerm s a env mBody
+evalTerm s a env (MPrivate bksR _ mBody)
+ = do let bsR = map fst bksR
+      let tsR = map snd bksR
+      let tenv = menvSliceTypeEnv env
+      tsR' <- mapM (evalType s a tenv) tsR
+      let env' = menvExtendTypes (zip bsR tsR') env
+
+      -- FIXME TODO need to add witnesses to env
+
+      evalTerm s a env' mBody
 
 -- (evm-extend) ------------------------------------------
--- TODO FIXME no-op MExtend eval
-evalTerm s a env (MExtend _ _ _ mBody)
- = evalTerm s a env mBody
+evalTerm s a env (MExtend _ bksR _ mBody)
+ = do let bsR = map fst bksR
+      let tsR = map snd bksR
+      let tenv = menvSliceTypeEnv env
+      tsR' <- mapM (evalType s a tenv) tsR
+      let env' = menvExtendTypes (zip bsR tsR') env
+
+      -- FIXME TODO need to add witnesses to env
+
+      evalTerm s a env' mBody
 
 -----------------------------------------------------------
 -- No match.
