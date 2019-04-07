@@ -8,3 +8,5 @@
 * sizeOf'word32: [4]
 * sizeOf'word64: [8]
 * sizeOf'addr: [8]
+* addr'allocandfree: []
+* ptr'allocandfree: []

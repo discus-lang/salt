@@ -11,3 +11,14 @@ test eval sizeOf'word32 = #sizeOf @[#Word32]
 test eval sizeOf'word64 = #sizeOf @[#Word64]
 
 test eval sizeOf'addr   = #sizeOf @[#Addr]
+
+test eval addr'allocandfree
+ = private r with {} in
+     let s = #sizeOf @[#Word8] in
+       let p = #allocAddr s in
+         #freeAddr p
+
+test eval ptr'allocandfree
+ = private r with {Alloc; Write; Read} in
+     let p = #allocPtr @[r, #Word8] in
+       #freePtr @[r, #Word8] p
