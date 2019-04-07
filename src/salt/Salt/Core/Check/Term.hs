@@ -550,7 +550,7 @@ checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
 
 
 -- (t-private) ------------------------------------------------
-checkTermWith a wh ctx Synth (MPrivate bksR btwS mBody)
+checkTermWith a wh ctx Synth (MPrivate bksR btsW mBody)
  = do
         -- TODO keep unpacking and repacking using MPTypes/MPTerms
         --      instead we should just change MPrivate type
@@ -561,21 +561,21 @@ checkTermWith a wh ctx Synth (MPrivate bksR btwS mBody)
         let ctx'  = contextBindTermParams (MPTypes bksR') ctx
 
         -- Check that all witness bindings have type TProp
-        let (bs, ts) = unzip btwS
+        let (bs, ts) = unzip btsW
         ts' <- checkTypesAre UType a wh ctx' (replicate (length ts) TProp) ts
-        let btwS' = zip bs ts'
+        let btsW' = zip bs ts'
 
         -- introduce capability witnesses to context
-        let ctx'' = contextBindTermParams (MPTerms btwS') ctx'
+        let ctx'' = contextBindTermParams (MPTerms btsW') ctx'
 
         -- check the body term in new ctx
         (mBody', tsResult, esResult)
          <- checkTerm a wh ctx'' Synth mBody
 
-        return (MPrivate bksR' btwS' mBody', tsResult, esResult)
+        return (MPrivate bksR' btsW' mBody', tsResult, esResult)
 
 -- (t-extend) ------------------------------------------------
-checkTermWith a wh ctx Synth (MExtend r1 bksR btwS mBody)
+checkTermWith a wh ctx Synth (MExtend r1 bksR btsW mBody)
  = do
         -- TODO keep unpacking and repacking using MPTypes/MPTerms
         --      instead we should just change MExtend type
@@ -590,18 +590,18 @@ checkTermWith a wh ctx Synth (MExtend r1 bksR btwS mBody)
         let ctx'  = contextBindTermParams (MPTypes bksR') ctx
 
         -- Check that all witness bindings have type TProp
-        let (bs, ts) = unzip btwS
+        let (bs, ts) = unzip btsW
         ts' <- checkTypesAre UType a wh ctx' (replicate (length ts) TProp) ts
-        let btwS' = zip bs ts'
+        let btsW' = zip bs ts'
 
         -- introduce capability witnesses to context
-        let ctx'' = contextBindTermParams (MPTerms btwS') ctx'
+        let ctx'' = contextBindTermParams (MPTerms btsW') ctx'
 
         -- check the body term in new ctx
         (mBody', tsResult, esResult)
          <- checkTerm a wh ctx'' Synth mBody
 
-        return (MExtend r1 bksR' btwS' mBody', tsResult, esResult)
+        return (MExtend r1 bksR' btsW' mBody', tsResult, esResult)
 
 -- (t-check) ----------------------------------------------
 -- Switch modes in bidirectional type checking.
