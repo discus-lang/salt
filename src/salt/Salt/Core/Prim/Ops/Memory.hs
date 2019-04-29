@@ -80,6 +80,9 @@ primWrite _ wp (VWord64 v) = do let p = Ptr.wordPtrToPtr wp
 primWrite _ wp (VAddr   v) = do let p = Ptr.wordPtrToPtr wp
                                 Storable.poke p v
                                 return []
+primWrite _ wp (VPtr _ _ v) = do let p = Ptr.wordPtrToPtr wp
+                                 Storable.poke p v
+                                 return []
 primWrite _ _  _           = error "primWrite unimplemented for requested type"
 
 primRead :: Type a -> Ptr.WordPtr -> IO [Value a]
@@ -116,6 +119,12 @@ primRead TAddr   wp = do let p = Ptr.wordPtrToPtr wp
 primRead TAddr   wp = do let p = Ptr.wordPtrToPtr wp
                          v <- Storable.peek p
                          return [VAddr v]
+-- Ptr requires a bit more work
+primRead (TKey TKApp [TGTypes [(TAnn _ (TPrm "Ptr"))], TGTypes [r, t]]) wp = do
+    let p = Ptr.wordPtrToPtr wp
+    v <- Storable.peek p
+    return [VPtr r t v]
+
 primRead _ _         = error "primRead unimplemented for requested type"
 
 primOpsMemory
@@ -177,5 +186,8 @@ primOpsMemory
         , tsig  = [("r", TRegion), ("t1", TData), ("t2", TData)] :*> [TPtr "r" "t1"] :-> [TPtr "r" "t2"]
         , step  = \[NTs [_, _, t2], NVs [VPtr r _ a]] -> [VPtr r t2 a]
         , docs  = "Cast a pointer to that of a different type." }
+
+    -- TODO makePtr and takePtr (down and up grade)
+    -- TODO consider castPtr' for also changing region ?
 
    ]
