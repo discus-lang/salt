@@ -68,3 +68,25 @@ term addr'indirection : []! #Console + #Memory
      #freeAddr p2
 
 test exec addr'indirection
+
+term ptr'indirection : []! #Console + #Memory
+ = box private r1 with {Read; Write; Alloc} in do
+     -- p1 is the ptr of our underlying data, an int8
+     p1 = #allocPtr @[r1, #Int8]
+     #writePtr @[r1, #Int8] [p1, #int8'1]
+
+     -- p2 refers to p1
+     p2 = #allocPtr @[r1, #Ptr [r1, #Int8]]
+     #writePtr @[r1, #Ptr [r1, #Int8]] [p2, p1]
+
+     v1 = #readPtr @[r1, #Int8] (#readPtr @[r1, #Ptr [r1, #Int8]] p2)
+     #writePtr @[r1, #Int8] [p1, #int8'100]
+     v2 = #readPtr @[r1, #Int8] (#readPtr @[r1, #Ptr [r1, #Int8]] p2)
+
+     #console'println (#int8'show v1)
+     #console'println (#int8'show v2)
+
+     #freePtr @[r1, #Int8] p1
+     #freePtr @[r1, #Ptr [r1, #Int8]] p2
+
+test exec ptr'indirection
