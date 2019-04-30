@@ -90,3 +90,18 @@ term ptr'indirection : []! #Console + #Memory
      #freePtr @[r1, #Ptr [r1, #Int8]] p2
 
 test exec ptr'indirection
+
+term ptr'roundtrip : []! #Console + #Memory
+ = box private r1 with {Read; Write; Alloc} in do
+     p1 = #allocPtr @[r1, #Int8]
+     #writePtr @[r1, #Int8] [p1, #int8'42]
+
+     a = #takePtr @[r1, #Int8] p1
+     #console'println (#int8'show (#readAddr @[#Int8] a))
+
+     #writeAddr @[#Int8] [a, #int8'67]
+     p2 = #makePtr @[r1, #Int8] a
+
+     #console'println (#int8'show (#readPtr @[r1, #Int8] p2))
+
+test exec ptr'roundtrip

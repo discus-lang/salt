@@ -182,12 +182,21 @@ primOpsMemory
         , exec  = \[NTs [_, _], NVs [VPtr _ t a]] -> primRead t a
         , docs  = "Read through a pointer." }
 
+    -- TODO consider castPtr' for also changing region ?
    , PP { name  = "castPtr"
         , tsig  = [("r", TRegion), ("t1", TData), ("t2", TData)] :*> [TPtr "r" "t1"] :-> [TPtr "r" "t2"]
         , step  = \[NTs [_, _, t2], NVs [VPtr r _ a]] -> [VPtr r t2 a]
         , docs  = "Cast a pointer to that of a different type." }
 
-    -- TODO makePtr and takePtr (down and up grade)
-    -- TODO consider castPtr' for also changing region ?
+   , PP { name  = "takePtr"
+        , tsig  = [("r", TRegion), ("t1", TData)] :*> [TPtr "r" "t1"] :-> [TAddr]
+        , step  = \[NTs [_, _], NVs [VPtr _ _ a]] -> [VAddr a]
+        , docs  = "Downgrade a Ptr to an Addr." }
+
+   , PP { name  = "makePtr"
+        , tsig  = [("r", TRegion), ("t1", TData)] :*> [TAddr] :-> [TPtr "r" "t1"]
+        , step  = \[NTs [r, t], NVs [VAddr a]] -> [VPtr r t a]
+        , docs  = "Upgrade an Addr to a Ptr." }
+
 
    ]
