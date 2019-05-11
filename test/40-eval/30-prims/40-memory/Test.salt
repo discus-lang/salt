@@ -20,3 +20,12 @@ test type castPtr
      p1 = #allocPtr @[r, #Word8]
      p2 = #castPtr @[r, #Word8, #Bool] p1
      #freePtr @[r, #Bool] p2
+
+test type castPtrRegion
+ = private r1 with {} in
+   private r2 with {} in do
+     p1 = #allocPtr @[r1, #Word8]
+     p2 = #castPtrRegion @[r1, r2, #Word8] p1
+     #writePtr @[r2, #Word8] [p2, #word8'16]
+     #freePtr @[r2, #Word8] p2
+

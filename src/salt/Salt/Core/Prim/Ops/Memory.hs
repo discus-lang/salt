@@ -182,11 +182,17 @@ primOpsMemory
         , exec  = \[NTs [_, _], NVs [VPtr _ t a]] -> primRead t a
         , docs  = "Read through a pointer." }
 
-    -- TODO consider castPtr' for also changing region ?
    , PP { name  = "castPtr"
         , tsig  = [("r", TRegion), ("t1", TData), ("t2", TData)] :*> [TPtr "r" "t1"] :-> [TPtr "r" "t2"]
         , step  = \[NTs [_, _, t2], NVs [VPtr r _ a]] -> [VPtr r t2 a]
         , docs  = "Cast a pointer to that of a different type." }
+
+   -- NB: we can always change region by going to and from addr, so the addition
+   --     of this function doesn't weaken our guarantees.
+   , PP { name  = "castPtrRegion"
+        , tsig  = [("r1", TRegion), ("r2", TRegion), ("t", TData)] :*> [TPtr "r1" "t"] :-> [TPtr "r2" "t"]
+        , step  = \[NTs [_, r2, _], NVs [VPtr _ t a]] -> [VPtr r2 t a]
+        , docs  = "Cast a pointer to that of a different region." }
 
    , PP { name  = "takePtr"
         , tsig  = [("r", TRegion), ("t1", TData)] :*> [TPtr "r" "t1"] :-> [TAddr]

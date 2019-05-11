@@ -10,3 +10,4 @@
 * sizeOf'addr: [8]
 * sizeOf'ptr: [8]
 * castPtr: []
+* castPtrRegion: []
