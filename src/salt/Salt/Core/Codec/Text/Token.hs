@@ -166,8 +166,8 @@ showTokenAsSource kk
         KCase           -> "case"
         KThen           -> "then"
         KElse           -> "else"
-        KSymForall      -> "∀";         KAsciiExists    -> "exists"
-        KSymExists      -> "∃";         KAsciiForall    -> "forall"
+        KSymForall      -> "∀";         KAsciiForall    -> "forall"
+        KSymExists      -> "∃";         KAsciiExists    -> "exists"
 
         KProc           -> "proc"
         KYield          -> "yield"
