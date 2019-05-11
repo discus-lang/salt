@@ -28,4 +28,3 @@ test type castPtrRegion
      p2 = #castPtrRegion @[r1, r2, #Word8] p1
      #writePtr @[r2, #Word8] [p2, #word8'16]
      #freePtr @[r2, #Word8] p2
-
