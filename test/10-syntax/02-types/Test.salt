@@ -38,12 +38,14 @@ test kind all1          = ∀[a: #Data, b: #Data]. a → b
 
 test kind all1'sugar    = forall [a: #Data, b: #Data]. a -> b
 
+test kind all1'region   = forall [r: #Region, t: #Data]. #Ptr [r, t] -> #Ptr [r, t]
 
 -- Exists type.
 test kind some1         = ∃[a: #Data, b: #Data]. a → b
 
 test kind some1'sugar   = exists [a: #Data, b: #Data]. a → b
 
+test kind some1'region  = exists [a: #Region, b: #Region, t: #Data]. #Ptr [a, t] -> #Ptr [b, t]
 
 -- Record types.
 test kind rec0          = ∏[foo: #Symbol]

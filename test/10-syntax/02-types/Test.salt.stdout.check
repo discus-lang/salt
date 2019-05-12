@@ -21,8 +21,10 @@
 * op3'sugar: #Data
 * all1: #Data
 * all1'sugar: #Data
+* all1'region: #Data
 * some1: #Data
 * some1'sugar: #Data
+* some1'region: #Data
 * rec0: #Data
 * rec1: #Data
 * rec2: #Data
