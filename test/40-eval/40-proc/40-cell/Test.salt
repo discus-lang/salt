@@ -1,0 +1,5 @@
+
+test eval proc do
+        cell x: #Nat ← 2
+        x ← 3
+        yield x

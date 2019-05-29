@@ -177,7 +177,11 @@ upsApplyValue upsT upsM vv
         VClosure tclo
          -> VClosure $ upsApplyTermClosure upsT upsM tclo
 
+        VLoc t i
+         -> VLoc        (upsApplyType upsT t) i
+
         VAddr _        -> vv
+
         -- TODO FIXME what do we do with `r` ?
         VPtr r t a     -> VPtr r (upsApplyType upsT t) a
 

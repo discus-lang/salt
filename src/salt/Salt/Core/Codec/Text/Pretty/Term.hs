@@ -320,6 +320,8 @@ instance Pretty c (Value a) where
 
         VClosure clo    -> ppr c clo
 
+        VLoc t i        -> brackets $ text "#loc" %% pprTArg c t %% int i
+
         VAddr a
          -> brackets
                 $ text "address" % string (show a)

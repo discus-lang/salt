@@ -161,16 +161,16 @@ instance MapAnnot Value where
   = case vv of
         VUnit           -> VUnit
         VSymbol n       -> VSymbol n
-        VText t         -> VText t
-        VBool b         -> VBool b
-        VNat n          -> VNat n
-        VInt i          -> VInt i
-        VWord i         -> VWord i
-        VInt8 i         -> VInt8 i
-        VInt16 i        -> VInt16 i
-        VInt32 i        -> VInt32 i
-        VInt64 i        -> VInt64 i
-        VWord8 i        -> VWord8 i
+        VText   t       -> VText   t
+        VBool   b       -> VBool   b
+        VNat    n       -> VNat    n
+        VInt    i       -> VInt    i
+        VWord   i       -> VWord   i
+        VInt8   i       -> VInt8   i
+        VInt16  i       -> VInt16  i
+        VInt32  i       -> VInt32  i
+        VInt64  i       -> VInt64  i
+        VWord8  i       -> VWord8  i
         VWord16 i       -> VWord16 i
         VWord32 i       -> VWord32 i
         VWord64 i       -> VWord64 i
@@ -181,8 +181,9 @@ instance MapAnnot Value where
         VSet  t vs      -> VSet       (mapAnnot f t)  vs
         VMap  tk tv kvs -> VMap       (mapAnnot f tk) (mapAnnot f tv) (Map.map (mapAnnot f) kvs)
         VClosure clo    -> VClosure   (mapAnnot f clo)
+        VLoc t i        -> VLoc       (mapAnnot f t) i
         VAddr a         -> VAddr a
-        VPtr r t a      -> VPtr     (mapAnnot f r) (mapAnnot f t) a
+        VPtr r t a      -> VPtr       (mapAnnot f r) (mapAnnot f t) a
 
 
 instance MapAnnot TermClosure where

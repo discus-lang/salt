@@ -5,9 +5,10 @@ import Salt.Core.Eval.Error
 import Salt.Core.Eval.Base
 import Salt.Core.Analysis.Support       ()
 import Salt.Core.Transform.MapAnnot
+import qualified Salt.Core.Prim.Ops     as Ops
+
 import Control.Exception
 import Control.Monad
-import qualified Salt.Core.Prim.Ops     as Ops
 import qualified Data.Map               as Map
 import qualified Data.Set               as Set
 
@@ -40,7 +41,17 @@ evalTerm s a env (MVar u)
  = resolveTermBound (stateModule s) env u
  >>= \case
         -- Value is bound in the local environment.
-        Just (TermDefLocal v) -> return [v]
+        Just (TermDefLocal v)
+         -> case v of
+                -- Cell locations are automatically dereferenced,
+                -- which is a difference from the usual ML-style Ref types.
+                VLoc _ iCell
+                 -> do  mv <- readCell s iCell
+                        case mv of
+                         Nothing  -> throw $ ErrorTermCellBroken a iCell env
+                         Just v'  -> return [v']
+
+                _ -> return [v]
 
         -- Term is bound at top level.
         --   We allow terms to be bound at top level which are not already
@@ -305,6 +316,52 @@ evalTerm s a env (MProcReturn mBody)
         throw (EvalControlReturn vs)
 
 
+-- (evm-proc-cell) ----------------------------------------
+evalTerm s a env (MProcCell nCell tCell mInit mRest)
+ = do
+        -- Evaluate the term to produce the initial value of the cell.
+        vInit   <- evalTerm1 s a env mInit
+
+        -- Allocate a new cell identifier and write the value.
+        iCell   <- newCell s
+        writeCell s iCell vInit
+
+        -- The environment maps the name of the cell to its identifier,
+        -- which is automatically dereferenced if we use the cell name
+        -- as a bound occurrence of a variable.
+        let env' = menvExtendValue (BindName nCell) (VLoc tCell iCell) env
+
+        -- Evaluate the body of the procedure.
+        vs      <- evalTerm s a env' mRest
+
+        -- The cell is automatically deleted when it goes out of scope.
+        -- There is no chance of the cell escaping this scope as cell
+        -- locations are not first class values -- we automatically
+        -- dereference them as mentioend above.
+        delCell s iCell
+
+        return vs
+
+
+-- (evm-proc-update) --------------------------------------
+evalTerm s a env (MProcUpdate nCell mNew mRest)
+ = do
+        -- Lookup the cell identifier.
+        iCell   <- resolveTermBound (stateModule s) env (Bound nCell)
+                >>= \case
+                        Just (TermDefLocal (VLoc _ i)) -> return i
+                        _ -> throw $ ErrorTermCellUnbound a nCell env
+
+        -- Evaluate the new cell contents.
+        vNew    <- evalTerm1 s a env mNew
+
+        -- Update the cell.
+        writeCell s iCell vNew
+
+        -- Evaluate the rest of the procedure.
+        evalTerm s a env mRest
+
+
 -- (evm-proc-when) ----------------------------------------
 evalTerm s a env mm@(MProcWhen msCond msThen mRest)
  = go msCond msThen
@@ -322,6 +379,7 @@ evalTerm s a env mm@(MProcWhen msCond msThen mRest)
 
         go _ _ = throw $ ErrorInvalidTerm a mm
 
+
 -- (evm-private) -----------------------------------------
 evalTerm s a env (MPrivate bksR _ mBody)
  = do let bsR = map fst bksR
@@ -334,6 +392,7 @@ evalTerm s a env (MPrivate bksR _ mBody)
 
       evalTerm s a env' mBody
 
+
 -- (evm-extend) ------------------------------------------
 evalTerm s a env (MExtend _ bksR _ mBody)
  = do let bsR = map fst bksR
@@ -345,6 +404,7 @@ evalTerm s a env (MExtend _ bksR _ mBody)
       -- FIXME TODO need to add witnesses to env
 
       evalTerm s a env' mBody
+
 
 -----------------------------------------------------------
 -- No match.

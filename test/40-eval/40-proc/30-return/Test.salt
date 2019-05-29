@@ -4,7 +4,7 @@ test eval proc launch #Nat of
  return 5
 
 
--- Return from deeper with a procedure.
+-- Return from deeper within a procedure.
 test eval proc launch #Nat of
  do     when #false return 2
         when #true  return 3

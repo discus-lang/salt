@@ -139,6 +139,7 @@ data Value a
                                                 -- ^ Map value.
         | VClosure  (TermClosure a)             -- ^ Closure.
         | VAddr     FPtr.WordPtr                -- ^ Raw memory address.
+        | VLoc      (Type a) Int
         | VPtr      (Type a) (Type a) FPtr.WordPtr -- ^ Ptr with Region and Value types.
         deriving (Show, Eq, Ord)
 

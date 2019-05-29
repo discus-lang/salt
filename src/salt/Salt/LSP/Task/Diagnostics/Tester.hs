@@ -92,12 +92,8 @@ buildTesterDiagnosticOfDecl ctx _mm
 buildTesterDiagnosticOfDecl _ctx mm
         (DTest (DeclTestEvalType aRange bWatch mName tTest))
  | bWatch
- = do   let state
-                = Eval.State
-                { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateModule      = mm }
-
-        let aRange' = mungeRangeForVSCode $ fromMaybe aRange $ takeAnnotOfType tTest
+ = do   state       <- Eval.newState Eval.configDefault mm
+        let aRange'  = mungeRangeForVSCode $ fromMaybe aRange $ takeAnnotOfType tTest
         tResult     <- Eval.evalType state aRange' (TypeEnv []) tTest
         let sResult  = slurpTestIdent mName ++ (P.render $ P.ppr () tResult)
         return  $ Just $ TesterDiagnosticWatch "eval'type" aRange' SeverityInformation sResult
@@ -106,13 +102,9 @@ buildTesterDiagnosticOfDecl _ctx mm
 buildTesterDiagnosticOfDecl _ctx mm
         (DTest (DeclTestEvalTerm aRange bWatch mName mTest))
  | bWatch
- = do   let state
-                = Eval.State
-                { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateModule      = mm }
-
-        let aRange' = mungeRangeForVSCode $ fromMaybe aRange $ takeAnnotOfTerm mTest
-        vsResult     <- Eval.evalTerm state aRange' (TermEnv []) mTest
+ = do   state       <- Eval.newState Eval.configDefault mm
+        let aRange'  = mungeRangeForVSCode $ fromMaybe aRange $ takeAnnotOfTerm mTest
+        vsResult    <- Eval.evalTerm state aRange' (TermEnv []) mTest
         let sResult  = slurpTestIdent mName ++ (P.render $ P.ppr () vsResult)
         return  $ Just $ TesterDiagnosticWatch "eval" aRange' SeverityInformation sResult
 
@@ -120,13 +112,9 @@ buildTesterDiagnosticOfDecl _ctx mm
 buildTesterDiagnosticOfDecl _ctx mm
         (DTest (DeclTestAssert aRange bWatch mName mTest))
  | bWatch
- = do   let state
-                = Eval.State
-                { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateModule      = mm }
-
+ = do   state     <- Eval.newState Eval.configDefault mm
         let aRange' = mungeRangeForVSCode $ fromMaybe aRange $ takeAnnotOfTerm mTest
-        vsResult    <- Eval.evalTerm state aRange' (TermEnv []) mTest
+        vsResult  <- Eval.evalTerm state aRange' (TermEnv []) mTest
         let (sev, sDiag :: String)
                 = case vsResult of
                         [VTrue]  -> (SeverityInformation, "ok")

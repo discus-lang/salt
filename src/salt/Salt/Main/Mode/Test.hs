@@ -62,12 +62,14 @@ runTestKind
 
 runTestKind ctx _mm mnTest tTest
  = do
+        -- Print the test name.
         putStr  $ "* "
                 ++ (case mnTest of
                         Nothing -> ""
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
+        -- Check the type in an empty environment and print he result.
         (_t, kResult) <- Check.checkType rlNone [] ctx tTest
         putStrLn $ P.render $ P.ppr () kResult
 
@@ -81,12 +83,14 @@ runTestType
 
 runTestType ctx _mm mnTest mTest
  = do
+        -- Print the test name.
         putStr  $ "* "
                 ++ (case mnTest of
                         Nothing -> ""
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
+        -- Check the term in an empty environment and print the result.
         (_m, tsResult, _esResult)
          <- Check.checkTerm rlNone [] ctx Check.Synth mTest
         case tsResult of
@@ -102,17 +106,17 @@ runTestEvalType
 
 runTestEvalType mm mnTest tTest
  = do
+        -- Print the test name.
         putStr  $ "* "
                 ++ (case mnTest of
                         Nothing -> ""
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        let state
-                = Eval.State
-                { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateModule      = mm }
+        -- Initialize the machine state.
+        state   <- Eval.newState Eval.configDefault mm
 
+        -- Reduce the type in an empty environment and print the result.
         tResult <- Eval.evalType state rlNone (TypeEnv []) tTest
         putStrLn $ P.render $ P.ppr () tResult
 
@@ -125,17 +129,17 @@ runTestEvalTerm
 
 runTestEvalTerm mm mnTest mTest
  = do
+        -- Print the test name.
         putStr  $ "* "
                 ++ (case mnTest of
                         Nothing -> ""
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        let state
-                = Eval.State
-                { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateModule      = mm }
+        -- Initialize the machine state.
+        state   <- Eval.newState Eval.configDefault mm
 
+        -- Evaluate the term in an empty environment and print the result.
         vResult <- Eval.evalTerm state rlNone (TermEnv []) mTest
         putStrLn $ P.render $ P.ppr () vResult
 
@@ -149,19 +153,18 @@ runTestExec
 
 runTestExec mm mnTest mTest
  = do
+        -- Print the test name.
         (case mnTest of
                 Nothing -> return ()
                 Just (Name tx) -> do
                         putStr $ T.unpack tx % ": "
                         System.hFlush System.stdout)
 
-        let state
-                = Eval.State
-                { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateModule      = mm }
+        -- Initialize the machine state.
+        state   <- Eval.newState Eval.configDefault mm
 
-        vsSusp <- Eval.evalTerm state rlNone (TermEnv []) mTest
-
+        -- Evaluate the term in an empty environment and print the result.
+        vsSusp  <- Eval.evalTerm state rlNone (TermEnv []) mTest
         case vsSusp of
                 [VClosure (TermClosure (TermEnv []) (MPTerms []) mBody)]
                  -> do  vsResult <- Eval.evalTerm state rlNone (TermEnv []) mBody
@@ -182,17 +185,18 @@ runTestAssert
 
 runTestAssert mm mnTest mTest
  = do
+        -- Print the test name.
         putStr  $ "* "
                 ++ (case mnTest of
                         Nothing -> ""
                         Just (Name tx) -> T.unpack tx % ": ")
         System.hFlush System.stdout
 
-        let state
-                = Eval.State
-                { Eval.stateConfig      = Eval.configDefault
-                , Eval.stateModule      = mm }
+        -- Initialize the machine state.
+        state   <- Eval.newState Eval.configDefault mm
 
+        -- Evaluate the term in an empty environment,
+        --   and print the test result based on the boolean return value.
         vResult <- Eval.evalTerm state rlNone (TermEnv []) mTest
         case vResult of
          [VTrue]  -> putStrLn "ok"

@@ -31,6 +31,10 @@ checkValue a wh ctx v
         VWord64{}  -> return TWord64
         VNone t    -> return $ TOption t
 
+        VLoc t _i
+         -> do  checkType a wh ctx t
+                return $ TCell t
+
         VAddr _    -> return TAddr
         VPtr r t _ -> return $ TPtr r t
 

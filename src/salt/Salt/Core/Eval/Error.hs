@@ -28,7 +28,7 @@ data Error a
         , errorNumExpected      :: Int
         , errorValues           :: [Value a] }
 
-        -- Varaibles --------------------------------------
+        -- Variables --------------------------------------
         -- | Type variable binding is not in the environment.
         | ErrorTypeVarUnbound
         { errorAnnot            :: a
@@ -39,6 +39,18 @@ data Error a
         | ErrorTermVarUnbound
         { errorAnnot            :: a
         , errorVarUnbound       :: Bound
+        , errorTermEnv          :: TermEnv a }
+
+        -- | Cell name does not have a matching cell identifier in the environment.
+        | ErrorTermCellUnbound
+        { errorAnnot            :: a
+        , errorCellName         :: Name
+        , errorTermEnv          :: TermEnv a }
+
+        -- | Cell identifier does not have a matching cell in the state.
+        | ErrorTermCellBroken
+        { errorAnnot            :: a
+        , errorCellIdent        :: Int
         , errorTermEnv          :: TermEnv a }
 
         -- Applications -----------------------------------
