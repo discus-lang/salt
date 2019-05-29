@@ -12,6 +12,10 @@ import qualified Salt.LSP.Driver                as LSP
 import qualified System.Environment             as System
 import qualified System.Exit                    as System
 
+-- NOTE: StripAnnot is currently only used by the testing framework,
+-- but we include it here so it always gets built along with the bin/salt,
+-- and we can see when it needs updating.
+import Salt.Core.Transform.StripAnnot           ()
 
 main
  = do   args    <- System.getArgs

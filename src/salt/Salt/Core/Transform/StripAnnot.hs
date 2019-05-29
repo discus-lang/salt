@@ -164,6 +164,7 @@ instance StripAnnot Value where
         VSet  t vs      -> VSet       (stripAnnot t)  vs
         VMap  tk tv kvs -> VMap       (stripAnnot tk) (stripAnnot tv) (Map.map stripAnnot kvs)
         VClosure clo    -> VClosure   (stripAnnot clo)
+        VLoc t i        -> VLoc       (stripAnnot t) i
         VAddr a         -> VAddr a
         VPtr r t a      -> VPtr       (stripAnnot r)  (stripAnnot t) a
 
