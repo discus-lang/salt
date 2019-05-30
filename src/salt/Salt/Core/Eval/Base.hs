@@ -120,6 +120,8 @@ type EvalTerm a x y
 --   to implement object language (Salt) control effects.
 data EvalControl a
         = EvalControlReturn [Value a]
+        | EvalControlBreak
+        | EvalControlContinue
         deriving (Show, Typeable)
 
 instance (Show a, Typeable a)

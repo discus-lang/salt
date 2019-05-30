@@ -353,7 +353,9 @@ showTokenForError (At _ k)
 pMAnn :: Parser (Term RL) -> Parser (Term RL)
 pMAnn p
  = do   (r, m) <- pRanged p
-        return $ MAnn r m
+        case m of
+         MAnn{} -> return m
+         _      -> return $ MAnn r m
 
 
 -- | Parse some type parameters wrapped in source range annotations.

@@ -54,6 +54,7 @@ GHC_LANGUAGE := \
         -XPatternSynonyms \
 	-XFlexibleContexts \
         -XParallelListComp \
+	-XTypeApplications \
 	-XOverloadedStrings \
         -XFlexibleInstances \
 	-XStandaloneDeriving \

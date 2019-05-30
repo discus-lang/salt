@@ -1,0 +1,13 @@
+
+
+-- Factorial using procedural loop.
+test eval proc launch #Nat of
+ do     cell n: #Nat ← 10
+        cell x: #Nat ← 1
+        loop do
+                when #nat'eq [n, 0] break
+                x ← #nat'mul [x, n]
+                n ← #nat'sub [n, 1]
+        return x
+
+

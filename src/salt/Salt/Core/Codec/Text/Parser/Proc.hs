@@ -270,7 +270,7 @@ pProcDoStmts pTerm pTermApp
          [ do   pTok KSemi
                 mRest <- pProcDoStmts pTerm pTermApp
                 return $ mkStmt mRest
-         , do   return $ MProcYield (MTerms []) ]
+         , do   return $ mkStmt $ MProcYield (MTerms []) ]
 
  , do   mFinal  <- pProcFinal pTerm pTermApp
         P.choice

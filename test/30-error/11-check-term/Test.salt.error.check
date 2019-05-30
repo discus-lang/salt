@@ -88,7 +88,7 @@ test/30-error/11-check-term/Test.salt:60:17
 
   60:11  In test
 
-test/30-error/11-check-term/Test.salt:63:26
+test/30-error/11-check-term/Test.salt:63:41
   Impure term abstraction body
    causes effect '#Console'
 

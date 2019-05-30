@@ -124,6 +124,15 @@ data Error a
         { errorAnnot            :: a
         , errorValue            :: Value a }
 
+        -- Control errors ---------------------------------
+        -- | Tried to break out of a launch construct.
+        | ErrorLaunchBreak
+        { errorAnnot            :: a }
+
+        -- | Tried to continue out of a launch construct.
+        | ErrorLaunchContinue
+        { errorAnnot            :: a }
+
         deriving Show
 
 instance (Show a, Typeable a) => Exception (Error a)

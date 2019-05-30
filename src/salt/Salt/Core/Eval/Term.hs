@@ -307,7 +307,9 @@ evalTerm s a env (MProcLaunch _tsRet mBody)
 
         handle' (e :: EvalControl a)
          = case e of
-                EvalControlReturn vs -> return vs
+                EvalControlReturn vs    -> return vs
+                EvalControlBreak        -> throw $ ErrorLaunchBreak a
+                EvalControlContinue     -> throw $ ErrorLaunchContinue a
 
 
 -- (evm-proc-return) --------------------------------------
@@ -370,14 +372,41 @@ evalTerm s a env mm@(MProcWhen msCond msThen mRest)
          = evalTerm s a env mRest
 
         go (mCond : msCond') (mThen : msThen')
-         = do   v <- evalTerm s a env mCond
-                case v of
+         = do   vs <- evalTerm s a env mCond
+                case vs of
                  [VBool b]
                   | b           -> evalTerm s a env mThen
                   | otherwise   -> go msCond' msThen'
                  _              -> throw $ ErrorInvalidTerm a mm
 
         go _ _ = throw $ ErrorInvalidTerm a mm
+
+
+-- (evm-proc-loop) ---------------------------------------
+evalTerm s a env mm@(MProcLoop mBody mRest)
+ = catch evalLoop handleLoop
+ where
+        evalLoop
+         = do   vs <- evalTerm s a env mBody
+                case vs of
+                 []     -> evalLoop
+                 _      -> throw $ ErrorInvalidTerm a mm
+
+        handleLoop (e :: EvalControl a)
+         = case e of
+                EvalControlReturn{}  -> throw e
+                EvalControlBreak     -> evalTerm s a env mRest
+                EvalControlContinue  -> evalLoop
+
+
+-- (evm-proc-break) --------------------------------------
+evalTerm _s _a _env MProcBreak
+ = throw $ EvalControlBreak @a
+
+
+-- (evm-proc-continue) -----------------------------------
+evalTerm _s _a _env MProcContinue
+ = throw $ EvalControlContinue @a
 
 
 -- (evm-private) -----------------------------------------
