@@ -377,8 +377,8 @@ evalTerm s a env (MProcUpdate nCell mNew mRest)
         evalTerm s a env mRest
 
 
--- (evm-proc-when) ----------------------------------------
-evalTerm s a env mm@(MProcWhen msCond msThen mRest)
+-- (evm-proc-whens) ----------------------------------------
+evalTerm s a env mm@(MProcWhens msCond msThen mRest)
  = go msCond msThen
  where
         go [] []

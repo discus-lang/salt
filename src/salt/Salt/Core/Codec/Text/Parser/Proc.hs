@@ -135,11 +135,11 @@ pProcStmt pTerm pTermApp
          [ do   mkThen <- pProcStmt pTerm pTermApp
                  <?> "the body of the 'then' branch"
                 let mThen = mkThen (MProcYield (MTerms []))
-                return $ \mRest -> MProcWhen [mCond] [mThen] mRest
+                return $ \mRest -> MProcWhens [mCond] [mThen] mRest
 
          , do   mThen   <- pProcFinal pTerm pTermApp
                  <?> "the body of the 'then' branch"
-                return $ \mRest -> MProcWhen [mCond] [mThen] mRest
+                return $ \mRest -> MProcWhens [mCond] [mThen] mRest
          ]
 
  , do   --  'whens' '{' (Term '→' Proc);+ '}' ...
@@ -156,7 +156,7 @@ pProcStmt pTerm pTermApp
                                 <?> "the body of the branch"
                 return (mCond, mThen)
         pTok KCKet
-        return $ \mRest -> MProcWhen msCond msThen mRest
+        return $ \mRest -> MProcWhens msCond msThen mRest
 
  , do   -- 'match' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' Stmt);* '}' ...
         pTok KMatch

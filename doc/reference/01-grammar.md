@@ -164,8 +164,8 @@ Term
   |   mset n Type Termⁿ             ('[set'  Type '|' Term,* ']')
   |   mmap n Type Type Termⁿ Termⁿ  ('[map'  Type Type '|' TermMapBind,* ']')
 
-  |   mprc Proc                     (Proc)
-  |   mblc Bloc                     (Bloc)
+  |   mprc Proc                     ('proc' Proc)
+  |   mblc Bloc                     ('bloc' Bloc)
 
 TermParams
  ::=  mpst n Varⁿ Typeⁿ             ('@' '[' (Var ':' Type),* ']')
@@ -225,29 +225,32 @@ The grammar for procs and blocs shares forms for expressions. The common forms a
 ```
 Proc
  ::=  pyld   Term                               ('yield'  Term)
-  |   pcpm n Bound TermArgsⁿ                    ('call'   Bound TermArgsⁿ)
-  |   pseq n Bindⁿ Proc Proc                    ('seq'    Binds '=' Proc ';' Proc)
+  |   pclv n Var  TermArgsⁿ                     ('call'   Var TermArgsⁿ)
+  |   pclp n Prm  TermArgsⁿ                     ('call'   Prm TermArgsⁿ)
+  |   pseq n Varⁿ Proc Proc                     ('seq'    Var '=' Proc ';' Proc)
 
   |   plch   Types of Proc                      ('launch' Types 'of' Proc)
   |   pret   Term                               ('return' Term)
 
-  |   pcll   Name Type Term Proc                ('cell'   Bind ':' Type '←' Term ';' Proc)
+  |   pcel   Name Type Term Proc                ('cell'   Bind ':' Type '←' Term ';' Proc)
   |   pupd   Name Term Proc                     ('update' Bound '←' Term ';' Proc)
 
   |   pwhs n (Term Proc)ⁿ Proc                  ('whens'  '{' ProcWhensAlt;+ '}' ';' Proc)
 
-  |   pmch   Term ProcAlt+ Proc                 ('match' Term '{' ProcMatchAlt;+ '}' ';' Proc
+  |   pmch   Term ProcAlt+ Proc                 ('match'  Term '{' ProcMatchAlt;+ '}' ';' Proc)
 
   |   pllp   Proc Proc                          ('loop'   Proc ';' Proc)
   |   pbrk                                      ('break')
   |   pcnt                                      ('continue')
 
-  |   sllp   ProcBody           ProcSeq         ('loop'   Proc ';' Proc)
+  |   pwll   Term Proc ';' Proc                 ('while'  Term Proc ';' Proc)
 
-  |   pwll  Term Proc ';' Proc                  ('while'  Term Proc ';' Proc)
+  |   pent   Term ProcBind                      ('enter'  Term 'with' ProcBind ';' Proc)
+  |   plve                                      ('leave')
 
-ProcWhensAlt ::= Term Proc                      Term '→' Proc
+ProcWhensAlt ::= Term Proc                      (Term '→' Proc)
 ProcMatchAlt ::= Lbl (Var Type)* Proc           (Lbl '[' (Var ':' Type)* ']' → Proc)
+ProcBind     ::= Name TermParams+ Type Proc     (Name TermParams+ ':' Type '=' Proc)
 ```
 
 

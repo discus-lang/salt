@@ -76,14 +76,13 @@ data TermKey
         -- Proc term formers.
         | MKProc                                -- ^ Define a procedure.
         | MKProcYield                           -- ^ Yield the value of an expression.
-        | MKProcCall                            -- ^ Call another procedure.
-        | MKProcWith                            -- ^ Define nested procedures.
         | MKProcSeq                             -- ^ Procedural statement sequence.
+        | MKProcCall                            -- ^ Call a term or proc declaration.
         | MKProcLaunch                          -- ^ Define scope of a 'return' statement.
         | MKProcReturn                          -- ^ Return to the enclosing 'launch' statement.
         | MKProcCell                            -- ^ Define a new storage cell.
         | MKProcUpdate                          -- ^ Update a storage cell.
-        | MKProcWhen                            -- ^ Branch on boolean.
+        | MKProcWhens                           -- ^ Branch on boolean.
         | MKProcMatch                           -- ^ Branch on variants.
         | MKProcLoop                            -- ^ Define a loop.
         | MKProcBreak                           -- ^ Break to the end of the enclosing loop.

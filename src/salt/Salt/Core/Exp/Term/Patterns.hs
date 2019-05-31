@@ -78,8 +78,8 @@ pattern MProcCell nCell tCell mInit mRest
 pattern MProcUpdate nCell mValue mRest
  = MKey MKProcUpdate    [MGTerm (MVar (Bound nCell)), MGTerm mValue, MGTerm mRest]
 
-pattern MProcWhen msCond msThen mRest
- = MKey MKProcWhen      [MGTerms msCond, MGTerms msThen, MGTerm mRest]
+pattern MProcWhens msCond msThen mRest
+ = MKey MKProcWhens     [MGTerms msCond, MGTerms msThen, MGTerm mRest]
 
 pattern MProcMatch mScrut msAlt mRest
  = MKey MKProcMatch     [MGTerm mScrut, MGTerms msAlt, MGTerm mRest]

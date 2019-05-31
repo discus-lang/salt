@@ -162,8 +162,8 @@ checkTermProc a wh ctx mode ctxProc (MProcUpdate nCell mNew mRest)
                 , tsResult, esNew ++ esRest)
 
 
--- (t-proc-when) ------------------------------------------
-checkTermProc a wh ctx mode ctxProc (MProcWhen msCond msThen mRest)
+-- (t-proc-whens) -----------------------------------------
+checkTermProc a wh ctx mode ctxProc (MProcWhens msCond msThen mRest)
  | length msCond == length msThen
  = do   (msCond', esCond)
          <- checkTermsAreAll a wh (asExp ctx) TBool msCond
@@ -175,7 +175,7 @@ checkTermProc a wh ctx mode ctxProc (MProcWhen msCond msThen mRest)
         (mRest', tsResult, esRest)
          <- checkTermProc a wh ctx mode ctxProc mRest
 
-        return  ( MProcWhen msCond' msThen' mRest'
+        return  ( MProcWhens msCond' msThen' mRest'
                 , tsResult, esCond ++ concat essThen ++ esRest)
 
 
