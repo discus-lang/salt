@@ -292,6 +292,7 @@ evalTerm s a env (MProcCall mFun mgssArgs)
  | mgs : mgssRest <- mgssArgs
  = evalTermApp s a env (mFun, mgs, mgssRest)
 
+ -- TODO: handle prim app.
 
 -- (evm-proc-seq) -----------------------------------------
 evalTerm s a env (MProcSeq mps mBind mRest)
@@ -310,6 +311,7 @@ evalTerm s a env (MProcLaunch _tsRet mBody)
                 EvalControlReturn vs    -> return vs
                 EvalControlBreak        -> throw $ ErrorLaunchBreak a
                 EvalControlContinue     -> throw $ ErrorLaunchContinue a
+                EvalControlLeave        -> throw $ ErrorLaunchLeave a
 
 
 -- (evm-proc-return) --------------------------------------
@@ -397,6 +399,7 @@ evalTerm s a env mm@(MProcLoop mBody mRest)
                 EvalControlReturn{}  -> throw e
                 EvalControlBreak     -> evalTerm s a env mRest
                 EvalControlContinue  -> evalLoop
+                EvalControlLeave     -> throw e
 
 
 -- (evm-proc-break) --------------------------------------
@@ -407,6 +410,47 @@ evalTerm _s _a _env MProcBreak
 -- (evm-proc-continue) -----------------------------------
 evalTerm _s _a _env MProcContinue
  = throw $ EvalControlContinue @a
+
+
+-- (evm-proc-enter) --------------------------------------
+evalTerm s a env mEnter@(MProcEnter mFirst bms mRest)
+ = do
+     -- Helper to build an abstraction that wraps the body
+        -- with any remaining parameters.
+        let wrap []   m = m
+            wrap mpss m = foldr MAbs m mpss
+
+        -- Make a closure for each of the bindings.
+        -- Later, when we look the closure up from the environment we'll re-add
+        -- the values in the recursive group back to its own environment.
+        let makeClosure (MBind _ [] _ _)
+             = throw $ ErrorInvalidTerm a mEnter
+
+            makeClosure (MBind b (mps : mpss) _tResult mBody')
+             = case takeTermParams mps of
+                Left  bks -> (b, TermClosure env (MPTypes bks) $ wrap mpss mBody')
+                Right bts -> (b, TermClosure env (MPTerms bts) $ wrap mpss mBody')
+
+        -- Enter the first binding, with all the others in scope.
+        let env'      = menvExtendValuesRec (map makeClosure bms) env
+        let evalFirst = evalTerm s a env' mFirst
+        let handleLeave (e :: EvalControl a)
+             = case e of
+                EvalControlReturn{}     -> throw e
+                EvalControlBreak{}      -> throw e
+                EvalControlContinue{}   -> throw e
+                EvalControlLeave        -> return []
+
+        [] <- catch evalFirst handleLeave
+
+        -- Once we've left the loop then continue with the original
+        -- environment, so the recursive bindings are no longer in scope.
+        evalTerm s a env mRest
+       
+
+-- (evm-proc-leave) --------------------------------------
+evalTerm _s _a _env MProcLeave
+ = throw $ EvalControlLeave @a
 
 
 -- (evm-private) -----------------------------------------

@@ -133,6 +133,9 @@ data Error a
         | ErrorLaunchContinue
         { errorAnnot            :: a }
 
+        -- | Tried to leave a launch construct.
+        | ErrorLaunchLeave
+        { errorAnnot            :: a }
         deriving Show
 
 instance (Show a, Typeable a) => Exception (Error a)

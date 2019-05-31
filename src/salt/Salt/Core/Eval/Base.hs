@@ -122,6 +122,7 @@ data EvalControl a
         = EvalControlReturn [Value a]
         | EvalControlBreak
         | EvalControlContinue
+        | EvalControlLeave
         deriving (Show, Typeable)
 
 instance (Show a, Typeable a)
