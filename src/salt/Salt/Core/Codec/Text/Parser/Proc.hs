@@ -16,7 +16,7 @@ import qualified Text.Parsec            as P
 pProc :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
 pProc pTerm pTermApp
  = pMAnn $ P.choice
- [ do   -- ProcFinal (';' Proc) | ε
+ [ do   -- ProcStmt ((';' Proc) | ε)
         mkProc <- pProcStmt pTerm pTermApp
         P.choice
          [ do   pTok KSemi

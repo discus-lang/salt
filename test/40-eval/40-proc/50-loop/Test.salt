@@ -47,15 +47,15 @@ proc square3 []: []! #Console
  = do   cell x: #Nat ← 9
         cell y: #Nat ← 9
         enter rows [] with
-                rows []: []
-                 = do   when #nat'eq [y, 0] leave
-                        y ← #nat'sub [y, 1]
-                        x ← 9
-                        elems []
-                        rows  []
+         rows []: []
+          = do  when #nat'eq [y, 0] leave
+                y ← #nat'sub [y, 1]
+                x ← 9
+                elems []
+                rows  []
 
-                elems []: []
-                 = do   when #nat'eq [x, 0] leave
-                        x ← #nat'sub [x, 1]
-                        #console'print "o"
-                        elems []
+         elems []: []
+          = do  when #nat'eq [x, 0] leave
+                x ← #nat'sub [x, 1]
+                #console'print "o"
+                elems []

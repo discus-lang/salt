@@ -224,63 +224,31 @@ The grammar for procs and blocs shares forms for expressions. The common forms a
 
 ```
 Proc
- ::=  proc n ProcBody                         ('proc' ProcBody)
+ ::=  pyld   Term                               ('yield'  Term)
+  |   pcpm n Bound TermArgsⁿ                    ('call'   Bound TermArgsⁿ)
+  |   pseq n Bindⁿ Proc Proc                    ('seq'    Binds '=' Proc ';' Proc)
 
-ProcBody
- ::=  plet n Varⁿ ProcExp ProcBody            ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
-                                               ';' ProcBody)
+  |   plch   Types of Proc                      ('launch' Types 'of' Proc)
+  |   pret   Term                               ('return' Term)
 
-  |   pifs n ProcExp ProcBody                 ('if' '{' (ProcExp '→' ProcBody);+ '}'
-                                                    'else' ProcBody)
+  |   pcll   Name Type Term Proc                ('cell'   Bind ':' Type '←' Term ';' Proc)
+  |   pupd   Name Term Proc                     ('update' Bound '←' Term ';' Proc)
 
-  |   pcse n ProcExp Lblⁿ Typeⁿ ProcBodyⁿ     ('case' ProcExp 'of'
-             ProcBody?                           '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
-                                                 ('else' ProcBody)?)
+  |   pwhs n (Term Proc)ⁿ Proc                  ('whens'  '{' ProcWhensAlt;+ '}' ';' Proc)
 
-  |   pseq   ProcSeq                          ('seq' ProcSeq 'end')
+  |   pmch   Term ProcAlt+ Proc                 ('match' Term '{' ProcMatchAlt;+ '}' ';' Proc
 
-  |   pret   ProcExp                          ('return' ProcExp)
+  |   pllp   Proc Proc                          ('loop'   Proc ';' Proc)
+  |   pbrk                                      ('break')
+  |   pcnt                                      ('continue')
 
-  |   pbrk                                    ('break')
-  |   pcnt                                    ('continue')
+  |   sllp   ProcBody           ProcSeq         ('loop'   Proc ';' Proc)
 
-  |   pexp   ProcExp                          (ProcExp)
-  |   pprc   Proc                             (Proc)
-  |   pblc   Bloc                             (Bloc)
+  |   pwll  Term Proc ';' Proc                  ('while'  Term Proc ';' Proc)
 
-ProcSeq
- ::=  slet n Varⁿ    ProcExp    ProcSeq       ('let' '[' (Var (':' Type)?),* ']' '=' ProcExp
-                                               ';' ProcSeq)
-
-  |   sifs n ProcExp ProcBody                 ('if'  '{' (ProcExp '→' ProcBody);+ '}'
-                                               ';' ProcSeq)
-
-  |   scse n ProcExp Lblⁿ Typeⁿ ProcBody      ('case' ProcExp 'of'
-             ProcSeq                           '{' (Lbl '[' (Var ':' Type),* ']' → ProcBody);+ '}'
-                                               ';' ProcSeq)
-
-  |   sllp   ProcBody           ProcSeq       ('loop' ProcBody ';' ProcSeq)
-
-  |   scll   Var Type ProcExp   ProcSeq       ('cell' Var ':' Type '←' ProcExp ';' ProcSeq)
-  |   sass   Var ProcExp        ProcSeq       (Var '←' ProcExp ';' ProcSeq)
-
-  |   sbdy   ProcBody                         (ProcBody)
-
-
-ProcExp
- ::=  ... shared Exp forms ...
-  |   xldd   Var                              ('!' Var)
+ProcWhensAlt ::= Term Proc                      Term '→' Proc
+ProcMatchAlt ::= Lbl (Var Type)* Proc           (Lbl '[' (Var ':' Type)* ']' → Proc)
 ```
-Procs consist of a sequence of statements, and an expression to compute the return values.
-
-Proc statements consist of `let`-binding, `cell`-definition and assignment, `if`-branching, `case`-branching, `while`- loops, `return`-statements, and embedded `bloc` constructs. Note that the `if` form does not require an `otherwise` branch. When no alternative matches control flow continues to the next statement after the `if`, which creates a join point in the control flow graph. The `while` loops execute their bodies while their scrutinees evaluates to `#true`. The `return` statement causes control to transfer to the end of the enclosing `proc` construct. Blocs are a fragment of Procs, so they can be embedded directly.
-
-#### TODO
-* we no longer have load forms in exps
-* add nested procedures, for clean inlining, not possible in plain C.
-* add nested sequences.
-* add end and end with forms.
-
 
 
 ### Blocs
@@ -310,42 +278,4 @@ Blocs contain a body with tree-like control flow, rather than graph-like control
 Bloc bodies consist of `let`-binding, `if`-branching, `case`-branching, expression evaluation and nested `bloc` constructs. Note that the `if` form requires an `otherwise` branch to ensure the control flow is tree-like.
 
 Bloc expressions are the shared forms only, without the ability to load from storage cells.
-
-
-### Shared forms
-
-These shared expression, argument and map binding forms are common to both the proc and bloc grammars. In our concrete implementation we reuse the `Term` data type to represent proc and bloc expressions. The differences between the various forms are enforced by checking the syntax trees after they have been parsed. We provide separate grammars here for ease of presentation.
-
-
-```
-_Exp
- ::=  xvar   Var                    (Var)
-  |   xcon   Con                    (Con)
-  |   xsym   Sym                    ('Sym)
-  |   xprm   Prm                    (#Prm)
-
-  |   xxxx n _Expⁿ                  ('[' _Exp,* ']')
-
-  |   xthe n Typeⁿ _Exp             ('the' Types 'of' _Exp)
-
-  |   xcfn   Var _Args              (Var _Args)
-  |   xcpm   Prm _Args              (Prm _Args)
-
-  |   xrec n Lblⁿ _Expⁿ             (∏ '[' (Lbl '=' _Exp),* ']')
-  |   xprj   _Exp Lbl               (_Exp '.' Lbl)
-
-  |   xvnt   Lbl  _Exp Type         ('the' Type  'of' '`' Lbl _Exp)
-
-  |   xlst n Type _Expⁿ             ('[list' Type '|' _Exp,* ']')
-  |   xset n Type _Expⁿ             ('[set'  Type '|' _Exp,* ']')
-  |   xmap n Type Type _Expⁿ _Expⁿ  ('[map'  Type Type '|' _MapBind,* ']')
-
-_Args
- ::=  xgst n Typeⁿ                  ('@' '[' Type,*    ']')
-  |   xgsm n _Expⁿ                  (    '[' _Exp,* ']')
-  |   xgsv   _Exp                   (_Exp)
-
-_MapBind
- ::=  xpbd   _Exp _Exp              (_Exp ':=' _Exp)
-```
 
