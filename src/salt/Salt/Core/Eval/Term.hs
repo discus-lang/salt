@@ -423,6 +423,32 @@ evalTerm _s _a _env MProcContinue
  = throw $ EvalControlContinue @a
 
 
+-- (evm-proc-while) --------------------------------------
+evalTerm s a env mm@(MProcWhile mPred mBody mRest)
+ = catch evalLoop handleLoop
+ where
+        evalLoop
+         = do   vs <- evalTerm s a env mPred
+                case vs of
+                 [VBool False]
+                  -> evalTerm s a env mRest
+
+                 [VBool True]
+                  -> do vs' <- evalTerm s a env mBody
+                        case vs' of
+                         []     -> evalLoop
+                         _      -> throw $ ErrorInvalidTerm a mm
+
+                 _ -> throw $ ErrorInvalidTerm a mm
+
+        handleLoop (e :: EvalControl a)
+         = case e of
+                EvalControlReturn{} -> throw e
+                EvalControlBreak    -> evalTerm s a env mBody
+                EvalControlContinue -> evalLoop
+                EvalControlLeave    -> throw e
+
+
 -- (evm-proc-enter) --------------------------------------
 evalTerm s a env mEnter@(MProcEnter mFirst bms mRest)
  = do

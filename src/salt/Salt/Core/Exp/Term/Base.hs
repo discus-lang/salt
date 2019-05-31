@@ -88,6 +88,7 @@ data TermKey
         | MKProcLoop                            -- ^ Define a loop.
         | MKProcBreak                           -- ^ Break to the end of the enclosing loop.
         | MKProcContinue                        -- ^ Continue to the next loop iteration.
+        | MKProcWhile                           -- ^ Standard while loop.
         | MKProcEnter                           -- ^ Enter a recursive procedure.
         | MKProcLeave                           -- ^ Leave a recursive procedure.
 

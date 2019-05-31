@@ -70,7 +70,7 @@ data Token
         | KLaunch       | KReturn
         | KCell         | KUpdate
         | KWhen         | KWhens        | KMatch
-        | KLoop         | KBreak        | KContinue
+        | KLoop         | KBreak        | KContinue     | KWhile
         | KEnter        | KLeave
         | KEnd
 
@@ -185,6 +185,7 @@ showTokenAsSource kk
         KLoop           -> "loop"
         KBreak          -> "break"
         KContinue       -> "continue"
+        KWhile          -> "while"
         KEnter          -> "enter"
         KLeave          -> "leave"
 
@@ -197,21 +198,21 @@ showTokenAsSource kk
         KPrm  tx        -> "#" ++ T.unpack tx
 
         -- Literals
-        KText    tx        -> show tx
+        KText    tx     -> show tx
 
-        KNat     n         -> show n
-        KInt     i         -> "#int'"    ++ show i
-        KWord    i         -> "#word'"   ++ show i
+        KNat     n      -> show n
+        KInt     i      -> "#int'"    ++ show i
+        KWord    i      -> "#word'"   ++ show i
 
-        KInt8    i         -> "#int8'"   ++ show i
-        KInt16   i         -> "#int16'"  ++ show i
-        KInt32   i         -> "#int32'"  ++ show i
-        KInt64   i         -> "#int64'"  ++ show i
+        KInt8    i      -> "#int8'"   ++ show i
+        KInt16   i      -> "#int16'"  ++ show i
+        KInt32   i      -> "#int32'"  ++ show i
+        KInt64   i      -> "#int64'"  ++ show i
 
-        KWord8   w         -> "#word8'"  ++ show w
-        KWord16  w         -> "#word16'" ++ show w
-        KWord32  w         -> "#word32'" ++ show w
-        KWord64  w         -> "#word64'" ++ show w
+        KWord8   w      -> "#word8'"  ++ show w
+        KWord16  w      -> "#word16'" ++ show w
+        KWord32  w      -> "#word32'" ++ show w
+        KWord64  w      -> "#word64'" ++ show w
 
 
 -- | Get a range covering the location from the start of the first token,

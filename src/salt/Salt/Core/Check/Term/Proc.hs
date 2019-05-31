@@ -233,6 +233,26 @@ checkTermProc a wh _ctx _mode ctxProc MProcContinue
     else throw $ ErrorProcContinueNoLoop a wh
 
 
+-- (t-proc-while) -----------------------------------------
+checkTermProc a wh ctx mode ctxProc (MProcWhile mPred mBody mRest)
+ = do
+        -- Check the predicate.
+        (mPred', _tsPred, esPred)
+         <- checkTermHas a wh (asExp ctx) [TBool] mPred
+
+        -- Check the body of the loop.
+        let ctxProc' = CPLoop ctxProc
+        (mBody', _tsBody, esBody)
+         <- checkTermProc a wh ctx (Check []) ctxProc' mBody
+
+        -- Check the rest of the procedure.
+        (mRest', tsResult, esRest)
+         <- checkTermProc a wh ctx mode ctxProc mRest
+
+        return  ( MProcWhile mPred' mBody' mRest'
+                , tsResult, esPred ++ esBody ++ esRest)
+
+
 -- (t-proc-enter) -----------------------------------------
 checkTermProc a wh ctx mode ctxProc (MProcEnter mEnter bms mRest)
  = do

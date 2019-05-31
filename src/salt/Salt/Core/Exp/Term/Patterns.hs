@@ -93,6 +93,9 @@ pattern MProcBreak
 pattern MProcContinue
  = MKey MKProcContinue []
 
+pattern MProcWhile mPred mBody mRest
+ = MKey MKProcWhile     [MGTerm mPred, MGTerm mBody, MGTerm mRest]
+
 pattern MProcEnter mEnter bms mRest
  = MKey MKProcEnter     [MGTerm mEnter, MGTerm (MRec bms mRest)]
 

@@ -71,7 +71,7 @@ pProcFinal pTerm pTermApp
         mBody <- pTerm
         return $ MProcReturn mBody
 
-         -- 'break'
+        -- 'break'
  , do   pTok KBreak
         return MProcBreak
 
@@ -158,7 +158,6 @@ pProcStmt pTerm pTermApp
         pTok KCKet
         return $ \mRest -> MProcWhen msCond msThen mRest
 
-
  , do   -- 'match' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' Stmt);* '}' ...
         pTok KMatch
         mScrut <- pTerm         <?> "a term for the scrutinee"
@@ -194,13 +193,27 @@ pProcStmt pTerm pTermApp
         pTok KLoop
         P.choice
          [ do   mkThen <- pProcStmt pTerm pTermApp
-                 <?> "the body of the 'then' branch"
+                 <?> "the body of the loop"
                 let mThen = mkThen (MProcYield (MTerms []))
                 return $ \mRest -> MProcLoop mThen mRest
 
          , do   mThen   <- pProcFinal pTerm pTermApp
-                 <?> "the body of the 'then' branch"
+                 <?> "the body of the loop"
                 return $ \mRest -> MProcLoop mThen mRest
+         ]
+
+  , do  -- 'while' Term (ProcStmt | ProcFinal) ...
+        pTok KWhile
+        mPred   <- pTermApp
+        P.choice
+         [ do   mkBody <- pProcStmt pTerm pTermApp
+                 <?> "the body of the loop"
+                let mBody = mkBody (MProcYield (MTerms []))
+                return $ \mRest -> MProcWhile mPred mBody mRest
+
+         , do   mBody   <- pProcFinal pTerm pTermApp
+                 <?> "the body of the loop"
+                return $ \mRest -> MProcWhile mPred mBody mRest
          ]
 
   , do  -- 'let' Binds '=' Term ...

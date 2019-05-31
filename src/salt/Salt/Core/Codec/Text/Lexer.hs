@@ -180,6 +180,7 @@ scanner
                 "loop"          -> Just KLoop
                 "break"         -> Just KBreak
                 "continue"      -> Just KContinue
+                "while"         -> Just KWhile
                 "end"           -> Just KEnd
                 "enter"         -> Just KEnter
                 "leave"         -> Just KLeave
