@@ -10,16 +10,3 @@ test eval proc launch #Nat of
                 n ← #nat'sub [n, 1]
         return x
 
-
-term square : []!#Console
- = box proc do
-        cell y: #Nat ← 0
-        loop do
-                cell x: #Nat ← 0
-                loop do
-                        #console'print "x"
-                        x ← #nat'add [x, 1]
-                #console'print "\n"
-                y ← #nat'add [y, 1]
-
-test exec square

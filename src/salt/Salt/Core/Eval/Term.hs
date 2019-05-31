@@ -288,11 +288,22 @@ evalTerm s a env (MProcYield m)
 
 
 -- (evm-proc-call) ----------------------------------------
-evalTerm s a env (MProcCall mFun mgssArgs)
- | mgs : mgssRest <- mgssArgs
+evalTerm s a env (MProcCall mFun mgssArg)
+ | Just nPrim <- takeMPrm mFun
+ = case Map.lookup nPrim Ops.primOps of
+        Just (Ops.PP _name _type step _docs)
+         -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
+                return $ step nssArg
+
+        Just (Ops.PO _name _type _effs exec _docs)
+         -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
+                exec nssArg
+
+        Nothing -> throw $ ErrorPrimUnknown a nPrim
+
+ | mgs : mgssRest <- mgssArg
  = evalTermApp s a env (mFun, mgs, mgssRest)
 
- -- TODO: handle prim app.
 
 -- (evm-proc-seq) -----------------------------------------
 evalTerm s a env (MProcSeq mps mBind mRest)
@@ -446,7 +457,7 @@ evalTerm s a env mEnter@(MProcEnter mFirst bms mRest)
         -- Once we've left the loop then continue with the original
         -- environment, so the recursive bindings are no longer in scope.
         evalTerm s a env mRest
-       
+
 
 -- (evm-proc-leave) --------------------------------------
 evalTerm _s _a _env MProcLeave

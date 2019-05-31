@@ -166,14 +166,14 @@ runTestExec mm mnTest mTest
         -- Evaluate the term in an empty environment and print the result.
         vsSusp  <- Eval.evalTerm state rlNone (TermEnv []) mTest
         case vsSusp of
-                [VClosure (TermClosure (TermEnv []) (MPTerms []) mBody)]
+                [VClosure (TermClosure (TermEnv _) (MPTerms []) mBody)]
                  -> do  vsResult <- Eval.evalTerm state rlNone (TermEnv []) mBody
                         case vsResult of
                          [] -> return ()
                          _  -> putStrLn $ P.render $ P.ppr () vsResult
 
-                _ -> error $ "runTestEval: term did not produce a suspension"
-                           ++ show vsSusp
+                [] -> return ()
+                _  -> putStrLn $ P.render $ P.ppr () vsSusp
 
 
 ------------------------------------------------------------------------------------- TestAssert --

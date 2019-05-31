@@ -15,3 +15,19 @@ term hello2 : []! #Console
 
 test exec hello2
 
+
+-- Draw a square.
+proc square [] : []! #Console
+ = do   cell x: #Nat ← 9
+        loop do
+                when #nat'eq [x, 0] break
+                x ← #nat'sub [x, 1]
+                cell y: #Nat ← 9
+                loop do
+                        when #nat'eq [y, 0] break
+                        y ← #nat'sub [y, 1]
+                        #console'print "o"
+                #console'print "\n"
+        #console'print "\n"
+
+test exec square []

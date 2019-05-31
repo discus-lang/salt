@@ -28,7 +28,6 @@ pTerms
 
 ------------------------------------------------------------------------------------------- Term --
 -- | Parse a term, and wrap the result in a source location annotation.
---   TODO: we're getting too many repeated annotations in the result AST.
 pTerm  :: Parser (Term RL)
 pTerm
  = pMAnn
