@@ -12,7 +12,7 @@ test eval proc launch #Nat of
 
 
 -- Draw a square, using loop syntax.
-proc square [] : []! #Console
+proc square []: []! #Console
  = do   cell x: #Nat ← 9
         loop do
                 when #nat'eq [x, 0] break
@@ -29,7 +29,7 @@ test exec square []
 
 
 -- Draw a square, using while syntax.
-proc square2 [] : []! #Console
+proc square2 []: []! #Console
  = do   cell x: #Nat ← 9
         while #nat'gt [x, 0] do
                 x ← #nat'sub [x, 1]
@@ -40,3 +40,22 @@ proc square2 [] : []! #Console
                 #console'print "\n"
 
 test exec square2 []
+
+
+-- Draw a square, using enter-leave syntax.
+proc square3 []: []! #Console
+ = do   cell x: #Nat ← 9
+        cell y: #Nat ← 9
+        enter rows [] with
+                rows []: []
+                 = do   when #nat'eq [y, 0] leave
+                        y ← #nat'sub [y, 1]
+                        x ← 9
+                        elems []
+                        rows  []
+
+                elems []: []
+                 = do   when #nat'eq [x, 0] leave
+                        x ← #nat'sub [x, 1]
+                        #console'print "o"
+                        elems []

@@ -15,7 +15,7 @@ import qualified Text.Parsec            as P
 -- | Parser for a procedure.
 pProc :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
 pProc pTerm pTermApp
- = P.choice
+ = pMAnn $ P.choice
  [ do   -- ProcFinal (';' Proc) | ε
         mkProc <- pProcStmt pTerm pTermApp
         P.choice
@@ -233,7 +233,7 @@ pProcStmt pTerm pTermApp
                 $  do   b       <- pBind
                         mps     <- P.many pTermParams
                         pTok KColon
-                        ts      <- pTypes
+                        ts      <- pTypesResult
                         pTok KEquals
                         m       <- pProc pTerm pTermApp
                         return  $  MBind b mps ts m

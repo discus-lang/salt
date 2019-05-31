@@ -5,14 +5,14 @@ test/30-error/12-check-proc/Test.salt:18:36
 
   18:11  In test
 
-test/30-error/12-check-proc/Test.salt:25:11
+test/30-error/12-check-proc/Test.salt:25:31
   Actual type '#Nat'
    does not match
    expected type '#Bool'
 
   25:11  In test
 
-test/30-error/12-check-proc/Test.salt:32:11
+test/30-error/12-check-proc/Test.salt:32:31
   Actual type '#Bool'
    does not match
    expected type '#Nat'
@@ -40,7 +40,7 @@ test/30-error/12-check-proc/Test.salt:52:19
 
   51:11  In test
 
-test/30-error/12-check-proc/Test.salt:61:11
+test/30-error/12-check-proc/Test.salt:62:2
   Alternative 'foo' is not in scrutinee type.
    '∑[bar: #Nat]'
 
@@ -60,12 +60,12 @@ test/30-error/12-check-proc/Test.salt:75:27
 
   75:11  In test
 
-test/30-error/12-check-proc/Test.salt:81:11
+test/30-error/12-check-proc/Test.salt:81:16
   break statement does not have an enclosing loop
 
   81:11  In test
 
-test/30-error/12-check-proc/Test.salt:87:11
+test/30-error/12-check-proc/Test.salt:87:16
   continue statement does not have an enclosing loop
 
   87:11  In test

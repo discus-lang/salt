@@ -15,6 +15,12 @@ import Text.Show.Pretty
 --   Type errors are thrown as exceptions in the IO monad.
 checkTermProc :: CheckTermProc a
 
+-- (t-proc-ann) -------------------------------------------
+checkTermProc _a wh ctx mode ctxProc (MAnn a m)
+ = do   (m', t, eff) <- checkTermProc a wh ctx mode ctxProc m
+        return (MAnn a m', t, eff)
+
+
 -- (t-proc-yield) -----------------------------------------
 checkTermProc a wh ctx mode _ctxProc (MProcYield mResult)
  = do
@@ -270,7 +276,8 @@ checkTermProc a wh ctx mode ctxProc (MProcEnter mEnter bms mRest)
         let btsBind = [ (bindOfTermBind bm, t) | bm <- bms | t <- tsBind']
         let ntsBind = [ (n, t) | (BindName n, t) <- btsBind ]
         let ctx'    = contextBindTerms ntsBind ctx
-        bms'    <- mapM (checkTermProcBind a wh ctx' ctxProc) bms
+        (bms', essBind)
+         <- fmap unzip $ mapM (checkTermProcBind a wh ctx' ctxProc) bms
 
         -- Check the entry expression, with the binders in scope.
         let ctxt    = ctx' { contextFragment = FragTerm }
@@ -282,7 +289,7 @@ checkTermProc a wh ctx mode ctxProc (MProcEnter mEnter bms mRest)
          <- checkTermProc a wh ctx mode ctxProc mRest
 
         return  ( MProcEnter mEnter' bms' mRest'
-                , tsResult, esEnter ++ esRest)
+                , tsResult, esEnter ++ concat essBind ++ esRest)
 
 
 -- (t-proc-leave) -----------------------------------------
@@ -304,7 +311,8 @@ checkTermProc _a _wh _ctx _mode _ctxProc  mm
 -- | Check a `TermProcBind`.
 checkTermProcBind
         :: Annot a => a -> [Where a]
-        -> Context a -> ContextProc a -> TermBind a -> IO (TermBind a)
+        -> Context a  -> ContextProc a
+        -> TermBind a -> IO (TermBind a, [Effect a])
 
 checkTermProcBind a wh ctx ctxProc (MBind b mpss tResult mBody)
  = do   -- Check the parameters.
@@ -324,10 +332,5 @@ checkTermProcBind a wh ctx ctxProc (MBind b mpss tResult mBody)
         (mBody', _tsResult, esBody)
          <- checkTermProc a wh ctx' (Check tsResult') ctxProc mBody
 
-        -- The body must be pure.
-        let aBody  = fromMaybe a $ takeAnnotOfTerm mBody
-        eBody_red  <- simplType aBody ctx' (TSum esBody)
-        when (not $ isTPure eBody_red)
-         $ throw $ ErrorAbsImpure UTerm aBody wh eBody_red
-
-        return $ MBind b mpss' tsResult' mBody'
+        return  ( MBind b mpss' tsResult' mBody'
+                , esBody)
