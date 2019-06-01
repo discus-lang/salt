@@ -1,0 +1,24 @@
+
+
+-- test eval #reify'pretty @[#Text] "hello"
+
+-- test eval #reify'pretty @[#Nat ! pure]  (box #nat'add [2, 3])
+
+term print @[a: #Data] [x: a]: [] !#Console
+ = box #console'println (#reify'pretty @a x)
+
+term fac2 [x: #Nat]: #Nat
+ = proc launch #Nat of
+   do   cell n: #Nat ← x
+        cell a: #Nat ← 1
+        loop do
+                when (#nat'eq [n, 0]) break
+                a ← #nat'mul [a, n]
+                n ← #nat'sub [n, 1]
+                end
+        return a
+
+
+test exec print @[#Nat ! pure] (box #nat'add [2, 3])
+
+test exec print @[#Nat → #Nat] fac2

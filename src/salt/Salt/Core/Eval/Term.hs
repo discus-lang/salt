@@ -28,7 +28,7 @@ evalTerm :: forall a. EvalTerm a (Term a) [Value a]
 
 -- (evm-ann) -----------------------------------------------
 evalTerm s _a env (MAnn a' m)
- = evalTerm s a' env m
+ = do   evalTerm s a' env m
 
 
 -- (evm-val) -----------------------------------------------
@@ -59,7 +59,7 @@ evalTerm s a env (MVar u)
         Just (TermDefDecl m)  -> evalTerm s a menvEmpty m
 
         -- Can't find the binding site for this bound variable.
-        _ -> throw $ ErrorTermVarUnbound a u env
+        _ -> error $ show env -- throw $ ErrorTermVarUnbound a u env
 
 
 -- (evm-abs) -----------------------------------------------

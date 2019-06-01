@@ -1,0 +1,2 @@
+[mclo_|λ[] → #nat'add [2, 3]]
+[mclo_|λ[x: #Nat] → the #Nat of ##proc (##proc'launch @[#Nat] (##proc'cell (x) (λ[n: #Nat] → ##proc'cell (1) (λ[a: #Nat] → ##proc'loop (##proc'whens [#nat'eq [n, 0]] [##proc'break ] (##proc'update (a) (#nat'mul [a, n]) (##proc'update (n) (#nat'sub [n, 1]) (##proc'yield ([]))))) (##proc'return (a))))))]

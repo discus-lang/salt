@@ -5,12 +5,12 @@ import Salt.Main.Mode.Parse
 import Salt.Core.Exp
 import Salt.Data.Pretty
 import Salt.Data.Location
-import qualified Salt.Core.Eval                 as Eval
-import qualified Salt.Core.Check                as Check
-import qualified Salt.Data.Pretty               as P
+import qualified Salt.Core.Eval         as Eval
+import qualified Salt.Core.Check        as Check
+import qualified Salt.Data.Pretty       as P
 
-import qualified System.IO                      as System
-import qualified Data.Text                      as T
+import qualified System.IO              as System
+import qualified Data.Text              as T
 
 
 ------------------------------------------------------------------------------------------- Main --
@@ -166,8 +166,8 @@ runTestExec mm mnTest mTest
         -- Evaluate the term in an empty environment and print the result.
         vsSusp  <- Eval.evalTerm state rlNone (TermEnv []) mTest
         case vsSusp of
-                [VClosure (TermClosure (TermEnv _) (MPTerms []) mBody)]
-                 -> do  vsResult <- Eval.evalTerm state rlNone (TermEnv []) mBody
+                [VClosure (TermClosure env (MPTerms []) mBody)]
+                 -> do  vsResult <- Eval.evalTerm state rlNone env mBody
                         case vsResult of
                          [] -> return ()
                          _  -> putStrLn $ P.render $ P.ppr () vsResult
