@@ -16,15 +16,3 @@ term hello2 : []! #Console
 test exec hello2
 
 
--- Draw a square.
-proc square [] : []! #Console
- = do   cell x: #Nat ← 9
-        while (#nat'gt [x, 0]) do
-                x ← #nat'sub [x, 1]
-                cell y: #Nat ← 9
-                while (#nat'gt [y, 0]) do
-                        y ← #nat'sub [y, 1]
-                        #console'print "x"
-                #console'print "\n"
-
-test exec square []

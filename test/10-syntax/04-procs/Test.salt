@@ -210,15 +210,15 @@ proc when1s [b: #Bool, x: #Nat, y: #Nat]: #Nat
 
 
 proc when2 [n: #Nat]: #Text
- =      when #nat'eq [n, 1] return "one";
-        when #nat'eq [n, 2] return "two";
-        when #nat'eq [n, 3] return "three";
+ =      when (#nat'eq [n, 1]) return "one";
+        when (#nat'eq [n, 2]) return "two";
+        when (#nat'eq [n, 3]) return "three";
         yield "dunno"
 
 proc when2s [n: #Nat]: #Text
- = do   when #nat'eq [n, 1] return "one"
-        when #nat'eq [n, 2] return "two"
-        when #nat'eq [n, 3] return "three"
+ = do   when (#nat'eq [n, 1]) return "one"
+        when (#nat'eq [n, 2]) return "two"
+        when (#nat'eq [n, 3]) return "three"
         yield "dunno"
 
 
@@ -231,64 +231,64 @@ proc whens2s [n: #Nat]: #Text
 
 
 proc when3 [n: #Nat, m: #Nat]: #Text
- = do   { when #nat'eq [n, 1]
-                when #nat'eq [n, 2]
-                        return "derp"
+ = do   { when (#nat'eq [n, 1])
+                (when (#nat'eq [n, 2])
+                        return "derp")
         ; yield "whatever" }
 
 proc when3s [n: #Nat, m: #Nat]: #Text
- = do   when #nat'eq [n, 1]
-                when #nat'eq [n, 2]
+ = do   when (#nat'eq [n, 1]) do
+                when (#nat'eq [n, 2])
                         return "derp"
         yield "whatever"
 
 proc when3sd [n: #Nat, m: #Nat]: #Text
- = do   when #nat'eq [n, 1] do
-                when #nat'eq [n, 2] do
+ = do   when (#nat'eq [n, 1]) do
+                when (#nat'eq [n, 2]) do
                         return "derp"
         yield "whatever"
 
 
 proc when4 [n: #Nat, m: #Nat]: #Text
- =      when #nat'eq [n, 1]
-                when #nat'eq [m, 1]
-                        return "one, one";
-                when #nat'eq [m, 2]
-                        return "one, two";
-        yield "whatever"
+ =      when (#nat'eq [n, 1])
+                ( when (#nat'eq [m, 1])
+                       (return "one, one")
+                ; when (#nat'eq [m, 2])
+                       (return "one, two"))
+        ; yield "whatever"
 
 proc when4s [n: #Nat, m: #Nat]: #Text
- = do   { when #nat'eq [n, 1]
-          do    { when #nat'eq [m, 1]
+ = do   { when (#nat'eq [n, 1])
+          do    { when (#nat'eq [m, 1])
                         return "one, one"
-                ; when #nat'eq [m, 2]
+                ; when (#nat'eq [m, 2])
                         return "one, two"
                 }
         ; yield "whatever" }
 
 proc when4ss [n: #Nat, m: #Nat]: #Text
- = do   { when #nat'eq [n, 1] do
-                { when #nat'eq [m, 1] do
+ = do   { when (#nat'eq [n, 1]) do
+                { when (#nat'eq [m, 1]) do
                         { return "one, one" }
-                ; when #nat'eq [m, 2] do
+                ; when (#nat'eq [m, 2]) do
                         { return "one, two" }
                 }
         ; yield "whatever"
         }
 
 proc when4sss [n: #Nat, m: #Nat]: #Text
- = do   when #nat'eq [n, 1] do
-                when #nat'eq [m, 1]
+ = do   when (#nat'eq [n, 1]) do
+                when (#nat'eq [m, 1])
                         return "one, one"
-                when #nat'eq [m, 2]
+                when (#nat'eq [m, 2])
                         return "one, two"
         yield "whatever"
 
 proc when4ssss [n: #Nat, m: #Nat]: #Text
- = do   when #nat'eq [n, 1]
-         do     when #nat'eq [m, 1]
+ = do   when (#nat'eq [n, 1])
+         do     when (#nat'eq [m, 1])
                  do     return "one, one"
-                when #nat'eq [m, 2]
+                when (#nat'eq [m, 2])
                  do     return "one, two"
         yield "whatever"
 
@@ -367,13 +367,13 @@ proc match3ss [v: <foo: #Nat, bar: [#Bool, #Nat, #Nat], baz: #Nat>]: #Nat
 -- loop -----------------------------------------------------------------------
 proc loop1 [n: #Nat]: []! #Console
  = launch [] of
-   loop when #nat'gt [n, 10]
+   loop when (#nat'gt [n, 10])
                 return [];
         call #console'print "hello"
 
 proc loop1s [n: #Nat]: []! #Console
  = loop do
-        { when #nat'gt [n, 10]
+        { when (#nat'gt [n, 10])
                 return []
         ; call #console'print "hello" }
 
@@ -381,7 +381,7 @@ proc loop1s [n: #Nat]: []! #Console
 proc loop1ss [n: #Nat]: []! #Console
  = launch [] of
    loop do
-        when #nat'gt [n, 10]
+        when (#nat'gt [n, 10])
                 return []
         call #console'print "hello"
 
@@ -392,10 +392,9 @@ proc rec1 [n: #Nat]: #Nat
         cell x:   #Nat ← n
         enter fac []
          with fac []: [] = do
-                when #nat'eq [x, 0] do leave
+                when (#nat'eq [x, 0]) do leave
                 acc ← #nat'mul [acc, x]
                 x   ← #nat'sub [x,   1]
                 fac []
         yield acc
-
 

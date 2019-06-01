@@ -38,17 +38,17 @@ proc do'nest'head []: []! #Console = do
 
 
 proc when3ss [n: #Nat, m: #Nat]: #Text
- = do   when #nat'eq [n, 1] do
-                when #nat'eq [n, 2] do
+ = do   when (#nat'eq [n, 1]) do
+                when (#nat'eq [n, 2]) do
                         return "derp"
         yield "whatever"
 
 
 proc when4sss [n: #Nat, m: #Nat]: #Text
- = do   when #nat'eq [n, 1] do
-                when #nat'eq [m, 1] do
+ = do   when (#nat'eq [n, 1]) do
+                when (#nat'eq [m, 1]) do
                         return "one, one"
-                when #nat'eq [m, 2] do
+                when (#nat'eq [m, 2]) do
                         return "one, two"
         yield "whatever"
 

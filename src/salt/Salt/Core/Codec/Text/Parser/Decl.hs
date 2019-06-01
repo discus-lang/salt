@@ -16,9 +16,10 @@ import qualified Text.Parsec                    as P
 
 ------------------------------------------------------------------------------------------- Decl --
 -- | Parser for a top-level declaration.
-pDecl :: Parser (Decl RL)
-pDecl   = P.choice
-        [ pDeclType, pDeclTerm, pDeclTest]
+pDecl :: Context -> Parser (Decl RL)
+pDecl ctx
+ = P.choice
+ [ pDeclType, pDeclTerm ctx, pDeclTest ctx]
 
 
 ------------------------------------------------------------------------------------------- Type --
@@ -28,8 +29,8 @@ pDeclType
  = do   -- 'type' Var TypeParams* ':' Type '=' Type
         pTok KType
         (rName, nName)
-         <- pRanged (pVar       <?> "a name for the type")
-        tps     <- P.many (pTypeParams
+          <- pRanged (pVar <?> "a name for the type")
+        tps     <- P.many  (pTypeParams
                                 <?> "some parameters, or a ':' to give the result kind")
         pTok KColon             <?> "more parameters, or a ':' to give the result kind"
         kResult <- pType        <?> "the result kind"
@@ -45,8 +46,8 @@ pDeclType
 
 ------------------------------------------------------------------------------------------- Term --
 -- | Parser for a term declaration.
-pDeclTerm :: Parser (Decl RL)
-pDeclTerm
+pDeclTerm :: Context -> Parser (Decl RL)
+pDeclTerm ctx
  = P.choice
  [ do   -- 'term' Var TermParams* ':' Type '=' Term
         pTok KTerm
@@ -57,7 +58,7 @@ pDeclTerm
         pTok KColon             <?> "more parameters, or a ':' to start the result type"
         tsRes   <- pTypesResult <?> "some result types"
         pTok KEquals            <?> "a '=' to start the body"
-        mBody   <- pTerm        <?> "the body"
+        mBody   <- pTerm ctx    <?> "the body"
         return  $  DTerm $ DeclTerm
                 { declAnnot       = rName
                 , declTermMode    = DeclTermModePlain
@@ -75,7 +76,7 @@ pDeclTerm
         pTok KColon             <?> "more parameters, or a ':' to start the result type"
         tsRes   <- pTypesResult <?> "some result types"
         pTok KEquals            <?> "a '=' to start the body"
-        mBody   <- pProc pTerm pTermApp
+        mBody   <- pProc ctx
                                 <?> "the body"
         return  $  DTerm $ DeclTerm
                 { declAnnot       = rName
@@ -89,8 +90,8 @@ pDeclTerm
 
 ------------------------------------------------------------------------------------------- Test --
 -- | Parser for a test declaration.
-pDeclTest :: Parser (Decl RL)
-pDeclTest
+pDeclTest :: Context -> Parser (Decl RL)
+pDeclTest ctx
  = do   -- 'watch'? 'test' 'kind'   (Name '=')? Type
         -- 'watch'? 'test' 'type'   (Name '=')? Term
         -- 'watch'? 'test' 'eval'   (Name '=')? Term
@@ -157,7 +158,7 @@ pDeclTest
                         , declTestType  = tType }
 
          , do   guard $ nMode == "type"
-                mTerm   <- pTerm
+                mTerm   <- pTerm ctx
                         <?> if isJust mName
                                 then "the term to take the type of"
                                 else "a test name, or the term to take the type of"
@@ -183,7 +184,7 @@ pDeclTest
                         , declTestType  = tBody }
 
          , do   guard $ (nMode == "eval'term") || (nMode == "eval")
-                mBody   <- pTerm
+                mBody   <- pTerm ctx
                         <?> if isJust mName
                                 then "the term to evaluate"
                                 else "a test name, or the term to evaluate"
@@ -196,7 +197,7 @@ pDeclTest
                         , declTestTerm  = mBody }
 
          , do   guard $ nMode == "exec"
-                mBody   <- pTerm
+                mBody   <- pTerm ctx
                         <?> if isJust mName
                                 then "the term to execute"
                                 else "a test name, or the term to execute"
@@ -209,7 +210,7 @@ pDeclTest
                         , declTestBody  = mBody }
 
          , do   guard $ nMode == "assert"
-                mBody   <- pTerm
+                mBody   <- pTerm ctx
                         <?> if isJust mName
                                 then "the term you hope is true"
                                 else "a test name, or the term you hope is true"

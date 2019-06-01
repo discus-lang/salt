@@ -8,9 +8,9 @@ import qualified Text.Parsec            as P
 
 
 -- | Parser for a module.
-pModule :: Parser (Module RL)
-pModule
- = do   decls   <- P.many pDecl
+pModule :: Context -> Parser (Module RL)
+pModule ctx
+ = do   decls   <- P.many (pDecl ctx)
         pTok KMetaEnd
         return  $ Module decls
 

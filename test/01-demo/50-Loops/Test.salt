@@ -15,9 +15,10 @@ term fac2 [x: #Nat]: #Nat
    do   cell n: #Nat ← x
         cell a: #Nat ← 1
         loop do
-                when #nat'eq [n, 0] break
+                when (#nat'eq [n, 0]) break
                 a ← #nat'mul [a, n]
                 n ← #nat'sub [n, 1]
+                end
         return a
 
 test eval fac2 10
@@ -30,7 +31,7 @@ proc fac3 [x: #Nat]: #Nat
         cell a: #Nat ← 1
         enter fac []
          with fac []: [] = do
-                when #nat'eq [n, 0] do leave
+                when (#nat'eq [n, 0]) leave
                 a ← #nat'mul [a, n]
                 n ← #nat'sub [n, 1]
                 fac []

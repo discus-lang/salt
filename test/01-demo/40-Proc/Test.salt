@@ -4,7 +4,7 @@ term derp [n: #Nat]: #Nat ! #Console
    seq x = yield 5;
    seq y = yield the <foo: #Nat> of `foo 4;
    seq call #console'print "derp";
-   when #nat'eq [x, 0] return 3;
+   when (#nat'eq [x, 0]) return 3;
    cell n: #Nat ← 0;
    loop call #console'print "derp";
    yield [3]
@@ -15,7 +15,7 @@ term derps [n: #Nat]: #Nat ! #Console
    seq x = yield 5
    seq y = yield the <foo: #Nat> of `foo 4
    seq call #console'print "derp"
-   when #nat'eq [x, 0] return 3
+   when (#nat'eq [x, 0]) return 3
    cell n: #Nat ← 0
    loop call #console'print "derp"
    yield [n]

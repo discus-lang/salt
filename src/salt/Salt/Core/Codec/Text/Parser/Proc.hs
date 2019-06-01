@@ -1,6 +1,8 @@
 
 -- TODO: check we still have expected text at intermediate points.
-module Salt.Core.Codec.Text.Parser.Proc where
+module Salt.Core.Codec.Text.Parser.Proc
+        (pProc)
+where
 import Salt.Core.Codec.Text.Parser.Params
 import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Base
@@ -10,42 +12,52 @@ import Salt.Core.Exp
 import Text.Parsec                      ((<?>))
 import qualified Text.Parsec            as P
 
+---------------------------------------------------------------------------------------- Context --
+pTerm    ctx = contextParseTerm    ctx ctx
+pTermApp ctx = contextParseTermApp ctx ctx
+pTermArg ctx = contextParseTermArg ctx ctx
+
 
 ------------------------------------------------------------------------------------------- Proc --
 -- | Parser for a procedure.
-pProc :: Parser (Term RL) -> Parser (Term RL) -> Parser (Term RL)
-pProc pTerm pTermApp
+pProc :: Context -> Parser (Term RL)
+pProc ctx
  = pMAnn $ P.choice
- [ do   -- ProcStmt ((';' Proc) | ε)
-        mkProc <- pProcStmt pTerm pTermApp
+ [ do   -- ( PROC )
+        pTok KRBra
+        mProc <- pProc ctx
+        pTok KRKet
+        return mProc
+
+ , do   -- ProcStmt ((';' Proc) | ε)
+        mkProc <- pProcStmt ctx
         P.choice
          [ do   pTok KSemi
-                mRest   <- pProc pTerm pTermApp
+                mRest   <- pProc ctx
                 return  $ mkProc mRest
 
          , do   return  $ mkProc $ MProcYield (MTerms []) ]
 
  , do   -- ProcFinal
-        pProcFinal pTerm pTermApp
+        pProcFinal ctx
  ]
 
 
 -------------------------------------------------------------------------------------- ProcFinal --
 -- | Parse a final procedure,
 --   which is a procedure that has no tail.
-pProcFinal :: Parser (Term RL) -> Parser (Term RL)
-           -> Parser (Term RL)
-pProcFinal pTerm pTermApp
+pProcFinal :: Context -> Parser (Term RL)
+pProcFinal ctx
  = P.choice
  [ do   -- ( PROC )
         pTok KRBra
-        mProc <- pProc pTerm pTermApp
+        mProc <- pProc ctx
         pTok KRKet
         return mProc
 
  , do   -- 'yield' Exp
         pTok KYield
-        mExp <- pTerm
+        mExp <- pTerm ctx
         return $ MProcYield mExp
 
  , do   -- 'end'
@@ -55,7 +67,7 @@ pProcFinal pTerm pTermApp
  , do   -- 'call' Prm TermArgs*
         -- 'call' Con TermArgs*
         pTok KCall
-        mApp <- pTermApp
+        mApp <- pTermApp ctx
         let Just (mFun, mgssArg) = takeMAps mApp
         return $ MProcCall mFun mgssArg
 
@@ -63,12 +75,12 @@ pProcFinal pTerm pTermApp
         pTok KLaunch
         tsRet   <- pTypes
         pTok KOf
-        mRest   <- pProc pTerm pTermApp
+        mRest   <- pProc ctx
         return  $ MProcLaunch tsRet mRest
 
  , do   -- 'return' Exp
         pTok KReturn
-        mBody <- pTerm
+        mBody <- pTerm ctx
         return $ MProcReturn mBody
 
         -- 'break'
@@ -84,12 +96,12 @@ pProcFinal pTerm pTermApp
         return MProcLeave
 
  , do   -- ProcDo
-        pProcDo pTerm pTermApp
+        pProcDo ctx
 
  , do   -- Prm TermArgs*
         -- Con TermArgs*
         -- TODO: check we have at least one arg.
-        mApp <- pTermApp
+        mApp <- pTermApp ctx
         (mFun, mgssArg)
          <- case takeMAps mApp of
                 Just (mFun, mgssArg) -> return (mFun, mgssArg)
@@ -103,13 +115,12 @@ pProcFinal pTerm pTermApp
 -- | Parse a procedure which has a tail.
 --   We produce a function that takes the tail and builds the
 --   overall procedure.
-pProcStmt :: Parser (Term RL) -> Parser (Term RL)
-          -> Parser (Term RL -> Term RL)
-pProcStmt pTerm pTermApp
+pProcStmt :: Context -> Parser (Term RL -> Term RL)
+pProcStmt ctx
  = P.choice
  [ do   -- 'seq' '[' Var,* ']' '=' Proc ...
         pTok KSeq
-        (mps, mBind) <- pProcBind pTerm pTermApp
+        (mps, mBind) <- pProcBind ctx
         return  $ \mRest -> MProcSeq mps mBind mRest
 
  , do   -- 'cell' Var ':' Type '←' Term ...
@@ -118,29 +129,21 @@ pProcStmt pTerm pTermApp
         pTok KColon
         tCell   <- pType
         pLeft
-        mBind   <- pTerm
+        mBind   <- pTerm ctx
         return  $ \mRest -> MProcCell nCell tCell mBind mRest
 
  , do   -- 'update' 'Var' '←' Term ...
         pTok KUpdate
         nCell   <- pVar
         pLeft
-        mValue  <- pTerm
+        mValue  <- pTerm ctx
         return  $ \mRest -> MProcUpdate nCell mValue mRest
 
- , do   -- 'when' Term (ProcStmt | ProcFinal)
+ , do   -- 'when' TermArg Proc ...
         pTok KWhen
-        mCond   <- pTerm        <?> "a term for the condition"
-        P.choice
-         [ do   mkThen <- pProcStmt pTerm pTermApp
-                 <?> "the body of the 'then' branch"
-                let mThen = mkThen (MProcYield (MTerms []))
-                return $ \mRest -> MProcWhens [mCond] [mThen] mRest
-
-         , do   mThen   <- pProcFinal pTerm pTermApp
-                 <?> "the body of the 'then' branch"
-                return $ \mRest -> MProcWhens [mCond] [mThen] mRest
-         ]
+        mCond   <- pTermArg ctx    <?> "a term for the condition"
+        mThen   <- pProc    ctx    <?> "the body of the 'then' branch"
+        return  $ \mRest -> MProcWhens [mCond] [mThen] mRest
 
  , do   --  'whens' '{' (Term '→' Proc);+ '}' ...
         pTok KWhens
@@ -149,18 +152,17 @@ pProcStmt pTerm pTermApp
 
         (msCond, msThen)
          <- fmap unzip $ flip P.sepEndBy (pTok KSemi)
-         $  do  mCond <- pTerm  <?> "a term for a condition."
-                pRight          <?> "a completed term, or '→' to start the body"
+         $  do  mCond <- pTerm ctx <?> "a term for a condition."
+                pRight             <?> "a completed term, or '→' to start the body"
 
-                mThen <- pProc pTerm pTermApp
-                                <?> "the body of the branch"
+                mThen <- pProc ctx <?> "the body of the branch"
                 return (mCond, mThen)
         pTok KCKet
         return $ \mRest -> MProcWhens msCond msThen mRest
 
  , do   -- 'match' Term 'of' '{' (Lbl [(Var ':' Type)*] '→' Stmt);* '}' ...
         pTok KMatch
-        mScrut <- pTerm         <?> "a term for the scrutinee"
+        mScrut <- pTerm ctx     <?> "a term for the scrutinee"
         pTok KWith              <?> "a completed term, or 'of' to start the alternatives"
 
         pTokBlock KCBra KSemi KCKet
@@ -181,7 +183,7 @@ pProcStmt pTerm pTermApp
 
                 pRight          <?> "a '→' to start the body"
 
-                mBody <- pProc pTerm pTermApp
+                mBody <- pProc ctx
                  <?> "the body of the alternative"
 
                 return $ MVarAlt lAlt (MPAnn rPat $ MPTerms btsPat) mBody
@@ -189,43 +191,27 @@ pProcStmt pTerm pTermApp
         pTok KCKet              <?> "a completed term, or '}' to end the alternatives"
         return $ \mRest -> MProcMatch mScrut msAlts mRest
 
- , do   -- 'loop' Proc (ProcStmt | ProcFinal) ...
+ , do   -- 'loop' Proc ...
         pTok KLoop
-        P.choice
-         [ do   mkThen <- pProcStmt pTerm pTermApp
-                 <?> "the body of the loop"
-                let mThen = mkThen (MProcYield (MTerms []))
-                return $ \mRest -> MProcLoop mThen mRest
+        mBody   <- pProc ctx    <?> "the body of the loop"
+        return  $ \mRest -> MProcLoop mBody mRest
 
-         , do   mThen   <- pProcFinal pTerm pTermApp
-                 <?> "the body of the loop"
-                return $ \mRest -> MProcLoop mThen mRest
-         ]
-
-  , do  -- 'while' Term (ProcStmt | ProcFinal) ...
+  , do  -- 'while' TermArg (ProcStmt | ProcFinal) ...
         pTok KWhile
-        mPred   <- pTermApp
-        P.choice
-         [ do   mkBody <- pProcStmt pTerm pTermApp
-                 <?> "the body of the loop"
-                let mBody = mkBody (MProcYield (MTerms []))
-                return $ \mRest -> MProcWhile mPred mBody mRest
-
-         , do   mBody   <- pProcFinal pTerm pTermApp
-                 <?> "the body of the loop"
-                return $ \mRest -> MProcWhile mPred mBody mRest
-         ]
+        mPred   <- pTermArg ctx <?> "the 'while' predicate"
+        mBody   <- pProc ctx    <?> "the body of the loop"
+        return  $ \mRest -> MProcWhile mPred mBody mRest
 
   , do  -- 'let' Binds '=' Term ...
         pTok KLet
         mps     <- pProcBinds
         pTok KEquals
-        mBind   <- pTerm
+        mBind   <- pTerm ctx
         return  $ \mRest -> MProcSeq mps (MProcYield mBind) mRest
 
   , do  -- 'enter' Name 'with' '{' ProcTermBind+ '}' ...
         pTok KEnter
-        mEnter  <- pTermApp
+        mEnter  <- pTermApp ctx
         pTok KWith      <?> "'with' to start the list of bindings"
         pTokBlock KCBra KSemi KCKet
          <?> "a '{' to start the list of bindings"
@@ -235,7 +221,7 @@ pProcStmt pTerm pTermApp
                         pTok KColon
                         ts      <- pTypesResult
                         pTok KEquals
-                        m       <- pProc pTerm pTermApp
+                        m       <- pProc ctx
                         return  $  MBind b mps ts m
         pTok KCKet
         return  $ \mRest -> MProcEnter mEnter bms mRest
@@ -246,7 +232,7 @@ pProcStmt pTerm pTermApp
         --   We know this is a seq when we get to the '='
         mps     <- pProcBinds
         pTok KEquals
-        mBind   <- pProcFinal pTerm pTermApp
+        mBind   <- pProcFinal ctx
         return  $ \mRest -> MProcSeq mps mBind mRest
 
  , P.try $ do
@@ -255,40 +241,39 @@ pProcStmt pTerm pTermApp
         --   We know this is an update when we get to the '←'.
         nCell   <- pVar
         pLeft
-        mBind   <- pTerm
+        mBind   <- pTerm ctx
         return  $ \mRest -> MProcUpdate nCell mBind mRest
  ]
 
 
 ----------------------------------------------------------------------------------------- ProcDo --
 -- | Parser for a 'do' construct.
-pProcDo    :: Parser (Term RL) -> Parser (Term RL)
-           -> Parser (Term RL)
-pProcDo pTerm pTermApp
+pProcDo :: Context -> Parser (Term RL)
+pProcDo ctx
  = do   -- 'do' '{' ProcStmt; ... ProcFinal }
         pTok KDo
         pTokBlock KCBra KSemi KCKet
-        mBody <- pProcDoStmts pTerm pTermApp
+        mBody <- pProcDoStmts ctx
         pTok KCKet
         return mBody
 
 
 -- | Parser for the statements in the body of a 'do' construct.
-pProcDoStmts :: Parser (Term RL) -> Parser (Term RL)
-           -> Parser (Term RL)
-pProcDoStmts pTerm pTermApp
+pProcDoStmts :: Context -> Parser (Term RL)
+pProcDoStmts ctx
  = P.choice
- [ do   mkStmt  <- pProcStmt pTerm pTermApp
+ [ do   mkStmt  <- pProcStmt ctx
         P.choice
          [ do   pTok KSemi
-                mRest <- pProcDoStmts pTerm pTermApp
+                mRest <- pProcDoStmts ctx
                 return $ mkStmt mRest
+
          , do   return $ mkStmt $ MProcYield (MTerms []) ]
 
- , do   mFinal  <- pProcFinal pTerm pTermApp
+ , do   mFinal  <- pProcFinal ctx
         P.choice
          [ do   pTok KSemi
-                mRest <- pProcDoStmts pTerm pTermApp
+                mRest <- pProcDoStmts ctx
                 return $ MProcSeq (MPTerms []) mFinal mRest
          , do   return $ mFinal ]
  ]
@@ -296,20 +281,18 @@ pProcDoStmts pTerm pTermApp
 
 --------------------------------------------------------------------------------------- ProcBind --
 -- | Parser for a procedure binding.
-pProcBind  :: Parser (Term RL) -> Parser (Term RL)
-           -> Parser (TermParams RL, Term RL)
-pProcBind pTerm pTermApp
+pProcBind :: Context -> Parser (TermParams RL, Term RL)
+pProcBind ctx
  = P.choice
  [ P.try $ do
         -- Binds '=' Proc
         mps   <- pProcBinds
-        pTok KEquals      <?> "a type annotation, or '=' to start the binding"
-        mBind <- pProc pTerm pTermApp
-                          <?> "a procedure for the binding"
+        pTok KEquals       <?> "a type annotation, or '=' to start the binding"
+        mBind <- pProc ctx <?> "a procedure for the binding"
         return (mps, mBind)
 
  , do   -- Proc
-        mBind <- pProc pTerm pTermApp
+        mBind <- pProc ctx
         return (MPTerms [], mBind)
  ]
 

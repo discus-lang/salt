@@ -19,6 +19,7 @@ import Debug.Trace
 type Parser a   = P.Parsec [At Token] State a
 type RL         = IW.Range IW.Location
 
+-- | Current parser state.
 data State
         = State
         { -- | The location of the previously parsed token.
@@ -28,17 +29,26 @@ data State
         , stateInjected         :: [At Token]
 
           -- | The context that we are in when managing the offside rule.
-        , stateContext          :: [Context] }
+        , stateOffside          :: [Offside] }
         deriving Show
 
 
+-- | Context for handling of the offside rule.
+data Offside
+        = OffsideImplicit
+        { offsideColumn         :: Int
+        , offsideTokenStart     :: Token
+        , offsideTokenSep       :: Token
+        , offsideTokenEnd       :: Token }
+        deriving Show
+
+
+-- | Parser context carried down into the abstract syntax tree.
 data Context
-        = ContextImplicit
-        { contextColumn         :: Int
-        , contextTokenStart     :: Token
-        , contextTokenSep       :: Token
-        , contextTokenEnd       :: Token }
-        deriving Show
+        = Context
+        { contextParseTerm      :: Context -> Parser (Term RL)
+        , contextParseTermApp   :: Context -> Parser (Term RL)
+        , contextParseTermArg   :: Context -> Parser (Term RL) }
 
 
 ------------------------------------------------------------------------------ Location Handling --
@@ -113,9 +123,9 @@ pInjectForContext
  = goStart
  where  -- See if we are in an implicit block context.
         goStart
-         = do ctx <- fmap stateContext  P.getState
+         = do ctx <- fmap stateOffside  P.getState
               case ctx of
-               ContextImplicit nCol _tStart tSep tEnd : ctxRest
+               OffsideImplicit nCol _tStart tSep tEnd : ctxRest
                  -> goImplicit nCol tSep tEnd ctxRest
                _ -> return ()
 
@@ -141,7 +151,7 @@ pInjectForContext
                  then do
                         P.modifyState $ \s -> s
                          { stateInjected = stateInjected s ++ [At rHere tEnd]
-                         , stateContext  = ctxRest }
+                         , stateOffside  = ctxRest }
                         goStart
 
                 -- Also end blocks if we hit the end of the file.
@@ -149,15 +159,15 @@ pInjectForContext
                  then do
                         P.modifyState $ \s -> s
                          { stateInjected = stateInjected s ++ [At rHere tEnd]
-                         , stateContext  = ctxRest }
+                         , stateOffside  = ctxRest }
                         goStart
 
                 else    return ()
 
 pDumpState :: Parser ()
 pDumpState
- = do   atPrev  <- fmap statePrev    P.getState
-        ctx     <- fmap stateContext P.getState
+ = do   atPrev  <- fmap statePrev     P.getState
+        ctx     <- fmap stateOffside  P.getState
         ts      <- fmap stateInjected P.getState
         trace (unlines
                 [ show atPrev
@@ -185,10 +195,10 @@ pTokBlock tStart tSep tEnd
 
         if tNext == tStart
         then    pTok tStart
-        else do let ctx = ContextImplicit col tStart tSep tEnd
+        else do let ctx = OffsideImplicit col tStart tSep tEnd
                 P.modifyState $ \s -> s
                         { statePrev     = tok
-                        , stateContext  = ctx : stateContext s }
+                        , stateOffside  = ctx : stateOffside s }
 
 
 -- | Parse a thing, and also return its range in the source file.

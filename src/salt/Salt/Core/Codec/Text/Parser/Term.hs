@@ -16,22 +16,22 @@ import qualified Text.Parsec            as P
 
 ------------------------------------------------------------------------------------------ Terms --
 -- | Parse a term vector.
-pTerms :: Parser [Term RL]
-pTerms
+pTerms :: Context -> Parser [Term RL]
+pTerms ctx
  = P.choice
  [ do   pSquared $ flip P.sepEndBy1 (pTok KComma)
-                 $ pTerm
- , do   m <- pTerm
+                 $ pTerm ctx
+ , do   m <- pTerm ctx
         return [m]
  ]
 
 
 ------------------------------------------------------------------------------------------- Term --
 -- | Parse a term, and wrap the result in a source location annotation.
-pTerm  :: Parser (Term RL)
-pTerm
+pTerm  :: Context -> Parser (Term RL)
+pTerm ctx
  = pMAnn
- $ do   m <- pTermBody
+ $ do   m <- pTermBody ctx
         P.choice
          [ do   pTok KColon
                 TGTypes ts <- pTypesHead
@@ -45,35 +45,34 @@ pTerm
          , do   return  $ m ]
 
 
-pTermBody  :: Parser (Term RL)
-pTermBody
+pTermBody :: Context -> Parser (Term RL)
+pTermBody ctx
  = pMAnn $ P.choice
  [ do   -- 'λ' TermParams+ '->' Term
         pFun
         mps  <- P.many1 $ (pTermParams
              <?> "some parameters, or a '→' to start the body")
-        pRight           <?> "more paramaters, or a '→' to start the body"
-        mBody <- pTerm   <?> "a body for the function"
+        pRight                  <?> "more paramaters, or a '→' to start the body"
+        mBody <- pTerm ctx      <?> "a body for the function"
         return  $ foldr MAbs mBody mps
-
 
  , do   -- 'let' '[' Var,* ']' '=' Term 'in' Term
         pTok KLet
         (rBinds, bts) <- pTermBinds
-        pTok KEquals    <?> "a type annotation, or '=' to start the binding"
-        mBind <- pTerm  <?> "a term for the binding"
-        pTok KIn        <?> "a completed term, or 'in' to start the body"
-        mBody <- pTerm  <?> "a body term"
+        pTok KEquals            <?> "a type annotation, or '=' to start the binding"
+        mBind <- pTerm ctx      <?> "a term for the binding"
+        pTok KIn                <?> "a completed term, or 'in' to start the body"
+        mBody <- pTerm ctx      <?> "a body term"
         return  $ MLet (MPAnn rBinds $ MPTerms bts) mBind mBody
 
   , do  -- 'private' Var 'with' '{' Cap;* '}' 'in' Term
         pTok KPrivate
-        rName <- pVar        <?> "region name to bind"
+        rName <- pVar           <?> "region name to bind"
         let rBound = BoundWith rName 0
-        pTok KWith           <?> "'with' to start capability list"
-        btsW <- pCaps rBound <?> "capability list"
-        pTok KIn             <?> "'in' to start the body"
-        mBody <- pTerm       <?> "a body term"
+        pTok KWith              <?> "'with' to start capability list"
+        btsW <- pCaps rBound    <?> "capability list"
+        pTok KIn                <?> "'in' to start the body"
+        mBody <- pTerm ctx      <?> "a body term"
         let rBinding = (BindName rName, TRegion)
         return $ MPrivate [rBinding] btsW mBody
 
@@ -86,7 +85,7 @@ pTermBody
         let rBound2 = BoundWith rName2 0
         btsW <- pCaps rBound2   <?> "capability list"
         pTok KIn                <?> "'in' to start the body"
-        mBody <- pTerm          <?> "a body term"
+        mBody <- pTerm ctx      <?> "a body term"
         let rBound1 = TVar $ BoundWith rName1 0
         let rBinding2 = (BindName rName2, TRegion)
         return $ MExtend rBound1 [rBinding2] btsW mBody
@@ -99,10 +98,10 @@ pTermBody
                         pTok KColon
                         ts      <- pTypes
                         pTok KEquals
-                        m       <- pTerm
+                        m       <- pTerm ctx
                         return $ MBind b mps ts m
         pTok KIn
-        mBody   <- pTerm
+        mBody   <- pTerm ctx
         return  $ MRec bms mBody
 
 
@@ -137,14 +136,14 @@ pTermBody
                 m <- P.choice
                         [ do    fmap MTerms
                                 $ pSquared $ flip P.sepBy (pTok KComma)
-                                        (pTerm <?> "an argument in the vector")
-                        , do    m <- pTermArg
+                                        (pTerm ctx <?> "an argument in the vector")
+                        , do    m <- pTermArg ctx
                                 return m
                         ]
                   <?> "a argument term or vector for the variant body"
                 return $ MVariant l m t
 
-         , do   m <- pTerm  <?> "a body term"
+         , do   m <- pTerm ctx <?> "a body term"
                 return $ MThe ts m
          ]
          <?> "a body term"
@@ -152,13 +151,13 @@ pTermBody
 
  , do   -- 'box' Term
         pTok KBox
-        m  <- pTerm <?> "a term to box"
+        m  <- pTerm ctx <?> "a term to box"
         return  $ MBox m
 
 
  , do   -- 'run' Term
         pTok KRun
-        m  <- pTerm <?> "a term to run"
+        m  <- pTerm ctx <?> "a term to run"
         return  $ MRun m
 
 
@@ -171,7 +170,7 @@ pTermBody
          <?> "a '{' to start the do-block"
 
         binds   <- (flip P.sepEndBy (pTok KSemi)
-                        $ (pTermDoStmt <?> "another binding, or a result value"))
+                        $ (pTermDoStmt ctx <?> "another binding, or a result value"))
                 <?> "some statements"
 
         m <- case reverse binds of
@@ -190,11 +189,11 @@ pTermBody
 
  , do   -- 'if' Term 'then' Term 'else' Term
         pTok KIf
-        mCond   <- pTerm    <?> "a term for the condition"
-        pTok KThen          <?> "a completed term, or 'then' to start the body"
-        mThen   <- pTerm    <?> "the body of the 'then' branch"
-        pTok KElse          <?> "a completed term, or 'else' to start the body"
-        mElse   <- pTerm    <?> "the body of the 'else' branch"
+        mCond   <- pTerm ctx            <?> "a term for the condition"
+        pTok KThen                      <?> "a completed term, or 'then' to start the body"
+        mThen   <- pTerm ctx            <?> "the body of the 'then' branch"
+        pTok KElse                      <?> "a completed term, or 'else' to start the body"
+        mElse   <- pTerm ctx            <?> "the body of the 'else' branch"
         return  $ MIf [mCond] [mThen] mElse
 
 
@@ -204,17 +203,17 @@ pTermBody
         pTokBlock KCBra KSemi KCKet     <?> "a '{' to start the list of alternatives"
         (msCond, msThen)
          <- fmap unzip $ flip P.sepEndBy (pTok KSemi)
-         $  do  mCond <- pTerm
+         $  do  mCond <- pTerm ctx
                  <?> "a term for a condition, or 'else' for the final branch"
                 pRight                  <?> "a completed term, or '→' to start the body"
-                mThen <- pTerm          <?> "the body of the branch"
+                mThen <- pTerm ctx      <?> "the body of the branch"
                 return (mCond, mThen)
 
         P.choice
          [ do   -- ... 'else' → Term '}'
                 pTok KElse
                 pRight
-                mElse <- pTerm    <?> "the body of the branch"
+                mElse <- pTerm ctx      <?> "the body of the branch"
                 P.optional (pTok KSemi)
                 pTok KCKet
                 return $ MIf msCond msThen mElse
@@ -222,14 +221,14 @@ pTermBody
          , do   -- ... '}' else Term
                 pTok KCKet
                 pTok KElse
-                mElse  <- pTerm     <?> "the body of the branch"
+                mElse  <- pTerm ctx     <?> "the body of the branch"
                 return $ MIf msCond msThen mElse
          ]
 
 
  , do   -- 'case' Term 'of' '{' (Lbl Var ':' Type '→' Term)* '}' ('else' Term)?
         pTok KCase
-        mScrut <- pTerm                 <?> "a term for the scrutinee"
+        mScrut <- pTerm ctx             <?> "a term for the scrutinee"
         pTok KOf                        <?> "a completed term, or 'of' to start the alternatives"
         pTokBlock KCBra KSemi KCKet     <?> "a '{' to start the list of alternatives"
         msAlts
@@ -245,68 +244,68 @@ pTermBody
                                 return (b, t))
                         <?> "binders for the payload of the variant"
 
-                pRight           <?> "a '→' to start the body"
-                mBody <- pTerm   <?> "the body of the alternative"
+                pRight             <?> "a '→' to start the body"
+                mBody <- pTerm ctx <?> "the body of the alternative"
                 return $ MVarAlt lAlt (MPAnn rPat $ MPTerms btsPat) mBody
         pTok KCKet               <?> "a completed term, or '}' to end the alternatives"
 
         P.choice
          [ do   pTok KElse
-                mElse   <- pTerm <?> "a term for the default alternative"
+                mElse   <- pTerm ctx <?> "a term for the default alternative"
                 return  $ MVarCase mScrut msAlts [mElse]
 
          , do   return  $ MVarCase mScrut msAlts [] ]
 
  , do   -- 'proc' Proc
         pTok KProc
-        mBody    <- pProc pTerm pTermApp
+        mBody <- pProc ctx
         return $ MProc mBody
 
  , do   -- 'bloc' BlocBody
         pTok KBloc
-        mBlocBody <- pTerm
+        mBlocBody <- pTerm ctx
         return  $ MBloc mBlocBody
 
 
  , do   -- Con TypeArg* TermArg*
         -- Prm TermArgs*
         -- TermArg TermArgs*
-        pTermApp
+        pTermApp ctx
  ]
 
 
 --------------------------------------------------------------------------------------- App/Args --
 -- | Parse an application expression.
-pTermApp :: Parser (Term RL)
-pTermApp
+pTermApp :: Context -> Parser (Term RL)
+pTermApp ctx
  = P.choice
  [ do   -- Con TermArgs*
         (rCon, nCon)  <- pRanged pCon
-        pTermAppArgsSat (MAnn rCon $ MCon nCon)
+        pTermAppArgsSat ctx (MAnn rCon $ MCon nCon)
          <?> "arguments for the constructor application"
 
  , do   -- Prm TermArgs*
         (rPrm, nPrm) <- pRanged pPrm
         case takePrimValueOfName nPrm of
-         Just vPrm -> pTermAppArgsSat (MAnn rPrm (MVal vPrm))
+         Just vPrm -> pTermAppArgsSat ctx (MAnn rPrm (MVal vPrm))
                       <?> "arguments for the primitive application"
 
-         Nothing   -> pTermAppArgsSat (MAnn rPrm (MPrm nPrm))
+         Nothing   -> pTermAppArgsSat ctx (MAnn rPrm (MPrm nPrm))
                       <?> "arguments for the primitive application"
 
  , do   -- TermArg TermArgs*
-        mFun    <- pTermArgProj
-        pTermAppArgs mFun
+        mFun <- pTermArgProj ctx
+        pTermAppArgs ctx mFun
          <?> "arguments for the application"
  ]
 
 
 -- | Parse arguments to the given function,
 --   returning the constructed application.
-pTermAppArgs :: Term RL -> Parser (Term RL)
-pTermAppArgs mFun
+pTermAppArgs :: Context -> Term RL -> Parser (Term RL)
+pTermAppArgs ctx mFun
  = pMAnn $ P.choice
- [ do   gsArgs  <- P.many1 (pTermArgs <?> "some arguments")
+ [ do   gsArgs  <- P.many1 (pTermArgs ctx <?> "some arguments")
         return $ foldl MApp mFun gsArgs
 
  , do   return mFun]
@@ -314,18 +313,18 @@ pTermAppArgs mFun
 
 -- | Parse arguments to the given function
 --   returning a saturated primitive application.
-pTermAppArgsSat :: Term RL -> Parser (Term RL)
-pTermAppArgsSat mFun
+pTermAppArgsSat :: Context -> Term RL -> Parser (Term RL)
+pTermAppArgsSat ctx mFun
  = pMAnn $ P.choice
- [ do   gsArgs  <- P.many1 (pTermArgs <?> "some arguments")
+ [ do   gsArgs  <- P.many1 (pTermArgs ctx <?> "some arguments")
         return  $ MAps mFun gsArgs
 
  , do   return mFun ]
 
 
 -- | Parse some term arguments.
-pTermArgs :: Parser (TermArgs RL)
-pTermArgs
+pTermArgs :: Context -> Parser (TermArgs RL)
+pTermArgs ctx
  = pMGAnn $ P.choice
  [ do   -- '@' '[' Type;+ ']'
         -- '@' TypeArg
@@ -345,13 +344,13 @@ pTermArgs
         -- NOTE: This needs to come before the following case because
         --       collection terms like [list #Nat| 1, 2, 3]
         --       also start with open brackets.
-        m       <- pTermArgProj
+        m <- pTermArgProj ctx
         return  $ MGTerm m
 
  , do   -- '[' Term;+ ']'
         ms <- pSquared
            $  flip P.sepBy (pTok KComma)
-                (pTerm <?> "an argument")
+                (pTerm ctx <?> "an argument")
         return  $ MGTerms ms
  ]
 
@@ -366,10 +365,10 @@ pTermArgType
 
 
 -- | Parser for a term argument or record projection.
-pTermArgProj :: Parser (Term RL)
-pTermArgProj
+pTermArgProj :: Context -> Parser (Term RL)
+pTermArgProj ctx
  = pMAnn
- $ do   mTerm   <- pTermArg
+ $ do   mTerm   <- pTermArg ctx
         nsLabel <- P.many
                 $  do   pTok KDot
                         pLbl <?> "a field label"
@@ -377,8 +376,8 @@ pTermArgProj
 
 
 -- | Parser for a term argument.
-pTermArg :: Parser (Term RL)
-pTermArg
+pTermArg :: Context -> Parser (Term RL)
+pTermArg ctx
  = pMAnn $ P.choice
  [ do   -- Var
         -- Var ^ Nat
@@ -442,7 +441,7 @@ pTermArg
 
         pTok KSBra; pVar; t <- pType; pTok KBar
         msElem  <- flip P.sepEndBy (pTok KComma)
-                        (pTerm <?> "an element of the list")
+                        (pTerm ctx <?> "an element of the list")
         pTok KSKet <?> "a ']' to end the list"
         return  $ MList t msElem
 
@@ -454,7 +453,7 @@ pTermArg
 
         pTok KSBra; pVar; t <- pType; pTok KBar
         msElem  <- flip P.sepEndBy (pTok KComma)
-                        (pTerm <?> "an element of the set")
+                        (pTerm ctx <?> "an element of the set")
         pTok KSKet <?> "a ']' to end the set"
         return  $ MSet t msElem
 
@@ -468,9 +467,9 @@ pTermArg
         tk <- pTypeArg; tv <- pTypeArg
         pTok KBar
         mmsElem <- flip P.sepEndBy (pTok KComma)
-                $  do   m1 <- pTerm       <?> "a term for the key"
+                $  do   m1 <- pTerm ctx   <?> "a term for the key"
                         pTok KColonEquals <?> "a complete term, or ':=' to give the value"
-                        m2 <- pTerm       <?> "a term for the value"
+                        m2 <- pTerm ctx   <?> "a term for the value"
                         return (m1, m2)
         pTok KSKet <?> "a ']' to end the map"
         let (mks, mvs) = unzip mmsElem
@@ -479,17 +478,17 @@ pTermArg
 
  , do   -- '[record|' (Lbl '=' Term),* ']'
         -- '⟨' (Lbl '=' Term)* '⟩'
-        pTermRecord
+        pTermRecord ctx
 
 
  , do   -- '[' Term,* ']'
         ms <- pSquared $ flip P.sepBy (pTok KComma)
-                (pTerm <?> "a term")
+                (pTerm ctx <?> "a term")
         return  $ MTerms ms
 
  , do   -- '(' Term ')'
         pTok KRBra
-        t <- pTerm <?> "a term"
+        t <- pTerm ctx <?> "a term"
         pTok KRKet
         return t
  ]
@@ -524,26 +523,26 @@ pTermBinds
 
 
 -- | Parser for a term binding.
-pTermBind :: Parser (Bind, Term RL)
-pTermBind
+pTermBind :: Context -> Parser (Bind, Term RL)
+pTermBind ctx
  = do   -- Var '=' Term
-        nBind   <- pBind  <?> "a binder"
-        pTok KEquals      <?> "a '=' to start the binding"
-        mBody   <- pTerm  <?> "the bound term"
+        nBind   <- pBind        <?> "a binder"
+        pTok KEquals            <?> "a '=' to start the binding"
+        mBody   <- pTerm ctx    <?> "the bound term"
         return  (nBind, mBody)
 
 
 ------------------------------------------------------------------------------------------- Stmt --
 -- | Parser for a do-statement.
-pTermDoStmt :: Parser (TermParams RL, Term RL)
-pTermDoStmt
+pTermDoStmt :: Context -> Parser (TermParams RL, Term RL)
+pTermDoStmt ctx
  = P.choice
  [ do   -- '[' (Var : Type),* ']' = Term
         (rBinds, bs)
          <- pRanged $ pSquared $ flip P.sepEndBy (pTok KComma)
                         (pBind <?> "a binder")
-        pTok KEquals     <?> "an '=' to start the body"
-        mBody   <- pTerm <?> "the body of the statement"
+        pTok KEquals    <?> "an '=' to start the body"
+        mBody   <- pTerm ctx   <?> "the body of the statement"
         return  ( MPAnn rBinds $ MPTerms $ zip bs $ repeat THole
                 , mBody)
 
@@ -555,27 +554,27 @@ pTermDoStmt
 
         (rBind, nBind)
          <- pRanged $ (pBind  <?> "a binder")
-        pTok KEquals    <?> "a '=' to start the body"
-        mBody <- pTerm  <?> "the body of the statement"
+        pTok KEquals        <?> "a '=' to start the body"
+        mBody <- pTerm ctx  <?> "the body of the statement"
         return  (MPAnn rBind $ MPTerms [(nBind, THole)], mBody)
 
  , do   -- Term
-        mBody   <- pTerm
+        mBody   <- pTerm ctx
         return  (MPTerms [], mBody)
  ]
 
 
 ----------------------------------------------------------------------------------------- Record --
 -- | Parser for a record.
-pTermRecord :: Parser (Term RL)
-pTermRecord
+pTermRecord :: Context -> Parser (Term RL)
+pTermRecord ctx
  = pMAnn $ P.choice
  [ do   -- '∏' '[' (Lbl '=' Term),* ']'
         pTok KSymProd
         lms     <- (pSquared $ flip P.sepEndBy (pTok KComma)
-                $  do   l   <- pLbl  <?> "a label for the record field"
-                        pTok KEquals <?> "a '=' to start the field"
-                        m <- pTerm   <?> "a term for the field"
+                $  do   l   <- pLbl    <?> "a label for the record field"
+                        pTok KEquals   <?> "a '=' to start the field"
+                        m <- pTerm ctx <?> "a term for the field"
                         return (l, m))
                 <?> "a vector of record fields"
         let (ls, ms) = unzip lms
@@ -590,9 +589,9 @@ pTermRecord
         lms <- (pSquared $ do
                  pVar; pTok KBar
                  flip P.sepEndBy (pTok KComma)
-                  $ (do l <- pLbl    <?> "a label for the record field"
-                        pTok KEquals <?> "a '=' to start the field"
-                        m <- pTerm   <?> "a term for the field"
+                  $ (do l <- pLbl      <?> "a label for the record field"
+                        pTok KEquals   <?> "a '=' to start the field"
+                        m <- pTerm ctx <?> "a term for the field"
                         return (l, m)))
             <?> "a vector of record fields"
         let (ls, ms) = unzip lms
@@ -605,9 +604,9 @@ pTermRecord
 
         lms <- pSquared $ do
                  flip P.sepEndBy1 (pTok KComma)
-                  $ do  l   <- pLbl  <?> "a label for the record field"
-                        pTok KEquals <?> "a '=' to start the field"
-                        m <- pTerm   <?> "a term for the field"
+                  $ do  l   <- pLbl    <?> "a label for the record field"
+                        pTok KEquals   <?> "a '=' to start the field"
+                        m <- pTerm ctx <?> "a term for the field"
                         return (l, m)
         let (ls, ms) = unzip lms
         return $ MRecord ls ms

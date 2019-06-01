@@ -215,19 +215,12 @@ The record term `[ L1 = M1, ... Ln = Mn ]` must have at least one field to disam
 
 Procs (Procedures) provide the statement/expression model of computation, with graph-like control flow and mutable storage cells. Control constructs appear as statements only, which ensures the expressions can always be flattened into straight line code during compilation. Storage cells are abstract, in the sense that references (addresses) to them cannot be taken. This means that updates to them can always be converted into Static Single Assignment (SSA) form.
 
-Blocs (Code Blocks) provide the pure SSA model of computation, with tree-like control flow. SSA is particularly easy to convert into target assembly languages such as LLVM. Control flow is restricted to be tree-like so that join points do not appear within the bloc body. Join points should be expressed using calls to continuation functions, which is cleaner than using the phi-nodes of other SSA representations. Blocs do not support mutable storage cells, so updates should be translated into SSA form, or performed using primitive load/store operators that work on raw memory addresses.
-
-The grammar for procs and blocs shares forms for expressions. The common forms are listed below as `_Exp`, `_Args` and `_MapBinds`. These forms are intended to be instantiated to `ProcExp`, `ProcArgs` and `ProcMapBinds` for procs, and `BlocExp`, `BlocArgs` and `BlocMapBinds` for blocs.
-
-
-### Procs
-
 ```
 Proc
  ::=  pyld   Term                               ('yield'  Term)
   |   pclv n Var  TermArgsⁿ                     ('call'   Var TermArgsⁿ)
   |   pclp n Prm  TermArgsⁿ                     ('call'   Prm TermArgsⁿ)
-  |   pseq n Varⁿ Proc Proc                     ('seq'    Var '=' Proc ';' Proc)
+  |   pseq n Varⁿ Proc Proc                     ('seq'    Varⁿ '=' Proc ';' Proc)
 
   |   plch   Types of Proc                      ('launch' Types 'of' Proc)
   |   pret   Term                               ('return' Term)
@@ -243,9 +236,9 @@ Proc
   |   pbrk                                      ('break')
   |   pcnt                                      ('continue')
 
-  |   pwll   Term Proc ';' Proc                 ('while'  Term Proc ';' Proc)
+  |   pwll   Term Proc ';' Proc                 ('while'  Term 'do' Proc ';' Proc)
 
-  |   pent   Term ProcBind                      ('enter'  Term 'with' ProcBind ';' Proc)
+  |   pent   Term ProcBind                      ('enter'  Term 'with' '{' ProcBind+ '}' ';' Proc)
   |   plve                                      ('leave')
 
 ProcWhensAlt ::= Term Proc                      (Term '→' Proc)
@@ -253,8 +246,67 @@ ProcMatchAlt ::= Lbl (Var Type)* Proc           (Lbl '[' (Var ':' Type)* ']' →
 ProcBind     ::= Name TermParams+ Type Proc     (Name TermParams+ ':' Type '=' Proc)
 ```
 
+### Proc Sugar
 
-### Blocs
+#### Substitutions
+The following substitutions are always valid:
+```
+end                        ≡ yield []
+when Term Proc ; Proc      ≡ whens { Term → Proc } ; Proc
+let  Varⁿ = Term ; Proc    ≡ seq Varⁿ = yield Term ; Proc
+```
+
+#### Do syntax
+Do syntax provides a convenient way to write compound procedures in a statement based style. Consider the following example, using the grammar specified above:
+```
+proc square []: []! #Console
+ = cell x: #Nat ← 9
+ ; while (#nat'gt [x, 0])
+          ( cell y: #Nat ← 9
+          ; while (#nat'gt [y, 0])
+                  ( seq [] = call #console'print "*"
+                  ; seq y  ← #nat'sub [y, 1]
+                  ; end)
+          ; seq [] = call #console'print "\n"
+          ; seq x  ← #nat'sub [x, 1]
+          ; end)
+ ; call #console'println "done"
+```
+
+Sequences of procedures connected by ';' can instead be written using the 'do' keyword to start the sequence, and omitting the 'seq', 'call' and 'end' keywords.
+```
+proc square []: []! #Console
+ = do   { cell x: #Nat ← 9
+        ; while (#nat'gt [x, 0])
+          do    { cell y: #Nat ← 9
+                ; while (#nat'gt [y, 0])
+                  do    { #console'print "*"
+                        ; y ← #nat'sub [y, 1] }
+                ; #console'print "\n"
+                ; x ← #nat'sub [x, 1] }
+        ; #console'println "done" }
+```
+
+The '{', '}' and ';' symbols can then be elided, replying on the indentation to specify how the procedure components should be nested. This is the preferred layout for hand written code.
+
+```
+proc square []: []! #Console
+ = do   cell x: #Nat ← 9
+        while (#nat'gt [x, 0]) do
+                cell y: #Nat ← 9
+                while (#nat'gt [y, 0]) do
+                        #console'print "*"
+                        y  ← #nat'sub [y, 1]
+                #console'print "\n"
+                x ← #nat'sub [x, 1]
+        #console'println "done"
+```
+
+
+## Blocs
+
+Blocs (Code Blocks) provide the pure SSA model of computation, with tree-like control flow. SSA is particularly easy to convert into target assembly languages such as LLVM. Control flow is restricted to be tree-like so that join points do not appear within the bloc body. Join points should be expressed using calls to continuation functions, which is cleaner than using the phi-nodes of other SSA representations. Blocs do not support mutable storage cells, so updates should be translated into SSA form, or performed using primitive load/store operators that work on raw memory addresses.
+
 
 ```
 Bloc

@@ -1,6 +1,7 @@
 
 module Salt.Core.Codec.Text.Parser where
 import Salt.Core.Codec.Text.Parser.Module
+import Salt.Core.Codec.Text.Parser.Term
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Lexer
 import Salt.Core.Exp
@@ -32,16 +33,24 @@ parseModule toks
                               _                    -> True]
                 ++ [Token.At rangeLast Token.KMetaEnd]
 
+        -- Parser context.
+        --  We use this to tie the mutually recursive knot through the parser,
+        --  so that we don't need mutually recrusive modules.
+        ctx    = Context
+                { contextParseTerm      = pTerm
+                , contextParseTermApp   = pTermApp
+                , contextParseTermArg   = pTermArg  }
+
         -- Parse the module in the prefix,
         -- also returning any remaining unparsable tokens.
         eResult
          = P.runParser
-                (do result <- pModule
-                    rest <- P.getInput
+                (do result <- pModule ctx
+                    rest   <- P.getInput
                     return (result, rest))
                (State
                 { statePrev     = At (Range (Location 0 0) (Location 0 0)) KMetaStart
-                , stateContext  = []
+                , stateOffside  = []
                 , stateInjected = []})
                 "sourceName"
                 toks'

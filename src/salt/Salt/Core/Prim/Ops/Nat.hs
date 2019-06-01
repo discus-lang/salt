@@ -1,10 +1,15 @@
 
 module Salt.Core.Prim.Ops.Nat where
 import Salt.Core.Prim.Ops.Base
-
+import qualified Data.Text      as T
 
 primOpsNat
- = [ PP { name  = "nat'add"
+ = [ PP { name  = "nat'show"
+        , tsig  = [TNat] :-> [TText]
+        , step  = \[NVs [VNat n]] -> [VText $ T.pack $ show n]
+        , docs  = "Convert nat to text." }
+
+   , PP { name  = "nat'add"
         , tsig  = [TNat, TNat] :-> [TNat]
         , step  = \[NVs [VNat n1, VNat n2]] -> [VNat $ n1 + n2]
         , docs  = "Natural number addition." }
