@@ -18,6 +18,10 @@ pprTerm c (MRef r)      = ppr c r
 pprTerm c (MVar u)      = ppr c u
 
 pprTerm c (MAbs p m)
+ | isSomeMProc m
+ = align $ text "λ" % ppr c p %% text "→" % line % ppr c m
+
+ | otherwise
  = text "λ" % ppr c p %% text "→" %% ppr c m
 
 pprTerm c (MRec bms mBody)
@@ -35,7 +39,6 @@ pprTerm c (MThe [t] m)
 pprTerm c (MThe ts m)
  = align $ text "the"   %% squared (map (ppr c) ts )
                         %% text "of" %% line % ppr c m
-
 -- app
 pprTerm c (MApp mFun mgsArg)
  | Just tsArg <- takeMGTypes mgsArg
@@ -48,7 +51,6 @@ pprTerm c (MApp mFun mgsArg)
 
  | Just mArg <- takeMGTerm mgsArg
  = pprMFun c mFun %% pprMArg c mArg
-
 
 -- let
 pprTerm c (MLet mps mBind mBody)
@@ -135,7 +137,8 @@ pprTerm c (MProcReturn mRet)
 
 -- proc cell / update
 pprTerm c (MProcCell nCell tCell mInit mRest)
- = align $ text "cell" %% pprVar nCell % text ":" %% ppr c tCell %% text "←" %% ppr c mInit
+ = align $ text "cell" %% pprVar nCell % text ":" %% ppr c tCell
+                       %% text "←" %% ppr c mInit
  % semi %% line % ppr c mRest
 
 pprTerm c (MProcUpdate nCell mValue mRest)
@@ -294,10 +297,19 @@ instance Pretty c TermKey where
 ------------------------------------------------------------------------------------ TermClosure --
 instance Pretty c (TermClosure a) where
  ppr c (TermClosure (TermEnv []) ps m)
-  = bracketed' "mclo_"
-        [ text "λ" % ppr c ps %% text "→" %% ppr c m ]
+  | isSomeMProc m
+  = bracketed' "mclo_" [ align $ text "λ" % ppr c ps %% text "→" % line % ppr c m ]
+
+  | otherwise
+  = bracketed' "mclo_" [ text "λ" % ppr c ps %% text "→" %% ppr c m ]
 
  ppr c (TermClosure env ps m)
+  | isSomeMProc m
+  = bracketed' "mclo"
+        [ ppr c env
+        , align $ text "λ" % ppr c ps %% text "→" % line % ppr c m ]
+
+  | otherwise
   = bracketed' "mclo"
         [ ppr c env
         , text "λ" % ppr c ps %% text "→" %% ppr c m ]

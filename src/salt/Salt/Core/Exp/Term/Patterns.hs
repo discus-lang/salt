@@ -103,7 +103,6 @@ pattern MProcLeave
  = MKey MKProcLeave     []
 
 
-
 ------------------------------------------------------------------------------------------- Bloc --
 pattern MBloc mBody             = MKey   MKBloc [MGTerm mBody]
 

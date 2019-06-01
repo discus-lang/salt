@@ -1,5 +1,6 @@
 
 module Salt.Core.Exp.Term.Predicates where
+import Salt.Core.Exp.Term.Patterns
 import Salt.Core.Exp.Term.Base
 
 
@@ -7,5 +8,30 @@ import Salt.Core.Exp.Term.Base
 isVTrue :: Value a -> Bool
 isVTrue (VBool True)    = True
 isVTrue _               = False
+
+
+-- | Check if this is a procedure, or one wrapped by a 'the'
+isSomeMProc :: Term a -> Bool
+isSomeMProc mm
+ = case mm of
+        MAnn _ m        -> isSomeMProc m
+        MThe _ m        -> isSomeMProc m
+        MProc{}         -> True
+        MProcYield{}    -> True
+        MProcCall{}     -> True
+        MProcSeq{}      -> True
+        MProcLaunch{}   -> True
+        MProcReturn{}   -> True
+        MProcCell{}     -> True
+        MProcUpdate{}   -> True
+        MProcWhens{}    -> True
+        MProcMatch{}    -> True
+        MProcLoop{}     -> True
+        MProcBreak{}    -> True
+        MProcContinue{} -> True
+        MProcWhile{}    -> True
+        MProcEnter{}    -> True
+        MProcLeave{}    -> True
+        _               -> False
 
 

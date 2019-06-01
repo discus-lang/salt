@@ -22,3 +22,5 @@ term fac2 [x: #Nat]: #Nat
 test exec print @[#Nat ! pure] (box #nat'add [2, 3])
 
 test exec print @[#Nat → #Nat] fac2
+
+
