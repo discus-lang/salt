@@ -145,10 +145,10 @@ Term
 
   |   mlet n Varⁿ Term Term         ('let' TermBind ';' Term)
 
-  |   mifs n Termⁿ Termⁿ Term       ('if' '{' (Term '→' Term);* '}'
-                                          'else' Term)
+  |   mifs n Termⁿ Termⁿ Term       ('ifs' '{' (Term '→' Term);* '}'
+                                           'else' Term)
 
-  |   mrec n Lblⁿ Termⁿ             (∏ '[' (Lbl '=' Term),* ']')
+  |   mrec n Lblⁿ Termⁿ             ('∏' '[' (Lbl '=' Term),* ']')
   |   mprj   Term Lbl               (Term '.' Lbl)
 
   |   mvnt   Lbl  Term Type         ('the' Type  'of' '`' Lbl Term)
@@ -211,9 +211,9 @@ Let expression syntax that binds a single value is equivalent to binding a vecto
 The record term `[ L1 = M1, ... Ln = Mn ]` must have at least one field to disambiguate the syntax from the empty term vector `[]`.
 
 
-## Procs and Blocs
+## Procs (Procedures)
 
-Procs (Procedures) provide the statement/expression model of computation, with graph-like control flow and mutable storage cells. Control constructs appear as statements only, which ensures the expressions can always be flattened into straight line code during compilation. Storage cells are abstract, in the sense that references (addresses) to them cannot be taken. This means that updates to them can always be converted into Static Single Assignment (SSA) form.
+Procs provide the statement/expression model of computation, with graph-like control flow and mutable storage cells. Control constructs appear as statements only, which ensures the expressions can always be flattened into straight line code during compilation. Storage cells are abstract, in the sense that references (addresses) to them cannot be taken. This means that updates to them can always be converted into Static Single Assignment (SSA) form.
 
 ```
 Proc
@@ -287,7 +287,7 @@ proc square []: []! #Console
         ; #console'println "done" }
 ```
 
-The '{', '}' and ';' symbols can then be elided, replying on the indentation to specify how the procedure components should be nested. This is the preferred layout for hand written code.
+The '{', '}' and ';' symbols can then be elided, relying on the indentation to specify how the procedure components should be nested. This is the preferred layout for hand written code.
 
 ```
 proc square []: []! #Console
@@ -303,9 +303,9 @@ proc square []: []! #Console
 ```
 
 
-## Blocs
+## Blocs (Code Blocks)
 
-Blocs (Code Blocks) provide the pure SSA model of computation, with tree-like control flow. SSA is particularly easy to convert into target assembly languages such as LLVM. Control flow is restricted to be tree-like so that join points do not appear within the bloc body. Join points should be expressed using calls to continuation functions, which is cleaner than using the phi-nodes of other SSA representations. Blocs do not support mutable storage cells, so updates should be translated into SSA form, or performed using primitive load/store operators that work on raw memory addresses.
+Blocs provide the pure SSA model of computation, with tree-like control flow. SSA is particularly easy to convert into target assembly languages such as LLVM. Control flow is restricted to be tree-like so that join points do not appear within the bloc body. Join points should be expressed using calls to continuation functions, which is cleaner than using the phi-nodes of other SSA representations. Blocs do not support mutable storage cells, so updates should be translated into SSA form, or performed using primitive load/store operators that work on raw memory addresses.
 
 
 ```

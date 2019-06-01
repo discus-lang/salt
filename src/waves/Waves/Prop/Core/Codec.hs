@@ -58,7 +58,7 @@ parser p toks
                 (PB.State
                 { PB.statePrev
                         = K.At (IW.Range (IW.Location 0 0) (IW.Location 0 0)) K.KMetaStart
-                , PB.stateContext  = []
+                , PB.stateOffside  = []
                 , PB.stateInjected = []})
         "<test>" toks
    of

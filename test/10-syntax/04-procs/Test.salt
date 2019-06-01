@@ -286,10 +286,8 @@ proc when4sss [n: #Nat, m: #Nat]: #Text
 
 proc when4ssss [n: #Nat, m: #Nat]: #Text
  = do   when (#nat'eq [n, 1])
-         do     when (#nat'eq [m, 1])
-                 do     return "one, one"
-                when (#nat'eq [m, 2])
-                 do     return "one, two"
+         do     when (#nat'eq [m, 1]) return "one, one"
+                when (#nat'eq [m, 2]) return "one, two"
         yield "whatever"
 
 
@@ -392,7 +390,7 @@ proc rec1 [n: #Nat]: #Nat
         cell x:   #Nat ← n
         enter fac []
          with fac []: [] = do
-                when (#nat'eq [x, 0]) do leave
+                when (#nat'eq [x, 0]) leave
                 acc ← #nat'mul [acc, x]
                 x   ← #nat'sub [x,   1]
                 fac []
