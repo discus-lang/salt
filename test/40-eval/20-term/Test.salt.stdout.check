@@ -1,5 +1,6 @@
 * evm'mmm'multi: [5,5]
-* evm'var'clo: [[mclo|[menv|@[a = #Nat]], λ[x: a] → the a of x]]
+* evm'var'clo: [[mclo|[menv|@[a = #Nat]], λ[x: a] → the a of 
+                                     x]]
 * evm'abs'type: [[mclo|[menv|@[a = #Nat]], λ[y: a] → y]]
 * evm'abs'term: [[mclo|[menv|[x = 5]], λ[y: #Nat] → x]]
 * evm'aps'prim: [5]

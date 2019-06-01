@@ -1,6 +1,8 @@
 * [[mclo_|λ[] → λ[x: #Nat] → x]]
-* [[mclo_|λ[] → the #Nat of 3]]
-* [[mclo_|λ[] → the [#Nat, #Symbol] of [3, 'foo]]]
+* [[mclo_|λ[] → the #Nat of 
+              3]]
+* [[mclo_|λ[] → the [#Nat, #Symbol] of 
+              [3, 'foo]]]
 * [[mclo_|λ[] → (λ@[a: #Data] → λ[x: a] → x) @#Nat 5]]
 * [[mclo_|λ[] → let x = 2; let y = 3; #nat'add [2, 3]]]
 * [[mclo_|λ[] → ∏[]]]

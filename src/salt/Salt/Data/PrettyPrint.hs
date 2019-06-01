@@ -709,15 +709,17 @@ align d         = column (\k ->
 -- hello
 -- world
 -- @
-data Doc        = Empty
-                | Char Char             -- invariant: char is not '\n'
-                | Text !Int String      -- invariant: text doesn't contain '\n'
-                | Line !Bool            -- True <=> when undone by group, do not insert a space
-                | Cat Doc Doc
-                | Nest !Int Doc
-                | Union Doc Doc         -- invariant: first lines of first doc longer than the first lines of the second doc
-                | Column  (Int -> Doc)
-                | Nesting (Int -> Doc)
+data Doc
+        = Empty
+        | Char Char             -- invariant: char is not '\n'
+        | Text !Int String      -- invariant: text doesn't contain '\n'
+        | Line !Bool            -- True <=> when undone by group, do not insert a space
+        | Cat Doc Doc
+        | Nest !Int Doc
+        | Union Doc Doc         -- invariant: first lines of first doc longer than
+                                -- the first lines of the second doc
+        | Column  (Int -> Doc)
+        | Nesting (Int -> Doc)
 
 
 -- | The data type @SimpleDoc@ represents rendered documents and is
@@ -728,10 +730,11 @@ data Doc        = Empty
 -- provides two default display functions 'displayS' and
 -- 'displayIO'. You can provide your own display function by writing a
 -- function from a @SimpleDoc@ to your own output format.
-data SimpleDoc  = SEmpty
-                | SChar Char SimpleDoc
-                | SText !Int String SimpleDoc
-                | SLine !Int SimpleDoc
+data SimpleDoc
+        = SEmpty
+        | SChar Char SimpleDoc
+        | SText !Int String SimpleDoc
+        | SLine !Int SimpleDoc
 
 
 -- | The empty document is, indeed, empty. Although @empty@ has no

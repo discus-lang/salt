@@ -8,101 +8,156 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 
 
+------------------------------------------------------------------------------------------- Term --
 instance Pretty c (Term a) where
- ppr c mm
-  = case mm of
-        MAnn _ m -> ppr c m
-        MRef r   -> ppr c r
+ ppr c m = pprTerm c m
 
-        MVar u   -> ppr c u
+pprTerm :: c -> Term a -> Doc
+pprTerm c (MAnn _ m)    = ppr c m
+pprTerm c (MRef r)      = ppr c r
+pprTerm c (MVar u)      = ppr c u
 
-        MAbs p m
-         -> text "λ" % ppr c p %% text "→" %% ppr c m
+pprTerm c (MAbs p m)
+ = text "λ" % ppr c p %% text "→" %% ppr c m
 
-        MRec bms mBody
-         ->  text "rec" %% braced (map (ppr c) bms)
-          %% text "in"  %% ppr c mBody
+pprTerm c (MRec bms mBody)
+ =  text "rec" %% braced (map (ppr c) bms)
+ %% text "in"  %% ppr c mBody
 
-        MTerms ms
-         -> squared (map (ppr c) ms)
+-- terms
+pprTerm c (MTerms ms)
+ = squared (map (ppr c) ms)
 
-        MThe ts m
-         -> case ts of
-                [t] -> text "the" %% ppr c t  %% text "of" %% ppr c m
-                _   -> text "the" %% squared (map (ppr c) ts )
-                                  %% text "of" %% ppr c m
+-- the
+pprTerm c (MThe [t] m)
+ = align $ text "the"   %% ppr c t  %% text "of" %% line % ppr c m
 
-        MApp mFun mgsArg
-         | Just tsArg <- takeMGTypes mgsArg
-         -> case tsArg of
-                [t] -> pprMFun c mFun %% text "@" % pprTArg c t
-                _   -> pprMFun c mFun %% text "@" % squared (map (pprTArg c) tsArg)
+pprTerm c (MThe ts m)
+ = align $ text "the"   %% squared (map (ppr c) ts )
+                        %% text "of" %% line % ppr c m
 
-         | Just msArg <- takeMGTerms mgsArg
-         -> pprMFun c mFun %% squared (map (pprMArg c) msArg)
+-- app
+pprTerm c (MApp mFun mgsArg)
+ | Just tsArg <- takeMGTypes mgsArg
+ = case tsArg of
+        [t] -> pprMFun c mFun %% text "@" % pprTArg c t
+        _   -> pprMFun c mFun %% text "@" % squared (map (pprTArg c) tsArg)
 
-         | Just mArg <- takeMGTerm mgsArg
-         -> pprMFun c mFun %% pprMArg c mArg
+ | Just msArg <- takeMGTerms mgsArg
+ = pprMFun c mFun %% squared (map (pprMArg c) msArg)
 
-        MLet mps mBind mBody
-         | Just bts <- takeMPTerms mps
-         -> let pp (b, THole) = ppr c b
-                pp (b, t)     = ppr c b % text ":" %% ppr c t
-            in  case bts of
-                 [bt]   -> text "let" %% pp bt
-                        %% text "="   %% ppr c mBind
-                        %  text ";"   %% ppr c mBody
+ | Just mArg <- takeMGTerm mgsArg
+ = pprMFun c mFun %% pprMArg c mArg
 
-                 _      -> text "let" %% squared (map pp bts)
-                        %% text "="   %% ppr c mBind
-                        %  text ";"   %% ppr c mBody
 
-        MRecord ns ms
-         | length ns == length ms
-         -> text "∏" % squared [ pprLbl n %% text "=" %% ppr c m | n <- ns | m <- ms ]
+-- let
+pprTerm c (MLet mps mBind mBody)
+ | Just bts <- takeMPTerms mps
+ = let pp (b, THole) = ppr c b
+       pp (b, t)     = ppr c b % text ":" %% ppr c t
+   in  case bts of
+         [bt]   -> text "let" %% pp bt
+                %% text "="   %% ppr c mBind
+                %  text ";"   %% ppr c mBody
 
-        MProject l m
-         -> pprMArg c m % text "." % pprLbl l
+         _      -> text "let" %% squared (map pp bts)
+                %% text "="   %% ppr c mBind
+                %  text ";"   %% ppr c mBody
 
-        MVariant l m t
-         -> text "the" %% ppr c t %% text "of" %% text "`" % pprLbl l %% pprMArg c m
+-- record / project
+pprTerm c (MRecord ns ms)
+ | length ns == length ms
+ = text "∏" % squared [ pprLbl n %% text "=" %% ppr c m | n <- ns | m <- ms ]
 
-        MVarCase mScrut msAlt []
-         -> text "case" %% ppr c mScrut %% text "of"
+pprTerm c (MProject l m)
+ = pprMArg c m % text "." % pprLbl l
+
+-- variant / varcase
+pprTerm c (MVariant l m t)
+ = text "the" %% ppr c t %% text "of" %% text "`" % pprLbl l %% pprMArg c m
+
+pprTerm c (MVarCase mScrut msAlt [])
+ = text "case" %% ppr c mScrut %% text "of"
          %% braced (map (pprMAlt c) msAlt)
 
-        MVarCase mScrut msAlt [mElse]
-         -> text "case" %% ppr c mScrut %% text "of"
-         %% braced (map (pprMAlt c) msAlt)
-         %% text "else" %% ppr c mElse
+pprTerm c (MVarCase mScrut msAlt [mElse])
+ = text "case" %% ppr c mScrut %% text "of"
+ %% braced (map (pprMAlt c) msAlt)
+ %% text "else" %% ppr c mElse
 
-        MData n ts ms
-         -> pprCon n %% hsep (map (pprTArg c) ts) %% hsep (map (pprMArg c) ms)
+-- data
+pprTerm c (MData n ts ms)
+ = pprCon n %% hsep (map (pprTArg c) ts) %% hsep (map (pprMArg c) ms)
 
-        MRun m
-         -> text "run" %% ppr c m
+-- box / run
+pprTerm c (MBox m)
+ = text "box" %% ppr c m
 
-        MBox m
-         -> text "box" %% ppr c m
+pprTerm c (MRun m)
+ = text "run" %% ppr c m
 
-        MList t ms
-         -> brackets
-                $ text "list" %% pprTArg c t % text "| "
-                % hcat (punctuate (text ", ") (map (ppr c) ms))
+-- list / set / map
+pprTerm c (MList t ms)
+ = brackets
+        $ text "list" %% pprTArg c t % text "| "
+        % hcat (punctuate (text ", ") (map (ppr c) ms))
 
-        MSet  t ms
-         -> brackets
-                $ text "set"  %% pprTArg c t % text "| "
-                % hcat (punctuate (text ", ") (map (ppr c) ms))
+pprTerm c (MSet  t ms)
+ = brackets
+        $ text "set"  %% pprTArg c t % text "| "
+        % hcat (punctuate (text ", ") (map (ppr c) ms))
 
-        MMap  tk tv msKey msVal
-         -> brackets
-                $ text "map"  %% pprTArg c tk %% pprTArg c tv % text "| "
-                % hcat (punctuate (text ", ")
-                               [ ppr c mk %% text ":=" %% ppr c mv
-                               | mk <- msKey | mv <- msVal ])
-        MKey k mgs
-         -> ppr c k %% (hsep $ map (ppr c) mgs)
+pprTerm c (MMap  tk tv msKey msVal)
+ = brackets
+        $ text "map"  %% pprTArg c tk %% pprTArg c tv % text "| "
+        % hcat (punctuate (text ", ")
+                [ ppr c mk %% text ":=" %% ppr c mv
+                | mk <- msKey | mv <- msVal ])
+
+-- proc
+pprTerm c (MProc m)
+ = align $ text "proc" %% ppr c m
+
+-- proc end / yield
+pprTerm _c (MProcYield (MTerms []))
+ = text "end"
+
+pprTerm c (MProcYield mExp)
+ = text "yield" %% ppr c mExp
+
+-- proc launch / return
+pprTerm c (MProcLaunch tsRet mRest)
+ = align $  text "launch" %% squared (map (ppr c) tsRet) %% text "of"
+         %% line % ppr c mRest
+
+pprTerm c (MProcReturn mRet)
+ = text "return" %% ppr c mRet
+
+-- proc cell / update
+pprTerm c (MProcCell nCell tCell mInit mRest)
+ = align $ text "cell" %% pprVar nCell % text ":" %% ppr c tCell %% text "←" %% ppr c mInit
+ % semi %% line % ppr c mRest
+
+pprTerm c (MProcUpdate nCell mValue mRest)
+ = align $ text "update" %% pprVar nCell %% text "←" %% ppr c mValue
+ % semi %% line % ppr c mRest
+
+-- proc when / whens
+pprTerm c (MProcWhens [mCond] [mThen] mRest)
+ = align $ text "when" %% pprMArg c mCond %% ppr c mThen
+ % semi %% line % ppr c mRest
+
+-- proc loop / break / continue
+pprTerm c (MProcLoop mBody mRest)
+ = align $ text "loop" %% pprMArg c mBody
+ % semi %% line % ppr c mRest
+
+pprTerm _c MProcBreak    = text "break"
+pprTerm _c MProcContinue = text "continue"
+
+-- key
+pprTerm c (MKey k mgs)
+ = ppr c k %% (hsep $ map (ppr c) mgs)
 
 
 pprMFun c mm
@@ -150,6 +205,7 @@ pprMAlt c mm
         _ -> parens (ppr c mm)
 
 
+--------------------------------------------------------------------------------------- TermBind --
 instance Pretty c (TermBind a) where
  ppr c (MBind b mpss tResult mBind)
   =  ppr c b
@@ -158,6 +214,7 @@ instance Pretty c (TermBind a) where
   %% text "=" %% ppr c mBind
 
 
+---------------------------------------------------------------------------------------- TermRef --
 instance Pretty c (TermRef a) where
  ppr c mr
   = case mr of
@@ -166,15 +223,7 @@ instance Pretty c (TermRef a) where
         MRCon n -> text "%" % pprCon n
 
 
-instance Pretty c (TermArgs a) where
- ppr c ma
-  = case ma of
-        MGAnn _ mgs -> ppr c mgs
-        MGTerm m    -> parens $ ppr c m
-        MGTerms ms  -> squared $ map (ppr c) ms
-        MGTypes ts  -> text "@" % (squared $ map (ppr c) ts)
-
-
+------------------------------------------------------------------------------ TermParams / Args --
 instance Pretty c (TermParams a) where
  ppr c mp
   = case mp of
@@ -190,6 +239,16 @@ instance Pretty c (TermParams a) where
                     | (n, t) <- nts]
 
 
+instance Pretty c (TermArgs a) where
+ ppr c ma
+  = case ma of
+        MGAnn _ mgs -> ppr c mgs
+        MGTerm m    -> parens $ ppr c m
+        MGTerms ms  -> squared $ map (ppr c) ms
+        MGTypes ts  -> text "@" % (squared $ map (ppr c) ts)
+
+
+---------------------------------------------------------------------------------------- TermKey --
 instance Pretty c TermKey where
  ppr _ mk
   = case mk of
@@ -232,6 +291,7 @@ instance Pretty c TermKey where
         MKBloc          -> text "##bloc"
 
 
+------------------------------------------------------------------------------------ TermClosure --
 instance Pretty c (TermClosure a) where
  ppr c (TermClosure (TermEnv []) ps m)
   = bracketed' "mclo_"
@@ -243,6 +303,7 @@ instance Pretty c (TermClosure a) where
         , text "λ" % ppr c ps %% text "→" %% ppr c m ]
 
 
+-------------------------------------------------------------------------------- TermEnv / Binds --
 instance Pretty c (TermEnv a) where
  ppr c (TermEnv ebs)
   = bracketed' "menv" (punctuate (text " ")
@@ -264,6 +325,7 @@ instance Pretty c (TermEnvBinds a) where
          %  squared [ pprVar n %% text "=" %% ppr c v | (n, v) <- Map.toList ncs ]
 
 
+------------------------------------------------------------------------------------------ Value --
 instance Pretty c (Value a) where
  ppr c
   = \case
