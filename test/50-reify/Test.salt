@@ -8,7 +8,7 @@ term print @[a: #Data] [x: a]: [] !#Console
  = box #console'println (#reify'pretty @a x)
 
 term fac2 [x: #Nat]: #Nat
- = proc launch #Nat of
+ = launch #Nat of
    do   cell n: #Nat ← x
         cell a: #Nat ← 1
         loop do

@@ -63,12 +63,11 @@ checkCaseProcAlts
         => a -> [Where a] -> Context a
         -> Term a               -- ^ Entire case term, for error reporting.
         -> Type a               -- ^ Type of scrutinee, for error reporting.
-        -> ContextProc a        -- ^ The procedural context we're in.
         -> [(Name, TypeArgs a)] -- ^ Names and types of scrutinee fields.
         -> [Term a]             -- ^ Alternatives.
         -> IO ([Term a], [Effect a])
 
-checkCaseProcAlts a wh ctx mCase tScrut ctxProc nmgsScrut msAlts
+checkCaseProcAlts a wh ctx mCase tScrut nmgsScrut msAlts
  = do   checkCaseAltsPatterns a wh ctx tScrut nmgsScrut msAlts False
         checkAlts msAlts [] []
  where
@@ -84,7 +83,7 @@ checkCaseProcAlts a wh ctx mCase tScrut ctxProc nmgsScrut msAlts
         let ctx'  = contextBindTermParams (MPTerms btsPat) ctx
 
         (mBody', _tsBody, esBody)
-         <- contextCheckProc ctx' aBody wh ctx' (Check []) ctxProc mBody
+         <- contextCheckTerm ctx' aBody wh ctx' (Check []) mBody
 
         checkAlts msAltsRest
             (MVarAlt nPat mpsPat mBody' : msAltsChecked)

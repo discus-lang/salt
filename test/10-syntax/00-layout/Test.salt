@@ -2,46 +2,43 @@
 -- Test offside rule handling in the parser framework.
 
 proc do'explicit []: [] ! #Console
- = do   { call #console'print "hello"
-        ; yield [] }
+ = do   { #console'print "hello"
+        ; return [] }
 
 
 proc do'same []: [] ! #Console
- = do   call #console'print "hello"
-        yield []
+ = do   #console'print "hello"
+        []
 
 
 proc do'next []: [] ! #Console
  = do
-        call #console'print "hello"
-        yield []
+        #console'print "hello"
+        []
 
 
 proc do'head []: [] ! #Console  = do
-        call #console'print "hello"
-        yield []
+        #console'print "hello"
+        []
 
 
 proc do'nest []: []! #Console
- = do
-        call #console'print "good morning"
-
-        do      call #console'print "hello"
-                call #console'print "world"
+ = do   #console'print "good morning"
+        do      #console'print "hello"
+                #console'print "world"
 
 
 proc do'nest'head []: []! #Console = do
-        call #console'print "good morning"
-
-        do call #console'print "hello"
-           call #console'print "world"
+        #console'print "good morning"
+        do #console'print "hello"
+           #console'print "world"
 
 
 proc when3ss [n: #Nat, m: #Nat]: #Text
  = do   when (#nat'eq [n, 1]) do
                 when (#nat'eq [n, 2]) do
                         return "derp"
-        yield "whatever"
+        "whatever"
 
 
 proc when4sss [n: #Nat, m: #Nat]: #Text
@@ -50,11 +47,11 @@ proc when4sss [n: #Nat, m: #Nat]: #Text
                         return "one, one"
                 when (#nat'eq [m, 2]) do
                         return "one, two"
-        yield "whatever"
+        "whatever"
 
 
 proc match1 [v: <foo: #Nat, bar: #Nat>]: #Nat
-  =  do  match v with
+  = do  match v with
           foo [x: #Nat] → return x
           bar [x: #Nat] → return x
-         yield [5]
+        [5]

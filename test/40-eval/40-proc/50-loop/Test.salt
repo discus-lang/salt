@@ -1,7 +1,7 @@
 
 
 -- Factorial using procedural loop.
-test eval proc launch #Nat of
+test eval launch #Nat of
  do     cell n: #Nat ← 10
         cell x: #Nat ← 1
         loop do

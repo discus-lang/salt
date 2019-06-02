@@ -6,7 +6,6 @@ import Salt.Core.Check.Module.DeclTest
 import Salt.Core.Check.Module.Base
 import Salt.Core.Check.Type
 import Salt.Core.Check.Term
-import Salt.Core.Check.Term.Proc
 import Salt.Core.Check.Term.Base
 import qualified Data.Map       as Map
 import qualified Data.Either    as Either
@@ -33,11 +32,10 @@ checkModule a mm
          = Context
          { contextCheckType     = checkTypeWith
          , contextCheckTerm     = checkTermWith
-         , contextCheckProc     = checkTermProc
          , contextModuleType    = Map.empty
          , contextModuleTerm    = Map.empty
          , contextLocal         = []
-         , contextFragment      = FragTerm }
+         , contextInside        = [] }
 
         -- Check kind signatures on types, before adding them to the context.
         goTypeSigs  ctx decls

@@ -2,7 +2,6 @@
 module Salt.Core.Codec.Text.Parser.Decl where
 import Salt.Core.Codec.Text.Parser.Type
 import Salt.Core.Codec.Text.Parser.Term
-import Salt.Core.Codec.Text.Parser.Proc
 import Salt.Core.Codec.Text.Parser.Params
 import Salt.Core.Codec.Text.Parser.Base
 import Salt.Core.Codec.Text.Token
@@ -76,7 +75,7 @@ pDeclTerm ctx
         pTok KColon             <?> "more parameters, or a ':' to start the result type"
         tsRes   <- pTypesResult <?> "some result types"
         pTok KEquals            <?> "a '=' to start the body"
-        mBody   <- pProc ctx
+        mBody   <- pTerm ctx
                                 <?> "the body"
         return  $  DTerm $ DeclTerm
                 { declAnnot       = rName

@@ -8,103 +8,119 @@ pattern MVal v                  = MRef  (MRVal v)
 pattern MPrm n                  = MRef  (MRPrm n)
 pattern MCon n                  = MRef  (MRCon n)
 
-pattern MAbm btsParam mBody     = MAbs  (MPTerms btsParam) mBody
-pattern MAbt btsParam mBody     = MAbs  (MPTypes btsParam) mBody
+pattern MAbm btsParam mBody
+ = MAbs (MPTerms btsParam) mBody
 
-pattern MTerms ms               = MKey   MKTerms [MGTerms ms]
+pattern MAbt btsParam mBody
+ = MAbs (MPTypes btsParam) mBody
 
-pattern MThe ts m               = MKey   MKThe  [MGTypes ts, MGTerm m]
+pattern MTerms ms
+ = MKey MKTerms         [MGTerms ms]
 
-pattern MAps mFun mgssArg       = MKey   MKApp  (MGTerm  mFun : mgssArg)
-pattern MApp mFun mgsArg        = MKey   MKApp  [MGTerm  mFun, mgsArg]
-pattern MApv mFun mArg          = MKey   MKApp  [MGTerm  mFun, MGTerm  mArg]
-pattern MApm mFun msArg         = MKey   MKApp  [MGTerm  mFun, MGTerms msArg]
-pattern MApt mFun tsArg         = MKey   MKApp  [MGTerm  mFun, MGTypes tsArg]
+pattern MThe ts m
+ = MKey MKThe           [MGTypes ts, MGTerm m]
+
+pattern MAps mFun mgssArg
+ = MKey MKApp           (MGTerm  mFun : mgssArg)
+
+pattern MApp mFun mgsArg
+ = MKey MKApp           [MGTerm  mFun, mgsArg]
+
+pattern MApv mFun mArg
+ = MKey MKApp           [MGTerm  mFun, MGTerm  mArg]
+
+pattern MApm mFun msArg
+ = MKey MKApp           [MGTerm  mFun, MGTerms msArg]
+
+pattern MApt mFun tsArg
+ = MKey MKApp           [MGTerm  mFun, MGTypes tsArg]
 
 -- TODO: these are in wrong order.
-pattern MLet mps mBind mBod     = MKey   MKLet  [MGTerm mBod, MGTerm (MAbs mps mBind)]
+pattern MLet mps mBind mBod
+ = MKey MKLet           [MGTerm mBod, MGTerm (MAbs mps mBind)]
 
 pattern MPrivate bksR btsW mBody
- = MKey MKPrivate [MGTerm (MAbs (MPTypes bksR) (MAbs (MPTerms btsW) mBody))]
+ = MKey MKPrivate       [MGTerm (MAbs (MPTypes bksR) (MAbs (MPTerms btsW) mBody))]
 
 pattern MExtend r1 bksR btsW mBody
- = MKey MKExtend [MGTypes [r1], MGTerm (MAbs (MPTypes bksR) (MAbs (MPTerms btsW) mBody))]
+ = MKey MKExtend        [MGTypes [r1], MGTerm (MAbs (MPTypes bksR) (MAbs (MPTerms btsW) mBody))]
 
-pattern MIf msCond msThen mElse = MKey   MKIf   [MGTerms msCond, MGTerms msThen, MGTerm mElse]
+pattern MIf msCond msThen mElse
+ = MKey   MKIf          [MGTerms msCond, MGTerms msThen, MGTerm mElse]
 
-pattern MRecord  ns ms          = MKey  (MKRecord ns) [MGTerms ms]
-pattern MProject l  m           = MKey  (MKProject l) [MGTerm  m]
+pattern MRecord  ns ms
+ = MKey (MKRecord ns)   [MGTerms ms]
 
-pattern MVariant l m tResult    = MKey  (MKVariant l) [MGTerm  m,      MGTypes [tResult]]
+pattern MProject l  m
+ = MKey (MKProject l)   [MGTerm  m]
+
+pattern MVariant l m tResult
+ = MKey (MKVariant l)   [MGTerm  m, MGTypes [tResult]]
 
 pattern MVarCase mScrut msAlt msElse
- = MKey MKVarCase    [MGTerm  mScrut, MGTerms msAlt, MGTerms msElse]
+ = MKey MKVarCase       [MGTerm  mScrut, MGTerms msAlt, MGTerms msElse]
 
 pattern MVarAlt  n mps mBody
- = MKey (MKVarAlt n)  [MGTerm (MAbs mps mBody)]
+ = MKey (MKVarAlt n)    [MGTerm (MAbs mps mBody)]
 
-pattern MData    n ts ms        = MKey  (MKCon n)     [MGTypes ts, MGTerms ms]
+pattern MData n ts ms
+ = MKey  (MKCon n)      [MGTypes ts, MGTerms ms]
 
-pattern MRun  mBody             = MKey   MKRun  [MGTerm mBody]
-pattern MBox  mBody             = MKey   MKBox  [MGTerm mBody]
+pattern MRun mBody
+ = MKey   MKRun         [MGTerm mBody]
 
-pattern MList tElem msElem      = MKey   MKList [MGTypes [tElem],  MGTerms msElem]
-pattern MSet  tElem msElem      = MKey   MKSet  [MGTypes [tElem],  MGTerms msElem]
-pattern MMap  tk tv msKey msVal = MKey   MKMap  [MGTypes [tk, tv], MGTerms msKey, MGTerms msVal]
+pattern MBox mBody
+ = MKey   MKBox         [MGTerm mBody]
+
+pattern MList tElem msElem
+ = MKey   MKList        [MGTypes [tElem],  MGTerms msElem]
+
+pattern MSet  tElem msElem
+ = MKey   MKSet         [MGTypes [tElem],  MGTerms msElem]
+
+pattern MMap  tk tv msKey msVal
+ = MKey   MKMap         [MGTypes [tk, tv], MGTerms msKey, MGTerms msVal]
 
 
 ------------------------------------------------------------------------------------------- Proc --
-pattern MProc mBody
- = MKey MKProc          [MGTerm mBody]
+pattern MSeq mps mBind mBody
+ = MKey MKSeq           [MGTerm mBind, MGTerm (MAbs mps mBody)]
 
-pattern MProcYield mExp
- = MKey MKProcYield     [MGTerm mExp]
+pattern MLaunch tsRet mRest
+ = MKey MKLaunch        [MGTypes tsRet, MGTerm mRest]
 
-pattern MProcCall mFun mgssArg
- = MKey MKProcCall      (MGTerm mFun : mgssArg)
+pattern MReturn mRet
+ = MKey MKReturn        [MGTerm mRet]
 
-pattern MProcSeq mps mBind mBody
- = MKey MKProcSeq       [MGTerm mBind, MGTerm (MAbs mps mBody)]
+pattern MCell nCell tCell mInit mRest
+ = MKey MKCell          [MGTerm mInit, MGTerm (MAbs (MPTerms [(BindName nCell, tCell)]) mRest)]
 
-pattern MProcLaunch tsRet mRest
- = MKey MKProcLaunch    [MGTypes tsRet, MGTerm mRest]
+pattern MUpdate nCell mValue mRest
+ = MKey MKUpdate        [MGTerm (MVar (Bound nCell)), MGTerm mValue, MGTerm mRest]
 
-pattern MProcReturn mRet
- = MKey MKProcReturn    [MGTerm mRet]
+pattern MWhens msCond msThen mRest
+ = MKey MKWhens         [MGTerms msCond, MGTerms msThen, MGTerm mRest]
 
-pattern MProcCell nCell tCell mInit mRest
- = MKey MKProcCell      [MGTerm mInit, MGTerm (MAbs (MPTerms [(BindName nCell, tCell)]) mRest)]
+pattern MMatch mScrut msAlt mRest
+ = MKey MKMatch         [MGTerm mScrut, MGTerms msAlt, MGTerm mRest]
 
-pattern MProcUpdate nCell mValue mRest
- = MKey MKProcUpdate    [MGTerm (MVar (Bound nCell)), MGTerm mValue, MGTerm mRest]
+pattern MLoop mBody mRest
+ = MKey MKLoop          [MGTerm mBody, MGTerm mRest]
 
-pattern MProcWhens msCond msThen mRest
- = MKey MKProcWhens     [MGTerms msCond, MGTerms msThen, MGTerm mRest]
+pattern MBreak
+ = MKey MKBreak         []
 
-pattern MProcMatch mScrut msAlt mRest
- = MKey MKProcMatch     [MGTerm mScrut, MGTerms msAlt, MGTerm mRest]
+pattern MContinue
+ = MKey MKContinue      []
 
-pattern MProcLoop mBody mRest
- = MKey MKProcLoop      [MGTerm mBody, MGTerm mRest]
+pattern MWhile mPred mBody mRest
+ = MKey MKWhile         [MGTerm mPred, MGTerm mBody, MGTerm mRest]
 
-pattern MProcBreak
- = MKey MKProcBreak    []
+pattern MEnter mEnter bms mRest
+ = MKey MKEnter         [MGTerm mEnter, MGTerm (MRec bms mRest)]
 
-pattern MProcContinue
- = MKey MKProcContinue []
-
-pattern MProcWhile mPred mBody mRest
- = MKey MKProcWhile     [MGTerm mPred, MGTerm mBody, MGTerm mRest]
-
-pattern MProcEnter mEnter bms mRest
- = MKey MKProcEnter     [MGTerm mEnter, MGTerm (MRec bms mRest)]
-
-pattern MProcLeave
- = MKey MKProcLeave     []
-
-
-------------------------------------------------------------------------------------------- Bloc --
-pattern MBloc mBody             = MKey   MKBloc [MGTerm mBody]
+pattern MLeave
+ = MKey MKLeave         []
 
 
 ------------------------------------------------------------------------------------------ Value --

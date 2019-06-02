@@ -268,10 +268,21 @@ resolveTermBound mm (TermEnv bs0) (BoundWith n d0)
          = let  upsT' = flip upsBumpNames upsT $ typeNamesOfModule mm
                 upsM' = flip upsBumpNames upsM $ termNamesOfModule mm
            in case lookupDeclTermOfModule n mm of
-                Just (DeclTerm _a _mode _n mpss tResult mBody)
+                -- For plain declarations we inject the result type
+                -- using a 'the' construct.
+                Just (DeclTerm _a DeclTermModePlain _n mpss tResult mBody)
                   -> return $ Just $ TermDefDecl
                             $ upsApplyTerm upsT' upsM'
                             $ foldr MAbs (MThe tResult mBody) mpss
+
+                -- For proc declarations we also inject a 'launch'
+                -- construct so that the body can return from it.
+                -- TODO: we'll need to split out the boxings for the launch
+                -- to be well typed here.
+                Just (DeclTerm _a DeclTermModeProc _n mpss tsResult mBody)
+                  -> return $ Just $ TermDefDecl
+                            $ upsApplyTerm upsT' upsM'
+                            $ foldr MAbs (MThe tsResult (MLaunch tsResult mBody)) mpss
 
                 _ -> return Nothing
 

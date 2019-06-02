@@ -53,7 +53,7 @@ data TermArgs a
 
 -- | Term Keyword.
 data TermKey
-        -- | functional term formers.
+        -- functional term formers.
         = MKTerms                               -- ^ Term sequence former.
         | MKThe                                 -- ^ Type ascription.
         | MKApp                                 -- ^ Term application.
@@ -74,35 +74,23 @@ data TermKey
         | MKExtend                              -- ^ Region extension.
 
         -- procedural term formers.
-        | MKProc                                -- ^ Define a procedure.
-        | MKProcYield                           -- ^ Yield the value of an expression.
-        | MKProcSeq                             -- ^ Procedural statement sequence.
-        | MKProcCall                            -- ^ Call a term or proc declaration.
-        | MKProcLaunch                          -- ^ Define scope of a 'return' statement.
-        | MKProcReturn                          -- ^ Return to the enclosing 'launch' statement.
-        | MKProcCell                            -- ^ Define a new storage cell.
-        | MKProcUpdate                          -- ^ Update a storage cell.
-        | MKProcWhens                           -- ^ Branch on boolean.
-        | MKProcMatch                           -- ^ Branch on variants.
-        | MKProcLoop                            -- ^ Define a loop.
-        | MKProcBreak                           -- ^ Break to the end of the enclosing loop.
-        | MKProcContinue                        -- ^ Continue to the next loop iteration.
-        | MKProcWhile                           -- ^ Standard while loop.
-        | MKProcEnter                           -- ^ Enter a recursive procedure.
-        | MKProcLeave                           -- ^ Leave a recursive procedure.
-
-        -- Bloc term formers.
-        | MKBloc                                -- ^ Define a bloc.
+        | MKSeq                                 -- ^ Procedural sequencing.
+        | MKLaunch                              -- ^ Define scope of a 'return' statement.
+        | MKReturn                              -- ^ Return to the enclosing 'launch' statement.
+        | MKCell                                -- ^ Define a new storage cell.
+        | MKUpdate                              -- ^ Update a storage cell.
+        | MKWhens                               -- ^ Branch on boolean.
+        | MKMatch                               -- ^ Branch on variants.
+        | MKEnter                               -- ^ Enter a recursive procedure.
+        | MKLeave                               -- ^ Leave a recursive procedure.
+        | MKLoop                                -- ^ Define a loop.
+        | MKBreak                               -- ^ Break to the end of the enclosing loop.
+        | MKContinue                            -- ^ Continue to the next loop iteration.
+        | MKWhile                               -- ^ Standard while loop.
         deriving (Show, Eq, Ord)
 
 
 -- | Term Value.
---
---   These are really "term normal forms" rather than "values" as type
---   expressions and the bodies of closures may include variable names
---   that refer to top-level things. These names need to be bumped when
---   carrying values under binders.
---
 data Value a
         -- Values that are also literals in the source program.
         = VUnit                                 -- ^ Unit value.

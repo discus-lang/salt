@@ -11,7 +11,7 @@ test eval fac1 10
 
 -- Factorial using procedural loop.
 term fac2 [x: #Nat]: #Nat
- = proc launch #Nat of
+ = launch #Nat of
    do   cell n: #Nat ← x
         cell a: #Nat ← 1
         loop do
@@ -35,6 +35,6 @@ proc fac3 [x: #Nat]: #Nat
                 a ← #nat'mul [a, n]
                 n ← #nat'sub [n, 1]
                 fac []
-        yield a
+        return a
 
 test eval fac3 10

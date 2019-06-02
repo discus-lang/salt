@@ -1,12 +1,12 @@
 
 module Salt.Core.Check.Context where
 import Salt.Core.Transform.Ups
-import Salt.Core.Check.Error
+-- import Salt.Core.Check.Error
 import Salt.Core.Check.Where
 import Salt.Core.Exp
 import qualified Salt.Core.Prim.Ctor    as Prim
 
-import Control.Exception
+-- import Control.Exception
 import Data.Map.Strict                  (Map)
 import qualified Data.Map               as Map
 
@@ -36,9 +36,6 @@ data Context a
           -- | Function to check a term.
         , contextCheckTerm      :: CheckTerm a
 
-          -- | Function to check a procedure.
-        , contextCheckProc      :: CheckTermProc a
-
           -- | Kinds and bodies of top-level type bindings in the current module.
         , contextModuleType     :: Map Name (Kind a, Type a)
 
@@ -49,16 +46,12 @@ data Context a
           --   This is used for bindings within a single top-level declaration.
         , contextLocal          :: [Elem a]
 
-          -- | The language fragment we are checking.
-          --   whether it is a plain functional term, a proc or a bloc.
-        , contextFragment       :: Fragment
+          -- | Tracks what construct we're syntactically inside, innermost
+          --   constructs on the front of the list. This is used to decide
+          --   whether it is currently invoke procedural terms like 'break'
+          --   that only work syntactically inside loops.
+        , contextInside         :: [Inside a]
         }
-
-data ContextProc a
-        = CPNone
-        | CPLaunch     [Type a] (ContextProc a)
-        | CPLoop       (ContextProc a)
-        deriving Show
 
 
 type CheckType a
@@ -73,28 +66,35 @@ type CheckTerm a
         -> IO (Term a, [Type a], [Effect a])
 
 
-type CheckTermProc a
-        =  Annot a => a -> [Where a]
-        -> Context a -> Mode a -> ContextProc a -> Term a
-        -> IO (Term a, [Type a], [Effect a])
-
-
 ---------------------------------------------------------------------------------------------------
+-- | Describes the syntactic construct that we're inside.
+data Inside a
+        = InsideLaunch  [Type a]
+        | InsideLoop
+        deriving Show
+
+
+-- | Record that we're going inside some construct in the context.
+goInside :: Inside a -> Context a -> Context a
+goInside ii ctx
+ = ctx { contextInside = ii : contextInside ctx }
+
+
 -- | Take the types of the innermost `Launch` context, if there is one.
-takeInnerLaunch :: ContextProc a -> Maybe [Type a]
-takeInnerLaunch cp
- = case cp of
-        CPNone          -> Nothing
-        CPLaunch ts _   -> Just ts
-        CPLoop ctx      -> takeInnerLaunch ctx
+takeInnerLaunch :: [Inside a] -> Maybe [Type a]
+takeInnerLaunch []     = Nothing
+takeInnerLaunch (i : is)
+ = case i of
+        InsideLaunch ts -> Just ts
+        InsideLoop      -> takeInnerLaunch is
 
 
-hasInnerLoop :: ContextProc a -> Bool
-hasInnerLoop cp
- = case cp of
-        CPNone          -> False
-        CPLaunch _ ctx  -> hasInnerLoop ctx
-        CPLoop _        -> True
+areInsideLoop :: [Inside a] -> Bool
+areInsideLoop []        = False
+areInsideLoop (i : is)
+ = case i of
+        InsideLaunch _  -> areInsideLoop is
+        InsideLoop      -> True
 
 
 ---------------------------------------------------------------------------------------------------
@@ -279,36 +279,30 @@ contextResolveDataCtor nCtor _ctx
 
 
 ---------------------------------------------------------------------------------------------------
--- | Check if the context has the given term mode.
-guardOnlyFragment
-        :: Annot a => a -> [Where a] -> Context a
-        -> Text -> Fragment -> IO b -> IO b
-
-guardOnlyFragment a wh ctx txBlame frag thing
- = if contextFragment ctx == frag
-         then thing
-         else throw $ ErrorTermNotFragment a wh (contextFragment ctx) txBlame
+-- -- | Check if the context has the given term mode.
+-- guardOnlyFragment
+--         :: Annot a => a -> [Where a] -> Context a
+--         -> Text -> Fragment -> IO b -> IO b
+--
+-- guardOnlyFragment a wh ctx txBlame frag thing
+--  = if contextFragment ctx == frag
+--          then thing
+--          else throw $ ErrorTermNotFragment a wh (contextFragment ctx) txBlame
 
 
 -- | Check if the context has any of the given term modes.
-guardAnyFragment
-        :: Annot a => a -> [Where a] -> Context a
-        -> Text -> [Fragment] -> IO b -> IO b
-
-guardAnyFragment a wh ctx txBlame frags thing
- = if elem (contextFragment ctx) frags
-         then thing
-         else throw $ ErrorTermNotFragment a wh (contextFragment ctx) txBlame
+-- guardAnyFragment
+--         :: Annot a => a -> [Where a] -> Context a
+--         -> Text -> [Fragment] -> IO b -> IO b
+--
+-- guardAnyFragment a wh ctx txBlame frags thing
+--  = if elem (contextFragment ctx) frags
+--          then thing
+--          else throw $ ErrorTermNotFragment a wh (contextFragment ctx) txBlame
 
 
 -- | Set the language fragment for the given context to the expression form
 --   of what is is right now.
-asExp   :: Context a -> Context a
-asExp ctx
- = case contextFragment ctx of
-        FragTerm         -> ctx
-        FragProcBody     -> ctx { contextFragment = FragProcExp }
-        FragProcExp      -> ctx
 
 
 

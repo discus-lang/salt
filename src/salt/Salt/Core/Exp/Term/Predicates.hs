@@ -16,22 +16,19 @@ isSomeMProc mm
  = case mm of
         MAnn _ m        -> isSomeMProc m
         MThe _ m        -> isSomeMProc m
-        MProc{}         -> True
-        MProcYield{}    -> True
-        MProcCall{}     -> True
-        MProcSeq{}      -> True
-        MProcLaunch{}   -> True
-        MProcReturn{}   -> True
-        MProcCell{}     -> True
-        MProcUpdate{}   -> True
-        MProcWhens{}    -> True
-        MProcMatch{}    -> True
-        MProcLoop{}     -> True
-        MProcBreak{}    -> True
-        MProcContinue{} -> True
-        MProcWhile{}    -> True
-        MProcEnter{}    -> True
-        MProcLeave{}    -> True
+        MSeq{}          -> True
+        MLaunch{}       -> True
+        MReturn{}       -> True
+        MCell{}         -> True
+        MUpdate{}       -> True
+        MWhens{}        -> True
+        MMatch{}        -> True
+        MLoop{}         -> True
+        MBreak{}        -> True
+        MContinue{}     -> True
+        MWhile{}        -> True
+        MEnter{}        -> True
+        MLeave{}        -> True
         _               -> False
 
 

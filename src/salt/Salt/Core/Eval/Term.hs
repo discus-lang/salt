@@ -277,41 +277,13 @@ evalTerm s a env mm@(MMap tk tv msk msv)
         evalPairs _ _   = throw $ ErrorInvalidTerm a mm
 
 
--- (evm-proc) --------------------------------------------
-evalTerm s a env (MProc m)
- = evalTerm s a env m
-
-
--- (evm-proc-yield) ---------------------------------------
-evalTerm s a env (MProcYield m)
- = evalTerm s a env m
-
-
--- (evm-proc-call) ----------------------------------------
-evalTerm s a env (MProcCall mFun mgssArg)
- | Just nPrim <- takeMPrm mFun
- = case Map.lookup nPrim Ops.primOps of
-        Just (Ops.PP _name _type step _docs)
-         -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
-                return $ step nssArg
-
-        Just (Ops.PO _name _type _effs exec _docs)
-         -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
-                exec nssArg
-
-        Nothing -> throw $ ErrorPrimUnknown a nPrim
-
- | mgs : mgssRest <- mgssArg
- = evalTermApp s a env (mFun, mgs, mgssRest)
-
-
 -- (evm-proc-seq) -----------------------------------------
-evalTerm s a env (MProcSeq mps mBind mRest)
+evalTerm s a env (MSeq mps mBind mRest)
  = evalTerm s a env (MLet mps mBind mRest)
 
 
 -- (evm-proc-launch) --------------------------------------
-evalTerm s a env (MProcLaunch _tsRet mBody)
+evalTerm s a env (MLaunch _tsRet mBody)
  = catch eval handle'
  where
         eval
@@ -326,13 +298,13 @@ evalTerm s a env (MProcLaunch _tsRet mBody)
 
 
 -- (evm-proc-return) --------------------------------------
-evalTerm s a env (MProcReturn mBody)
+evalTerm s a env (MReturn mBody)
  = do   vs <- evalTerm s a env mBody
         throw (EvalControlReturn vs)
 
 
 -- (evm-proc-cell) ----------------------------------------
-evalTerm s a env (MProcCell nCell tCell mInit mRest)
+evalTerm s a env (MCell nCell tCell mInit mRest)
  = do
         -- Evaluate the term to produce the initial value of the cell.
         vInit   <- evalTerm1 s a env mInit
@@ -359,7 +331,7 @@ evalTerm s a env (MProcCell nCell tCell mInit mRest)
 
 
 -- (evm-proc-update) --------------------------------------
-evalTerm s a env (MProcUpdate nCell mNew mRest)
+evalTerm s a env (MUpdate nCell mNew mRest)
  = do
         -- Lookup the cell identifier.
         iCell   <- resolveTermBound (stateModule s) env (Bound nCell)
@@ -378,7 +350,7 @@ evalTerm s a env (MProcUpdate nCell mNew mRest)
 
 
 -- (evm-proc-whens) ----------------------------------------
-evalTerm s a env mm@(MProcWhens msCond msThen mRest)
+evalTerm s a env mm@(MWhens msCond msThen mRest)
  = go msCond msThen
  where
         go [] []
@@ -396,7 +368,7 @@ evalTerm s a env mm@(MProcWhens msCond msThen mRest)
 
 
 -- (evm-proc-loop) ---------------------------------------
-evalTerm s a env mm@(MProcLoop mBody mRest)
+evalTerm s a env mm@(MLoop mBody mRest)
  = catch evalLoop handleLoop
  where
         evalLoop
@@ -414,17 +386,17 @@ evalTerm s a env mm@(MProcLoop mBody mRest)
 
 
 -- (evm-proc-break) --------------------------------------
-evalTerm _s _a _env MProcBreak
+evalTerm _s _a _env MBreak
  = throw $ EvalControlBreak @a
 
 
 -- (evm-proc-continue) -----------------------------------
-evalTerm _s _a _env MProcContinue
+evalTerm _s _a _env MContinue
  = throw $ EvalControlContinue @a
 
 
 -- (evm-proc-while) --------------------------------------
-evalTerm s a env mm@(MProcWhile mPred mBody mRest)
+evalTerm s a env mm@(MWhile mPred mBody mRest)
  = catch evalLoop handleLoop
  where
         evalLoop
@@ -450,7 +422,7 @@ evalTerm s a env mm@(MProcWhile mPred mBody mRest)
 
 
 -- (evm-proc-enter) --------------------------------------
-evalTerm s a env mEnter@(MProcEnter mFirst bms mRest)
+evalTerm s a env mEnter@(MEnter mFirst bms mRest)
  = do
      -- Helper to build an abstraction that wraps the body
         -- with any remaining parameters.
@@ -486,7 +458,7 @@ evalTerm s a env mEnter@(MProcEnter mFirst bms mRest)
 
 
 -- (evm-proc-leave) --------------------------------------
-evalTerm _s _a _env MProcLeave
+evalTerm _s _a _env MLeave
  = throw $ EvalControlLeave @a
 
 

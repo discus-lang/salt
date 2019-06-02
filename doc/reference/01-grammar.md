@@ -264,13 +264,13 @@ proc square []: []! #Console
  ; while (#nat'gt [x, 0])
           ( cell y: #Nat ← 9
           ; while (#nat'gt [y, 0])
-                  ( seq [] = call #console'print "*"
-                  ; seq y  ← #nat'sub [y, 1]
+                  ( seq #console'print "*"
+                  ; update y ← #nat'sub [y, 1]
                   ; end)
-          ; seq [] = call #console'print "\n"
-          ; seq x  ← #nat'sub [x, 1]
+          ; seq #console'print "\n"
+          ; update x ← #nat'sub [x, 1]
           ; end)
- ; call #console'println "done"
+ ; #console'println "done"
 ```
 
 Sequences of procedures connected by ';' can instead be written using the 'do' keyword to start the sequence, and omitting the 'seq', 'call' and 'end' keywords.

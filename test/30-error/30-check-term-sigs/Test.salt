@@ -22,22 +22,21 @@ test type term5 = term5
 term term6: [] = []
 
 -- Error: Malformed type annotations on proc declaration.
-proc proc1 [x: #Derp]: #Nat = yield 5
+proc proc1 [x: #Derp]: #Nat = 5
 
 -- Error: Malformed result type.
-proc proc2 [x: #Nat]: #Derp = yield 5
+proc proc2 [x: #Nat]: #Derp = 5
 
 -- Error: Proc declaration has duplicate parameters.
-proc proc3 [x: #Nat, x: #Nat]: #Nat = yield x
+proc proc3 [x: #Nat, x: #Nat]: #Nat = x
 
 -- Error: Proc declaration is rebound
-proc proc4 []: #Nat = yield 1
-proc proc4 []: #Nat = yield 2
+proc proc4 []: #Nat = 1
+proc proc4 []: #Nat = 2
 
 -- Error: Proc declaration does not produce a value.
-proc proc5 @[a: #Data]: [] = yield []
+proc proc5 @[a: #Data]: [] = []
 test type term5 = term5
 
 -- Error: Proc declaration does not have parameters.
--- TODO: should be an error.
-proc proc6: #Nat = yield 5
+proc proc6: #Nat = 5

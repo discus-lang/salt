@@ -1,72 +1,58 @@
-test/30-error/12-check-proc/Test.salt:18:36
-  Not enough terms.
-   Actual   types []
-   Expected kind '#Data'
-
-  18:11  In test
-
-test/30-error/12-check-proc/Test.salt:25:31
-  Actual type '#Nat'
-   does not match
-   expected type '#Bool'
-
-  25:11  In test
-
-test/30-error/12-check-proc/Test.salt:32:31
+test/30-error/12-check-proc/Test.salt:7:26
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  32:11  In test
+  7:11   In test
 
-test/30-error/12-check-proc/Test.salt:39:38
+test/30-error/12-check-proc/Test.salt:14:33
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  39:11  In test
+  14:11  In test
 
-test/30-error/12-check-proc/Test.salt:48:7
+test/30-error/12-check-proc/Test.salt:23:7
   Actual type '#Nat'
    does not match
    expected type '#Bool'
 
-  47:11  In test
+  22:11  In test
 
-test/30-error/12-check-proc/Test.salt:52:19
+test/30-error/12-check-proc/Test.salt:27:16
   Too many terms.
    Actual   type '#Nat'
    Expected types []
 
-  51:11  In test
+  27:2   In test
 
-test/30-error/12-check-proc/Test.salt:62:2
+test/30-error/12-check-proc/Test.salt:37:2
   Alternative 'foo' is not in scrutinee type.
    '∑[bar: #Nat]'
 
-  61:11  In test
+  36:11  In test
 
-test/30-error/12-check-proc/Test.salt:68:27
+test/30-error/12-check-proc/Test.salt:43:21
   Too many terms.
    Actual   type '#Nat'
    Expected kinds []
 
-  66:11  In test
+  42:2   In test
 
-test/30-error/12-check-proc/Test.salt:75:27
+test/30-error/12-check-proc/Test.salt:50:16
   Too many terms.
    Actual   type '#Nat'
    Expected kinds []
 
-  75:11  In test
+  50:11  In test
 
-test/30-error/12-check-proc/Test.salt:81:16
+test/30-error/12-check-proc/Test.salt:55:11
   break statement does not have an enclosing loop
 
-  81:11  In test
+  55:11  In test
 
-test/30-error/12-check-proc/Test.salt:87:16
+test/30-error/12-check-proc/Test.salt:60:11
   continue statement does not have an enclosing loop
 
-  87:11  In test
+  60:11  In test
 

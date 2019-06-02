@@ -25,11 +25,10 @@ checkDeclTermSig _ _ decl
 checkDeclTerm :: CheckDecl a
 
 -- (d-term-plain) -----------------------------------------
-checkDeclTerm _a ctx0
+checkDeclTerm _a ctx
         (DTerm (DeclTerm a mode@DeclTermModePlain nDecl mpss tsResult mBody))
  = do
         let wh  = [WhereTermDecl a nDecl]
-        let ctx = ctx0 { contextFragment = FragTerm }
 
         -- Check the parameter type annotations.
         (ctx', mpss') <- checkTermParamss a wh ctx mpss
@@ -73,10 +72,11 @@ checkDeclTerm _a ctx
          <- checkTypesAreAll UType a wh ctx' TData tsResult
 
         -- Check the body.
-        let ctx'' = ctx' { contextFragment = FragProcBody }
         (mBody', _tsResult'', esResult')
-         <- contextCheckProc ctx a wh ctx''
-                (Check tsResult') (CPLaunch tsResult' CPNone) mBody
+         <- contextCheckTerm ctx a wh
+                ctx' { contextInside = [InsideLaunch tsResult']}
+                (Check tsResult')
+                mBody
 
         -- Check result effects against the annotation.
         eActual   <- simplType a ctx' $ TSum esResult'

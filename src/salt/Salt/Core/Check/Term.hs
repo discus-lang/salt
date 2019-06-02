@@ -1,6 +1,6 @@
 
 module Salt.Core.Check.Term where
-import Salt.Core.Check.Term.Proc
+-- import Salt.Core.Check.Term.Proc
 import Salt.Core.Check.Term.App
 import Salt.Core.Check.Term.Case
 import Salt.Core.Check.Term.Bind
@@ -18,6 +18,7 @@ import qualified Data.Set               as Set
 import qualified Text.Show.Pretty       as Debug
 
 
+------------------------------------------------------------------------------------------- Term --
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
 checkTermWith :: CheckTerm a
@@ -44,17 +45,14 @@ checkTermWith a wh ctx Synth (MThe ts m)
 
 -- (t-box) ------------------------------------------------
 checkTermWith a wh ctx Synth (MBox m)
- = guardOnlyFragment a wh ctx "Explicit box" FragTerm
- $ do   (m', ts, es) <- checkTerm a wh ctx Synth m
+ = do   (m', ts, es) <- checkTerm a wh ctx Synth m
         tEff <- simplType a ctx (TSum es)
         return  (MBox m', [TSusp ts tEff], [])
 
 
 -- (t-run) ------------------------------------------------
 checkTermWith a wh ctx Synth (MRun mBody)
- = guardOnlyFragment a wh ctx "Explicit run" FragTerm
- $ do
-        -- Check the body.
+ = do   -- Check the body.
         (mBody', tsSusp', es)
          <- checkTerm a wh ctx Synth mBody
 
@@ -100,9 +98,7 @@ checkTermWith a wh ctx Synth m@(MRef (MRPrm nPrim))
 
 -- (t-con) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
- = guardAnyFragment a wh ctx "Constructor"
-        [FragTerm, FragProcExp]
- $  contextResolveDataCtor nCon ctx
+ = contextResolveDataCtor nCon ctx
  >>= \case
         Nothing
          -> throw $ ErrorUnknownCtor UTerm a wh nCon
@@ -114,9 +110,7 @@ checkTermWith a wh ctx Synth m@(MRef (MRCon nCon))
 
 -- (t-var) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MVar u)
- = guardAnyFragment a wh ctx "Variable reference"
-        [FragTerm, FragProcExp]
- $   contextResolveTermBound ctx u
+ = contextResolveTermBound ctx u
  >>= \case
         -- Cells referenced in statements are implicitly read.
         --   The type 'Cell T' has kind #State, not #Data,
@@ -132,8 +126,7 @@ checkTermWith a wh ctx Synth m@(MVar u)
 -- (t-abt) ------------------------------------------------
 checkTermWith a wh ctx Synth (MAbs mps m)
  | Just bks <- takeMPTypes mps
- = guardOnlyFragment a wh ctx "Type abstraction" FragTerm
- $ do
+ = do
         -- Check the parameters and bind into the context.
         mps' <- checkTermParams a wh ctx mps
         let ctx' = contextBindTermParams mps ctx
@@ -159,8 +152,7 @@ checkTermWith a wh ctx Synth (MAbs mps m)
 -- (t-abm) ------------------------------------------------
 checkTermWith a wh ctx Synth (MAbs mps m)
  | Just bts <- takeMPTerms mps
- = guardOnlyFragment a wh ctx "Term abstraction" FragTerm
- $ do
+ = do
         -- Check the parameters and bind them into the context.
         mps' <- checkTermParams a wh ctx mps
         let ctx' = contextBindTermParams mps ctx
@@ -180,9 +172,7 @@ checkTermWith a wh ctx Synth (MAbs mps m)
 -- (t-aps) ------------------------------------------------
 -- This handles (t-apt), (t-apm) and (t-apv) from the docs.
 checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
- = guardAnyFragment a wh ctx "application"
-        [FragTerm, FragProcExp]
- $ do
+ = do
         -- If this an effectful primitive then also add the effects
         -- we get from applying it.
         (mFun1, tFun1, esFun1)
@@ -214,7 +204,7 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
                     in  throw $ ErrorUnknownPrim UTerm aFun wh nPrm
 
                 Nothing
-                 -> checkTerm1 a wh (asExp ctx) Synth mFun0
+                 -> checkTerm1 a wh ctx Synth mFun0
 
         -- Check that we have at least some arguments to apply.
         when (null mgss0)
@@ -232,13 +222,13 @@ checkTermWith a wh ctx Synth (MAps mFun0 mgss0)
             -- (t-apm) -----
             checkApp [tFun] es (mps : mgss) mgssAcc
              | Just (a', msArg) <- takeAnnMGTerms a mps
-             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh (asExp ctx) aFun tFun msArg
+             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh ctx aFun tFun msArg
                   checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerms msArg') : mgssAcc)
 
             -- (t-apv) -----
             checkApp [tFun] es (mps : mgss) mgssAcc
              | Just (a', mArg) <- takeAnnMGTerm a mps
-             = do (mArg',  tsResult, es') <- checkTermAppTerm  a wh (asExp ctx) aFun tFun mArg
+             = do (mArg',  tsResult, es') <- checkTermAppTerm  a wh ctx aFun tFun mArg
                   checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerm mArg') : mgssAcc)
 
             checkApp tsResult es [] mgssAcc
@@ -263,7 +253,7 @@ checkTermWith a wh ctx modeBody (MLet mps mBind mBody)
 
         -- Check the bound expression.
         (mBind', tsBind, esBind)
-         <- checkTerm a wh (asExp ctx) Synth mBind
+         <- checkTerm a wh ctx Synth mBind
 
         -- Check we have the same number of binders
         -- as values produced by the binding.
@@ -299,8 +289,7 @@ checkTermWith a wh ctx modeBody (MLet mps mBind mBody)
 
 -- (t-rec) ------------------------------------------------
 checkTermWith a wh ctx mode (MRec bms mBody)
- = guardAnyFragment a wh ctx "recursive binding" [FragTerm]
- $ do
+ = do
         -- Check the type annotations on each of the binders.
         let tsBind  = map makeTypeOfTermBind bms
         tsBind' <- checkTypesAreAll UKind a wh ctx TData tsBind
@@ -326,9 +315,7 @@ checkTermWith a wh ctx mode (MRec bms mBody)
 
 -- (t-rcd) ------------------------------------------------
 checkTermWith a wh ctx mode mm@(MRecord ns ms)
- = guardAnyFragment a wh ctx "record constructor"
-        [FragTerm, FragProcExp]
- $ do
+ = do
         mode'   <- simplMode a ctx mode
         case mode' of
          Return{} -> error "TODO: return a value"
@@ -351,7 +338,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
                   <- fmap unzip3 $ forM nmtgs $ \(n, m, tgs)
                   -> do let ts  = takeTGTypes tgs
                         let wh' = WhereRecordField a n (Just ts) : wh
-                        checkTerm a wh' (asExp ctx) (Check ts) m
+                        checkTerm a wh' ctx (Check ts) m
 
                 return  ( MRecord ns ms'
                         , [TRecord ns $ map TGTypes tss']
@@ -371,7 +358,7 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
 
                  -- Check each of the field terms.
                  (ms', tss', ess')
-                  <- fmap unzip3 $ mapM (checkTerm a wh (asExp ctx) Synth) ms
+                  <- fmap unzip3 $ mapM (checkTerm a wh ctx Synth) ms
 
                  return  ( MRecord ns ms'
                          , [TRecord ns (map TGTypes tss')]
@@ -380,13 +367,11 @@ checkTermWith a wh ctx mode mm@(MRecord ns ms)
 
 -- (t-prj) ------------------------------------------------
 checkTermWith a wh ctx Synth (MProject nLabel mRecord)
- = guardAnyFragment a wh ctx "record projection"
-        [FragTerm, FragProcExp]
- $ do
+ = do
         -- Check the body expression.
         let aRecord = fromMaybe a $ takeAnnotOfTerm mRecord
         (mRecord', tRecord, esRecord)
-         <- checkTerm1 aRecord wh (asExp ctx) Synth mRecord
+         <- checkTerm1 aRecord wh ctx Synth mRecord
 
         -- The body needs to have record type with the field that we were expecting.
         (ns, tgss, tRecord')
@@ -407,9 +392,7 @@ checkTermWith a wh ctx Synth (MProject nLabel mRecord)
 
 -- (t-vnt) ------------------------------------------------
 checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
- = guardAnyFragment a wh ctx "variant constructor"
-        [FragTerm, FragProcExp]
- $ do
+ = do
         -- Check annotation is well kinded.
         checkType a wh ctx tVariant
 
@@ -429,7 +412,7 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
 
         -- Check the body against the type from the annotation.
         (mValues', _tsValues, esValues)
-         <- checkTerm a wh (asExp ctx) (Check tsExpected') mValues
+         <- checkTerm a wh ctx (Check tsExpected') mValues
 
         return  ( MVariant nLabel mValues' tVariant
                 , [tVariant], esValues)
@@ -439,11 +422,10 @@ checkTermWith a wh ctx Synth (MVariant nLabel mValues tVariant)
 checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
  | length msAlt  >= 1
  , length msElse <= 1
- = guardAnyFragment a wh ctx "case-expression"  [FragTerm]
- $ do
+ = do
         -- Check the scrutinee.
         (mScrut', tScrut, esScrut)
-         <- checkTerm1 a wh (asExp ctx) Synth mScrut
+         <- checkTerm1 a wh ctx Synth mScrut
 
         -- The scrutinee needs to be a variant.
         let aScrut = fromMaybe a $ takeAnnotOfTerm mScrut
@@ -478,10 +460,9 @@ checkTermWith a wh ctx Synth mCase@(MVarCase mScrut msAlt msElse)
 -- (t-ifs) ------------------------------------------------
 checkTermWith a wh ctx Synth (MIf msCond msThen mElse)
  | length msCond == length msThen
- = guardAnyFragment a wh ctx "if-expression" [FragTerm]
- $ do
+ = do
         (msCond', esCond)
-         <- checkTermsAreAll a wh (asExp ctx) TBool msCond
+         <- checkTermsAreAll a wh ctx TBool msCond
 
         (mElse',  tsElse, esElse)
          <- checkTerm a wh ctx Synth mElse
@@ -495,55 +476,31 @@ checkTermWith a wh ctx Synth (MIf msCond msThen mElse)
                 , esCond ++ concat essThen ++ esElse)
 
 
--- (t-proc) -----------------------------------------------
-checkTermWith a wh ctx Synth (MProc mBody)
- = guardAnyFragment a wh ctx "procedure" [FragTerm]
- $ do
-        let ctx' = ctx { contextFragment = FragProcBody }
-        (mBody', tsResult, esBody)
-         <- checkTermProc a wh ctx' Synth CPNone mBody
-
-        return  ( MProc mBody'
-                , tsResult, esBody)
-
--- (t-bloc) -----------------------------------------------
-checkTermWith a wh ctx Synth (MBloc mBody)
- = guardOnlyFragment a wh ctx "bloc definition" FragTerm
- $ do
-        (mBody', tsBody, esBody)
-         <- checkTerm a wh ctx Synth mBody
-
-        return  ( MBloc mBody'
-                , tsBody, esBody)
-
 -- (t-lst) ------------------------------------------------
 checkTermWith a wh ctx Synth (MList t ms)
- = guardOnlyFragment a wh ctx "list" FragTerm
- $ do   t' <- checkTypeHas UKind a wh ctx TData t
-        (ms', es) <- checkTermsAreAll a wh (asExp ctx) t' ms
+ = do   t' <- checkTypeHas UKind a wh ctx TData t
+        (ms', es) <- checkTermsAreAll a wh ctx t' ms
         return  (MList t' ms', [TList t], es)
 
 
 -- (t-set) ------------------------------------------------
 checkTermWith a wh ctx Synth (MSet t ms)
- = guardOnlyFragment a wh ctx "set" FragTerm
- $ do   t' <- checkTypeHas UKind a wh ctx TData t
-        (ms', es) <- checkTermsAreAll a wh (asExp ctx) t' ms
+ = do   t' <- checkTypeHas UKind a wh ctx TData t
+        (ms', es) <- checkTermsAreAll a wh ctx t' ms
         return (MSet t ms', [TSet t], es)
 
 
 -- (t-map) ------------------------------------------------
 checkTermWith a wh ctx Synth m@(MMap tk tv msk msv)
- = guardOnlyFragment a wh ctx "map" FragTerm
- $ do
+ = do
         when (not $ length msk == length msv)
          $ throw $ ErrorTermMalformed a wh m
 
         tk' <- checkTypeHas UKind a wh ctx TData tk
         tv' <- checkTypeHas UKind a wh ctx TData tv
 
-        (msk', esKeys) <- checkTermsAreAll a wh (asExp ctx) tk' msk
-        (msv', esVals) <- checkTermsAreAll a wh (asExp ctx) tv' msv
+        (msk', esKeys) <- checkTermsAreAll a wh ctx tk' msk
+        (msv', esVals) <- checkTermsAreAll a wh ctx tv' msv
         return  ( MMap tk tv msk' msv'
                 , [TMap tk tv]
                 , esKeys ++ esVals)
@@ -574,6 +531,7 @@ checkTermWith a wh ctx Synth (MPrivate bksR btsW mBody)
 
         return (MPrivate bksR' btsW' mBody', tsResult, esResult)
 
+
 -- (t-extend) ------------------------------------------------
 checkTermWith a wh ctx Synth (MExtend r1 bksR btsW mBody)
  = do
@@ -603,6 +561,219 @@ checkTermWith a wh ctx Synth (MExtend r1 bksR btsW mBody)
 
         return (MExtend r1 bksR' btsW' mBody', tsResult, esResult)
 
+
+-- (t-launch) ---------------------------------------------
+checkTermWith a wh ctx Synth (MLaunch tsResult mBody)
+ = do
+        tsResult'
+         <- checkTypesAreAll UType a wh ctx TData tsResult
+
+        (mBody', _tsResult, esResult)
+         <- checkTerm a wh
+                (goInside (InsideLaunch tsResult') ctx)
+                (Check tsResult')
+                mBody
+
+        return  ( MLaunch tsResult' mBody'
+                , tsResult, esResult)
+
+
+-- (t-return) ---------------------------------------------
+checkTermWith a wh ctx _mode (MReturn mBody)
+ = do
+        -- Get the expected type from the enclosing launch construct,
+        -- or error if there isn't one. We can only return to a launch.
+        tsResult
+         <- case takeInnerLaunch (contextInside ctx) of
+                Just tsResult -> return tsResult
+                _  -> throw $ ErrorProcReturnNoLaunch a wh
+
+        (mBody', _tsResult, esReturn)
+         <- checkTermHas a wh ctx tsResult mBody
+
+        return  ( MReturn mBody'
+                , [], esReturn)
+
+
+-- (t-cell) -----------------------------------------------
+checkTermWith a wh ctx mode (MCell nCell tCell mBind mRest)
+ = do
+        tCell' <- checkTypeHas UKind a wh ctx TData tCell
+
+        (mBind', _tBind, esBind)
+         <- checkTerm a wh ctx (Check [tCell]) mBind
+
+        let ctx' = contextBindTerm nCell (TCell tCell') ctx
+        (mRest', tsResult, esRest)
+         <- checkTermWith a wh ctx' mode mRest
+
+        return  ( MCell nCell tCell' mBind' mRest'
+                , tsResult, esBind ++ esRest)
+
+
+-- (t-update) ---------------------------------------------
+checkTermWith a wh ctx mode (MUpdate nCell mNew mRest)
+ = do
+        let uCell = BoundWith nCell 0
+        tCell   <- contextResolveTermBound ctx uCell
+                >>= \case
+                        Nothing -> throw $ ErrorUnknownBound UTerm a wh uCell
+                        Just t  -> return t
+
+        tCell'  <- simplType a ctx tCell
+        tVal    <- case tCell' of
+                        TCell t -> return t
+                        _       -> throw $ ErrorProcUpdateNotCell a wh tCell'
+
+        (mNew', _tsNew, esNew)
+         <- checkTerm a wh ctx (Check [tVal]) mNew
+
+        (mRest', tsResult, esRest)
+         <- checkTerm a wh ctx mode mRest
+
+        return  ( MUpdate nCell mNew' mRest'
+                , tsResult, esNew ++ esRest)
+
+
+-- (t-whens) ----------------------------------------------
+checkTermWith a wh ctx mode (MWhens msCond msThen mRest)
+ | length msCond == length msThen
+ = do   (msCond', esCond)
+         <- checkTermsAreAll a wh ctx TBool msCond
+
+        (msThen', _tsThen, essThen)
+         <- fmap unzip3
+         $  mapM (checkTerm a wh ctx (Check []))  msThen
+
+        (mRest', tsResult, esRest)
+         <- checkTerm a wh ctx mode mRest
+
+        return  ( MWhens msCond' msThen' mRest'
+                , tsResult, esCond ++ concat essThen ++ esRest)
+
+
+-- (t-match) ----------------------------------------------
+checkTermWith a wh ctx mode mCase@(MMatch mScrut msAlt mRest)
+ = do
+        -- Check the scrutinee.
+        (mScrut', tScrut, esScrut)
+         <- checkTerm1 a wh ctx Synth mScrut
+
+        -- The scrutinee needs to be a variant.
+        let aScrut = fromMaybe a $ takeAnnotOfTerm mScrut
+        (nsScrut, mgsScrut)
+         <- simplType aScrut ctx tScrut
+         >>= \case
+                TVariant ns mgs -> return (ns, mgs)
+                _ -> throw $ ErrorCaseScrutNotVariant aScrut wh tScrut
+
+        -- Check all alternatives in turn,
+        --  collecting up all the effects,
+        --  and ensuring all the alt result types match.
+        let nmgsScrut = zip nsScrut mgsScrut
+        (msAlt', esAlt)
+         <- checkCaseProcAlts a wh ctx mCase tScrut nmgsScrut msAlt
+
+        -- Check the rest of the procedure.
+        (mRest', tsResult, esRest)
+         <- checkTerm a wh ctx mode mRest
+
+        return  ( MMatch mScrut' msAlt' mRest'
+                , tsResult, esScrut ++ esAlt ++ esRest)
+
+
+-- (t-loop) -----------------------------------------------
+checkTermWith a wh ctx mode (MLoop mBody mRest)
+ = do
+        -- Check the body of the loop.
+        (mBody', _tsBody, esBody)
+         <- checkTerm a wh
+                (goInside InsideLoop ctx)
+                (Check []) mBody
+
+        -- Check the rest of the procedure.
+        (mRest', tsResult, esRest)
+         <- checkTermWith a wh ctx mode mRest
+
+        return  ( MLoop mBody' mRest'
+                , tsResult, esBody ++ esRest)
+
+
+-- (t-break) ----------------------------------------------
+checkTermWith a wh ctx _mode MBreak
+ = if areInsideLoop (contextInside ctx)
+    then return (MBreak, [], [])
+    else throw $ ErrorProcBreakNoLoop a wh
+
+
+-- (t-continue) -------------------------------------------
+checkTermWith a wh ctx _mode MContinue
+ = if areInsideLoop (contextInside ctx)
+    then return (MContinue, [], [])
+    else throw $ ErrorProcContinueNoLoop a wh
+
+
+-- (t-while) ----------------------------------------------
+checkTermWith a wh ctx mode (MWhile mPred mBody mRest)
+ = do
+        -- Check the predicate.
+        (mPred', _tsPred, esPred)
+         <- checkTermHas a wh ctx [TBool] mPred
+
+        -- Check the body of the loop.
+        (mBody', _tsBody, esBody)
+         <- checkTerm a wh
+                (goInside InsideLoop ctx)
+                (Check []) mBody
+
+        -- Check the rest of the procedure.
+        (mRest', tsResult, esRest)
+         <- checkTerm a wh ctx mode mRest
+
+        return  ( MWhile mPred' mBody' mRest'
+                , tsResult, esPred ++ esBody ++ esRest)
+
+
+-- (t-enter) ----------------------------------------------
+checkTermWith a wh ctx mode (MEnter mEnter bms mRest)
+ = do
+        -- Check the type annotations on each of the binders.
+        let tsBind  = map makeTypeOfTermBind bms
+        tsBind' <- checkTypesAreAll UKind a wh ctx TData tsBind
+
+        -- Check for duplicate recursive binders.
+        let nsBind  = mapMaybe takeNameOfTermBind bms
+        let nsDup   = List.duplicates nsBind
+        when (not $ null nsDup)
+         $ throw $ ErrorRecConflict a wh nsDup
+
+        -- Check the bindings, with the types of each in scope.
+        let btsBind = [ (bindOfTermBind bm, t) | bm <- bms | t <- tsBind']
+        let ntsBind = [ (n, t) | (BindName n, t) <- btsBind ]
+        let ctx'    = contextBindTerms ntsBind ctx
+        (bms', essBind)
+         <- fmap unzip $ mapM (checkTermProcBind a wh ctx') bms
+
+        -- Check the entry expression, with the binders in scope.
+        (mEnter', _tsEnter, esEnter)
+         <- checkTermHas a wh ctx' [] mEnter
+
+        -- Check the rest of the procedure.
+        (mRest', tsResult, esRest)
+         <- checkTermWith a wh ctx mode mRest
+
+        return  ( MEnter mEnter' bms' mRest'
+                , tsResult, esEnter ++ concat essBind ++ esRest)
+
+
+-- (t-leave) -----------------------------------------
+checkTermWith _a _wh _ctx _mode MLeave
+ = do
+        -- TODO: check we are in scope of an 'enter'
+        return  ( MLeave
+                , [], [])
+
+
 -- (t-check) ----------------------------------------------
 -- Switch modes in bidirectional type checking.
 --  We don't have an explicit check rule for this term,
@@ -616,3 +787,30 @@ checkTermWith _a _wh _ctx _mode mm
  = error $ Debug.ppShow mm
 --  throw $ ErrorTermMalformed a wh mm
 
+
+----------------------------------------------------------------------------------- TermProcBind --
+-- | Check a `TermProcBind`.
+checkTermProcBind
+        :: Annot a => a -> [Where a]
+        -> Context a -> TermBind a -> IO (TermBind a, [Effect a])
+
+checkTermProcBind a wh ctx (MBind b mpss tResult mBody)
+ = do   -- Check the parameters.
+        (ctx', mpss')
+         <- checkTermParamss a wh ctx mpss
+
+        -- There must be at least one vector of term parameters,
+        -- as we do not support value recursion in the evaluator.
+        when (not $ any isJust $ map takeMPTerms mpss)
+         $ throw $ ErrorRecValueRecursion a wh b
+
+        -- Check the result type annotation.
+        tsResult'
+         <- checkTypesAreAll UKind a wh ctx' TData tResult
+
+        -- The body must have type as specified by the result annotation.
+        (mBody', _tsResult, esBody)
+         <- checkTerm a wh ctx' (Check tsResult') mBody
+
+        return  ( MBind b mpss' tsResult' mBody'
+                , esBody)

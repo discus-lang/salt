@@ -1,87 +1,60 @@
 
--- yield ----------------------------------------------------------------------
-test type proc yield []
-test type proc yield 5
-test type proc yield #nat'add [2, 3]
-
--- control flow restrictions
-test type proc yield (if #true then 2 else 3)
-
-test type proc yield
- (case the <derp: #Nat> of `derp 5 of { derp [x: #Nat] → x})
-
-
--- call ----------------------------------------------------------------------
-test type proc call #console'print ["derp"]
-
--- Error: not enough terms.
-test type proc call #console'print []
-
-
--- seq ------------------------------------------------------------------------
-test type proc seq a: #Nat = #nat'add [2, 3]
-
--- Error: binding type does not match annotation.
-test type proc seq a: #Bool = #nat'add [2, 3]
-
 
 -- launch / return  -----------------------------------------------------------
-test type proc launch #Nat of return 5
+test type launch #Nat of return 5
 
 -- Error: value produced by 'return' does not match type of launch.
-test type proc launch #Nat of return #true
+test type launch #Nat of return #true
 
 
 -- cell / update  -------------------------------------------------------------
-test type proc cell a: #Nat ← 5; a ← 6; yield a
+test type cell a: #Nat ← 5; a ← 6; a
 
 -- Error: type of cell does not match the type it is being updated at.
-test type proc cell a: #Nat ← 5; a ← #true; yield a
+test type cell a: #Nat ← 5; a ← #true; a
 
 
 -- when -----------------------------------------------------------------------
-test type proc launch [] of
+test type launch [] of
  when #true return []
 
 -- Error: scrutinee is not a boolean.
-test type proc launch [] of
+test type launch [] of
  when 5 return []
 
 -- Error: body yields a value.
-test type proc
- when #true yield 5
+test type
+ when #true do 5
 
 
 -- match ----------------------------------------------------------------------
-test type proc launch [] of
+test type launch [] of
  match the <foo: #Nat> of `foo [5] with
   { foo [x: #Nat] → return []}
 
 -- Error: scrutinee type does not match alt type.
-test type proc launch [] of
+test type launch [] of
  match the <bar: #Nat> of `bar [5] with
   { foo [x: #Nat] → return []}
 
 -- Error: body yields a value
-test type proc
+test type
  match the <foo: #Nat> of `foo [5] with
-  { foo [x: #Nat] → yield [x]}
+  { foo [x: #Nat] → [x]}
 
 
 -- loop -----------------------------------------------------------------------
-test type proc loop #console'print "meep"
+test type loop #console'print "meep"
 
 -- Error: body yields a value.
-test type proc loop yield [5]
+test type loop [5]
 
-test type proc loop break
+test type loop break
 
 -- Error: break appears outside the scope of a loop
--- TODO: better error location.
-test type proc break
+test type break
 
-test type proc loop continue
+test type loop continue
 
 -- Error: continue appears outside the scope of a loop
--- TODO: better error location.
-test type proc continue
+test type continue

@@ -65,8 +65,8 @@ test/30-error/30-check-term-sigs/Test.salt:38:6
 
   38:6   In term declaration "proc5"
 
-test/30-error/30-check-term-sigs/Test.salt:43:6
+test/30-error/30-check-term-sigs/Test.salt:42:6
   Proc declaration 'proc6' has no parameters
 
-  43:6   In term declaration "proc6"
+  42:6   In term declaration "proc6"
 

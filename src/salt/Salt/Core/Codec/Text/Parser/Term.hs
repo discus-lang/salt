@@ -61,9 +61,15 @@ pTermBody ctx
         (rBinds, bts) <- pTermBinds
         pTok KEquals            <?> "a type annotation, or '=' to start the binding"
         mBind <- pTerm ctx      <?> "a term for the binding"
-        pTok KIn                <?> "a completed term, or 'in' to start the body"
-        mBody <- pTerm ctx      <?> "a body term"
-        return  $ MLet (MPAnn rBinds $ MPTerms bts) mBind mBody
+        P.choice
+         [ do   pTok KIn        <?> "a completed term, or 'in' to start the body"
+                mBody <- pTerm ctx      <?> "a body term"
+                return  $ MLet (MPAnn rBinds $ MPTerms bts) mBind mBody
+
+         , do   pTok KSemi
+                mBody <- pTerm ctx      <?> "a body term"
+                return  $ MLet (MPAnn rBinds $ MPTerms bts) mBind mBody ]
+
 
   , do  -- 'private' Var 'with' '{' Cap;* '}' 'in' Term
         pTok KPrivate
@@ -75,6 +81,7 @@ pTermBody ctx
         mBody <- pTerm ctx      <?> "a body term"
         let rBinding = (BindName rName, TRegion)
         return $ MPrivate [rBinding] btsW mBody
+
 
   , do  -- 'extend' Var 'using' Var 'with' '{' Cap;* '}' 'in' Term
         pTok KExtend
@@ -105,9 +112,9 @@ pTermBody ctx
         return  $ MRec bms mBody
 
 
-        -- 'the' Type 'of' '`' Lbl TermArg
+  , do  -- 'the' Type 'of' '`' Lbl TermArg
         -- 'the' Type 'of' Term
-  , do  pTok KThe
+        pTok KThe
         TGTypes ts <- pTypesHead
          <?> "a type to ascribe"
 
@@ -170,7 +177,7 @@ pTermBody ctx
          <?> "a '{' to start the do-block"
 
         binds   <- (flip P.sepEndBy (pTok KSemi)
-                        $ (pTermDoStmt ctx <?> "another binding, or a result value"))
+                        $ (pProcDoStmt ctx <?> "another binding, or a result value"))
                 <?> "some statements"
 
         m <- case reverse binds of
@@ -256,15 +263,45 @@ pTermBody ctx
 
          , do   return  $ MVarCase mScrut msAlts [] ]
 
- , do   -- 'proc' Proc
-        pTok KProc
-        mBody <- pProc ctx
-        return $ MProc mBody
+ , do   -- 'end'
+        pTok KEnd
+        return $ MTerms []
 
- , do   -- 'bloc' BlocBody
-        pTok KBloc
-        mBlocBody <- pTerm ctx
-        return  $ MBloc mBlocBody
+ , do   -- 'launch' Types of ...
+        pTok KLaunch
+        tsRet   <- pTypes
+        pTok KOf
+        mRest   <- pTerm ctx
+        return  $ MLaunch tsRet mRest
+
+ , do   -- 'return' Exp
+        pTok KReturn
+        mBody <- pTerm ctx
+        return $ MReturn mBody
+
+ , do   -- 'break'
+        pTok KBreak
+        return MBreak
+
+ , do   -- 'continue'
+        pTok KContinue
+        return MContinue
+
+ , do   -- 'leave'
+        pTok KLeave
+        return MLeave
+
+ , do   -- 'do '{' ProcStmt; ... Term '}'
+        pProcDo ctx
+
+ , do   -- ProcStmt ((';' Proc) | ε)
+        mkProc <- pProcStmt ctx
+        P.choice
+         [ do   pTok KSemi
+                mRest   <- pTerm ctx
+                return  $ mkProc mRest
+
+         , do   return  $ mkProc $ MTerms [] ]
 
 
  , do   -- Con TypeArg* TermArg*
@@ -530,38 +567,6 @@ pTermBind ctx
         pTok KEquals            <?> "a '=' to start the binding"
         mBody   <- pTerm ctx    <?> "the bound term"
         return  (nBind, mBody)
-
-
-------------------------------------------------------------------------------------------- Stmt --
--- | Parser for a do-statement.
-pTermDoStmt :: Context -> Parser (TermParams RL, Term RL)
-pTermDoStmt ctx
- = P.choice
- [ do   -- '[' (Var : Type),* ']' = Term
-        (rBinds, bs)
-         <- pRanged $ pSquared $ flip P.sepEndBy (pTok KComma)
-                        (pBind <?> "a binder")
-        pTok KEquals    <?> "an '=' to start the body"
-        mBody   <- pTerm ctx   <?> "the body of the statement"
-        return  ( MPAnn rBinds $ MPTerms $ zip bs $ repeat THole
-                , mBody)
-
- , do   -- Var '=' Term
-        -- We need the lookahead here because plain terms
-        -- in the next choice can also start with variable name.
-        P.try $ P.lookAhead $ do
-                pBind; pTok KEquals
-
-        (rBind, nBind)
-         <- pRanged $ (pBind  <?> "a binder")
-        pTok KEquals        <?> "a '=' to start the body"
-        mBody <- pTerm ctx  <?> "the body of the statement"
-        return  (MPAnn rBind $ MPTerms [(nBind, THole)], mBody)
-
- , do   -- Term
-        mBody   <- pTerm ctx
-        return  (MPTerms [], mBody)
- ]
 
 
 ----------------------------------------------------------------------------------------- Record --

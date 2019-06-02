@@ -116,47 +116,36 @@ pprTerm c (MMap  tk tv msKey msVal)
                 [ ppr c mk %% text ":=" %% ppr c mv
                 | mk <- msKey | mv <- msVal ])
 
--- proc
-pprTerm c (MProc m)
- = align $ text "proc" %% ppr c m
-
--- proc end / yield
-pprTerm _c (MProcYield (MTerms []))
- = text "end"
-
-pprTerm c (MProcYield mExp)
- = text "yield" %% ppr c mExp
-
 -- proc launch / return
-pprTerm c (MProcLaunch tsRet mRest)
+pprTerm c (MLaunch tsRet mRest)
  = align $  text "launch" %% squared (map (ppr c) tsRet) %% text "of"
          %% line % ppr c mRest
 
-pprTerm c (MProcReturn mRet)
+pprTerm c (MReturn mRet)
  = text "return" %% ppr c mRet
 
 -- proc cell / update
-pprTerm c (MProcCell nCell tCell mInit mRest)
+pprTerm c (MCell nCell tCell mInit mRest)
  = align $ text "cell" %% pprVar nCell % text ":" %% ppr c tCell
                        %% text "←" %% ppr c mInit
  % semi %% line % ppr c mRest
 
-pprTerm c (MProcUpdate nCell mValue mRest)
+pprTerm c (MUpdate nCell mValue mRest)
  = align $ text "update" %% pprVar nCell %% text "←" %% ppr c mValue
  % semi %% line % ppr c mRest
 
 -- proc when / whens
-pprTerm c (MProcWhens [mCond] [mThen] mRest)
+pprTerm c (MWhens [mCond] [mThen] mRest)
  = align $ text "when" %% pprMArg c mCond %% ppr c mThen
  % semi %% line % ppr c mRest
 
 -- proc loop / break / continue
-pprTerm c (MProcLoop mBody mRest)
+pprTerm c (MLoop mBody mRest)
  = align $ text "loop" %% pprMArg c mBody
  % semi %% line % ppr c mRest
 
-pprTerm _c MProcBreak    = text "break"
-pprTerm _c MProcContinue = text "continue"
+pprTerm _c MBreak    = text "break"
+pprTerm _c MContinue = text "continue"
 
 -- key
 pprTerm c (MKey k mgs)
@@ -274,24 +263,19 @@ instance Pretty c TermKey where
         MKSet           -> text "##set"
         MKMap           -> text "##map"
 
-        MKProc          -> text "##proc"
-        MKProcYield     -> text "##proc'yield"
-        MKProcCall      -> text "##proc'call"
-        MKProcSeq       -> text "##proc'seq"
-        MKProcLaunch    -> text "##proc'launch"
-        MKProcReturn    -> text "##proc'return"
-        MKProcCell      -> text "##proc'cell"
-        MKProcUpdate    -> text "##proc'update"
-        MKProcWhens     -> text "##proc'whens"
-        MKProcMatch     -> text "##proc'match"
-        MKProcLoop      -> text "##proc'loop"
-        MKProcBreak     -> text "##proc'break"
-        MKProcContinue  -> text "##proc'continue"
-        MKProcWhile     -> text "##proc'while"
-        MKProcEnter     -> text "##proc'enter"
-        MKProcLeave     -> text "##proc'leave"
-
-        MKBloc          -> text "##bloc"
+        MKSeq           -> text "##seq"
+        MKLaunch        -> text "##launch"
+        MKReturn        -> text "##return"
+        MKCell          -> text "##cell"
+        MKUpdate        -> text "##update"
+        MKWhens         -> text "##whens"
+        MKMatch         -> text "##match"
+        MKLoop          -> text "##loop"
+        MKBreak         -> text "##break"
+        MKContinue      -> text "##continue"
+        MKWhile         -> text "##while"
+        MKEnter         -> text "##enter"
+        MKLeave         -> text "##leave"
 
 
 ------------------------------------------------------------------------------------ TermClosure --

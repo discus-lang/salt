@@ -1,16 +1,16 @@
 
 -- Launch and direct return.
-test eval proc launch #Nat of
+test eval launch #Nat of
  return 5
 
 
 -- Return from deeper within a procedure.
-test eval proc launch #Nat of
+test eval launch #Nat of
  do     when #false return 2
         when #true  return 3
         return 5
 
 
 -- Local use of launch/return in a functional expression.
-test eval #nat'add [proc launch #Nat of return 2, 3]
+test eval #nat'add [launch #Nat of return 2, 3]
 
