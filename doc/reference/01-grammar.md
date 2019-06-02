@@ -164,8 +164,7 @@ Term
   |   mset n Type Termⁿ             ('[set'  Type '|' Term,* ']')
   |   mmap n Type Type Termⁿ Termⁿ  ('[map'  Type Type '|' TermMapBind,* ']')
 
-  |   mprc Proc                     ('proc' Proc)
-  |   mblc Bloc                     ('bloc' Bloc)
+  |   Proc                          (Proc)
 
 TermParams
  ::=  mpst n Varⁿ Typeⁿ             ('@' '[' (Var ':' Type),* ']')
@@ -213,37 +212,32 @@ The record term `[ L1 = M1, ... Ln = Mn ]` must have at least one field to disam
 
 ## Procs (Procedures)
 
-Procs provide the statement/expression model of computation, with graph-like control flow and mutable storage cells. Control constructs appear as statements only, which ensures the expressions can always be flattened into straight line code during compilation. Storage cells are abstract, in the sense that references (addresses) to them cannot be taken. This means that updates to them can always be converted into Static Single Assignment (SSA) form.
+Procs provide the statement/expression model of computation, with graph-like control flow and mutable storage cells.
 
 ```
 Proc
- ::=  pyld   Term                               ('yield'  Term)
-  |   pclv n Var  TermArgsⁿ                     ('call'   Var TermArgsⁿ)
-  |   pclp n Prm  TermArgsⁿ                     ('call'   Prm TermArgsⁿ)
-  |   pseq n Varⁿ Proc Proc                     ('seq'    Varⁿ '=' Proc ';' Proc)
-
-  |   plch   Types of Proc                      ('launch' Types 'of' Proc)
+ ::=  plch   Types of Proc                      ('launch' Types 'of' Term)
   |   pret   Term                               ('return' Term)
 
-  |   pcel   Name Type Term Proc                ('cell'   Bind ':' Type '←' Term ';' Proc)
-  |   pupd   Name Term Proc                     ('update' Bound '←' Term ';' Proc)
+  |   pcel   Name Type Term Proc                ('cell'   Bind ':' Type '←' Term ';' Term)
+  |   pupd   Name Term Proc                     ('update' Bound '←' Term ';' Term)
 
-  |   pwhs n (Term Proc)ⁿ Proc                  ('whens'  '{' ProcWhensAlt;+ '}' ';' Proc)
+  |   pwhs n (Term Proc)ⁿ Proc                  ('whens'  '{' ProcWhensAlt;+ '}' ';' Term)
 
-  |   pmch   Term ProcAlt+ Proc                 ('match'  Term '{' ProcMatchAlt;+ '}' ';' Proc)
+  |   pmch   Term ProcAlt+ Proc                 ('match'  Term '{' ProcMatchAlt;+ '}' ';' Term)
 
-  |   pllp   Proc Proc                          ('loop'   Proc ';' Proc)
+  |   pllp   Proc Proc                          ('loop'   Term ';' Term)
   |   pbrk                                      ('break')
   |   pcnt                                      ('continue')
 
-  |   pwll   Term Proc ';' Proc                 ('while'  Term 'do' Proc ';' Proc)
+  |   pwll   Term Proc ';' Proc                 ('while'  Term 'do' Term ';' Term)
 
-  |   pent   Term ProcBind                      ('enter'  Term 'with' '{' ProcBind+ '}' ';' Proc)
+  |   pent   Term ProcBind                      ('enter'  Term 'with' '{' ProcBind+ '}' ';' Term)
   |   plve                                      ('leave')
 
-ProcWhensAlt ::= Term Proc                      (Term '→' Proc)
-ProcMatchAlt ::= Lbl (Var Type)* Proc           (Lbl '[' (Var ':' Type)* ']' → Proc)
-ProcBind     ::= Name TermParams+ Type Proc     (Name TermParams+ ':' Type '=' Proc)
+ProcWhensAlt ::= Term Proc                      (Term '→' Term)
+ProcMatchAlt ::= Lbl (Var Type)* Proc           (Lbl '[' (Var ':' Type)* ']' → Term)
+ProcBind     ::= Name TermParams+ Type Proc     (Name TermParams+ ':' Type '=' Term)
 ```
 
 ### Proc Sugar
@@ -251,9 +245,9 @@ ProcBind     ::= Name TermParams+ Type Proc     (Name TermParams+ ':' Type '=' P
 #### Substitutions
 The following substitutions are always valid:
 ```
-end                        ≡ yield []
-when Term Proc ; Proc      ≡ whens { Term → Proc } ; Proc
-let  Varⁿ = Term ; Proc    ≡ seq Varⁿ = yield Term ; Proc
+end                    ≡ []
+seq  Term ; Term       ≡ let [] = Term ; Term
+when Term Proc ; Term  ≡ whens { Term → Proc } ; Term
 ```
 
 #### Do syntax
@@ -301,36 +295,4 @@ proc square []: []! #Console
                 x ← #nat'sub [x, 1]
         #console'println "done"
 ```
-
-
-## Blocs (Code Blocks)
-
-Blocs provide the pure SSA model of computation, with tree-like control flow. SSA is particularly easy to convert into target assembly languages such as LLVM. Control flow is restricted to be tree-like so that join points do not appear within the bloc body. Join points should be expressed using calls to continuation functions, which is cleaner than using the phi-nodes of other SSA representations. Blocs do not support mutable storage cells, so updates should be translated into SSA form, or performed using primitive load/store operators that work on raw memory addresses.
-
-
-```
-Bloc
- ::=  bloc n BlocBody                       ('bloc' BlocBody)
-
-BlocBody
- ::=  blet n Varⁿ BlocExp BlocBody BlocBody ('let' '[' (Var (':' Type)?),* ']' '=' BlocExp ';' BlocBody)
-
-  |   bifs n BlocExpⁿ BlocBodyⁿ BlocBody    ('if' '{' (BlocExp    '→' BlocBody);*
-                                                      'otherwise' '→' BlocBody '}')
-
-  |   bcse n BlocExp Lblⁿ Typeⁿ BlocBodyⁿ   ('case' BlocExp 'of'
-                                             '{' (Lbl '[' (Var ':' Type),* ']' → BlocBody);+ '}')
-
-  |   bexp   BlocExp                        (BlocExp)
-  |   bblk   Bloc                           (Bloc)
-
-BlocExp
- ::=  ... shared Exp forms ...
-```
-
-Blocs contain a body with tree-like control flow, rather than graph-like control flow as with procs. Bloc bodies are a proper fragment of proc bodies, namely the ones that can be written without the proc 'do' construct or cell load.
-
-Bloc bodies consist of `let`-binding, `if`-branching, `case`-branching, expression evaluation and nested `bloc` constructs. Note that the `if` form requires an `otherwise` branch to ensure the control flow is tree-like.
-
-Bloc expressions are the shared forms only, without the ability to load from storage cells.
 
