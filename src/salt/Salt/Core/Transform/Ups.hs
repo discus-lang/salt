@@ -174,16 +174,17 @@ upsApplyValue upsT upsM vv
                                         , upsApplyValue upsT upsM ve)
                                       | (vk, ve) <- Map.toList kvs ])
 
-        VClosure tclo
-         -> VClosure $ upsApplyTermClosure upsT upsM tclo
+        VClosure tclo   -> VClosure $ upsApplyTermClosure upsT upsM tclo
 
-        VLoc t i
-         -> VLoc        (upsApplyType upsT t) i
+        -- Bundles are always closed.
+        VBundle {}      -> vv
 
-        VAddr _        -> vv
+        VLoc t i        -> VLoc (upsApplyType upsT t) i
+
+        VAddr _         -> vv
 
         -- TODO FIXME what do we do with `r` ?
-        VPtr r t a     -> VPtr r (upsApplyType upsT t) a
+        VPtr r t a      -> VPtr r (upsApplyType upsT t) a
 
 upsApplyTermClosure :: Ups -> Ups -> TermClosure a -> TermClosure a
 upsApplyTermClosure upsT upsM tc

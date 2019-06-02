@@ -95,6 +95,11 @@ checkValue a wh ctx v
 
                 return $ TFun tsParam tsResult
 
+        -- TODO: we should check the components of the bundle similarly
+        -- to how whole modules are checked. To achieve this the decls
+        -- need their kind and type sigs attached.
+        VBundle _
+         -> do  return $ TBundle
 
 -- | Check that a list of values all have the given type.
 checkValuesAreAll

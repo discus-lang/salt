@@ -53,7 +53,7 @@ data TermArgs a
 
 -- | Term Keyword.
 data TermKey
-        -- | Term formers.
+        -- | functional term formers.
         = MKTerms                               -- ^ Term sequence former.
         | MKThe                                 -- ^ Type ascription.
         | MKApp                                 -- ^ Term application.
@@ -73,7 +73,7 @@ data TermKey
         | MKPrivate                             -- ^ Region introduction.
         | MKExtend                              -- ^ Region extension.
 
-        -- Proc term formers.
+        -- procedural term formers.
         | MKProc                                -- ^ Define a procedure.
         | MKProcYield                           -- ^ Yield the value of an expression.
         | MKProcSeq                             -- ^ Procedural statement sequence.
@@ -138,6 +138,7 @@ data Value a
         | VMap      (Type a) (Type a) (Map (Value ()) (Value a))
                                                 -- ^ Map value.
         | VClosure  (TermClosure a)             -- ^ Closure.
+        | VBundle   (Bundle a)                  -- ^ Declation bundle.
         | VAddr     FPtr.WordPtr                -- ^ Raw memory address.
         | VLoc      (Type a) Int
         | VPtr      (Type a) (Type a) FPtr.WordPtr -- ^ Ptr with Region and Value types.
@@ -170,3 +171,17 @@ data TermNormals a
         = NTs [Type a]
         | NVs [Value a]
         deriving (Show, Eq, Ord)
+
+
+-- | Bundle refies a closed collection of desugared type and term declarations.
+--   This is used when specifying how to transform code using Salt as its own
+--   meta language. We don't use the source version of declarations as they
+--   also represent syntactic sugar and include extra meta commands such as for
+--   the testing framework, which doesn't make sense as part of a bundle of
+--   code for compilation.
+data Bundle a
+        = Bundle
+        { bundleTypes   :: Map Name (Type a)
+        , bundleTerms   :: Map Name (Term a) }
+        deriving (Show, Eq, Ord)
+

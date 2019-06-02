@@ -164,6 +164,7 @@ instance StripAnnot Value where
         VSet  t vs      -> VSet       (stripAnnot t)  vs
         VMap  tk tv kvs -> VMap       (stripAnnot tk) (stripAnnot tv) (Map.map stripAnnot kvs)
         VClosure clo    -> VClosure   (stripAnnot clo)
+        VBundle bb      -> VBundle    (stripAnnot bb)
         VLoc t i        -> VLoc       (stripAnnot t) i
         VAddr a         -> VAddr a
         VPtr r t a      -> VPtr       (stripAnnot r)  (stripAnnot t) a
@@ -186,3 +187,8 @@ instance StripAnnot TermEnvBinds where
         TermEnvValues vs    -> TermEnvValues    (Map.map stripAnnot vs)
         TermEnvValuesRec vs -> TermEnvValuesRec (Map.map stripAnnot vs)
 
+
+instance StripAnnot Bundle where
+ stripAnnot (Bundle nts nms)
+  = Bundle (Map.map stripAnnot nts)
+           (Map.map stripAnnot nms)

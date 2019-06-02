@@ -389,10 +389,11 @@ instance Pretty c (Value a) where
          -> brackets
                 $ text "map"  %% pprTArg c tk %% pprTArg c tv % text "| "
                 % hcat (punctuate (text ", ")
-                               [ ppr c vk %% text ":=" %% ppr c vv
-                               | (vk, vv) <- Map.toList kvs ])
+                        [ ppr c vk %% text ":=" %% ppr c vv
+                        | (vk, vv) <- Map.toList kvs ])
 
         VClosure clo    -> ppr c clo
+        VBundle  bun    -> ppr c bun
 
         VLoc t i        -> brackets $ text "#loc" %% pprTArg c t %% int i
 
@@ -411,3 +412,16 @@ pprVArg c vv
         _               -> ppr c vv
 
 
+----------------------------------------------------------------------------------------- Bundle --
+instance Pretty c (Bundle a) where
+ ppr c (Bundle nts nms)
+  = brackets
+        $ vcat
+        [ text "bundle"
+        , vcat (punctuate (text ",")
+                [ text "@" % pprVar nt %% text "=" %% ppr c t
+                | (nt, t) <- Map.toList nts ])
+        , vcat (punctuate (text ",")
+                [ text ""  % pprVar nm %% text "=" %% ppr c m
+                | (nm, m) <- Map.toList nms ])
+        ]

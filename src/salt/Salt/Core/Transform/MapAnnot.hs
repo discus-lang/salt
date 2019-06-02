@@ -181,6 +181,7 @@ instance MapAnnot Value where
         VSet  t vs      -> VSet       (mapAnnot f t)  vs
         VMap  tk tv kvs -> VMap       (mapAnnot f tk) (mapAnnot f tv) (Map.map (mapAnnot f) kvs)
         VClosure clo    -> VClosure   (mapAnnot f clo)
+        VBundle  bun    -> VBundle    (mapAnnot f bun)
         VLoc t i        -> VLoc       (mapAnnot f t) i
         VAddr a         -> VAddr a
         VPtr r t a      -> VPtr       (mapAnnot f r) (mapAnnot f t) a
@@ -202,3 +203,8 @@ instance MapAnnot TermEnvBinds where
         TermEnvTypes  ts    -> TermEnvTypes     (Map.map (mapAnnot f) ts)
         TermEnvValues vs    -> TermEnvValues    (Map.map (mapAnnot f) vs)
         TermEnvValuesRec vs -> TermEnvValuesRec (Map.map (mapAnnot f) vs)
+
+instance MapAnnot Bundle where
+ mapAnnot f (Bundle nts nms)
+  = Bundle (Map.map (mapAnnot f) nts)
+           (Map.map (mapAnnot f) nms)
