@@ -1,11 +1,11 @@
-[mclo_|λ[] → #nat'add [2, 3]]
-[mclo_|λ[x: #Nat] →
-       the #Nat of 
-       launch [#Nat] of 
-       cell n: #Nat ← x; 
-       cell a: #Nat ← 1; 
-       loop (when (#nat'eq [n, 0]) break; 
-             update a ← #nat'mul [a, n]; 
-             update n ← #nat'sub [n, 1]; 
-             []); 
-       return a]
+* [[bundle|
+  fac2 = λ[x: #Nat] →
+         the #Nat of 
+         launch [#Nat] of 
+         cell n: #Nat ← x; 
+         cell a: #Nat ← 1; 
+         loop (when (#nat'eq [n, 0]) break; 
+               update a ← #nat'mul [a, n]; 
+               update n ← #nat'sub [n, 1]; 
+               []); 
+         return a]]

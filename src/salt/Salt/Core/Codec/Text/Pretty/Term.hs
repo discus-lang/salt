@@ -400,12 +400,10 @@ pprVArg c vv
 instance Pretty c (Bundle a) where
  ppr c (Bundle nts nms)
   = brackets
-        $ vcat
-        [ text "bundle"
-        , vcat (punctuate (text ",")
-                [ text "@" % pprVar nt %% text "=" %% ppr c t
-                | (nt, t) <- Map.toList nts ])
-        , vcat (punctuate (text ",")
-                [ text ""  % pprVar nm %% text "=" %% ppr c m
-                | (nm, m) <- Map.toList nms ])
-        ]
+        $ align
+        $ text "bundle|" % line
+        % vcat  (punctuate (text ",")
+                (  [ text "@" % pprVar nt %% text "=" %% ppr c t
+                   | (nt, t) <- Map.toList nts ]
+                ++ [ text ""  % pprVar nm %% text "=" %% ppr c m
+                   | (nm, m) <- Map.toList nms ]))

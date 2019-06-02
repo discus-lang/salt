@@ -35,6 +35,14 @@ takeMPrm mm
         _               -> Nothing
 
 
+-- | Take the name of a symbol from a value, if this is one.
+takeVSymbol :: Value a -> Maybe Name
+takeVSymbol vv
+ = case vv of
+        VSymbol n       -> Just n
+        _               -> Nothing
+
+
 ------------------------------------------------------------------------------------------- Bind --
 -- | Take the binder of a `TermBind`.
 bindOfTermBind :: TermBind a -> Bind

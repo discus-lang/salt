@@ -19,7 +19,7 @@ primOpsBool
         , step  = \[NVs [VBool b1, VBool b2]] -> [VBool $ b1 || b2]
         , docs  = "Boolean or." }
 
-  , PP { name  = "bool'eq"
+  , PP  { name  = "bool'eq"
         , tsig  = [TBool, TBool] :-> [TBool]
         , step  = \[NVs [VBool b1, VBool b2]] -> [VBool $ b1 == b2]
         , docs  = "Boolean or." }

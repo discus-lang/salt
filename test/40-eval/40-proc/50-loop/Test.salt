@@ -39,6 +39,7 @@ proc square2 []: []! #Console
                         #console'print "x"
                 #console'print "\n"
         #console'print "\n"
+
 test exec square2 []
 
 

@@ -29,6 +29,7 @@ import Salt.Core.Prim.Ops.Word16
 import Salt.Core.Prim.Ops.Word32
 import Salt.Core.Prim.Ops.Word64
 import Salt.Core.Prim.Ops.Reify
+import Salt.Core.Prim.Ops.Bundle
 
 
 primOps :: Map Name Prim
@@ -42,6 +43,7 @@ primOps
         , primOpsMemory
         , primOpsDebug
         , primOpsConsole
-        , primOpsReify ]
+        , primOpsReify
+        , primOpsBundle ]
 
 

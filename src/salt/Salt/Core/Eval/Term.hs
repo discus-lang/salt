@@ -82,8 +82,16 @@ evalTerm s a env (MThe _ m)
 
 -- (evm-aps-prim) ------------------------------------------
 evalTerm s a env (MAps mFun mgssArg)
+ | Just "bundle'new" <- takeMPrm mFun
+ = do   [NVs [VSet _ vsType, VSet _ vsTerm]]
+         <- mapM (evalTermArgs s a env) mgssArg
+
+        let Just nsType = sequence $ map takeVSymbol $ Set.toList vsType
+        let Just nsTerm = sequence $ map takeVSymbol $ Set.toList vsTerm
+        evalBundleNew s a env (nsType, nsTerm)
+
  | Just nPrim <- takeMPrm mFun
- = case Map.lookup nPrim Ops.primOps of
+ = do case Map.lookup nPrim Ops.primOps of
         Just (Ops.PP _name _type step _docs)
          -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
                 return $ step nssArg
@@ -277,12 +285,12 @@ evalTerm s a env mm@(MMap tk tv msk msv)
         evalPairs _ _   = throw $ ErrorInvalidTerm a mm
 
 
--- (evm-proc-seq) -----------------------------------------
+-- (evm-seq) ----------------------------------------------
 evalTerm s a env (MSeq mps mBind mRest)
  = evalTerm s a env (MLet mps mBind mRest)
 
 
--- (evm-proc-launch) --------------------------------------
+-- (evm-launch) -------------------------------------------
 evalTerm s a env (MLaunch _tsRet mBody)
  = catch eval handle'
  where
@@ -297,13 +305,13 @@ evalTerm s a env (MLaunch _tsRet mBody)
                 EvalControlLeave        -> throw $ ErrorLaunchLeave a
 
 
--- (evm-proc-return) --------------------------------------
+-- (evm-return) -------------------------------------------
 evalTerm s a env (MReturn mBody)
  = do   vs <- evalTerm s a env mBody
         throw (EvalControlReturn vs)
 
 
--- (evm-proc-cell) ----------------------------------------
+-- (evm-cell) ---------------------------------------------
 evalTerm s a env (MCell nCell tCell mInit mRest)
  = do
         -- Evaluate the term to produce the initial value of the cell.
@@ -330,7 +338,7 @@ evalTerm s a env (MCell nCell tCell mInit mRest)
         return vs
 
 
--- (evm-proc-update) --------------------------------------
+-- (evm-update) -------------------------------------------
 evalTerm s a env (MUpdate nCell mNew mRest)
  = do
         -- Lookup the cell identifier.
@@ -349,7 +357,7 @@ evalTerm s a env (MUpdate nCell mNew mRest)
         evalTerm s a env mRest
 
 
--- (evm-proc-whens) ----------------------------------------
+-- (evm-whens) --------------------------------------------
 evalTerm s a env mm@(MWhens msCond msThen mRest)
  = go msCond msThen
  where
@@ -367,7 +375,7 @@ evalTerm s a env mm@(MWhens msCond msThen mRest)
         go _ _ = throw $ ErrorInvalidTerm a mm
 
 
--- (evm-proc-loop) ---------------------------------------
+-- (evm-loop) ---------------------------------------------
 evalTerm s a env mm@(MLoop mBody mRest)
  = catch evalLoop handleLoop
  where
@@ -385,17 +393,17 @@ evalTerm s a env mm@(MLoop mBody mRest)
                 EvalControlLeave     -> throw e
 
 
--- (evm-proc-break) --------------------------------------
+-- (evm-break) --------------------------------------------
 evalTerm _s _a _env MBreak
  = throw $ EvalControlBreak @a
 
 
--- (evm-proc-continue) -----------------------------------
+-- (evm-continue) -----------------------------------------
 evalTerm _s _a _env MContinue
  = throw $ EvalControlContinue @a
 
 
--- (evm-proc-while) --------------------------------------
+-- (evm-while) --------------------------------------------
 evalTerm s a env mm@(MWhile mPred mBody mRest)
  = catch evalLoop handleLoop
  where
@@ -421,7 +429,7 @@ evalTerm s a env mm@(MWhile mPred mBody mRest)
                 EvalControlLeave    -> throw e
 
 
--- (evm-proc-enter) --------------------------------------
+-- (evm-enter) --------------------------------------------
 evalTerm s a env mEnter@(MEnter mFirst bms mRest)
  = do
      -- Helper to build an abstraction that wraps the body
@@ -457,7 +465,7 @@ evalTerm s a env mEnter@(MEnter mFirst bms mRest)
         evalTerm s a env mRest
 
 
--- (evm-proc-leave) --------------------------------------
+-- (evm-leave) --------------------------------------------
 evalTerm _s _a _env MLeave
  = throw $ EvalControlLeave @a
 
@@ -494,7 +502,44 @@ evalTerm _s a _env mm
  =      throw $ ErrorInvalidTerm a mm
 
 
--- App --------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- | Like `evalTerm`, but expect a single result value.
+evalTerm1 :: EvalTerm a (Term a) (Value a)
+evalTerm1 s a env m
+ = do   vs      <- evalTerm s a env m
+        case vs of
+         [v]    -> return v
+         _      -> throw $ ErrorWrongTermArity a 1 vs
+
+
+-- | Evaluate a list of terms, producing a single value for each.
+evalTerms :: EvalTerm a [Term a] [Value a]
+evalTerms s a env ms
+ = mapM (evalTerm1 s a env) ms
+
+
+---------------------------------------------------------------------------------------------------
+evalTermArgs :: EvalTerm a (TermArgs a) (TermNormals a)
+evalTermArgs s a env mgs
+ = case mgs of
+        MGAnn _ mgs'
+         -> evalTermArgs s a env mgs'
+
+        MGTerm  m
+         -> do  vs  <- evalTerm s a env m
+                return $ NVs vs
+
+        MGTerms ms
+         -> do  vs  <- mapM (evalTerm1 s a env) ms
+                return $ NVs vs
+
+        MGTypes ts
+         -> do  let tenv = menvSliceTypeEnv env
+                ts' <- mapM (evalType s a tenv) ts
+                return $ NTs ts'
+
+
+-------------------------------------------------------------------------------------------- App --
 evalTermApp :: EvalTerm a (Term a, TermArgs a, [TermArgs a]) [Value a]
 evalTermApp s a env (mFun, mgs, mgssRest)
  = do   vsCloTerm <- evalTerm s a env mFun
@@ -548,39 +593,19 @@ evalTermApp s a env (mFun, mgs, mgssRest)
          _  -> throw $ ErrorAppTermBadClosure a vsCloTerm
 
 
----------------------------------------------------------------------------------------------------
--- | Like `evalTerm`, but expect a single result value.
-evalTerm1 :: EvalTerm a (Term a) (Value a)
-evalTerm1 s a env m
- = do   vs      <- evalTerm s a env m
-        case vs of
-         [v]    -> return v
-         _      -> throw $ ErrorWrongTermArity a 1 vs
+----------------------------------------------------------------------------------------- Bundle --
+-- | Evaluate an application of #bundle'new which reifies
+--   declarations from the context into a value.
+evalBundleNew :: EvalTerm a ([Name], [Name]) [Value a]
+evalBundleNew s _a _env (_nsType, nsTerm)
+ = do
+        -- Cut the environment back to just contain the top level decls.
+        let getTermBind n
+                =   resolveTermBound (stateModule s) menvEmpty (Bound n)
+                >>= \case Just (TermDefDecl m) -> return (n, m)
+                          _ -> error "evalBundleNew: cannot find name"
 
+        nmsTerm  <- mapM getTermBind nsTerm
 
--- | Evaluate a list of terms, producing a single value for each.
-evalTerms :: EvalTerm a [Term a] [Value a]
-evalTerms s a env ms
- = mapM (evalTerm1 s a env) ms
-
-
----------------------------------------------------------------------------------------------------
-evalTermArgs :: EvalTerm a (TermArgs a) (TermNormals a)
-evalTermArgs s a env mgs
- = case mgs of
-        MGAnn _ mgs'
-         -> evalTermArgs s a env mgs'
-
-        MGTerm  m
-         -> do  vs  <- evalTerm s a env m
-                return $ NVs vs
-
-        MGTerms ms
-         -> do  vs  <- mapM (evalTerm1 s a env) ms
-                return $ NVs vs
-
-        MGTypes ts
-         -> do  let tenv = menvSliceTypeEnv env
-                ts' <- mapM (evalType s a tenv) ts
-                return $ NTs ts'
+        return [VBundle (Bundle Map.empty (Map.fromList nmsTerm))]
 
