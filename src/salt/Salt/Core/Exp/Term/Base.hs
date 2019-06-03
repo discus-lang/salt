@@ -169,7 +169,29 @@ data TermNormals a
 --   code for compilation.
 data Bundle a
         = Bundle
-        { bundleTypes   :: Map Name (Type a)
-        , bundleTerms   :: Map Name (Term a) }
+        { bundleTypes   :: Map Name (BundleType a)
+        , bundleTerms   :: Map Name (BundleTerm a) }
+        deriving (Show, Eq, Ord)
+
+
+-- | Type declaration held in a code bundle.
+data BundleType a
+        = BundleType
+        { bundleAnnot           :: a
+        , bundleName            :: Name
+        , bundleTypeParams      :: [TypeParams a]
+        , bundleKindResult      :: Kind a
+        , bundleTypeBody        :: Type a }
+        deriving (Show, Eq, Ord)
+
+
+-- | Term declaration held in a code bundle.
+data BundleTerm a
+        = BundleTerm
+        { bundleAnnot           :: a
+        , bundleName            :: Name
+        , bundleTermParams      :: [TermParams a]
+        , bundleTypeResult      :: [Type a]
+        , bundleTermBody        :: Term a }
         deriving (Show, Eq, Ord)
 

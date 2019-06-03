@@ -211,7 +211,22 @@ instance MapAnnot TermEnvBinds where
         TermEnvValues vs    -> TermEnvValues    (Map.map (mapAnnot f) vs)
         TermEnvValuesRec vs -> TermEnvValuesRec (Map.map (mapAnnot f) vs)
 
+
 instance MapAnnot Bundle where
  mapAnnot f (Bundle nts nms)
   = Bundle (Map.map (mapAnnot f) nts)
            (Map.map (mapAnnot f) nms)
+
+
+instance MapAnnot BundleType where
+ mapAnnot f (BundleType a n tps k t)
+  = BundleType (f a) n (map (mapAnnot f) tps) (mapAnnot f k) (mapAnnot f t)
+
+
+instance MapAnnot BundleTerm where
+ mapAnnot f (BundleTerm a n tgs ts m)
+  = BundleTerm (f a) n
+        (map (mapAnnot f) tgs)
+        (map (mapAnnot f) ts)
+        (mapAnnot f m)
+

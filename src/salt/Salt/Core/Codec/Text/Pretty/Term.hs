@@ -400,19 +400,32 @@ pprVArg c vv
 instance Pretty c (Bundle a) where
  ppr c (Bundle nts nms)
   = brackets
-        $ align
-        $ text "bundle|" % line
+        $ align $ text "bundle|" % line
         % vcat  (punctuate (text ",")
-                (  [ text "type" %% pprVar nt %% text "=" %% ppr c t
-                   | (nt, t) <- Map.toList nts ]
-                ++ [ text "term" %% pprVar nm %% text "=" %% ppr c m
-                   | (nm, m) <- Map.toList nms ]))
+                        (  (map (ppr c) $ Map.elems nts)
+                        ++ (map (ppr c) $ Map.elems nms)))
+
+
+instance Pretty c (BundleType a) where
+ ppr c (BundleType _a n tpsParam kResult tBody)
+  = vcat [ text "type" %% pprVar n
+                %% hcat (map (ppr c) tpsParam)
+                %  text ":" %% ppr c kResult
+         , text " =  " % (align $ ppr c tBody) ]
+
+
+instance Pretty c (BundleTerm a) where
+ ppr c (BundleTerm _a n tmsParam tResult mBody)
+  = vcat [ text "term" %% pprVar n
+                %% hcat (map (ppr c) tmsParam)
+                %  text ":" %% ppr c tResult
+         , text " =  " % (align $ ppr c mBody) ]
+
 
 -- | Pretty print the guts of a bundle, with declarations on sequential lines,
 --   without the `[bundle| ]` wrapper.
 ppBundleGuts ::  Bundle a -> Doc
 ppBundleGuts (Bundle nts nms)
- = vcat $  [ text "type" %% pprVar nt %% text "=" %% ppr () t
-           | (nt, t) <- Map.toList nts ]
-        ++ [ text "term" %% pprVar nm %% text "=" %% ppr () m
-           | (nm, m) <- Map.toList nms ]
+ = vcat (  (map (ppr ()) $ Map.elems nts)
+        ++ (map (ppr ()) $ Map.elems nms))
+

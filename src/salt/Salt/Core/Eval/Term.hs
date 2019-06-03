@@ -599,13 +599,26 @@ evalTermApp s a env (mFun, mgs, mgssRest)
 evalBundleNew :: EvalTerm a ([Name], [Name]) [Value a]
 evalBundleNew s _a _env (_nsType, nsTerm)
  = do
+--        let ndsType = Map.fromList [ (declName n, d) | d@DeclType{} <- stateModule s ]
+        let ndsTerm
+                = Map.fromList
+                $ [ (n, d) |  DTerm d@(DeclTerm _ _ n _ _ _)
+                           <- moduleDecls $ stateModule s ]
+
         -- Cut the environment back to just contain the top level decls.
         let getTermBind n
-                =   resolveTermBound (stateModule s) menvEmpty (Bound n)
-                >>= \case Just (TermDefDecl m) -> return (n, m)
-                          _ -> error "evalBundleNew: cannot find name"
+             = case Map.lookup n ndsTerm of
+                Just (DeclTerm a DeclTermModePlain n' tgs tResult mBody)
+                 |  n == n'
+                 -> (n, BundleTerm a n tgs tResult mBody)
 
-        nmsTerm  <- mapM getTermBind nsTerm
+                Just (DeclTerm a DeclTermModeProc  n' tgs tsResult mBody)
+                 |  n == n'
+                 -> (n, BundleTerm a n tgs tsResult (MLaunch tsResult mBody))
+
+                _ -> error "evalBundleNew: cannot find name"
+
+        let nmsTerm = map getTermBind nsTerm
 
         return [VBundle (Bundle Map.empty (Map.fromList nmsTerm))]
 

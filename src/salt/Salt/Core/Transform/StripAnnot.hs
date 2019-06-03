@@ -199,3 +199,14 @@ instance StripAnnot Bundle where
  stripAnnot (Bundle nts nms)
   = Bundle (Map.map stripAnnot nts)
            (Map.map stripAnnot nms)
+
+
+instance StripAnnot BundleType where
+ stripAnnot (BundleType _a n tps k t)
+  = BundleType () n (map stripAnnot tps) (stripAnnot k) (stripAnnot t)
+
+
+instance StripAnnot BundleTerm where
+ stripAnnot (BundleTerm _a n tgs ts m)
+  = BundleTerm () n (map stripAnnot tgs) (map stripAnnot ts) (stripAnnot m)
+
