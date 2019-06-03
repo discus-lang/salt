@@ -16,12 +16,16 @@ data Mode
         = ModeLSP
         { modeFileLog   :: Maybe FilePath }
 
+        | ModeEmit      FilePath
+
         | ModeTest      FilePath
         | ModeTest1     FilePath Text
 
         | ModeCheck     FilePath
         | ModeParse     FilePath
         | ModeLex       FilePath
+
+        | ModeMake      FilePath
         deriving Show
 
 
@@ -45,9 +49,9 @@ parseArgs ("-lsp-debug" : fileLog : rest) config
  = parseArgs rest
  $ config { configMode = Just (ModeLSP (Just fileLog)) }
 
-parseArgs ("-check" : filePath : rest) config
+parseArgs ("-emit" : filePath : rest) config
  = parseArgs rest
- $ config { configMode = Just (ModeCheck filePath) }
+ $ config { configMode = Just (ModeEmit filePath) }
 
 parseArgs ("-test" : filePath : rest) config
  = parseArgs rest
@@ -56,6 +60,10 @@ parseArgs ("-test" : filePath : rest) config
 parseArgs ("-test1"  : filePath : name : rest) config
  = parseArgs rest
  $ config { configMode = Just (ModeTest1 filePath (T.pack name)) }
+
+parseArgs ("-check" : filePath : rest) config
+ = parseArgs rest
+ $ config { configMode = Just (ModeCheck filePath) }
 
 parseArgs ("-parse" : filePath : rest) config
  = parseArgs rest
@@ -67,7 +75,7 @@ parseArgs ("-lex" : filePath : rest) config
 
 parseArgs (filePath : []) config
  = return
- $ config { configMode = Just (ModeTest filePath) }
+ $ config { configMode = Just (ModeMake filePath) }
 
 parseArgs _ _
  = do   putStr usage
@@ -77,7 +85,8 @@ usage
  = unlines
  [ "salt: The compilation target that functional programmers always wanted."
  , ""
- , " salt FILE.salt                   Run all the tests in the given module."
+ , " salt FILE.salt                   Emit result if one is define, else run tests."
+ , " salt -emit   FILE.salt           Emit the defined result."
  , " salt -test   FILE.salt           Run all the tests in the given module."
  , " salt -test1  FILE.salt NAME      Run a single test in the given module."
  , " salt -check  FILE.salt           Type check a core file and print its AST."

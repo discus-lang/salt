@@ -154,6 +154,8 @@ makeTypeOfDeclTerm decl
         DType{} -> Right []
         DTest{} -> Right []
 
+        DEmit{} -> Right []
+
  where
         loop tsResult [] = tsResult
 

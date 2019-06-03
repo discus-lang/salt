@@ -25,6 +25,7 @@ instance StripAnnot Decl where
         DType d         -> DType (stripAnnot d)
         DTerm d         -> DTerm (stripAnnot d)
         DTest d         -> DTest (stripAnnot d)
+        DEmit d         -> DEmit (stripAnnot d)
 
 
 instance StripAnnot DeclType where
@@ -46,6 +47,12 @@ instance StripAnnot DeclTest where
         DeclTestEvalTerm _ w mn m   -> DeclTestEvalTerm () w mn (stripAnnot m)
         DeclTestExec     _ w mn m   -> DeclTestExec     () w mn (stripAnnot m)
         DeclTestAssert   _ w mn m   -> DeclTestAssert   () w mn (stripAnnot m)
+
+
+instance StripAnnot DeclEmit where
+ stripAnnot dd
+  = case dd of
+        DeclEmit _ mn m -> DeclEmit () mn (stripAnnot m)
 
 
 ---------------------------------------------------------------------------------------------------

@@ -137,6 +137,8 @@ scanner
                 "term"          -> Just KTerm
                 "test"          -> Just KTest
                 "watch"         -> Just KWatch
+                "emit"          -> Just KEmit
+                "proc"          -> Just KProc
 
                 "forall"        -> Just KAsciiForall
                 "exists"        -> Just KAsciiExists
@@ -164,9 +166,6 @@ scanner
                 "else"          -> Just KElse
                 "case"          -> Just KCase
 
-                "proc"          -> Just KProc
-                "yield"         -> Just KYield
-                "call"          -> Just KCall
                 "seq"           -> Just KSeq
                 "with"          -> Just KWith
                 "using"         -> Just KUsing
@@ -188,8 +187,6 @@ scanner
                 "Alloc"         -> Just KAlloc
                 "Write"         -> Just KWrite
                 "Read"          -> Just KRead
-
-                "bloc"          -> Just KBloc
 
                 _               -> Nothing
 

@@ -18,7 +18,7 @@ import qualified Text.Parsec                    as P
 pDecl :: Context -> Parser (Decl RL)
 pDecl ctx
  = P.choice
- [ pDeclType, pDeclTerm ctx, pDeclTest ctx]
+ [ pDeclType, pDeclTerm ctx, pDeclTest ctx, pDeclEmit ctx ]
 
 
 ------------------------------------------------------------------------------------------- Type --
@@ -221,3 +221,30 @@ pDeclTest ctx
                         , declTestName  = mName
                         , declTestBody  = mBody }
          ]
+
+
+------------------------------------------------------------------------------------------- Emit --
+-- | Parser for an emit declaration.
+pDeclEmit :: Context -> Parser (Decl RL)
+pDeclEmit ctx
+ = do   -- 'emit' Var? '=' Term
+        pTok KEmit
+
+        -- See if this is a named emission, or a bare type/term.
+        --  We know it's a named test if we can see the '=' after the name.
+        mRangeName
+                <- P.choice
+                [  P.try $ do rn <- pRanged pVar; pTok KEquals; return $ Just rn
+                ,  return Nothing ]
+
+        let mName = fmap snd mRangeName
+
+        -- What we parse next depends on the test mode.
+        lStart  <- locHere
+        mBody   <- pTerm ctx    <?> "the body"
+        lEnd    <- locPrev
+        let a   = fromMaybe (Range lStart lEnd) $ fmap fst mRangeName
+        return  $ DEmit $ DeclEmit
+                { declAnnot     = a
+                , declEmitName  = mName
+                , declEmitBody  = mBody }

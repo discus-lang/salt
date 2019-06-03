@@ -52,7 +52,8 @@ data Token
         | KSymProd
 
         -- Keywords
-        | KType         | KTerm         | KTest         | KWatch
+        | KType         | KTerm         | KProc
+        | KTest         | KWatch        | KEmit
         | KPure         | KSync
         | KThe          | KOf
         | KBox          | KRun
@@ -64,17 +65,14 @@ data Token
         | KSymForall    | KAsciiForall
         | KSymExists    | KAsciiExists
 
-        | KProc
-        | KYield        | KCall
-        | KSeq          | KWith
+        | KSeq
         | KLaunch       | KReturn
         | KCell         | KUpdate
-        | KWhen         | KWhens        | KMatch
+        | KWhen         | KWhens
+        | KMatch
         | KLoop         | KBreak        | KContinue     | KWhile
-        | KEnter        | KLeave
+        | KEnter        | KLeave        | KWith
         | KEnd
-
-        | KBloc
 
         -- Names
         | KVar  Text            -- Plain variable name, "foo"
@@ -144,7 +142,10 @@ showTokenAsSource kk
         KType           -> "type"
         KTerm           -> "term"
         KTest           -> "test"
+        KProc           -> "proc"
         KWatch          -> "watch"
+        KEmit           -> "emit"
+
         KPure           -> "pure"
         KSync           -> "sync"
         KThe            -> "the"
@@ -169,12 +170,10 @@ showTokenAsSource kk
         KSymForall      -> "∀";         KAsciiForall    -> "forall"
         KSymExists      -> "∃";         KAsciiExists    -> "exists"
 
-        KProc           -> "proc"
-        KYield          -> "yield"
-        KCall           -> "call"
         KWith           -> "with"
         KUsing          -> "using"
-        KSeq            -> "seq";       KEnd            -> "end"
+        KSeq            -> "seq"
+        KEnd            -> "end"
         KLaunch         -> "launch"
         KReturn         -> "return"
         KCell           -> "cell"
@@ -188,8 +187,6 @@ showTokenAsSource kk
         KWhile          -> "while"
         KEnter          -> "enter"
         KLeave          -> "leave"
-
-        KBloc           -> "bloc"
 
         -- Names
         KVar  tx        -> T.unpack tx

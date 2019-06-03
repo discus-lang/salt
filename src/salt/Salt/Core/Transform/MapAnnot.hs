@@ -28,9 +28,10 @@ instance MapAnnot Module where
 instance MapAnnot Decl where
  mapAnnot f dd
   = case dd of
-        DType d         -> DType (mapAnnot f d)
-        DTerm d         -> DTerm (mapAnnot f d)
-        DTest d         -> DTest (mapAnnot f d)
+        DType d -> DType (mapAnnot f d)
+        DTerm d -> DTerm (mapAnnot f d)
+        DTest d -> DTest (mapAnnot f d)
+        DEmit d -> DEmit (mapAnnot f d)
 
 
 instance MapAnnot DeclType where
@@ -60,6 +61,12 @@ instance MapAnnot DeclTest where
         DeclTestEvalTerm a w mn m   -> DeclTestEvalTerm (f a) w mn (mapAnnot f m)
         DeclTestExec     a w mn m   -> DeclTestExec     (f a) w mn (mapAnnot f m)
         DeclTestAssert   a w mn m   -> DeclTestAssert   (f a) w mn (mapAnnot f m)
+
+
+instance MapAnnot DeclEmit where
+ mapAnnot f dd
+  = case dd of
+        DeclEmit a mn m -> DeclEmit (f a) mn (mapAnnot f m)
 
 
 ---------------------------------------------------------------------------------------------------

@@ -22,6 +22,7 @@ data Decl a
         = DType (DeclType a)
         | DTerm (DeclTerm a)
         | DTest (DeclTest a)
+        | DEmit (DeclEmit a)
         deriving Show
 
 
@@ -101,6 +102,16 @@ data DeclTest a
         deriving Show
 
 
+-- | Emit declaration.
+data DeclEmit a
+        -- Emit an object.
+        = DeclEmit
+        { declAnnot             :: a
+        , declEmitName          :: Maybe Name
+        , declEmitBody          :: Term a }
+        deriving Show
+
+
 ---------------------------------------------------------------------------------------------------
 -- | Get the annotation of a declaration.
 annotOfDecl :: Decl a -> a
@@ -114,6 +125,7 @@ annotOfDecl decl
         DTest (DeclTestEvalTerm { declAnnot }) -> declAnnot
         DTest (DeclTestExec     { declAnnot }) -> declAnnot
         DTest (DeclTestAssert   { declAnnot }) -> declAnnot
+        DEmit (DeclEmit         { declAnnot }) -> declAnnot
 
 
 -- | Get the name of a declaration, if it has one.
@@ -128,6 +140,7 @@ nameOfDecl decl
         DTest (DeclTestEvalTerm { declTestName }) -> declTestName
         DTest (DeclTestExec     { declTestName }) -> declTestName
         DTest (DeclTestAssert   { declTestName }) -> declTestName
+        DEmit (DeclEmit         { declEmitName }) -> declEmitName
 
 
 -- | Get the names of type declarations in a module.

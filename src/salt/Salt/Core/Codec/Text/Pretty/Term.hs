@@ -403,7 +403,16 @@ instance Pretty c (Bundle a) where
         $ align
         $ text "bundle|" % line
         % vcat  (punctuate (text ",")
-                (  [ text "@" % pprVar nt %% text "=" %% ppr c t
+                (  [ text "type" %% pprVar nt %% text "=" %% ppr c t
                    | (nt, t) <- Map.toList nts ]
-                ++ [ text ""  % pprVar nm %% text "=" %% ppr c m
+                ++ [ text "term" %% pprVar nm %% text "=" %% ppr c m
                    | (nm, m) <- Map.toList nms ]))
+
+-- | Pretty print the guts of a bundle, with declarations on sequential lines,
+--   without the `[bundle| ]` wrapper.
+ppBundleGuts ::  Bundle a -> Doc
+ppBundleGuts (Bundle nts nms)
+ = vcat $  [ text "type" %% pprVar nt %% text "=" %% ppr () t
+           | (nt, t) <- Map.toList nts ]
+        ++ [ text "term" %% pprVar nm %% text "=" %% ppr () m
+           | (nm, m) <- Map.toList nms ]

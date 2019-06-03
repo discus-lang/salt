@@ -1,13 +1,9 @@
 
 
--- test eval #reify'pretty @[#Text] "hello"
-
--- test eval #reify'pretty @[#Nat ! pure]  (box #nat'add [2, 3])
-
 term print @[a: #Data] [x: a]: [] !#Console
  = box #console'println (#reify'pretty @a x)
 
-term fac2 [x: #Nat]: #Nat
+term fac [x: #Nat]: #Nat
  = launch #Nat of
    do   cell n: #Nat ← x
         cell a: #Nat ← 1
@@ -18,6 +14,7 @@ term fac2 [x: #Nat]: #Nat
                 end
         return a
 
-test eval #bundle'new
+emit #bundle'new
         [ [set #Symbol|]
-        , [set #Symbol| 'fac2] ]
+        , [set #Symbol| 'fac] ]
+

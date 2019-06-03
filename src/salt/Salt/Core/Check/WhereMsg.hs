@@ -9,20 +9,25 @@ import Salt.Data.Pretty
 instance Show a => Pretty c (Where a) where
  ppr c wh = pprw c wh
 
--- type decls ---------------------------------------------
+-- decls --------------------------------------------------
 pprw _c (WhereTypeDecl _a n)
  = vcat [ text "In type declaration" %% pprNameQuoted n ]
 
--- term decls ---------------------------------------------
 pprw _c (WhereTermDecl _a n)
  = vcat [ text "In term declaration" %% pprNameQuoted n ]
 
--- test decls ---------------------------------------------
 pprw _c (WhereTestDecl _a Nothing)
  = vcat [ text "In test" ]
 
 pprw _c (WhereTestDecl _a (Just n))
  = vcat [ text "In test" %% pprNameQuoted n ]
+
+pprw _c (WhereEmitDecl _a Nothing)
+ = vcat [ text "In emit declaration" ]
+
+pprw _c (WhereEmitDecl _a (Just n))
+ = vcat [ text "In emit declaration" %% pprNameQuoted n]
+
 
 -- terms --------------------------------------------------
 pprw c  (WhereAppPrim _a n t)
