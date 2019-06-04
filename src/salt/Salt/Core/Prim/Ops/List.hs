@@ -51,10 +51,14 @@ primOpsList
 
    , PP { name  = "list'case"
         , tsig  =  [("a", TData)] :*> [TList "a"] :-> [makeListType "a"]
-        , step  = \[NTs [t], NVs [VList _ vv]]
-                  -> case vv of
-                      []      -> [VVariant "nil"  (makeListType t) []]
-                      v : vs  -> [VVariant "cons" (makeListType t) [v, VList t vs]]
+        , step  = \ns
+                -> case ns of
+                        [NTs [t], NVs [VList _ vv]]
+                         -> case vv of
+                                []      -> [VVariant "nil"  (makeListType t) []]
+                                v : vs  -> [VVariant "cons" (makeListType t) [v, VList t vs]]
+
+                        _ -> error $ show ns
         , docs  = "Case analysis on a list." }
    ]
 

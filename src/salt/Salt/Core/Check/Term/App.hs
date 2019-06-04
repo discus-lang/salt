@@ -6,6 +6,8 @@ import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Data.Map.Strict        as Map
 
+-- import qualified Salt.Core.Transform.StripAnnot         as S
+
 -- TODO: we used to have specific error messages for unsaturated prim/ctors
 --  pss <- stripTermParamsOfType ctx tPrim
 --  when (length pss /= length mgss0)
@@ -51,50 +53,140 @@ checkTermApp a wh ctx mFun0 mgss0
         when (null mgss0)
          $ throw $ ErrorAppNoArguments a wh tFun1
 
---        mgssReassoc
---         <- do  tFun_red <- simplType a ctx tFun
---                let (tsParam, tsResult)
---                          = fromMaybe (throw $ ErrorAppTermTermCannot aFun wh tFun)
---                          $ takeTFun tFun_red
---                let arity = length tsParam
+        (mApp', tsApp', esApp')
+         <- checkTermAppArgs
+                a wh ctx
+                a mFun1 tFun1 mgss0
 
-        mgss_reassoc
-         <- reassocApps a ctx tFun1 mgss0
-
-        let aFun = fromMaybe a $ takeAnnotOfTerm mFun0
-
-        -- Check argument types line up with parameter types.
-        let -- (t-apt) -----
-            checkApp [tFun] es (mps : mgss) mgssAcc
-             | Just (a', tsArg) <- takeAnnMGTypes a mps
-             = do (tsArg', tResult)  <- checkTermAppTypes a' wh ctx aFun tFun tsArg
-                  checkApp [tResult] es mgss (MGAnn a' (MGTypes tsArg') : mgssAcc)
-
-            -- (t-apv) -----
-            checkApp [tFun] es (mps : mgss) mgssAcc
-             | Just (a', mArg) <- takeAnnMGTerm a mps
-             = do (mArg',  tsResult, es') <- checkTermAppTerm  a wh ctx aFun tFun mArg
-                  checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerm mArg') : mgssAcc)
-
-            -- (t-apm) -----
-            checkApp [tFun] es (mps : mgss) mgssAcc
-             | Just (a', msArg) <- takeAnnMGTerms a mps
-             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh ctx aFun tFun msArg
-                  checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerms msArg') : mgssAcc)
-
-            checkApp tsResult es [] mgssAcc
-             = do return (MAps mFun1 (reverse mgssAcc), tsResult, es)
-
-            -- If the current function is multi valued and we still have arguments
-            --   then we had a type abstraction that returned multiple values
-            --   but haven't detected that when it was constructed.
-            checkApp tsResult _ _ _
-             = throw $ ErrorWrongArityUp UTerm a wh tsResult [TData]
-
-        checkApp [tFun1] esFun1 mgss_reassoc []
+        return (mApp', tsApp', esFun1 ++ esApp')
 
 
-reassocApps :: Annot a => a -> Context a -> Type a -> [TermArgs a] -> IO [TermArgs a]
+--------------------------------------------------------------------------------------- App/Args --
+checkTermAppArgs
+        :: Annot a
+        => a -> [Where a] -> Context a
+        -> a -> Term a -> Type a -> [TermArgs a]
+        -> IO (Term a, [Type a], [Effect a])
+
+checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
+ = goHead [tFun] [] mgssArg0 []
+ where
+  goHead tsHead mgssAcc [] esAcc
+   = do let mApp = MAnn aApp $ MAps mFun (reverse mgssAcc)
+        return  ( mApp
+                , tsHead, esAcc)
+
+  goHead [tHead] mgssAcc mgssArg esAcc
+   = do -- Check the head of the functional type to determine
+        -- what sort of arguments to expect.
+        tFun_red <- simplType aFun ctx tHead
+        goDispatch tFun_red mgssAcc mgssArg esAcc
+
+  goHead tsHead _ _ _
+   = throw $ ErrorAppVector aApp wh tsHead
+
+  goDispatch (TForall tpsParam tResult) mgssAcc mgssArg esAcc
+   | (mgs : mgssRest)   <- mgssArg
+   , Just (aArg, tsArg) <- takeAnnMGTypes aApp mgs
+   = do
+        let bksParam = takeTPTypes tpsParam
+
+        -- Check the kinds of the arguments.
+        (tsArg', ksArg)
+         <- checkTypes aArg wh ctx tsArg
+
+        -- The number of arguments must match the number of parameters.
+        when (not $ length bksParam == length tsArg)
+         $ throw $ ErrorAppTermTypeWrongArity aArg wh bksParam tsArg
+
+        -- Check the parameter and argument kinds match.
+        (checkTypeEquivs ctx aApp [] (map snd bksParam) aApp [] ksArg
+         >>= \case
+                Nothing -> return ()
+                Just ((_aErr1', tErr1), (_aErr2', tErr2))
+                  -> throw $ ErrorMismatch UType aApp wh tErr1 tErr2)
+
+        -- Substitute arguments into the result type to instantiate
+        -- the type scheme.
+        let nts    = [ (n, t) | (BindName n, _k) <- bksParam | t <- tsArg ]
+        let snv    = snvOfBinds nts
+        let tSubst = snvApplyType upsEmpty snv tResult
+
+        -- Continue collecting arguments.
+        goHead  [tSubst]
+                (MGAnn aArg (MGTypes tsArg') : mgssAcc)
+                mgssRest esAcc
+
+   | otherwise = throw $ ErrorAppTermTypeCannot aApp wh tFun
+
+  -- Application of a term vector.
+  goDispatch (TFun tsParam tsResult) mgssAcc mgssArg esAcc
+   | (mgs : mgssRest')  <- mgssArg
+   , Just (aArg, msArg) <- takeAnnMGTerms aApp mgs
+   = do
+        -- Check the types of the arguments.
+        (msArg', tsArg, esArg)
+         <- checkTerms aArg wh ctx (Check tsParam) msArg
+
+        -- The number of arguments must match the number of parameters.
+        when (not $ length tsParam == length tsArg)
+         $ throw $ ErrorAppTermTermWrongArity aApp wh tsParam tsArg
+
+        -- Check the parameter and argument types match.
+        checkTypeEquivs ctx aApp [] tsParam aApp [] tsArg
+         >>= \case
+                Nothing -> return ()
+                Just ((_aErr1', tErr1), (_aErr2', tErr2))
+                 -> throw $ ErrorMismatch UType aArg wh tErr1 tErr2
+
+        goHead  tsResult
+                (MGAnn aArg (MGTerms msArg') : mgssAcc)
+                mgssRest' (esArg ++ esAcc)
+
+  -- Application of a single term.
+  -- Need to unbake MTerms from MTerm
+--   goDispatch (TFun tsParam _tsResult) mgssAcc mgssArg esAcc
+--    | (mgs : _mgssRest')  <- mgssArg
+--    , Just (_aArg, _mArg) <- takeAnnMGTerm aApp mgs
+--    , length tsParam > 1
+--    = do mgssArg' <- reassocApps aApp ctx tFun mgssArg
+--         putStrLn $ "reassoc " ++ show mgssArg'
+--         goDispatch tFun mgssAcc mgssArg' esAcc
+
+  goDispatch (TFun tsParam tsResult) mgssAcc mgssArg esAcc
+   | (mgs : mgssRest')  <- mgssArg
+   , Just (aArg, mArg)  <- takeAnnMGTerm aApp mgs
+   = do
+        -- Check the types of the arguments.
+        (mArg', tsArg, esArg)
+         <- checkTerm aArg wh ctx (Check tsParam) mArg
+
+        -- The number of arguments must match the number of parameters.
+        when (not $ length tsParam == length tsArg)
+         $ throw $ ErrorAppTermTermWrongArity aApp wh tsParam tsArg
+
+        -- Check the parameter and argument types match.
+        checkTypeEquivs ctx aApp [] tsParam aApp [] tsArg
+         >>= \case
+                Nothing -> return ()
+                Just ((_aErr1', tErr1), (_aErr2', tErr2))
+                 -> throw $ ErrorMismatch UType aArg wh tErr1 tErr2
+
+        goHead  tsResult
+                (MGAnn aArg (MGTerm mArg') : mgssAcc)
+                mgssRest' (esArg ++ esAcc)
+
+   | otherwise = throw $ ErrorAppTermTermCannot aApp wh tFun
+
+  goDispatch tHead _mgssAcc _mgssArg _esAcc
+   = throw $ ErrorAppNotFunction aApp wh tHead
+
+
+---------------------------------------------------------------------------------------------------
+reassocApps
+        :: Annot a
+        => a -> Context a -> Type a
+        -> [TermArgs a] -> IO [TermArgs a]
 reassocApps a ctx tFun mgss
  = do   tFun_red <- simplType a ctx tFun
         case takeTFun tFun_red of
@@ -123,112 +215,6 @@ takeSomeMGTerm n (MGTerm m : mgss)
         Just (ms, mgss') -> Just (m : ms, mgss')
 
 takeSomeMGTerm _ _ = Nothing
-
-
---------------------------------------------------------------------------------- App Term/Types --
--- | Check the application of a term to some types.
-checkTermAppTypes
-        :: Annot a => a -> [Where a]
-        -> Context a -> a -> Type a -> [Type a]
-        -> IO ([Type a], Type a)
-
-checkTermAppTypes a wh ctx aFun tFun tsArg
- = do
-        -- The funtion needs to have a forall type.
-        tFun_red <- simplType a ctx tFun
-        (bksParam, tResult)
-         <- case tFun_red of
-                TForall tps tResult
-                  -> return (takeTPTypes tps, tResult)
-                _ -> throw $ ErrorAppTermTypeCannot aFun wh tFun
-
-        -- Check the kinds of the arguments.
-        (tsArg', ksArg)
-         <- checkTypes a wh ctx tsArg
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length bksParam == length tsArg)
-         $ throw $ ErrorAppTermTypeWrongArity a wh bksParam tsArg
-
-        -- Check the parameter and argument kinds match.
-        (checkTypeEquivs ctx a [] (map snd bksParam) a [] ksArg
-         >>= \case
-                Nothing -> return ()
-                Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                  -> throw $ ErrorMismatch UType a wh tErr1 tErr2)
-
-        -- Substitute arguments into the result type to instantiate
-        -- the type scheme.
-        let nts    = [ (n, t) | (BindName n, _k) <- bksParam | t <- tsArg ]
-        let snv    = snvOfBinds nts
-        let tSubst = snvApplyType upsEmpty snv tResult
-
-        -- Return the checked argument types and the instantiated scheme.
-        return  (tsArg', tSubst)
-
-
----------------------------------------------------------------------------------- App Term/Term --
--- | Check the application of a functional term to an argument term.
---   Reduction of the argument may produce a vector of values.
-checkTermAppTerm
-        :: Annot a => a -> [Where a]
-        -> Context a -> a -> Type a -> Term a
-        -> IO (Term a, [Type a], [Effect a])
-
-checkTermAppTerm a wh ctx aFun tFun mArg
- = do
-        -- The function needs to have a functional type.
-        tFun_red <- simplType a ctx tFun
-        let (tsParam, tsResult)
-                = fromMaybe (throw $ ErrorAppTermTermCannot aFun wh tFun)
-                $ takeTFun tFun_red
-
-        -- Check the types of the argument.
-        (mArg', tsArg, esArg)
-         <- checkTerm a wh ctx (Check tsParam) mArg
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length tsParam == length tsArg)
-         $ throw $ ErrorAppTermTermWrongArity a wh tsParam tsArg
-
-        -- Check the parameter and argument tpyes match.
-        checkTypeEquivs ctx a [] tsParam a [] tsArg
-         >>= \case
-                Nothing -> return (mArg', tsResult, esArg)
-                Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorMismatch UType a wh tErr1 tErr2
-
-
---------------------------------------------------------------------------------- App Term/Terms --
--- | Check the application of a functional term to a vector of argument terms.
---   The arguments may only produce a single value each.
-checkTermAppTerms
-        :: Annot a => a -> [Where a]
-        -> Context a -> a -> Type a -> [Term a]
-        -> IO ([Term a], [Type a], [Effect a])
-
-checkTermAppTerms a wh ctx aFun tFun msArg
- = do
-        -- The function needs to have a functional type.
-        tFun_red <- simplType a ctx tFun
-        let (tsParam, tsResult)
-                = fromMaybe (throw $ ErrorAppTermTermCannot aFun wh tFun)
-                $ takeTFun tFun_red
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length msArg == length tsParam)
-         $ throw $ ErrorAppTermTermWrongArityNum a wh tsParam (length msArg)
-
-        -- Check the types of the arguments.
-        (msArg', tsArg, esArgs)
-         <- checkTerms a wh ctx (Check tsParam) msArg
-
-        -- Check the parameter and argument types match.
-        checkTypeEquivs ctx a [] tsParam a [] tsArg
-         >>= \case
-                Nothing -> return  (msArg', tsResult, esArgs)
-                Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorMismatch UType a wh tErr1 tErr2
 
 
 

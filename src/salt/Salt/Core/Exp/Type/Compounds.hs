@@ -39,7 +39,17 @@ takeTGTypes tgs
         TGTypes ts      -> ts
 
 
+-- | Take the parameter and result types from a function type,
+--   if this is one.
+takeTFun :: Type a -> Maybe ([Type a], [Type a])
+takeTFun tt
+ = case tt of
+        TFun tsParam tsResult   -> Just (tsParam, tsResult)
+        _                       -> Nothing
+
+
 -- | If this is a `forall` type then split off the parameters and body.
+--   TODO: this one splits deep params, distinguish between one level split and deep split.
 takeTForalls :: Type a -> Maybe ([[(Bind, Type a)]], Type a)
 takeTForalls tt
  = start

@@ -119,6 +119,14 @@ ppre c (ErrorAppNoArguments _a _wh tFun)
  = vcat [ text "No arguments for function application"
         , text " of type" %% squotes (ppr c tFun) ]
 
+ppre c (ErrorAppNotFunction _a _wh tFun)
+ = vcat [ text "Cannot apply non-function"
+        , text " of type" %% squotes (ppr c tFun) ]
+
+ppre c (ErrorAppVector _a _wh tsFun)
+ = vcat [ text "Cannot apply vector result"
+        , text " of types" %% squotes (ppr c tsFun) ]
+
 -- type/type
 ppre c (ErrorAppTypeTypeCannot _a _wh tFun)
  = vcat [ text "Cannot apply type"

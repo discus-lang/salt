@@ -12,6 +12,7 @@ class MapAnnot c where
 
 
 -- | Replace all annotations in a thing by the unit value.
+--   TODO: use real stripAnnot
 stripAnnot :: MapAnnot c => c a -> c ()
 stripAnnot xx
  = mapAnnot (const ()) xx

@@ -212,16 +212,6 @@ takeAnnMGTerm a mgs
         _               -> Nothing
 
 
--------------------------------------------------------------------------------------------- Fun --
--- | Take the parameter and result types from a function type,
---   if this is one.
-takeTFun :: Type a -> Maybe ([Type a], [Type a])
-takeTFun tt
- = case tt of
-        TFun tsParam tsResult   -> Just (tsParam, tsResult)
-        _                       -> Nothing
-
-
 -------------------------------------------------------------------------------------------- Aps --
 takeMAps :: Term a -> Maybe (Term a, [TermArgs a])
 takeMAps mm

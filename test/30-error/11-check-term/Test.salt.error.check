@@ -106,9 +106,9 @@ test/30-error/11-check-term/Test.salt:71:26
 
   71:11  In test
 
-test/30-error/11-check-term/Test.salt:75:11
-  Cannot instantiate non-polymorphic value
-   of type  '#Nat'
+test/30-error/11-check-term/Test.salt:75:13
+  Cannot apply non-function
+   of type '#Nat'
 
   75:11  In test
 
@@ -133,7 +133,7 @@ test/30-error/11-check-term/Test.salt:84:34
 
   84:11  In test
 
-test/30-error/11-check-term/Test.salt:88:11
+test/30-error/11-check-term/Test.salt:88:13
   Cannot apply non-function
    of type '#Nat'
 
@@ -160,7 +160,7 @@ test/30-error/11-check-term/Test.salt:97:22
 
   97:11  In test
 
-test/30-error/11-check-term/Test.salt:101:11
+test/30-error/11-check-term/Test.salt:101:13
   Cannot apply non-function
    of type '#Nat'
 
@@ -193,18 +193,12 @@ test/30-error/11-check-term/Test.salt:113:11
 
   113:11 In test
 
-test/30-error/11-check-term/Test.salt:116:23
-  Unsaturated term primitive '#map'insert'
-   of type '∀[k: #Data, v: #Data]. [k, v, #Map [k, v]] → [#Map [k, v]]'
-
-  116:11 In test
-
 test/30-error/11-check-term/Test.salt:121:18
   Unknown type primitive '#Derp'
 
   121:11 In test
 
-test/30-error/11-check-term/Test.salt:124:19
+test/30-error/11-check-term/Test.salt:124:25
   Cannot apply non-function
    of type '#Bool'
 
@@ -231,7 +225,7 @@ test/30-error/11-check-term/Test.salt:133:25
 
   133:11 In test
 
-test/30-error/11-check-term/Test.salt:136:28
+test/30-error/11-check-term/Test.salt:136:34
   Cannot apply non-function
    of type '#Bool'
 
@@ -294,7 +288,7 @@ test/30-error/11-check-term/Test.salt:171:11
 
   171:11 In test
 
-test/30-error/11-check-term/Test.salt:174:16
+test/30-error/11-check-term/Test.salt:174:22
   Cannot apply non-function
    of type '#Bool'
 
@@ -360,7 +354,7 @@ test/30-error/11-check-term/Test.salt:207:15
 
   207:11 In test
 
-test/30-error/11-check-term/Test.salt:212:16
+test/30-error/11-check-term/Test.salt:212:18
   Cannot apply non-function
    of type '#Nat'
 
@@ -420,7 +414,7 @@ test/30-error/11-check-term/Test.salt:245:15
 
   244:11 In test
 
-test/30-error/11-check-term/Test.salt:250:14
+test/30-error/11-check-term/Test.salt:250:16
   Cannot apply non-function
    of type '#Nat'
 
@@ -453,7 +447,7 @@ test/30-error/11-check-term/Test.salt:264:17
 
   264:11 In test
 
-test/30-error/11-check-term/Test.salt:267:23
+test/30-error/11-check-term/Test.salt:267:25
   Cannot apply non-function
    of type '#Nat'
 
@@ -479,7 +473,7 @@ test/30-error/11-check-term/Test.salt:278:16
 
   278:11 In test
 
-test/30-error/11-check-term/Test.salt:281:22
+test/30-error/11-check-term/Test.salt:281:24
   Cannot apply non-function
    of type '#Nat'
 
@@ -505,7 +499,7 @@ test/30-error/11-check-term/Test.salt:292:16
 
   292:11 In test
 
-test/30-error/11-check-term/Test.salt:295:27
+test/30-error/11-check-term/Test.salt:295:29
   Cannot apply non-function
    of type '#Nat'
 

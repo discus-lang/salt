@@ -20,7 +20,7 @@ data Prim
         = PP
         { name  :: Name
         , tsig  :: Type ()
-        , step  :: forall a. [TermNormals a] -> [Value a]
+        , step  :: forall a. Show a => [TermNormals a] -> [Value a]
         , docs  :: Text }
 
         -- Define an operator that performs an action in the local process.

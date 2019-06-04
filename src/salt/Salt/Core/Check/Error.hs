@@ -159,6 +159,16 @@ data Error a
         , errorWhere            :: [Where a]
         , errorType             :: Type a }
 
+        | ErrorAppNotFunction
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorType             :: Type a }
+
+        | ErrorAppVector
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorTypes            :: [Type a] }
+
         -- type/type
         | ErrorAppTypeTypeCannot
         { errorAnnot            :: a
