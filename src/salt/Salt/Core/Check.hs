@@ -27,7 +27,8 @@ import qualified Data.Map.Strict        as Map
 contextEmpty :: Context a
 contextEmpty
         = Context
-        { contextCheckType      = checkTypeWith
+        { contextOptions        = optionsDefault
+        , contextCheckType      = checkTypeWith
         , contextCheckTerm      = checkTermWith
         , contextModuleType     = Map.empty
         , contextModuleTerm     = Map.empty

@@ -14,6 +14,7 @@ term fac [x: #Nat]: #Nat
                 end
         return a
 
+
 emit #bundle'new
         [ [set #Symbol|]
         , [set #Symbol| 'fac] ]

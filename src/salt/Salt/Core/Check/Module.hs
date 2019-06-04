@@ -30,7 +30,8 @@ checkModule a mm
  where
         ctxStart
          = Context
-         { contextCheckType     = checkTypeWith
+         { contextOptions       = optionsDefault
+         , contextCheckType     = checkTypeWith
          , contextCheckTerm     = checkTermWith
          , contextModuleType    = Map.empty
          , contextModuleTerm    = Map.empty

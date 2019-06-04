@@ -1,12 +1,10 @@
 
 module Salt.Core.Check.Context where
 import Salt.Core.Transform.Ups
--- import Salt.Core.Check.Error
 import Salt.Core.Check.Where
 import Salt.Core.Exp
 import qualified Salt.Core.Prim.Ctor    as Prim
 
--- import Control.Exception
 import Data.Map.Strict                  (Map)
 import qualified Data.Map               as Map
 
@@ -20,15 +18,13 @@ data Mode a
 
 
 ---------------------------------------------------------------------------------------------------
-data Elem a
-        = ElemTypes (Map Name (Kind a))
-        | ElemTerms (Map Name (Type a))
-        deriving Show
-
-
+-- | Context to use during type checking.
 data Context a
         = Context
-        { -- | Function to check a type.
+        { -- | Type checker options.
+          contextOptions        :: Options
+
+        , -- | Function to check a type.
           --   We hold a reference to the checker here o tie the mutually recursive
           --   knot without needing mutually recursive modules.
           contextCheckType      :: CheckType a
@@ -52,6 +48,31 @@ data Context a
           --   that only work syntactically inside loops.
         , contextInside         :: [Inside a]
         }
+
+
+-- | Type checker options.
+data Options
+        = Options
+        { -- | Automatically reassociate applications.
+          --   If we have a function of type like f :: [#Nat, #Nat] :-> [#Nat]
+          --   in an application (f 2 3) then just treat that as the saturated
+          --   application (f [2, 3]).
+          optionsReassocApps     :: Bool }
+        deriving Show
+
+
+-- | Default type checker options.
+optionsDefault :: Options
+optionsDefault
+        = Options
+        { optionsReassocApps    = True }
+
+
+-- | Element of the local type checker context.
+data Elem a
+        = ElemTypes (Map Name (Kind a))
+        | ElemTerms (Map Name (Type a))
+        deriving Show
 
 
 type CheckType a
