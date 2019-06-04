@@ -334,19 +334,19 @@ instance Pretty c (Value a) where
                 True    -> text "#true"
                 False   -> text "#false"
 
-        VNat     i       -> string $ show i
-        VInt     i       -> string $ show i
-        VWord    i       -> string $ show i
+        VNat    i       -> string $ show i
+        VInt    i       -> string $ show i
+        VWord   i       -> string $ show i
 
-        VInt8    i       -> string $ show i
-        VInt16   i       -> string $ show i
-        VInt32   i       -> string $ show i
-        VInt64   i       -> string $ show i
+        VInt8   i       -> string $ show i
+        VInt16  i       -> string $ show i
+        VInt32  i       -> string $ show i
+        VInt64  i       -> string $ show i
 
-        VWord8   i       -> string $ show i
-        VWord16  i       -> string $ show i
-        VWord32  i       -> string $ show i
-        VWord64  i       -> string $ show i
+        VWord8  i       -> string $ show i
+        VWord16 i       -> string $ show i
+        VWord32 i       -> string $ show i
+        VWord64 i       -> string $ show i
 
         VData n ts vs
          -> pprCon n %% hsep (map (pprTArg c) ts) %% hsep (map (pprVArg c) vs)
@@ -422,8 +422,8 @@ instance Pretty c (BundleTerm a) where
          , text " =  " % (align $ ppr c mBody) ]
 
 
--- | Pretty print the guts of a bundle, with declarations on sequential lines,
---   without the `[bundle| ]` wrapper.
+-- | Pretty print the guts of a bundle, with declarations on sequential
+--   lines, without the `[bundle| ]` wrapper.
 ppBundleGuts ::  Bundle a -> Doc
 ppBundleGuts (Bundle nts nms)
  = vcat (  (map (ppr ()) $ Map.elems nts)

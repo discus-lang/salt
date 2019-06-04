@@ -11,12 +11,12 @@ import Salt.Core.Exp
 --   otherwise run any contained tests.
 mainMake :: FilePath -> IO ()
 mainMake filePath
- = do   mm      <- runParse filePath
-        ctx     <- runCheck filePath mm
+ = do   mm         <- runParse filePath
+        (mm', ctx) <- runCheck filePath mm
 
-        let emits = [ d | DEmit d <- moduleDecls mm ]
-        let tests = [ d | DTest d <- moduleDecls mm ]
+        let emits = [ d | DEmit d <- moduleDecls mm' ]
+        let tests = [ d | DTest d <- moduleDecls mm' ]
         if not (null emits)
-         then mapM_ (runEmit ctx mm) emits
-         else mapM_ (runTest ctx mm) tests
+         then mapM_ (runEmit ctx mm') emits
+         else mapM_ (runTest ctx mm') tests
 

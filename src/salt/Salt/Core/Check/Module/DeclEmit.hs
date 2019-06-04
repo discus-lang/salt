@@ -2,9 +2,6 @@
 module Salt.Core.Check.Module.DeclEmit where
 import Salt.Core.Check.Module.Base
 import Salt.Core.Check.Term.Base
-import Salt.Core.Check.Type.Base
-import qualified Salt.Data.List as List
-import qualified Data.Set       as Set
 
 
 -- | Check emit declarations.
@@ -20,3 +17,6 @@ checkDeclEmit _a ctx (DEmit (DeclEmit a' mn m))
          <- checkTerm a' wh ctx Synth m
 
         return  $ DEmit $ DeclEmit a' mn m'
+
+checkDeclEmit _ _ decl
+ = return decl

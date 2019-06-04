@@ -18,11 +18,11 @@ import qualified Data.Text              as T
 --   printing the result to stdout.
 mainTests :: FilePath -> IO ()
 mainTests filePath
- = do   mm      <- runParse filePath
-        ctx     <- runCheck filePath mm
+ = do   mm         <- runParse filePath
+        (mm', ctx) <- runCheck filePath mm
 
-        let tests = [ d | DTest d <- moduleDecls mm ]
-        mapM_ (runTest ctx mm) tests
+        let tests = [ d | DTest d <- moduleDecls mm' ]
+        mapM_ (runTest ctx mm') tests
 
 
 -- | Run a single test in the given source file,
@@ -30,15 +30,15 @@ mainTests filePath
 mainTest :: FilePath -> Text -> IO ()
 mainTest filePath name
  = do
-        mm      <- runParse filePath
-        ctx     <- runCheck filePath mm
+        mm         <- runParse filePath
+        (mm', ctx) <- runCheck filePath mm
 
-        let tests = [ d | DTest d <- moduleDecls mm
+        let tests = [ d | DTest d <- moduleDecls mm'
                         , declTestName d == Just (Name name) ]
 
         case tests of
          []     -> error $ "mainTest: no test named: " ++ show name
-         _      -> mapM_ (runTest ctx mm) tests
+         _      -> mapM_ (runTest ctx mm') tests
 
 
 -- | Run a single test declaration from a type-checked module.

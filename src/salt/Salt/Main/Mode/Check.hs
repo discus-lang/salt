@@ -21,11 +21,12 @@ mainCheck filePath
 
 
 -- | Check a source module and return the resulting top-level context.
-runCheck :: FilePath -> Module RL -> IO (Check.Context RL)
+runCheck :: FilePath -> Module RL -> IO (Module RL, Check.Context RL)
 runCheck filePath mm
  = do   Check.checkModule rlNone mm
          >>= \case
-                Right (_mm', ctx) -> return ctx
+                Right (mm', ctx)
+                 -> return (mm', ctx)
                 Left errs
                  -> do  mapM_ (printError filePath) errs
                         System.exitFailure

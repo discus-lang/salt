@@ -8,14 +8,14 @@ term fac [x: #Nat]: #Nat
    do   cell n: #Nat ← x
         cell a: #Nat ← 1
         loop do
-                when (#nat'eq [n, 0]) break
-                a ← #nat'mul [a, n]
-                n ← #nat'sub [n, 1]
+                when (#nat'eq n 0) break
+                a ← #nat'mul a n
+                n ← #nat'sub n 1
                 end
         return a
 
 
 emit #bundle'new
-        [ [set #Symbol|]
-        , [set #Symbol| 'fac] ]
+        [set #Symbol|]
+        [set #Symbol| 'fac]
 

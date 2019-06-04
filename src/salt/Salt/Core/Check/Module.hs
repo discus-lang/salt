@@ -3,6 +3,7 @@ module Salt.Core.Check.Module where
 import Salt.Core.Check.Module.DeclType
 import Salt.Core.Check.Module.DeclTerm
 import Salt.Core.Check.Module.DeclTest
+import Salt.Core.Check.Module.DeclEmit
 import Salt.Core.Check.Module.Base
 import Salt.Core.Check.Type
 import Salt.Core.Check.Term
@@ -116,5 +117,13 @@ checkModule a mm
 
                 if not $ null errs
                  then return $ Left errs
-                 else return $ Right (mm { moduleDecls = decls' }, ctx)
+                 else goEmitDecls ctx decls'
 
+        -- Check individual emit declarations.
+        goEmitDecls ctx decls
+         = do   (decls', errs)
+                 <- checkDecls (checkDeclEmit a ctx) decls
+
+                if not $ null errs
+                 then return $ Left errs
+                 else return $ Right (mm { moduleDecls = decls' }, ctx)

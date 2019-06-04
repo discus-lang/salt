@@ -6,6 +6,15 @@ import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Data.Map.Strict        as Map
 
+-- TODO: we used to have specific error messages for unsaturated prim/ctors
+--  pss <- stripTermParamsOfType ctx tPrim
+--  when (length pss /= length mgss0)
+--   $ throw $ ErrorUnsaturatedPrim a wh nPrm tPrim
+
+--  pss <- stripTermParamsOfType ctx tCon'
+--  when (length pss /= length mgss0)
+--   $ throw $ ErrorUnsaturatedCtor a wh nPrm tCon'
+
 
 -------------------------------------------------------------------------------------------- App --
 -- | Check an application of a term to its arguments.
@@ -15,30 +24,20 @@ checkTermApp
         -> IO (Term a, [Type a], [Effect a])
 
 checkTermApp a wh ctx mFun0 mgss0
- = do   -- If this an effectful primitive then also add the effects
-        -- we get from applying it.
+ = do
+        -- Determine the type of the functional expression.
+        --  If this is a primitive then also determine if any effects
+        --  will be caused from applying it.
         (mFun1, tFun1, esFun1)
          <- case takeMPrm mFun0 of
                 Just nPrm
                  | Just pp  <- Map.lookup nPrm Prim.primOps
-                 -> do
-                        let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
+                 -> do  let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
                         let ePrim = mapAnnot (const a) $ Prim.effectOfPrim pp
-
-                        pss <- stripTermParamsOfType ctx tPrim
-                        when (length pss /= length mgss0)
-                         $ throw $ ErrorUnsaturatedPrim a wh nPrm tPrim
-
                         return (mFun0, tPrim, [ePrim])
 
                  | Just tCon <- Map.lookup nPrm Prim.primDataCtors
-                 -> do
-                        let tCon' = mapAnnot (const a) tCon
-
-                        pss <- stripTermParamsOfType ctx tCon'
-                        when (length pss /= length mgss0)
-                         $ throw $ ErrorUnsaturatedCtor a wh nPrm tCon'
-
+                 -> do  let tCon' = mapAnnot (const a) tCon
                         return (mFun0, tCon', [])
 
                  | otherwise
@@ -52,6 +51,16 @@ checkTermApp a wh ctx mFun0 mgss0
         when (null mgss0)
          $ throw $ ErrorAppNoArguments a wh tFun1
 
+--        mgssReassoc
+--         <- do  tFun_red <- simplType a ctx tFun
+--                let (tsParam, tsResult)
+--                          = fromMaybe (throw $ ErrorAppTermTermCannot aFun wh tFun)
+--                          $ takeTFun tFun_red
+--                let arity = length tsParam
+
+        mgss_reassoc
+         <- reassocApps a ctx tFun1 mgss0
+
         let aFun = fromMaybe a $ takeAnnotOfTerm mFun0
 
         -- Check argument types line up with parameter types.
@@ -61,20 +70,20 @@ checkTermApp a wh ctx mFun0 mgss0
              = do (tsArg', tResult)  <- checkTermAppTypes a' wh ctx aFun tFun tsArg
                   checkApp [tResult] es mgss (MGAnn a' (MGTypes tsArg') : mgssAcc)
 
-            -- (t-apm) -----
-            checkApp [tFun] es (mps : mgss) mgssAcc
-             | Just (a', msArg) <- takeAnnMGTerms a mps
-             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh ctx aFun tFun msArg
-                  checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerms msArg') : mgssAcc)
-
             -- (t-apv) -----
             checkApp [tFun] es (mps : mgss) mgssAcc
              | Just (a', mArg) <- takeAnnMGTerm a mps
              = do (mArg',  tsResult, es') <- checkTermAppTerm  a wh ctx aFun tFun mArg
                   checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerm mArg') : mgssAcc)
 
+            -- (t-apm) -----
+            checkApp [tFun] es (mps : mgss) mgssAcc
+             | Just (a', msArg) <- takeAnnMGTerms a mps
+             = do (msArg', tsResult, es') <- checkTermAppTerms a' wh ctx aFun tFun msArg
+                  checkApp tsResult (es ++ es') mgss (MGAnn a' (MGTerms msArg') : mgssAcc)
+
             checkApp tsResult es [] mgssAcc
-             = return (MAps mFun1 (reverse mgssAcc), tsResult, es)
+             = do return (MAps mFun1 (reverse mgssAcc), tsResult, es)
 
             -- If the current function is multi valued and we still have arguments
             --   then we had a type abstraction that returned multiple values
@@ -82,7 +91,39 @@ checkTermApp a wh ctx mFun0 mgss0
             checkApp tsResult _ _ _
              = throw $ ErrorWrongArityUp UTerm a wh tsResult [TData]
 
-        checkApp [tFun1] esFun1 mgss0 []
+        checkApp [tFun1] esFun1 mgss_reassoc []
+
+
+reassocApps :: Annot a => a -> Context a -> Type a -> [TermArgs a] -> IO [TermArgs a]
+reassocApps a ctx tFun mgss
+ = do   tFun_red <- simplType a ctx tFun
+        case takeTFun tFun_red of
+         Nothing        -> return mgss
+         Just (tsParam, _tsResult)
+          | length tsParam > 1
+          , Just (msArg, mgss') <- takeSomeMGTerm (length tsParam) mgss
+          -> return (MGTerms msArg : mgss')
+
+          | otherwise -> return mgss
+
+
+-- | Try to take the given number of MGTerm arguments
+--   from the front of an arguments list.
+--   TODO: preserve annotations.
+takeSomeMGTerm :: Int -> [TermArgs a] -> Maybe ([Term a], [TermArgs a])
+takeSomeMGTerm 0 mgss
+ = (Just ([], mgss))
+
+takeSomeMGTerm n (MGAnn _a mgs : mgss)
+ = takeSomeMGTerm n (mgs : mgss)
+
+takeSomeMGTerm n (MGTerm m : mgss)
+ = case takeSomeMGTerm (n - 1) mgss of
+        Nothing          -> Nothing
+        Just (ms, mgss') -> Just (m : ms, mgss')
+
+takeSomeMGTerm _ _ = Nothing
+
 
 --------------------------------------------------------------------------------- App Term/Types --
 -- | Check the application of a term to some types.
@@ -125,7 +166,6 @@ checkTermAppTypes a wh ctx aFun tFun tsArg
         -- Return the checked argument types and the instantiated scheme.
         return  (tsArg', tSubst)
 
---
 
 ---------------------------------------------------------------------------------- App Term/Term --
 -- | Check the application of a functional term to an argument term.

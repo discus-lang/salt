@@ -15,26 +15,25 @@ import qualified Salt.Data.Pretty               as P
 --   We evaluate the provided term to a compiled bundle and print the result.
 mainEmits :: FilePath -> IO ()
 mainEmits filePath
- = do   mm      <- runParse filePath
-        ctx     <- runCheck filePath mm
+ = do   mm         <- runParse filePath
+        (mm', ctx) <- runCheck filePath mm
 
-        let emits = [ d | DEmit d <- moduleDecls mm ]
-        mapM_ (runEmit ctx mm) emits
+        let emits = [ d | DEmit d <- moduleDecls mm' ]
+        mapM_ (runEmit ctx mm') emits
 
 
 -- | Evalaute a code bundle and emit the result
 mainEmit :: FilePath -> Text -> IO ()
 mainEmit filePath name
- = do
-        mm      <- runParse filePath
-        ctx     <- runCheck filePath mm
+ = do   mm         <- runParse filePath
+        (mm', ctx) <- runCheck filePath mm
 
-        let emits = [ d | DEmit d <- moduleDecls mm
+        let emits = [ d | DEmit d <- moduleDecls mm'
                         , declEmitName d == Just (Name name) ]
 
         case emits of
          []     -> error $ "mainEmit: no emit named: " ++ show name
-         _      -> mapM_ (runEmit ctx mm) emits
+         _      -> mapM_ (runEmit ctx mm') emits
 
 
 -- | Run a single emit declareation.
