@@ -32,12 +32,15 @@ checkCaseTermAlts a wh ctx mCase tScrut nmgsScrut msAlts
         -- have checked before.
         let aBody = fromMaybe a $ takeAnnotOfTerm mBody
         let ctx'  = contextBindTermParams (MPTerms btsPat) ctx
-        let mode  = case mtsResult of
-                        Just ts -> Check ts
-                        _       -> Synth
 
         (mBody', tsResult, esResult)
-         <- checkTerm aBody wh ctx' mode mBody
+         <- case mtsResult of
+                Just ts
+                 -> do  (m, es) <- checkTerm aBody wh ctx' ts mBody
+                        return (m, ts, es)
+                Nothing
+                 -> do  synthTerm aBody wh ctx' mBody
+
 
         checkAlts msAltsRest
             (MVarAlt nPat mpsPat mBody' : msAltsChecked)
@@ -82,8 +85,8 @@ checkCaseProcAlts a wh ctx mCase tScrut nmgsScrut msAlts
         let aBody = fromMaybe a $ takeAnnotOfTerm mBody
         let ctx'  = contextBindTermParams (MPTerms btsPat) ctx
 
-        (mBody', _tsBody, esBody)
-         <- contextCheckTerm ctx' aBody wh ctx' (Check []) mBody
+        (mBody', esBody)
+         <- contextCheckTerm ctx' aBody wh ctx' [] mBody
 
         checkAlts msAltsRest
             (MVarAlt nPat mpsPat mBody' : msAltsChecked)

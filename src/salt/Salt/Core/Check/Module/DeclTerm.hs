@@ -37,8 +37,8 @@ checkDeclTerm _a ctx
         tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
 
         -- Check the body.
-        (mBody', _tsResult, esResult)
-         <- checkTerm a wh ctx' (Check tsResult) mBody
+        (mBody', esResult)
+         <- checkTerm a wh ctx' tsResult mBody
 
         -- The body must be pure.
         eBody_red <- simplType a ctx' (TSum esResult)
@@ -72,10 +72,10 @@ checkDeclTerm _a ctx
          <- checkTypesAreAll UType a wh ctx' TData tsResult
 
         -- Check the body.
-        (mBody', _tsResult'', esResult')
+        (mBody', esResult')
          <- contextCheckTerm ctx a wh
                 ctx' { contextInside = [InsideLaunch tsResult']}
-                (Check tsResult')
+                tsResult
                 mBody
 
         -- Check result effects against the annotation.

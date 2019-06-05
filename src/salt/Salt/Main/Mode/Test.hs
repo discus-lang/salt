@@ -92,7 +92,7 @@ runTestType ctx _mm mnTest mTest
 
         -- Check the term in an empty environment and print the result.
         (_m, tsResult, _esResult)
-         <- Check.checkTerm rlNone [] ctx Check.Synth mTest
+         <- Check.synthTerm rlNone [] ctx mTest
         case tsResult of
          [t]    -> putStrLn $ P.render $ P.ppr () t
          _      -> putStrLn $ P.render $ P.ppr () tsResult

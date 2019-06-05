@@ -8,11 +8,11 @@ import qualified Data.Set       as Set
 
 
 -- | Check a value, yielding its type.
-checkValue
+synthValue
         :: Annot a => a -> [Where a]
         -> Context a -> Value a -> IO (Type a)
 
-checkValue a wh ctx v
+synthValue a wh ctx v
  = case v of
         VUnit      -> return TUnit
         VSymbol{}  -> return TSymbol
@@ -41,18 +41,18 @@ checkValue a wh ctx v
         VData n ts vs
          -> do  -- Use the term checker to check the applications.
                 (_m, tResult, [])
-                 <- checkTerm1 a wh ctx Synth
+                 <- synthTerm1 a wh ctx
                         (MApm (MApt (MCon n) ts) (map MVal vs))
                 return tResult
 
         VRecord nvs
          -> do  let (ns, vss) = unzip nvs
-                tss <- mapM (mapM (checkValue a wh ctx)) vss
+                tss <- mapM (mapM (synthValue a wh ctx)) vss
                 return (TRecord ns $ map TGTypes tss)
 
         VVariant _n tVar vs
          -> do  checkType a wh ctx tVar
-                mapM_ (checkValue a wh ctx) vs
+                mapM_ (synthValue a wh ctx) vs
                 return tVar
 
         VList t vs
@@ -86,7 +86,7 @@ checkValue a wh ctx v
 
                 -- Check the body expression.
                 (_, tsResult, esBody)
-                 <- checkTerm a wh ctx2 Synth mBody
+                 <- synthTerm a wh ctx2 mBody
 
                 -- The body must be pure.
                 eBody_red <- simplType a ctx2 (TSum esBody)
@@ -116,8 +116,7 @@ checkValueIs
         -> Type a -> Value a -> IO ()
 
 checkValueIs a wh ctx tExpected v
- = do   tActual <- checkValue a wh ctx v
-
+ = do   tActual <- synthValue a wh ctx v
         checkTypeEquivs ctx a [] [tExpected] a [] [tActual]
          >>= \case
                 Nothing -> return ()
@@ -143,8 +142,8 @@ contextBindTermEnv a wh (TermEnv bs0) ctx0
 
         go ctx (TermEnvValues nvs : bs)
          = do   let (ns, vs) = unzip $ Map.toList nvs
-                ts'     <- fmap (map (\(_, t, _) -> t))
-                        $  mapM (\v -> checkTerm1 a wh ctx Synth (MVal v)) vs
+                ts' <- fmap (map (\(_, t, _) -> t))
+                    $  mapM (\v -> synthTerm1 a wh ctx (MVal v)) vs
                 let nts' = zip ns ts'
                 go (contextBindTerms nts' ctx) bs
 

@@ -84,7 +84,7 @@ buildTesterDiagnosticOfDecl ctx _mm
         (DTest (DeclTestType aRange bWatch mName mTest))
  | bWatch
  = do   let aRange' = mungeRangeForVSCode $ fromMaybe aRange $ takeAnnotOfTerm mTest
-        (_mTest, tResult, _effs) <- Check.checkTerm aRange [] ctx Check.Synth mTest
+        (_mTest, tResult, _effs) <- Check.synthTerm aRange [] ctx mTest
         let sResult = slurpTestIdent mName ++ (P.render $ P.ppr () tResult)
         return $ Just $ TesterDiagnosticWatch "type" aRange' SeverityInformation sResult
 

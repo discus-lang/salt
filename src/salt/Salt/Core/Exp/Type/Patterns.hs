@@ -20,6 +20,8 @@ pattern TSusp   tsv te  = TKey TKSusp         [TGTypes tsv, TGTypes [te]]
 pattern TPure           = TKey TKPure         []
 pattern TSync           = TKey TKSync         []
 pattern TSum    ts      = TKey TKSum          [TGTypes ts]
+pattern TReturn ts      = TKey TKReturn       [TGTypes ts]
+
 
 pattern (:=>) ks1 k2    = TArr    ks1 k2
 infixr 4 :=>

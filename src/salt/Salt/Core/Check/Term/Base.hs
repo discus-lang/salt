@@ -12,10 +12,10 @@ module Salt.Core.Check.Term.Base
         , module Control.Monad
         , module Control.Exception
         , module Data.Maybe
-        , checkTerm
-        , checkTerm1
+        , synthTerm,  checkTerm
+        , synthTerm1, checkTerm1
+        , synthTerms, checkTerms
         , checkTermHas
-        , checkTerms
         , checkTermsAreAll)
 where
 import Salt.Core.Check.Context
@@ -33,48 +33,41 @@ import Data.Maybe
 
 
 ---------------------------------------------------------------------------------------------------
+-- | Synthesise a type for a single term.
+synthTerm :: SynthTerm a
+synthTerm a wh ctx term
+ = contextSynthTerm ctx a wh ctx term
+
+
 -- | Type check a single term.
 checkTerm :: CheckTerm a
-checkTerm a wh ctx mode term
- = contextCheckTerm ctx a wh ctx mode term
+checkTerm a wh ctx ts term
+ = contextCheckTerm ctx a wh ctx ts term
 
 
 -- (t-one) ----------------------------------------------------------------------------------------
--- | Like 'checkTerm' but expect a single result type.
+-- | Like 'checkTerm', but expect a single result type.
 checkTerm1
         :: Annot a => a -> [Where a]
-        -> Context a -> Mode a -> Term a
+        -> Context a -> Type a -> Term a
+        -> IO (Term a, [Effect a])
+
+checkTerm1 a wh ctx t m
+ = do   (m', es') <- checkTerm a wh ctx [t] m
+        return (m', es')
+
+
+-- | Like 'synthTerm', but expect a single result type.
+synthTerm1
+        :: Annot a => a -> [Where a]
+        -> Context a -> Term a
         -> IO (Term a, Type a, [Effect a])
 
-checkTerm1 a wh ctx mode m
- = do   (m', ts', es')
-         <- checkTerm a wh ctx mode m
+synthTerm1 a wh ctx m
+ = do   (m', ts', es') <- synthTerm a wh ctx m
         case ts' of
          [t]    -> return (m', t, es')
          _      -> throw $ ErrorWrongArityUp UTerm a wh ts' [TData]
-
-
--- (t-check) --------------------------------------------------------------------------------------
--- | Synthesise the actual types of a term,
---   then check it against the expected types.
-checkTermHas
-        :: Annot a => a -> [Where a]
-        -> Context a -> [Type a] -> Term a
-        -> IO (Term a, [Type a], [Effect a])
-
-checkTermHas a wh ctx tsExpected m
- = do
-        (m', tsActual, esActual)
-         <- checkTerm a wh ctx Synth m
-
-        when (length tsActual /= length tsExpected)
-         $ throw $ ErrorWrongArity UTerm a wh tsActual tsExpected
-
-        checkTypeEquivs ctx a [] tsActual a [] tsExpected
-         >>= \case
-                Nothing -> return (m', tsActual, esActual)
-                Just ((_a1, tActualErr), (_a2, tExpectedErr))
-                 -> throw $ ErrorMismatch UType a wh tActualErr tExpectedErr
 
 
 -- (t-many / t-gets) ------------------------------------------------------------------------------
@@ -82,34 +75,36 @@ checkTermHas a wh ctx tsExpected m
 -- version of the typing rules. In this algorithmic, bidirectional implementation
 -- the expected types are represented in the checker mode we get from the caller.
 
+synthTerms
+        :: Annot a => a -> [Where a]
+        -> Context a -> [Term a]
+        -> IO ([Term a], [Type a], [Effect a])
+
+synthTerms a wh ctx ms
+ = do   (ms', ts', ess')
+         <- fmap unzip3
+         $  mapM (synthTerm1 a wh ctx) ms
+        return (ms', ts', concat ess')
+
+
 -- | Check a list of individual terms.
 checkTerms
         :: Annot a => a -> [Where a]
-        -> Context a -> Mode a -> [Term a]
-        -> IO ([Term a], [Type a], [Effect a])
+        -> Context a -> [Type a] -> [Term a]
+        -> IO ([Term a], [Effect a])
 
-checkTerms a wh ctx Synth ms
- = do   (ms', ts', ess')
-         <- fmap unzip3 $ mapM (checkTerm1 a wh ctx Synth) ms
-        return (ms', ts', concat ess')
-
-checkTerms a wh ctx (Check tsExpected) ms
+checkTerms a wh ctx tsExpected ms
  | length ms == length tsExpected
- = do   (ms', ts', ess')
-         <- fmap unzip3
-         $  zipWithM (\t m -> checkTerm1 a wh ctx (Check [t]) m) tsExpected ms
-        return (ms', ts', concat ess')
+ = do   (ms', ess')
+         <- fmap unzip
+         $  zipWithM (\t m -> checkTerm1 a wh ctx t m) tsExpected ms
+        return (ms', concat ess')
 
  | otherwise
  = do   (_ms, ts', _ess')
-         <- fmap unzip3 $ mapM (checkTerm1 a wh ctx Synth) ms
+         <- fmap unzip3 $ mapM (synthTerm1 a wh ctx) ms
         let ksExpected = replicate (length tsExpected) TData
         throw $ ErrorWrongArityUp UTerm a wh ts' ksExpected
-
-checkTerms _a _wh _ct mode ms
- = error $ "TODO: checkTerms invalid mode"
-         ++ show (mode, ms)
-
 
 
 -- | Check the given terms all have the specified type,
@@ -120,7 +115,31 @@ checkTermsAreAll
         -> IO ([Term a], [Effect a])
 
 checkTermsAreAll a wh ctx tExpected ms
- = do   (ms', _ts, effs)
-         <- fmap unzip3 $ mapM (\m -> checkTerm1 a wh ctx (Check [tExpected]) m) ms
+ = do   (ms', effs)
+         <- fmap unzip
+         $  mapM (\m -> checkTerm1 a wh ctx tExpected m) ms
         return (ms', concat effs)
 
+
+-- (t-check) --------------------------------------------------------------------------------------
+-- | Synthesise the actual types of a term,
+--   then check it against the expected types.
+--   TODO: rename to synthCheckTerm or something.
+checkTermHas
+        :: Annot a => a -> [Where a]
+        -> Context a -> [Type a] -> Term a
+        -> IO (Term a, [Effect a])
+
+checkTermHas a wh ctx tsExpected m
+ = do
+        (m', tsActual, esActual)
+         <- synthTerm a wh ctx m
+
+        when (length tsActual /= length tsExpected)
+         $ throw $ ErrorWrongArity UTerm a wh tsActual tsExpected
+
+        checkTypeEquivs ctx a [] tsActual a [] tsExpected
+         >>= \case
+                Nothing -> return (m', esActual)
+                Just ((_a1, tActualErr), (_a2, tExpectedErr))
+                 -> throw $ ErrorMismatch UType a wh tActualErr tExpectedErr

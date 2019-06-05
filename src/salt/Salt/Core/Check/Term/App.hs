@@ -35,7 +35,7 @@ checkTermApp a wh ctx mFun0 mgss0
                     in  throw $ ErrorUnknownPrim UTerm aFun wh nPrm
 
                 Nothing
-                 -> checkTerm1 a wh ctx Synth mFun0
+                 -> synthTerm1 a wh ctx mFun0
 
         -- Check that we have at least some arguments to apply.
         when (null mgss0)
@@ -128,20 +128,9 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
    | (mgs : mgssRest')  <- mgssArg
    , Just (aArg, msArg) <- takeAnnMGTerms aApp mgs
    = do
-        -- Check the types of the arguments.
-        (msArg', tsArg, esArg)
-         <- checkTerms aArg wh ctx (Check tsParam) msArg
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length tsParam == length tsArg)
-         $ throw $ ErrorAppTermTermWrongArity aApp wh tsParam tsArg
-
-        -- Check the parameter and argument types match.
-        checkTypeEquivs ctx aApp [] tsParam aApp [] tsArg
-         >>= \case
-                Nothing -> return ()
-                Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorMismatch UType aArg wh tErr1 tErr2
+        -- Check the arguments against the types of the parameters.
+        (msArg', esArg)
+         <- checkTerms aArg wh ctx tsParam msArg
 
         goHead  tsResult
                 (MGAnn aArg (MGTerms msArg') : mgssAcc)
@@ -151,20 +140,9 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
    | (mgs : mgssRest')  <- mgssArg
    , Just (aArg, mArg)  <- takeAnnMGTerm aApp mgs
    = do
-        -- Check the types of the arguments.
-        (mArg', tsArg, esArg)
-         <- checkTerm aArg wh ctx (Check tsParam) mArg
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length tsParam == length tsArg)
-         $ throw $ ErrorAppTermTermWrongArity aApp wh tsParam tsArg
-
-        -- Check the parameter and argument types match.
-        checkTypeEquivs ctx aApp [] tsParam aApp [] tsArg
-         >>= \case
-                Nothing -> return ()
-                Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorMismatch UType aArg wh tErr1 tErr2
+        -- Check the arguments against the types of the parameters.
+        (mArg', esArg)
+         <- checkTerm aArg wh ctx tsParam mArg
 
         goHead  tsResult
                 (MGAnn aArg (MGTerm mArg') : mgssAcc)

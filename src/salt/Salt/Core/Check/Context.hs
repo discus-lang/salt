@@ -13,7 +13,6 @@ import qualified Data.Map               as Map
 data Mode a
         = Synth                 -- ^ Synthesize the type of a term.
         | Check  [Type a]       -- ^ Check that a term has the give type.
-        | Return [Type a]       -- ^ Check that a procedure returns values of the given type.
         deriving Show
 
 
@@ -28,6 +27,9 @@ data Context a
           --   We hold a reference to the checker here o tie the mutually recursive
           --   knot without needing mutually recursive modules.
           contextCheckType      :: CheckType a
+
+          -- | Function to synthesise a type for a term.
+        , contextSynthTerm      :: SynthTerm a
 
           -- | Function to check a term.
         , contextCheckTerm      :: CheckTerm a
@@ -81,10 +83,16 @@ type CheckType a
         -> IO (Type a, Kind a)
 
 
+type SynthTerm a
+        =  Annot a => a -> [Where a]
+        -> Context a -> Term a
+        -> IO (Term a, [Type a], [Effect a])
+
+
 type CheckTerm a
         =  Annot a => a -> [Where a]
-        -> Context a -> Mode a -> Term a
-        -> IO (Term a, [Type a], [Effect a])
+        -> Context a -> [Type a] -> Term a
+        -> IO (Term a, [Effect a])
 
 
 ---------------------------------------------------------------------------------------------------
