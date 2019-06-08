@@ -22,10 +22,10 @@ data Context a
           contextCheckType      :: CheckType a
 
           -- | Function to synthesise a type for a term.
-        , contextSynthTerm      :: SynthTerm a
+        , contextSynthTerm      :: SynthTerm a (Maybe [Type a])
 
           -- | Function to check a term.
-        , contextCheckTerm      :: CheckTerm a
+        , contextCheckTerm      :: CheckTerm a [Type a] (Maybe [Type a])
 
           -- | Kinds and bodies of top-level type bindings in the current module.
         , contextModuleType     :: Map Name (Kind a, Type a)
@@ -58,16 +58,28 @@ type CheckType a
         -> IO (Type a, Kind a)
 
 
-type SynthTerm a
+type SynthTerm a result
         =  Annot a => a -> [Where a]
         -> Context a -> Term a
-        -> IO (Term a, Maybe [Type a], [Effect a])
+        -> IO (Term a, result, [Effect a])
 
 
-type CheckTerm a
+type SynthTerms a result
         =  Annot a => a -> [Where a]
-        -> Context a -> [Type a] -> Term a
-        -> IO (Term a, Maybe [Type a], [Effect a])
+        -> Context a -> [Term a]
+        -> IO ([Term a], result, [Effect a])
+
+
+type CheckTerm a expect result
+        =  Annot a => a -> [Where a]
+        -> Context a -> expect -> Term a
+        -> IO (Term a, result, [Effect a])
+
+
+type CheckTerms a expect result
+        =  Annot a => a -> [Where a]
+        -> Context a -> expect -> [Term a]
+        -> IO ([Term a], result, [Effect a])
 
 
 ---------------------------------------------------------------------------------------- Options --

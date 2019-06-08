@@ -21,13 +21,13 @@ import qualified Data.Map.Strict        as Map
 ------------------------------------------------------------------------------------------ Synth --
 -- | Check and elaborate a term producing, a new term and its type.
 --   Type errors are thrown as exceptions in the IO monad.
-synthTermWith :: SynthTerm a
+synthTermWith :: SynthTerm a (Maybe [Type a])
 
 -- (t-synth-ann) ------------------------------------------
 synthTermWith _a wh ctx (MAnn a' m)
- = do   (m', t, eff)
+ = do   (m', rr, eff)
          <- synthTerm a' wh ctx m
-        return (MAnn a' m', t, eff)
+        return (MAnn a' m', rr, eff)
 
 
 -- (t-synth-mmm) ------------------------------------------
@@ -39,7 +39,6 @@ synthTermWith a wh ctx (MTerms msArg)
 
 
 -- (t-synth-the) ------------------------------------------
--- TODO: also add check form.
 synthTermWith a wh ctx (MThe ts m)
  = do   -- TODO: check well kindedness of type annots.
         (m', _mtsResult, es)
@@ -375,7 +374,7 @@ synthTermWith a wh ctx mCase@(MVarCase mScrut msAlt msElse)
 synthTermWith a wh ctx (MIf msCond msThen mElse)
  | length msCond == length msThen
  = do
-        (msCond', esCond)
+        (msCond', _rsCond, esCond)
          <- checkTermsAreAll a wh ctx TBool msCond
 
         -- TODO: check branch types are compatible.
@@ -394,7 +393,7 @@ synthTermWith a wh ctx (MIf msCond msThen mElse)
 -- (t-synth-lst) ------------------------------------------
 synthTermWith a wh ctx (MList t ms)
  = do   t' <- checkTypeHas UKind a wh ctx TData t
-        (ms', es) <- checkTermsAreAll a wh ctx t' ms
+        (ms', _rsElems, es) <- checkTermsAreAll a wh ctx t' ms
         return  ( MList t' ms'
                 , Just [TList t], es)
 
@@ -402,7 +401,7 @@ synthTermWith a wh ctx (MList t ms)
 -- (t-synth-set) ------------------------------------------
 synthTermWith a wh ctx (MSet t ms)
  = do   t' <- checkTypeHas UKind a wh ctx TData t
-        (ms', es) <- checkTermsAreAll a wh ctx t' ms
+        (ms', _rsElems, es) <- checkTermsAreAll a wh ctx t' ms
         return  ( MSet t ms'
                 , Just [TSet t], es)
 
@@ -416,8 +415,8 @@ synthTermWith a wh ctx m@(MMap tk tv msk msv)
         tk' <- checkTypeHas UKind a wh ctx TData tk
         tv' <- checkTypeHas UKind a wh ctx TData tv
 
-        (msk', esKeys) <- checkTermsAreAll a wh ctx tk' msk
-        (msv', esVals) <- checkTermsAreAll a wh ctx tv' msv
+        (msk', _rsKeys, esKeys) <- checkTermsAreAll a wh ctx tk' msk
+        (msv', _rsVals, esVals) <- checkTermsAreAll a wh ctx tv' msv
         return  ( MMap tk tv msk' msv'
                 , Just [TMap tk tv]
                 , esKeys ++ esVals)
@@ -559,7 +558,7 @@ synthTermWith a wh ctx (MUpdate nCell mNew mRest)
 synthTermWith a wh ctx (MWhens msCond msThen mRest)
  | length msCond == length msThen
  = do
-        (msCond', esCond)
+        (msCond', _rsCond, esCond)
          <- checkTermsAreAll a wh ctx TBool msCond
 
         -- TODO: check the types of the branches are compatible.

@@ -129,7 +129,7 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
    , Just (aArg, msArg) <- takeAnnMGTerms aApp mgs
    = do
         -- Check the arguments against the types of the parameters.
-        (msArg', esArg)
+        (msArg', _rsArg, esArg)
          <- checkTermsAreEach aArg wh ctx tsParam msArg
 
         goHead  tsResult

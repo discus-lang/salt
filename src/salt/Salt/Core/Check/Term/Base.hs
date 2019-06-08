@@ -33,70 +33,16 @@ import Control.Exception
 import Data.Maybe
 
 
----------------------------------------------------------------------------------------------------
--- | Type check a single term.
-checkTerm :: CheckTerm a
-checkTerm a wh ctx ts term
- = contextCheckTerm ctx a wh ctx ts term
-
-
--- | Synthesise a type for a single term.
-synthTerm :: SynthTerm a
+------------------------------------------------------------------------------------------ Synth --
+-- | Synthesise the result type for a single term.
+synthTerm :: SynthTerm a (Maybe [Type a])
 synthTerm a wh ctx term
  = contextSynthTerm ctx a wh ctx term
 
 
--- | Like `synthTerm`, but expect the term to be productive.
-synthTermProductive
-        :: Annot a => a -> [Where a]
-        -> Context a -> Term a
-        -> IO (Term a, [Type a], [Effect a])
-
-synthTermProductive a wh ctx m
- = do   (m', rr', es') <- synthTerm a wh ctx m
-        case rr' of
-         Nothing  -> error "TODO: not productive. add better error message."
-         Just ts' -> return (m', ts', es')
-
-
--- (t-one) ----------------------------------------------------------------------------------------
--- | Like 'checkTerm', but expect a single result type.
-checkTerm1
-        :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> Term a
-        -> IO (Term a, Maybe (Type a), [Effect a])
-
-checkTerm1 a wh ctx t m
- = do   (m', rr', es') <- checkTerm a wh ctx [t] m
-        case rr' of
-         Nothing   -> return (m', Nothing, es')
-         Just [t'] -> return (m', Just t',  es')
-         Just ts'  -> throw $ ErrorWrongArityUp UTerm a wh ts' [TData]
-
-
--- | Like 'synthTerm1', but expect the term to be productive.
-synthTermProductive1
-        :: Annot a => a -> [Where a]
-        -> Context a -> Term a
-        -> IO (Term a, Type a, [Effect a])
-
-synthTermProductive1 a wh ctx m
- = do   (m', rr', es') <- synthTerm a wh ctx m
-        case rr' of
-         Nothing  -> error "TODO: not productive. add better error message."
-         Just [t] -> return (m', t, es')
-         Just ts' -> throw $ ErrorWrongArityUp UTerm a wh ts' [TData]
-
-
--- (t-many / t-gets) ------------------------------------------------------------------------------
-
 -- Synthesise types for each of the terms,
 -- and combine them conjunctively into the same result vector.
-synthTermsConjunctive
-        :: Annot a => a -> [Where a]
-        -> Context a -> [Term a]
-        -> IO ([Term a], Maybe [Type a], [Effect a])
-
+synthTermsConjunctive :: SynthTerms a (Maybe [Type a])
 synthTermsConjunctive a wh ctx ms
  = do   (ms', rss', ess')
          <- fmap unzip3 $ mapM (synthTerm a wh ctx) ms
@@ -106,19 +52,53 @@ synthTermsConjunctive a wh ctx ms
         return (ms', rs', concat ess')
 
 
--- | Given a list of terms, if a term's result is defined then check
---   that it matches the corresponding type vector.
-checkTermsAreEach
-        :: Annot a => a -> [Where a]
-        -> Context a -> [Type a] -> [Term a]
-        -> IO ([Term a], [Effect a])
+-- | Like `synthTerm`, but expect the term to be productive.
+synthTermProductive :: SynthTerm a [Type a]
+synthTermProductive a wh ctx m
+ = do   (m', rr', es') <- synthTerm a wh ctx m
+        case rr' of
+         Nothing  -> error "TODO: not productive. add better error message."
+         Just ts' -> return (m', ts', es')
 
+
+-- | Like 'synthTerm1', but expect the term to be productive.
+synthTermProductive1 :: SynthTerm a (Type a)
+synthTermProductive1 a wh ctx m
+ = do   (m', rr', es') <- synthTerm a wh ctx m
+        case rr' of
+         Nothing  -> error "TODO: not productive. add better error message."
+         Just [t] -> return (m', t, es')
+         Just ts' -> throw $ ErrorWrongArityUp UTerm a wh ts' [TData]
+
+
+------------------------------------------------------------------------------------------ Check --
+-- | Check a term against the expected types of its result values.
+checkTerm :: CheckTerm a [Type a] (Maybe [Type a])
+checkTerm a wh ctx ts term
+ = contextCheckTerm ctx a wh ctx ts term
+
+
+-- | Like 'checkTerm', but if the term is productive then expect
+--   only a single value.
+checkTerm1 :: CheckTerm a (Type a) (Maybe (Type a))
+checkTerm1 a wh ctx t m
+ = do   (m', rr', es') <- checkTerm a wh ctx [t] m
+        case rr' of
+         Nothing   -> return (m', Nothing, es')
+         Just [t'] -> return (m', Just t',  es')
+         Just ts'  -> throw $ ErrorWrongArityUp UTerm a wh ts' [TData]
+
+
+-- | Given a list of terms, if a term is productive then expect it
+--   to produce a single value of the corresponding type, where all
+--   terms do not need to produce values of the same type.
+checkTermsAreEach :: CheckTerms a [Type a] [Maybe (Type a)]
 checkTermsAreEach a wh ctx tsExpected ms
  | length ms == length tsExpected
- = do   (ms', _rs, ess')
+ = do   (ms', rss, ess')
          <- fmap unzip3
          $  zipWithM (\t m -> checkTerm1 a wh ctx t m) tsExpected ms
-        return (ms', concat ess')
+        return (ms', rss, concat ess')
 
  | otherwise
  = do   -- (_ms, ts', _ess')
@@ -128,29 +108,22 @@ checkTermsAreEach a wh ctx tsExpected ms
         error "TODO: better error for arity mismatch"
 
 
--- Like `checkTermsAreEach`, but use the same expected type for each
--- of the terms.
-checkTermsAreAll
-        :: Annot a => a -> [Where a]
-        -> Context a -> Type a -> [Term a]
-        -> IO ([Term a], [Effect a])
-
+-- | Given a list of terms, if a term is productive then expect it
+--   to produce a single value of the given type, where all
+--   terms must produce values of the same type.
+checkTermsAreAll :: CheckTerms a (Type a) [Maybe (Type a)]
 checkTermsAreAll a wh ctx tExpected ms
- = do   (ms', _rs, effs)
+ = do   (ms', rss, effs)
          <- fmap unzip3
          $  mapM (\m -> checkTerm1 a wh ctx tExpected m) ms
-        return (ms', concat effs)
+        return (ms', rss, concat effs)
 
 
 -- (t-check) --------------------------------------------------------------------------------------
 -- | Synthesise the actual types of a term,
 --   then check it against the expected types.
 --   TODO: rename to synthCheckTerm or something.
-checkTermHas
-        :: Annot a => a -> [Where a]
-        -> Context a -> [Type a] -> Term a
-        -> IO (Term a, Maybe [Type a], [Effect a])
-
+checkTermHas :: CheckTerm a [Type a] (Maybe [Type a])
 checkTermHas a wh ctx tsExpected m
  = do
         (m', mtsActual, esActual)
@@ -160,7 +133,6 @@ checkTermHas a wh ctx tsExpected m
                 a wh ctx tsExpected mtsActual
 
         return (m', mtsActual, esActual)
-
 
 
 -- | If the result is defined then check it matches the given types.
