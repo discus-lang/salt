@@ -32,31 +32,39 @@ synthTermWith _a wh ctx (MAnn a' m)
 
 -- (t-synth-mmm) ------------------------------------------
 synthTermWith a wh ctx (MTerms msArg)
- = do   (msArg', tsArg, esArg)
-         <- synthTerms a wh ctx msArg
-        return  (MTerms msArg', tsArg, esArg)
+ = do   (msArg', mtsArg, esArg)
+         <- synthTermsConjunctive a wh ctx msArg
+
+        return  (MTerms msArg', mtsArg, esArg)
 
 
 -- (t-synth-the) ------------------------------------------
 -- TODO: also add check form.
 synthTermWith a wh ctx (MThe ts m)
  = do   -- TODO: check well kindedness of type annots.
-        (m', es) <- checkTerm a wh ctx ts m
-        return  (MThe ts m', ts, es)
+        (m', _mtsResult, es)
+         <- checkTerm a wh ctx ts m
+
+        -- We return the ascribed type instead of the checked one
+        -- so that synonyms in the ascription remain folded.
+        return  ( MThe ts m'
+                , Just ts, es)
 
 
 -- (t-synth-box) ------------------------------------------
 synthTermWith a wh ctx (MBox m)
- = do   (m', ts, es) <- synthTerm a wh ctx m
+ = do   (m', ts, es) <- synthTermProductive a wh ctx m
         tEff <- simplType a ctx (TSum es)
-        return  (MBox m', [TSusp ts tEff], [])
+        return  ( MBox m'
+                , Just [TSusp ts tEff], [])
 
 
 -- (t-synth-run) ------------------------------------------
 synthTermWith a wh ctx (MRun mBody)
- = do   -- Check the body.
+ = do
+        -- Check the body.
         (mBody', tSusp, es)
-         <- synthTerm1 a wh ctx mBody
+         <- synthTermProductive1 a wh ctx mBody
 
         -- The body must produce a suspension.
         -- When we run it it causes the effects in its annotations.
@@ -64,14 +72,14 @@ synthTermWith a wh ctx (MRun mBody)
         let aBody   = fromMaybe a $ takeAnnotOfTerm mBody
         case tSusp_red of
          TSusp tsResult' e'
-            -> return (MRun mBody', tsResult', es ++ [e'])
+            -> return ( MRun mBody', Just tsResult', es ++ [e'])
          _  -> throw $ ErrorRunSuspensionIsNot aBody wh [tSusp_red]
 
 
 -- (t-synth-val) ------------------------------------------
 synthTermWith a wh ctx m@(MRef (MRVal v))
  = do   t <- synthValue a wh ctx v
-        return (m, [t], [])
+        return (m, Just [t], [])
 
 
 -- (t-synth-prm) ------------------------------------------
@@ -83,7 +91,7 @@ synthTermWith a wh ctx m@(MRef (MRPrm nPrim))
         when (not $ null pss)
          $ throw $ ErrorUnsaturatedPrim a wh nPrim tPrim
 
-        return (m, [tPrim], [])
+        return (m, Just [tPrim], [])
 
  | Just t <- Map.lookup nPrim Prim.primDataCtors
  = do
@@ -92,7 +100,7 @@ synthTermWith a wh ctx m@(MRef (MRPrm nPrim))
         when (not $ null pss)
          $ throw $ ErrorUnsaturatedCtor a wh nPrim tCon
 
-        return (m, [tCon], [])
+        return (m, Just [tCon], [])
 
  | otherwise
  = throw $ ErrorUnknownPrim UTerm a wh nPrim
@@ -107,7 +115,7 @@ synthTermWith a wh ctx m@(MRef (MRCon nCon))
 
         Just tCtor
          -> do  let tCtor' = mapAnnot (const a) tCtor
-                return (m, [tCtor'], [])
+                return (m, Just [tCtor'], [])
 
 
 -- (t-synth-var) ------------------------------------------
@@ -117,11 +125,9 @@ synthTermWith a wh ctx m@(MVar u)
         -- Cells referenced in statements are implicitly read.
         --   The type 'Cell T' has kind #State, not #Data,
         --   so we cannot produce the Cell type itself.
-        Just (TCell t)
-         -> return (m, [t], [])
-
-        Just t  -> return (m, [t], [])
-        Nothing -> throw $ ErrorUnknownBound UTerm a wh u
+        Just (TCell t)  -> return (m, Just [t], [])
+        Just t          -> return (m, Just [t], [])
+        Nothing         -> throw $ ErrorUnknownBound UTerm a wh u
 
 
 -- (t-synth-abt) ------------------------------------------
@@ -135,7 +141,7 @@ synthTermWith a wh ctx (MAbs mps m)
         -- Check the body of the abstraction in the new context.
         -- It needs to produce a single value.
         let aBody  = fromMaybe a $ takeAnnotOfTerm m
-        (m', ts, es) <- synthTerm a wh ctx' m
+        (m', ts, es) <- synthTermProductive a wh ctx' m
         tBody
          <- case ts of
                 []  -> throw $ ErrorAbsEmpty UType aBody wh
@@ -147,7 +153,9 @@ synthTermWith a wh ctx (MAbs mps m)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsImpure UType aBody wh eBody_red
 
-        return  (MAbs mps' m', [TForall (TPTypes bks) tBody], [])
+        return  ( MAbs mps' m'
+                , Just [TForall (TPTypes bks) tBody]
+                , [])
 
 
 -- (t-synth-abm) ------------------------------------------
@@ -159,7 +167,7 @@ synthTermWith a wh ctx (MAbs mps m)
         let ctx' = contextBindTermParams mps ctx
 
         -- Check the body of the abstraction in the new context.
-        (m', ts, es) <- synthTerm a wh ctx' m
+        (m', ts, es) <- synthTermProductive a wh ctx' m
 
         -- The body must be pure.
         let aBody  = fromMaybe a $ takeAnnotOfTerm m
@@ -167,13 +175,16 @@ synthTermWith a wh ctx (MAbs mps m)
         when (not $ isTPure eBody_red)
          $ throw $ ErrorAbsImpure UTerm aBody wh eBody_red
 
-        return  (MAbs mps' m', [TFun (map snd bts) ts], [])
+        return  ( MAbs mps' m'
+                , Just [TFun (map snd bts) ts]
+                , [])
 
 
 -- (t-synth-aps) ------------------------------------------
 -- This handles (t-apt), (t-apm) and (t-apv) from the docs.
 synthTermWith a wh ctx (MAps mFun mgss)
- = checkTermApp a wh ctx mFun mgss
+ = do   (m, ts, es) <- checkTermApp a wh ctx mFun mgss
+        return (m, Just ts, es)
 
 
 -- (t-synth-let) ------------------------------------------
@@ -187,7 +198,7 @@ synthTermWith a wh ctx (MLet mps mBind mBody)
 
         -- Check the bound expression.
         (mBind', tsBind, esBind)
-         <- synthTerm a wh ctx mBind
+         <- synthTermProductive a wh ctx mBind
 
         -- Check we have the same number of binders
         -- as values produced by the binding.
@@ -241,11 +252,11 @@ synthTermWith a wh ctx (MRec bms mBody)
         let ctx'    = contextBindTerms ntsBind ctx
         bms'    <- mapM (checkTermBind a wh ctx') bms
 
-        (mBody', tsResult, esResult)
+        (mBody', mtsResult, esResult)
          <- synthTerm a wh ctx' mBody
 
         return  ( MRec bms' mBody'
-                , tsResult, esResult)
+                , mtsResult, esResult)
 
 
 -- (t-synth-rcd) ------------------------------------------
@@ -258,10 +269,10 @@ synthTermWith a wh ctx (MRecord ns ms)
 
         -- Check each of the field terms.
         (ms', tss', ess')
-         <- fmap unzip3 $ mapM (synthTerm a wh ctx) ms
+         <- fmap unzip3 $ mapM (synthTermProductive a wh ctx) ms
 
         return  ( MRecord ns ms'
-                , [TRecord ns (map TGTypes tss')]
+                , Just [TRecord ns (map TGTypes tss')]
                 , concat ess')
 
 
@@ -271,7 +282,7 @@ synthTermWith a wh ctx (MProject nLabel mRecord)
         -- Check the body expression.
         let aRecord = fromMaybe a $ takeAnnotOfTerm mRecord
         (mRecord', tRecord, esRecord)
-         <- synthTerm1 aRecord wh ctx mRecord
+         <- synthTermProductive1 aRecord wh ctx mRecord
 
         -- The body needs to have record type with the field that we were expecting.
         (ns, tgss, tRecord')
@@ -287,7 +298,7 @@ synthTermWith a wh ctx (MProject nLabel mRecord)
                 Nothing  -> throw $ ErrorRecordProjectNoField aRecord wh tRecord' nLabel
 
         return  ( MProject nLabel mRecord'
-                , tsField, esRecord)
+                , Just tsField, esRecord)
 
 
 -- (t-synth-vnt) ------------------------------------------
@@ -311,11 +322,11 @@ synthTermWith a wh ctx (MVariant nLabel mValues tVariant)
                 _ -> throw $ ErrorVariantAnnotAltMissing aAnnot wh tVariant' nLabel
 
         -- Check the body against the type from the annotation.
-        (mValues', esValues)
+        (mValues', _rr, esValues)
          <- checkTerm a wh ctx tsExpected' mValues
 
         return  ( MVariant nLabel mValues' tVariant
-                , [tVariant], esValues)
+                , Just [tVariant], esValues)
 
 
 -- (t-synth-cse) ------------------------------------------
@@ -326,7 +337,7 @@ synthTermWith a wh ctx mCase@(MVarCase mScrut msAlt msElse)
  = do
         -- Check the scrutinee.
         (mScrut', tScrut, esScrut)
-         <- synthTerm1 a wh ctx mScrut
+         <- synthTermProductive1 a wh ctx mScrut
 
         -- The scrutinee needs to be a variant.
         let aScrut = fromMaybe a $ takeAnnotOfTerm mScrut
@@ -344,17 +355,19 @@ synthTermWith a wh ctx mCase@(MVarCase mScrut msAlt msElse)
          <- checkCaseTermAlts a wh ctx mCase tScrut nmgsScrut msAlt
 
         -- Check the default 'else' branch if we have one.
+        -- TODO: check branch types are compatible.
+        -- TODO: allow branch results to be Empty.
         (mmElse', esElse)
          <- case listToMaybe msElse of
                 Nothing
                  -> return (Nothing, [])
                 Just mElse
-                 -> do  (mElse', esElse)
+                 -> do  (mElse', _rsElse, esElse)
                          <- checkTerm a wh ctx tsResult mElse
                         return (Just mElse', esElse)
 
         return  ( MVarCase mScrut' msAlt' (maybeToList mmElse')
-                , tsResult
+                , Just tsResult
                 , esScrut ++ esResult ++ esElse)
 
 
@@ -365,15 +378,16 @@ synthTermWith a wh ctx (MIf msCond msThen mElse)
         (msCond', esCond)
          <- checkTermsAreAll a wh ctx TBool msCond
 
-        (mElse', tsElse, esElse)
+        -- TODO: check branch types are compatible.
+        (msThen', _rss, essThen)
+         <- fmap unzip3
+         $  mapM (synthTerm a wh ctx) msThen
+
+        (mElse', mtsElse, esElse)
          <- synthTerm a wh ctx mElse
 
-        (msThen', essThen)
-         <- fmap unzip
-         $  mapM (checkTerm a wh ctx tsElse) msThen
-
         return  ( MIf msCond' msThen' mElse'
-                , tsElse
+                , mtsElse
                 , esCond ++ concat essThen ++ esElse)
 
 
@@ -381,14 +395,16 @@ synthTermWith a wh ctx (MIf msCond msThen mElse)
 synthTermWith a wh ctx (MList t ms)
  = do   t' <- checkTypeHas UKind a wh ctx TData t
         (ms', es) <- checkTermsAreAll a wh ctx t' ms
-        return  (MList t' ms', [TList t], es)
+        return  ( MList t' ms'
+                , Just [TList t], es)
 
 
 -- (t-synth-set) ------------------------------------------
 synthTermWith a wh ctx (MSet t ms)
  = do   t' <- checkTypeHas UKind a wh ctx TData t
         (ms', es) <- checkTermsAreAll a wh ctx t' ms
-        return (MSet t ms', [TSet t], es)
+        return  ( MSet t ms'
+                , Just [TSet t], es)
 
 
 -- (t-synth-map) ------------------------------------------
@@ -403,7 +419,7 @@ synthTermWith a wh ctx m@(MMap tk tv msk msv)
         (msk', esKeys) <- checkTermsAreAll a wh ctx tk' msk
         (msv', esVals) <- checkTermsAreAll a wh ctx tv' msv
         return  ( MMap tk tv msk' msv'
-                , [TMap tk tv]
+                , Just [TMap tk tv]
                 , esKeys ++ esVals)
 
 
@@ -471,13 +487,13 @@ synthTermWith a wh ctx (MLaunch tsResult mBody)
         tsResult'
          <- checkTypesAreAll UType a wh ctx TData tsResult
 
-        (mBody', _tsResult, esResult)
+        (mBody', rrResult, esResult)
          <- synthTerm a wh
                 (goInside (InsideLaunch tsResult') ctx)
                 mBody
 
         return  ( MLaunch tsResult' mBody'
-                , tsResult', esResult)
+                , rrResult, esResult)
 
 
 -- (t-synth-return) ---------------------------------------
@@ -491,11 +507,11 @@ synthTermWith a wh ctx (MReturn mBody)
                 Just tsResult -> return tsResult
                 _  -> throw $ ErrorProcReturnNoLaunch a wh
 
-        (mBody', esReturn)
+        (mBody', _mtsResult, esReturn)
          <- checkTermHas a wh ctx tsResult mBody
 
         return  ( MReturn mBody'
-                , [TReturn tsResult], esReturn)
+                , Nothing, esReturn)
 
 
 -- (t-synth-cell) -----------------------------------------
@@ -504,15 +520,15 @@ synthTermWith a wh ctx (MCell nCell tCell mBind mRest)
  = do
         tCell' <- checkTypeHas UKind a wh ctx TData tCell
 
-        (mBind', esBind)
+        (mBind', _rrBind, esBind)
          <- checkTerm a wh ctx [tCell] mBind
 
         let ctx' = contextBindTerm nCell (TCell tCell') ctx
-        (mRest', tsResult, esRest)
+        (mRest', mtsResult, esRest)
          <- synthTerm a wh ctx' mRest
 
         return  ( MCell nCell tCell' mBind' mRest'
-                , tsResult, esBind ++ esRest)
+                , mtsResult, esBind ++ esRest)
 
 
 -- (t-synth-update) ---------------------------------------
@@ -529,14 +545,14 @@ synthTermWith a wh ctx (MUpdate nCell mNew mRest)
                         TCell t -> return t
                         _       -> throw $ ErrorProcUpdateNotCell a wh tCell'
 
-        (mNew', esNew)
+        (mNew', _rrNew, esNew)
          <- checkTerm a wh ctx [tVal] mNew
 
-        (mRest', tsResult, esRest)
+        (mRest', rrResult, esRest)
          <- synthTerm a wh ctx mRest
 
         return  ( MUpdate nCell mNew' mRest'
-                , tsResult, esNew ++ esRest)
+                , rrResult, esNew ++ esRest)
 
 
 -- (t-synth-whens) ----------------------------------------
@@ -546,15 +562,16 @@ synthTermWith a wh ctx (MWhens msCond msThen mRest)
         (msCond', esCond)
          <- checkTermsAreAll a wh ctx TBool msCond
 
-        (msThen', essThen)
-         <- fmap unzip
+        -- TODO: check the types of the branches are compatible.
+        (msThen', _rssThen, essThen)
+         <- fmap unzip3
          $  mapM (checkTerm a wh ctx [])  msThen
 
-        (mRest', tsResult, esRest)
+        (mRest', rsResult, esRest)
          <- synthTerm a wh ctx mRest
 
         return  ( MWhens msCond' msThen' mRest'
-                , tsResult, esCond ++ concat essThen ++ esRest)
+                , rsResult, esCond ++ concat essThen ++ esRest)
 
 
 -- (t-synth-match) ----------------------------------------
@@ -562,7 +579,7 @@ synthTermWith a wh ctx mCase@(MMatch mScrut msAlt mRest)
  = do
         -- Check the scrutinee.
         (mScrut', tScrut, esScrut)
-         <- synthTerm1 a wh ctx mScrut
+         <- synthTermProductive1 a wh ctx mScrut
 
         -- The scrutinee needs to be a variant.
         let aScrut = fromMaybe a $ takeAnnotOfTerm mScrut
@@ -591,30 +608,30 @@ synthTermWith a wh ctx mCase@(MMatch mScrut msAlt mRest)
 synthTermWith a wh ctx (MLoop mBody mRest)
  = do
         -- Check the body of the loop.
-        (mBody', esBody)
+        (mBody', _rrBody, esBody)
          <- checkTerm a wh
                 (goInside InsideLoop ctx)
                 [] mBody
 
         -- Check the rest of the procedure.
-        (mRest', tsResult, esRest)
+        (mRest', mtsResult, esRest)
          <- synthTerm a wh ctx mRest
 
         return  ( MLoop mBody' mRest'
-                , tsResult, esBody ++ esRest)
+                , mtsResult, esBody ++ esRest)
 
 
 -- (t-synth-break) ----------------------------------------
 synthTermWith a wh ctx MBreak
  = if areInsideLoop (contextInside ctx)
-    then return (MBreak, [], [])
+    then return (MBreak, Nothing, [])
     else throw $ ErrorProcBreakNoLoop a wh
 
 
 -- (t-synth-continue) -------------------------------------
 synthTermWith a wh ctx MContinue
  = if areInsideLoop (contextInside ctx)
-    then return (MContinue, [], [])
+    then return (MContinue, Nothing, [])
     else throw $ ErrorProcContinueNoLoop a wh
 
 
@@ -622,21 +639,21 @@ synthTermWith a wh ctx MContinue
 synthTermWith a wh ctx (MWhile mPred mBody mRest)
  = do
         -- Check the predicate.
-        (mPred', esPred)
+        (mPred', _mtsPred, esPred)
          <- checkTerm a wh ctx [TBool] mPred
 
         -- Check the body of the loop.
-        (mBody', esBody)
+        (mBody', _mtsBody, esBody)
          <- checkTerm a wh
                 (goInside InsideLoop ctx)
                 [] mBody
 
         -- Check the rest of the procedure.
-        (mRest', tsResult, esRest)
+        (mRest', mtsResult, esRest)
          <- synthTerm a wh ctx mRest
 
         return  ( MWhile mPred' mBody' mRest'
-                , tsResult, esPred ++ esBody ++ esRest)
+                , mtsResult, esPred ++ esBody ++ esRest)
 
 
 -- (t-synth-enter) ----------------------------------------
@@ -660,15 +677,15 @@ synthTermWith a wh ctx (MEnter mEnter bms mRest)
          <- fmap unzip $ mapM (checkTermProcBind a wh ctx') bms
 
         -- Check the entry expression, with the binders in scope.
-        (mEnter', esEnter)
+        (mEnter', _mtsEnter, esEnter)
          <- checkTermHas a wh ctx' [] mEnter
 
         -- Check the rest of the procedure.
-        (mRest', tsResult, esRest)
+        (mRest', mtsResult, esRest)
          <- synthTerm a wh ctx mRest
 
         return  ( MEnter mEnter' bms' mRest'
-                , tsResult, esEnter ++ concat essBind ++ esRest)
+                , mtsResult, esEnter ++ concat essBind ++ esRest)
 
 
 -- (t-leave) -----------------------------------------
@@ -676,7 +693,7 @@ synthTermWith _a _wh _ctx MLeave
  = do
         -- TODO: check we are in scope of an 'enter'
         return  ( MLeave
-                , [], [])
+                , Nothing, [])
 
 -- fail --------------------------------------------
 -- We don't know how to check this sort of term.
@@ -752,7 +769,7 @@ checkTermProcBind a wh ctx (MBind b mpss tResult mBody)
          <- checkTypesAreAll UKind a wh ctx' TData tResult
 
         -- The body must have type as specified by the result annotation.
-        (mBody', esBody)
+        (mBody', _rr, esBody)
          <- checkTerm a wh ctx' tsResult' mBody
 
         return  ( MBind b mpss' tsResult' mBody'

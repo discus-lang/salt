@@ -1,4 +1,4 @@
-test/30-error/31-check-term-decls/Test.salt:5:20
+test/30-error/31-check-term-decls/Test.salt:5:6
   Actual type '#Bool'
    does not match
    expected type '#Nat'

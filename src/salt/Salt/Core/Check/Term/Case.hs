@@ -27,24 +27,29 @@ checkCaseTermAlts a wh ctx mCase tScrut nmgsScrut msAlts
    | (_aPatBind, mpsPat_) <- unwrapTermParams a mpsPat
    , Just btsPat          <- takeMPTerms mpsPat_
    = do
-        -- Check the result in the context extended by the fields from the pattern.
-        -- Also ensure this alternative has the same result type as any others we
-        -- have checked before.
+        -- Check the result in the context extended by the fields from the
+        -- pattern. Also ensure this alternative has the same result type as
+        -- any others we have checked before.
         let aBody = fromMaybe a $ takeAnnotOfTerm mBody
         let ctx'  = contextBindTermParams (MPTerms btsPat) ctx
 
-        (mBody', tsResult, esResult)
+        -- If one of the previous alternatives might produce a result vector
+        -- then result vectors produced by later alternatives must also have
+        -- the same type.
+        (mBody', mtsResult', esResult)
          <- case mtsResult of
                 Just ts
-                 -> do  (m, es) <- checkTerm aBody wh ctx' ts mBody
-                        return (m, ts, es)
+                 -> do  (m, _rr, es) <- checkTerm aBody wh ctx' ts mBody
+                        return (m, mtsResult, es)
                 Nothing
-                 -> do  synthTerm aBody wh ctx' mBody
-
+                 -> do  (m, rr, es)  <- synthTerm aBody wh ctx' mBody
+                        case rr of
+                         Just ts -> return (m, Just ts,   es)
+                         _       -> return (m, mtsResult, es)
 
         checkAlts msAltsRest
             (MVarAlt nPat mpsPat mBody' : msAltsChecked)
-            (Just tsResult)
+            mtsResult'
             (esResult ++ esAlt)
 
   checkAlts [] msAltsChecked (Just tsResult) esAlt
@@ -53,6 +58,7 @@ checkCaseTermAlts a wh ctx mCase tScrut nmgsScrut msAlts
                 , reverse esAlt)
 
   -- There are either no alternatives or one of them is not a MVarAlt term.
+  -- TODO: handle case where no alt produces a result vector.
   checkAlts _ _ _ _
      = throw $ ErrorTermMalformed a wh mCase
 
@@ -85,7 +91,7 @@ checkCaseProcAlts a wh ctx mCase tScrut nmgsScrut msAlts
         let aBody = fromMaybe a $ takeAnnotOfTerm mBody
         let ctx'  = contextBindTermParams (MPTerms btsPat) ctx
 
-        (mBody', esBody)
+        (mBody', _rr, esBody)
          <- contextCheckTerm ctx' aBody wh ctx' [] mBody
 
         checkAlts msAltsRest

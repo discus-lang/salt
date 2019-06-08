@@ -13,10 +13,11 @@ module Salt.Core.Check.Term.Base
         , module Control.Exception
         , module Data.Maybe
         , synthTerm,  checkTerm
-        , synthTerm1, checkTerm1
-        , synthTerms, checkTerms
-        , checkTermHas
-        , checkTermsAreAll)
+        , synthTermProductive, synthTermProductive1
+        , synthTermsConjunctive
+        , checkTerm1
+        , checkTermsAreEach, checkTermsAreAll
+        , checkTermHas)
 where
 import Salt.Core.Check.Context
 import Salt.Core.Check.Equiv
@@ -33,16 +34,29 @@ import Data.Maybe
 
 
 ---------------------------------------------------------------------------------------------------
+-- | Type check a single term.
+checkTerm :: CheckTerm a
+checkTerm a wh ctx ts term
+ = contextCheckTerm ctx a wh ctx ts term
+
+
 -- | Synthesise a type for a single term.
 synthTerm :: SynthTerm a
 synthTerm a wh ctx term
  = contextSynthTerm ctx a wh ctx term
 
 
--- | Type check a single term.
-checkTerm :: CheckTerm a
-checkTerm a wh ctx ts term
- = contextCheckTerm ctx a wh ctx ts term
+-- | Like `synthTerm`, but expect the term to be productive.
+synthTermProductive
+        :: Annot a => a -> [Where a]
+        -> Context a -> Term a
+        -> IO (Term a, [Type a], [Effect a])
+
+synthTermProductive a wh ctx m
+ = do   (m', rr', es') <- synthTerm a wh ctx m
+        case rr' of
+         Nothing  -> error "TODO: not productive. add better error message."
+         Just ts' -> return (m', ts', es')
 
 
 -- (t-one) ----------------------------------------------------------------------------------------
@@ -50,73 +64,80 @@ checkTerm a wh ctx ts term
 checkTerm1
         :: Annot a => a -> [Where a]
         -> Context a -> Type a -> Term a
-        -> IO (Term a, [Effect a])
+        -> IO (Term a, Maybe (Type a), [Effect a])
 
 checkTerm1 a wh ctx t m
- = do   (m', es') <- checkTerm a wh ctx [t] m
-        return (m', es')
+ = do   (m', rr', es') <- checkTerm a wh ctx [t] m
+        case rr' of
+         Nothing   -> return (m', Nothing, es')
+         Just [t'] -> return (m', Just t',  es')
+         Just ts'  -> throw $ ErrorWrongArityUp UTerm a wh ts' [TData]
 
 
--- | Like 'synthTerm', but expect a single result type.
-synthTerm1
+-- | Like 'synthTerm1', but expect the term to be productive.
+synthTermProductive1
         :: Annot a => a -> [Where a]
         -> Context a -> Term a
         -> IO (Term a, Type a, [Effect a])
 
-synthTerm1 a wh ctx m
- = do   (m', ts', es') <- synthTerm a wh ctx m
-        case ts' of
-         [t]    -> return (m', t, es')
-         _      -> throw $ ErrorWrongArityUp UTerm a wh ts' [TData]
+synthTermProductive1 a wh ctx m
+ = do   (m', rr', es') <- synthTerm a wh ctx m
+        case rr' of
+         Nothing  -> error "TODO: not productive. add better error message."
+         Just [t] -> return (m', t, es')
+         Just ts' -> throw $ ErrorWrongArityUp UTerm a wh ts' [TData]
 
 
 -- (t-many / t-gets) ------------------------------------------------------------------------------
--- This function implements both the t-many and t-gets rules from the declarative
--- version of the typing rules. In this algorithmic, bidirectional implementation
--- the expected types are represented in the checker mode we get from the caller.
 
-synthTerms
+-- Synthesise types for each of the terms,
+-- and combine them conjunctively into the same result vector.
+synthTermsConjunctive
         :: Annot a => a -> [Where a]
         -> Context a -> [Term a]
-        -> IO ([Term a], [Type a], [Effect a])
+        -> IO ([Term a], Maybe [Type a], [Effect a])
 
-synthTerms a wh ctx ms
- = do   (ms', ts', ess')
-         <- fmap unzip3
-         $  mapM (synthTerm1 a wh ctx) ms
-        return (ms', ts', concat ess')
+synthTermsConjunctive a wh ctx ms
+ = do   (ms', rss', ess')
+         <- fmap unzip3 $ mapM (synthTerm a wh ctx) ms
+
+        let rs' = fmap concat $ sequence rss'
+
+        return (ms', rs', concat ess')
 
 
--- | Check a list of individual terms.
-checkTerms
+-- | Given a list of terms, if a term's result is defined then check
+--   that it matches the corresponding type vector.
+checkTermsAreEach
         :: Annot a => a -> [Where a]
         -> Context a -> [Type a] -> [Term a]
         -> IO ([Term a], [Effect a])
 
-checkTerms a wh ctx tsExpected ms
+checkTermsAreEach a wh ctx tsExpected ms
  | length ms == length tsExpected
- = do   (ms', ess')
-         <- fmap unzip
+ = do   (ms', _rs, ess')
+         <- fmap unzip3
          $  zipWithM (\t m -> checkTerm1 a wh ctx t m) tsExpected ms
         return (ms', concat ess')
 
  | otherwise
- = do   (_ms, ts', _ess')
-         <- fmap unzip3 $ mapM (synthTerm1 a wh ctx) ms
-        let ksExpected = replicate (length tsExpected) TData
-        throw $ ErrorWrongArityUp UTerm a wh ts' ksExpected
+ = do   -- (_ms, ts', _ess')
+        -- <- fmap unzip3 $ mapM (synthTerm1 a wh ctx) ms
+        -- let ksExpected = replicate (length tsExpected) TData
+        -- throw $ ErrorWrongArityUp UTerm a wh ts' ksExpected
+        error "TODO: better error for arity mismatch"
 
 
--- | Check the given terms all have the specified type,
---   bundling all the caused effects together in the result.
+-- Like `checkTermsAreEach`, but use the same expected type for each
+-- of the terms.
 checkTermsAreAll
         :: Annot a => a -> [Where a]
         -> Context a -> Type a -> [Term a]
         -> IO ([Term a], [Effect a])
 
 checkTermsAreAll a wh ctx tExpected ms
- = do   (ms', effs)
-         <- fmap unzip
+ = do   (ms', _rs, effs)
+         <- fmap unzip3
          $  mapM (\m -> checkTerm1 a wh ctx tExpected m) ms
         return (ms', concat effs)
 
@@ -128,18 +149,39 @@ checkTermsAreAll a wh ctx tExpected ms
 checkTermHas
         :: Annot a => a -> [Where a]
         -> Context a -> [Type a] -> Term a
-        -> IO (Term a, [Effect a])
+        -> IO (Term a, Maybe [Type a], [Effect a])
 
 checkTermHas a wh ctx tsExpected m
  = do
-        (m', tsActual, esActual)
+        (m', mtsActual, esActual)
          <- synthTerm a wh ctx m
 
+        checkResultMatchesIfDefined
+                a wh ctx tsExpected mtsActual
+
+        return (m', mtsActual, esActual)
+
+
+
+-- | If the result is defined then check it matches the given types.
+checkResultMatchesIfDefined
+        :: Annot a => a -> [Where a]
+        -> Context a -> [Type a] -> Maybe [Type a]
+        -> IO ()
+
+checkResultMatchesIfDefined
+        a wh ctx tsExpected (Just tsActual)
+ = do
         when (length tsActual /= length tsExpected)
          $ throw $ ErrorWrongArity UTerm a wh tsActual tsExpected
 
         checkTypeEquivs ctx a [] tsActual a [] tsExpected
          >>= \case
-                Nothing -> return (m', esActual)
-                Just ((_a1, tActualErr), (_a2, tExpectedErr))
-                 -> throw $ ErrorMismatch UType a wh tActualErr tExpectedErr
+               Nothing -> return ()
+               Just ((_a1, tActualErr), (_a2, tExpectedErr))
+                -> throw $ ErrorMismatch UType a wh tActualErr tExpectedErr
+
+checkResultMatchesIfDefined
+        _a _wh _ctx _ Nothing
+ = return ()
+

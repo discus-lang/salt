@@ -5,21 +5,21 @@ test/30-error/12-check-proc/Test.salt:7:26
 
   7:11   In test
 
-test/30-error/12-check-proc/Test.salt:14:33
+test/30-error/12-check-proc/Test.salt:14:29
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
   14:11  In test
 
-test/30-error/12-check-proc/Test.salt:23:7
+test/30-error/12-check-proc/Test.salt:23:2
   Actual type '#Nat'
    does not match
    expected type '#Bool'
 
   22:11  In test
 
-test/30-error/12-check-proc/Test.salt:27:16
+test/30-error/12-check-proc/Test.salt:27:2
   Too many terms.
    Actual   type '#Nat'
    Expected types []
@@ -35,14 +35,14 @@ test/30-error/12-check-proc/Test.salt:37:2
 test/30-error/12-check-proc/Test.salt:43:21
   Too many terms.
    Actual   type '#Nat'
-   Expected kinds []
+   Expected types []
 
   42:2   In test
 
-test/30-error/12-check-proc/Test.salt:50:16
+test/30-error/12-check-proc/Test.salt:50:11
   Too many terms.
    Actual   type '#Nat'
-   Expected kinds []
+   Expected types []
 
   50:11  In test
 

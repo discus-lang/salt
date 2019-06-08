@@ -54,19 +54,17 @@ checkDeclTest _a ctx (DTest (DeclTestExec a bWatch nDecl mBody))
  = do   let wh  = [WhereTestDecl a nDecl]
 
         -- Check the body term.
-        (mBody', tsResult, esResult)
-         <- synthTerm a wh ctx mBody
+        (mBody', tResult, esResult)
+         <- synthTermProductive1 a wh ctx mBody
+
+        tResult_simp <- simplType a ctx tResult
+        when (not $ isTSusp tResult_simp)
+         $ throw $ ErrorTestDeclNotSusp a wh nDecl [tResult]
 
         -- The body must be pure.
         eBody_simp <- simplType a ctx (TSum esResult)
         when (not $ isTPure eBody_simp)
          $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
-
-        -- The result must be a suspension to execute.
-        tsResult_simp <- simplTypes a ctx tsResult
-        case tsResult_simp of
-         [t] | isTSusp t        -> return ()
-         _ -> throw $ ErrorTestDeclNotSusp a wh nDecl tsResult
 
         return  $ DTest $ DeclTestExec a bWatch nDecl mBody'
 
@@ -76,7 +74,7 @@ checkDeclTest _a ctx (DTest (DeclTestAssert a bWatch nDecl mBody))
  = do   let wh  = [WhereTestDecl a nDecl]
 
         -- Check the body term.
-        (mBody', esResult)
+        (mBody', _rr, esResult)
          <- checkTerm a wh ctx [TBool] mBody
 
         -- The body must be pure.

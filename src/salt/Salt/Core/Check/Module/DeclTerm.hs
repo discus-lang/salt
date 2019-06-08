@@ -37,7 +37,7 @@ checkDeclTerm _a ctx
         tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
 
         -- Check the body.
-        (mBody', esResult)
+        (mBody', _rr, esResult)
          <- checkTerm a wh ctx' tsResult mBody
 
         -- The body must be pure.
@@ -72,7 +72,7 @@ checkDeclTerm _a ctx
          <- checkTypesAreAll UType a wh ctx' TData tsResult
 
         -- Check the body.
-        (mBody', esResult')
+        (mBody', _rr, esResult')
          <- contextCheckTerm ctx a wh
                 ctx' { contextInside = [InsideLaunch tsResult']}
                 tsResult

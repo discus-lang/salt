@@ -35,7 +35,7 @@ checkTermApp a wh ctx mFun0 mgss0
                     in  throw $ ErrorUnknownPrim UTerm aFun wh nPrm
 
                 Nothing
-                 -> synthTerm1 a wh ctx mFun0
+                 -> synthTermProductive1 a wh ctx mFun0
 
         -- Check that we have at least some arguments to apply.
         when (null mgss0)
@@ -130,7 +130,7 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
    = do
         -- Check the arguments against the types of the parameters.
         (msArg', esArg)
-         <- checkTerms aArg wh ctx tsParam msArg
+         <- checkTermsAreEach aArg wh ctx tsParam msArg
 
         goHead  tsResult
                 (MGAnn aArg (MGTerms msArg') : mgssAcc)
@@ -141,7 +141,7 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
    , Just (aArg, mArg)  <- takeAnnMGTerm aApp mgs
    = do
         -- Check the arguments against the types of the parameters.
-        (mArg', esArg)
+        (mArg', _rr, esArg)
          <- checkTerm aArg wh ctx tsParam mArg
 
         goHead  tsResult
