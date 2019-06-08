@@ -12,9 +12,10 @@ module Salt.Core.Check.Term.Base
         , module Control.Monad
         , module Control.Exception
         , module Data.Maybe
-        , synthTerm,  checkTerm
-        , synthTermProductive, synthTermProductive1
-        , synthTermsConjunctive
+        , synthTerm
+        , synthTermProductive,   synthTermProductive1
+        , synthTermsConjunctive, synthTermsDisjunctive
+        , checkTerm
         , checkTerm1
         , checkTermsAreEach, checkTermsAreAll
         , checkTermHas)
@@ -34,25 +35,13 @@ import Data.Maybe
 
 
 ------------------------------------------------------------------------------------------ Synth --
--- | Synthesise the result type for a single term.
+-- | Synthesize the result type for a single term.
 synthTerm :: SynthTerm a (Maybe [Type a])
 synthTerm a wh ctx term
  = contextSynthTerm ctx a wh ctx term
 
 
--- Synthesise types for each of the terms,
--- and combine them conjunctively into the same result vector.
-synthTermsConjunctive :: SynthTerms a (Maybe [Type a])
-synthTermsConjunctive a wh ctx ms
- = do   (ms', rss', ess')
-         <- fmap unzip3 $ mapM (synthTerm a wh ctx) ms
-
-        let rs' = fmap concat $ sequence rss'
-
-        return (ms', rs', concat ess')
-
-
--- | Like `synthTerm`, but expect the term to be productive.
+-- | Like `synthTerm`, but require the term to be productive.
 synthTermProductive :: SynthTerm a [Type a]
 synthTermProductive a wh ctx m
  = do   (m', rr', es') <- synthTerm a wh ctx m
@@ -61,7 +50,8 @@ synthTermProductive a wh ctx m
          Just ts' -> return (m', ts', es')
 
 
--- | Like 'synthTerm1', but expect the term to be productive.
+-- | Like 'synthTerm', but require the term to be productive,
+--   and to produce a single value.
 synthTermProductive1 :: SynthTerm a (Type a)
 synthTermProductive1 a wh ctx m
  = do   (m', rr', es') <- synthTerm a wh ctx m
@@ -69,6 +59,31 @@ synthTermProductive1 a wh ctx m
          Nothing  -> error "TODO: not productive. add better error message."
          Just [t] -> return (m', t, es')
          Just ts' -> throw $ ErrorWrongArityUp UTerm a wh ts' [TData]
+
+
+-- | Synthesize types for each of the terms,
+--   and combine them conjunctively into the same result vector.
+--
+--   If any of the terms is non-productive then treat the whole result
+--   as non-productive, otherwise concatenate the results from each
+--   of the terms into the overall result.
+synthTermsConjunctive :: SynthTerms a (Maybe [Type a])
+synthTermsConjunctive a wh ctx ms
+ = do   (ms', rss', ess')
+         <- fmap unzip3 $ mapM (synthTerm a wh ctx) ms
+        let rs' = fmap concat $ sequence rss'
+        return (ms', rs', concat ess')
+
+
+-- | Synthesize types of each of the terms,
+--   and combine them disjunctively into the same result vector.
+synthTermsDisjunctive :: SynthTerms a (Maybe [Type a])
+synthTermsDisjunctive a wh ctx ms
+ = do   (ms', rss', ess')
+         <- fmap unzip3 $ mapM (synthTerm a wh ctx) ms
+
+        rs' <- mergeResults a wh ctx rss'
+        return (ms', rs', concat ess')
 
 
 ------------------------------------------------------------------------------------------ Check --
@@ -157,3 +172,30 @@ checkResultMatchesIfDefined
         _a _wh _ctx _ Nothing
  = return ()
 
+
+
+-- | Merge results disjunctively.
+mergeResults
+        :: Annot a => a -> [Where a]
+        -> Context a -> [Maybe [Type a]] -> IO (Maybe [Type a])
+mergeResults a wh ctx rss0
+ = goNone rss0
+ where
+        goNone    []                = return Nothing
+        goNone    (Nothing : rss)   = goNone rss
+        goNone    (Just ts : rss)   = goSome ts rss
+
+        goSome ts []                = return $ Just ts
+        goSome ts (Nothing  : rss)  = goSome ts rss
+        goSome ts (Just ts' : rss)
+         = do
+                when (length ts' /= length ts)
+                   $ throw $ ErrorWrongArity UTerm a wh ts' ts
+
+                checkTypeEquivs ctx a [] ts' a [] ts
+                   >>= \case
+                         Nothing -> return ()
+                         Just ((_a1, tActualErr), (_a2, tExpectedErr))
+                          -> throw $ ErrorMismatch UType a wh tActualErr tExpectedErr
+
+                goSome ts rss

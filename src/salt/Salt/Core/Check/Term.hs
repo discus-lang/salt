@@ -1,6 +1,5 @@
 
 module Salt.Core.Check.Term where
--- import Salt.Core.Check.Term.Proc
 import Salt.Core.Check.Term.App
 import Salt.Core.Check.Term.Case
 import Salt.Core.Check.Term.Bind
@@ -13,9 +12,6 @@ import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Data.Map.Strict        as Map
--- import qualified Data.Set               as Set
-
--- import qualified Text.Show.Pretty       as Debug
 
 
 ------------------------------------------------------------------------------------------ Synth --
@@ -374,20 +370,20 @@ synthTermWith a wh ctx mCase@(MVarCase mScrut msAlt msElse)
 synthTermWith a wh ctx (MIf msCond msThen mElse)
  | length msCond == length msThen
  = do
+        -- The conditional expressions need to all produce Bools.
         (msCond', _rsCond, esCond)
          <- checkTermsAreAll a wh ctx TBool msCond
 
-        -- TODO: check branch types are compatible.
-        (msThen', _rss, essThen)
-         <- fmap unzip3
-         $  mapM (synthTerm a wh ctx) msThen
+        -- Make sure to check the 'then' branches before the rest of
+        -- the expression so errors in the branches are detected first.
+        (msResult', rsResult, esBranches)
+         <- synthTermsDisjunctive a wh ctx (reverse msThen ++ [mElse])
 
-        (mElse', mtsElse, esElse)
-         <- synthTerm a wh ctx mElse
+        let mElse' : msThen' = reverse msResult'
 
         return  ( MIf msCond' msThen' mElse'
-                , mtsElse
-                , esCond ++ concat essThen ++ esElse)
+                , rsResult
+                , esCond ++ esBranches)
 
 
 -- (t-synth-lst) ------------------------------------------
@@ -561,16 +557,16 @@ synthTermWith a wh ctx (MWhens msCond msThen mRest)
         (msCond', _rsCond, esCond)
          <- checkTermsAreAll a wh ctx TBool msCond
 
-        -- TODO: check the types of the branches are compatible.
-        (msThen', _rssThen, essThen)
-         <- fmap unzip3
-         $  mapM (checkTerm a wh ctx [])  msThen
+        -- Make sure to check the 'then' branches before the rest of
+        -- the expresson so errors in the branches are detected first.
+        (msThen', _rsThen, esThen)
+         <- fmap unzip3 $ mapM (checkTermHas a wh ctx []) msThen
 
-        (mRest', rsResult, esRest)
+        (mRest', rsResult, esResult)
          <- synthTerm a wh ctx mRest
 
         return  ( MWhens msCond' msThen' mRest'
-                , rsResult, esCond ++ concat essThen ++ esRest)
+                , rsResult, esCond ++ concat esThen ++ esResult)
 
 
 -- (t-synth-match) ----------------------------------------
