@@ -1,12 +1,12 @@
 
 module Salt.Core.Prim.Ops.Base
-        ( module Salt.Core.Transform.MapAnnot
+        ( module Salt.Core.Transform.StripAnnot
         , module Salt.Core.Exp
         , Prim(..)
         , typeOfPrim
         , effectOfPrim)
 where
-import Salt.Core.Transform.MapAnnot
+import Salt.Core.Transform.StripAnnot
 import Salt.Core.Exp
 
 

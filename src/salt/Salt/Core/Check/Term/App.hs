@@ -6,6 +6,8 @@ import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Data.Map.Strict        as Map
 
+-- import Salt.Core.Transform.StripAnnot
+
 -------------------------------------------------------------------------------------------- App --
 -- | Check an application of a term to its arguments.
 checkTermApp
@@ -47,14 +49,24 @@ checkTermApp a wh ctx mFun0 mgss0
         -- of functions that expect vectors to multiple term arguments,
         -- which is nicer to write in the source program.
         let elimsHave = length mgss0
+
         mgssReassoc
          <- if   not $ optionsReassocApps $ contextOptions ctx
             then return mgss0
             else do
                 elimsNeeded   <- termElimsOfType a ctx tFun1
+--                print (stripAnnot tFun1)
+--                print (elimsHave, elimsNeeded)
+
                 if   elimsHave > elimsNeeded
                 then reassocApps a ctx tFun1 mgss0
                 else return mgss0
+
+--        putStrLn $ "mFun0:       " ++ (show $ stripAnnot mFun0)
+--        putStrLn $ "tFun1:       " ++ (show $ stripAnnot tFun1)
+--        putStrLn $ "mgss0:       " ++ show (map stripAnnot mgss0)
+--        putStrLn $ "mgssReassoc: " ++ show (map stripAnnot mgssReassoc)
+--        putStrLn $ "\n"
 
         -- Check the functional expresion against the reassociate arguments.
         (mApp', tsApp', esApp')

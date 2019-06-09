@@ -4,7 +4,7 @@ import Salt.Core.Eval.Type
 import Salt.Core.Eval.Error
 import Salt.Core.Eval.Base
 import Salt.Core.Analysis.Support       ()
-import Salt.Core.Transform.MapAnnot
+import Salt.Core.Transform.StripAnnot
 import qualified Salt.Core.Prim.Ops     as Ops
 
 import Control.Exception
@@ -13,7 +13,7 @@ import qualified Data.Map               as Map
 import qualified Data.Set               as Set
 
 
----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------- Term --
 -- | Evaluate a term in the given environment.
 --
 --   This is a definitional interpreter that evaluates types as well as terms
@@ -59,7 +59,7 @@ evalTerm s a env (MVar u)
         Just (TermDefDecl m)  -> evalTerm s a menvEmpty m
 
         -- Can't find the binding site for this bound variable.
-        _ -> error $ show env -- throw $ ErrorTermVarUnbound a u env
+        _ -> throw $ ErrorTermVarUnbound a u env
 
 
 -- (evm-abs) -----------------------------------------------
@@ -93,19 +93,24 @@ evalTerm s a env (MAps mFun mgssArg)
  | Just nPrim <- takeMPrm mFun
  = do case Map.lookup nPrim Ops.primOps of
         Just (Ops.PP _name _type step _docs)
-         -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
+         -> do  nssArg <- mapM (evalTermArgs s a env) mgssArg
                 return $ step nssArg
 
         Just (Ops.PO _name _type _effs exec _docs)
-         -> do  nssArg   <- mapM (evalTermArgs s a env) mgssArg
+         -> do  nssArg <- mapM (evalTermArgs s a env) mgssArg
                 exec nssArg
 
         Nothing -> throw $ ErrorPrimUnknown a nPrim
 
 
 -- (evm-aps) -----------------------------------------------
-evalTerm s a env (MApp mFun mgs)
- = evalTermApp s a env (mFun, mgs, [])
+evalTerm s a env (MAps mFun mgssArg)
+ = do   vsClo <- evalTerm s a env mFun
+        nsArg <- mapM (evalTermArgs s a env) mgssArg
+
+        case vsClo of
+         [vClo] -> evalTermApp s a vClo nsArg
+         _      -> throw $ ErrorAppTermBadClosure a vsClo
 
 
 -- (evm-let) -----------------------------------------------
@@ -299,10 +304,10 @@ evalTerm s a env (MLaunch _tsRet mBody)
 
         handle' (e :: EvalControl a)
          = case e of
-                EvalControlReturn vs    -> return vs
-                EvalControlBreak        -> throw $ ErrorLaunchBreak a
-                EvalControlContinue     -> throw $ ErrorLaunchContinue a
-                EvalControlLeave        -> throw $ ErrorLaunchLeave a
+                EvalControlReturn vs -> return vs
+                EvalControlBreak     -> throw $ ErrorLaunchBreak a
+                EvalControlContinue  -> throw $ ErrorLaunchContinue a
+                EvalControlLeave     -> throw $ ErrorLaunchLeave a
 
 
 -- (evm-return) -------------------------------------------
@@ -502,8 +507,7 @@ evalTerm _s a _env mm
  =      throw $ ErrorInvalidTerm a mm
 
 
----------------------------------------------------------------------------------------------------
--- | Like `evalTerm`, but expect a single result value.
+-- | Evaluate Like `evalTerm`, but expect a single result value.
 evalTerm1 :: EvalTerm a (Term a) (Value a)
 evalTerm1 s a env m
  = do   vs      <- evalTerm s a env m
@@ -518,7 +522,8 @@ evalTerms s a env ms
  = mapM (evalTerm1 s a env) ms
 
 
----------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------- TermArgs --
+-- | Evaluate term arguments to normal form.
 evalTermArgs :: EvalTerm a (TermArgs a) (TermNormals a)
 evalTermArgs s a env mgs
  = case mgs of
@@ -540,66 +545,63 @@ evalTermArgs s a env mgs
 
 
 -------------------------------------------------------------------------------------------- App --
-evalTermApp :: EvalTerm a (Term a, TermArgs a, [TermArgs a]) [Value a]
-evalTermApp s a env (mFun, mgs, mgssRest)
- = do   vsCloTerm <- evalTerm s a env mFun
-        case vsCloTerm of
-         [VClosure (TermClosure env' mps@(MPTerms bts) mBody)]
-          -> case unwrapTermArgs a mgs of
-                (a', MGTerm m)
-                 -> do  let bs  = map fst bts
-                        vsArg   <- evalTerm s a env m
-                        when (not $ length vsArg == length bs)
-                         $ throw $ ErrorWrongTermArity a' (length bs) vsArg
+-- | Apply a closure to its normal form arguments.
+--
+--   This handles application in 'spine form', where we have a list of
+--   arguments instead of many individual application nodes.
+--
+evalTermApp
+        :: Annot a
+        => State a -> a
+        -> Value a -> [TermNormals a] -> IO [Value a]
 
-                        let env''  = menvExtendValues (zip bs vsArg) env'
-                        let mBody' = case mgssRest of
-                                        []      -> mBody
-                                        _       -> MAps mBody mgssRest
+evalTermApp s a
+        (VClosure (TermClosure env' (MPTerms bts) mBody))
+        (NVs vsArg : nssRest)
+ = do
+        let bs  = map fst bts
+        when (not $ length vsArg == length bs)
+         $ throw $ ErrorWrongTermArity a (length bs) vsArg
 
-                        evalTerm s a env'' mBody'
+        let env'' = menvExtendValues (zip bs vsArg) env'
+        vsBody <- evalTerm s a env'' mBody
+        case (vsBody, nssRest) of
+         (vs,     [])   -> return vs
+         ([vClo], nss') -> evalTermApp s a vClo nss'
+         _              -> throw $ ErrorAppTermBadClosure a vsBody
 
-                (a', MGTerms ms)
-                 -> do  let bs  = map fst bts
-                        vsArg   <- mapM (evalTerm1 s a env) ms
-                        when (not $ length vsArg == length bs)
-                         $ throw $ ErrorWrongTermArity a' (length bs) vsArg
+evalTermApp s a
+        (VClosure (TermClosure env' (MPTypes bks) mBody))
+        (NTs tsArg : nssRest)
+ = do
+        let bs  = map fst bks
+        when (not $ length tsArg == length bs)
+         $ throw $ ErrorWrongTypeArity a (length bs) tsArg
 
-                        let env'' = menvExtendValues (zip bs vsArg) env'
-                        let mBody' = case mgssRest of
-                                        []      -> mBody
-                                        _       -> MAps mBody mgssRest
-                        evalTerm s a env'' mBody'
+        let env'' = menvExtendTypes (zip bs tsArg) env'
+        vsBody <- evalTerm s a env'' mBody
+        case (vsBody, nssRest) of
+         (vs,     [])   -> return vs
+         ([vClo], nss') -> evalTermApp s a vClo nss'
+         _              -> throw $ ErrorAppTermBadClosure a vsBody
 
-                _ -> throw $ ErrorAppTermWrongArgs a mps mgs
+evalTermApp _s a (VClosure (TermClosure _ mps _mBody)) (ns : _)
+ = throw $ ErrorAppTermMismatch a mps ns
 
-         [VClosure (TermClosure env' mps@(MPTypes bks) mBody)]
-          -> case unwrapTermArgs a mgs of
-                (a', MGTypes ts)
-                 -> do  let bs   = map fst bks
-                        let tenv = menvSliceTypeEnv env
-                        tsArg   <- mapM (evalType s a' tenv) ts
-                        when (not $ length tsArg == length bs)
-                         $ throw $ ErrorWrongTypeArity a' (length bs) tsArg
-
-                        let env'' = menvExtendTypes (zip bs tsArg) env'
-                        let mBody' = case mgssRest of
-                                        []      -> mBody
-                                        _       -> MAps mBody mgssRest
-                        evalTerm s a env'' mBody'
-
-                _ -> throw $ ErrorAppTermWrongArgs a mps mgs
-
-         _  -> throw $ ErrorAppTermBadClosure a vsCloTerm
+evalTermApp _s a vClo _
+ = throw $ ErrorAppTermBadClosure a [vClo]
 
 
 ----------------------------------------------------------------------------------------- Bundle --
 -- | Evaluate an application of #bundle'new which reifies
 --   declarations from the context into a value.
+--   TODO: this is incomplete.
 evalBundleNew :: EvalTerm a ([Name], [Name]) [Value a]
 evalBundleNew s _a _env (_nsType, nsTerm)
  = do
---        let ndsType = Map.fromList [ (declName n, d) | d@DeclType{} <- stateModule s ]
+--        let ndsType
+--                = Map.fromList [ (declName n, d) | d@DeclType{} <- stateModule s ]
+
         let ndsTerm
                 = Map.fromList
                 $ [ (n, d) |  DTerm d@(DeclTerm _ _ n _ _ _)

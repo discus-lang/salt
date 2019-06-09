@@ -332,7 +332,7 @@ pTermApp ctx
 
  , do   -- TermArg TermArgs*
         mFun <- pTermArgProj ctx
-        pTermAppArgs ctx mFun
+        pTermAppArgsSat ctx mFun
          <?> "arguments for the application"
  ]
 
