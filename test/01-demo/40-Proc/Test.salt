@@ -4,7 +4,7 @@ term derp [n: #Nat]: #Nat ! #Console
    let x  = 5;
    let y  = the <foo: #Nat> of `foo 4;
    let [] = #console'print "derp";
-   when (#nat'eq [x, 0]) return 3;
+   when (#nat'eq x 0) return 3;
    cell n: #Nat ← 0;
    loop #console'print "derp";
    [3]
@@ -15,22 +15,8 @@ term derps [n: #Nat]: #Nat ! #Console
    let x = 5
    let y = the <foo: #Nat> of `foo 4
    seq #console'print "derp"
-   when (#nat'eq [x, 0]) return 3
+   when (#nat'eq x 0) return 3
    cell n: #Nat ← 0
    loop #console'print "derp"
    [n]
-
-
--- term derp [n: #Nat]: #Nat ! #Console
---  = box proc #Nat of
---    seq {
---         let x = 5;
---         let y = the <foo: #Nat> of `foo 4;
---         #console'print "derp";
---         if #nat'eq [x, 0] then return 3;
---         case y of { foo [x: #Nat] → return x }
---         cel n : #Nat ← 0
---         return 5
---    }
-
 

@@ -16,10 +16,10 @@ term append @[a: #Data] [xx: #List a, yy: #List a]: #List a
  = case #list'case @a xx of
         nil   [] → yy
         cons  [x: a, xs: #List a]
-         → #list'cons @a [x, append @a [xs, yy]]
+         → #list'cons @a x (append @a xs yy)
 
 test eval append
- = append @#Nat [[list #Nat| 10, 11, 12], [list #Nat| 13, 14, 15]]
+ = append @#Nat [list #Nat| 10, 11, 12] [list #Nat| 13, 14, 15]
 
 
 -- Reverse
@@ -27,7 +27,7 @@ term reverse @[a: #Data] [xx: #List a]: #List a
  = case #list'case @a xx of
         nil  [] → [list a|]
         cons [x: a, xs: #List a]
-         → append @a [reverse @a xs, #list'one @a x]
+         → append @a (reverse @a xs) (#list'one @a x)
 
 test eval reverse
  = reverse @#Nat [list #Nat| 10, 12, 13, 14]

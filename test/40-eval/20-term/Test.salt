@@ -54,21 +54,21 @@ test eval evm'let
 -- (evm-rec) ----------------------------------------------
 test eval evm'rec
  = rec { fac [n: #Nat]: #Nat
-          = if #nat'eq [n, 0]
+          = if #nat'eq n 0
               then 1
-              else #nat'add [n, fac [#nat'sub [n, 1]]] }
-   in fac [5]
+              else #nat'add n (fac (#nat'sub n 1)) }
+   in fac 5
 
 
 -- (evm-rcd) ----------------------------------------------
 test eval evm'rcd
- = [ x = [#nat'add [2, 3], 5]
-   , y = [#nat'add [4, 5], 9] ]
+ = [ x = [#nat'add 2 3, 5]
+   , y = [#nat'add 4 5, 9] ]
 
 
 -- (evm-prj) ----------------------------------------------
 test eval evm'prj
- = [ x = [#nat'add [2, 3], 5]
+ = [ x = [#nat'add 2 3, 5]
    , y = 23].x
 
 
@@ -115,7 +115,7 @@ term someMap  @[tk: #Data, tv: #Data] [k: tk, v: tv]: #Map [tk, tv]
  = [map tk tv| k := v ]
 
 test eval evm'map
- = someMap @[#Nat, #Symbol] [5, 'Derp]
+ = someMap @#Nat @#Symbol 5 'Derp
 
 -- (evm-private) ----------------------------------------------
 test eval region'private'nat

@@ -5,7 +5,6 @@ import Salt.Core.Check.Error
 import Salt.Core.Codec.Text.Pretty
 import Salt.Core.Codec.Text             ()
 import Salt.Core.Exp
-import Salt.Data.Pretty
 
 
 ---------------------------------------------------------------------------------------------------

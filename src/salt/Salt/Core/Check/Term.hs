@@ -183,7 +183,6 @@ synthTermWith a wh ctx (MAps mFun mgss)
 
 
 -- (t-synth-let) ------------------------------------------
--- TODO: also add check form.
 synthTermWith a wh ctx (MLet mps mBind mBody)
  | (aParam, mps_) <- unwrapTermParams a mps
  , Just _bts      <- takeMPTerms mps_
@@ -228,7 +227,6 @@ synthTermWith a wh ctx (MLet mps mBind mBody)
 
 
 -- (t-synth-rec) ------------------------------------------
--- TODO: also add check form.
 synthTermWith a wh ctx (MRec bms mBody)
  = do
         -- Check the type annotations on each of the binders.
@@ -325,7 +323,6 @@ synthTermWith a wh ctx (MVariant nLabel mValues tVariant)
 
 
 -- (t-synth-cse) ------------------------------------------
--- TODO: also add check form.
 synthTermWith a wh ctx mCase@(MVarCase mScrut msAlt msElse)
  | length msAlt  >= 1
  , length msElse <= 1
@@ -419,7 +416,6 @@ synthTermWith a wh ctx m@(MMap tk tv msk msv)
 
 
 -- (t-synth-private) --------------------------------------
--- TODO: add check form.
 synthTermWith a wh ctx (MPrivate bksR btsW mBody)
  = do
         -- TODO keep unpacking and repacking using MPTypes/MPTerms
@@ -446,7 +442,6 @@ synthTermWith a wh ctx (MPrivate bksR btsW mBody)
 
 
 -- (t-synth-extend) ---------------------------------------
--- TODO: add check form.
 synthTermWith a wh ctx (MExtend r1 bksR btsW mBody)
  = do
         -- TODO keep unpacking and repacking using MPTypes/MPTerms
@@ -492,7 +487,6 @@ synthTermWith a wh ctx (MLaunch tsResult mBody)
 
 
 -- (t-synth-return) ---------------------------------------
--- TODO: add check form.
 synthTermWith a wh ctx (MReturn mBody)
  = do
         -- Get the expected type from the enclosing launch construct,
@@ -510,7 +504,6 @@ synthTermWith a wh ctx (MReturn mBody)
 
 
 -- (t-synth-cell) -----------------------------------------
--- TODO: add check form.
 synthTermWith a wh ctx (MCell nCell tCell mBind mRest)
  = do
         tCell' <- checkTypeHas UKind a wh ctx TData tCell
@@ -690,6 +683,7 @@ synthTermWith _a _wh _ctx MLeave
         return  ( MLeave
                 , Nothing, [])
 
+
 -- fail --------------------------------------------
 -- We don't know how to check this sort of term.
 synthTermWith a wh _ctx mm
@@ -705,7 +699,37 @@ checkTermWith a wh ctx tsExpected m
  = checkTermHas a wh ctx tsExpected m
 
 
+----------------------------------------------------------------------------------- TermProcBind --
+-- | Check a `TermProcBind`.
+checkTermProcBind
+        :: Annot a => a -> [Where a]
+        -> Context a -> TermBind a -> IO (TermBind a, [Effect a])
+
+checkTermProcBind a wh ctx (MBind b mpss tResult mBody)
+ = do   -- Check the parameters.
+        (ctx', mpss')
+         <- checkTermParamss a wh ctx mpss
+
+        -- There must be at least one vector of term parameters,
+        -- as we do not support value recursion in the evaluator.
+        when (not $ any isJust $ map takeMPTerms mpss)
+         $ throw $ ErrorRecValueRecursion a wh b
+
+        -- Check the result type annotation.
+        tsResult'
+         <- checkTypesAreAll UKind a wh ctx' TData tResult
+
+        -- The body must have type as specified by the result annotation.
+        (mBody', _rr, esBody)
+         <- checkTerm a wh ctx' tsResult' mBody
+
+        return  ( MBind b mpss' tsResult' mBody'
+                , esBody)
+
+
 ------------------------------------------------------------------------------------------ Check --
+-- TODO: reinstate check mode for record typing.
+--
 --        mode' <- simplMode a ctx mode
 --        case mode' of
 --         -- If we have an expected type for all the fields then check the fields
@@ -743,29 +767,3 @@ checkTermWith a wh ctx tsExpected m
 --          -> do
 
 
------------------------------------------------------------------------------------ TermProcBind --
--- | Check a `TermProcBind`.
-checkTermProcBind
-        :: Annot a => a -> [Where a]
-        -> Context a -> TermBind a -> IO (TermBind a, [Effect a])
-
-checkTermProcBind a wh ctx (MBind b mpss tResult mBody)
- = do   -- Check the parameters.
-        (ctx', mpss')
-         <- checkTermParamss a wh ctx mpss
-
-        -- There must be at least one vector of term parameters,
-        -- as we do not support value recursion in the evaluator.
-        when (not $ any isJust $ map takeMPTerms mpss)
-         $ throw $ ErrorRecValueRecursion a wh b
-
-        -- Check the result type annotation.
-        tsResult'
-         <- checkTypesAreAll UKind a wh ctx' TData tResult
-
-        -- The body must have type as specified by the result annotation.
-        (mBody', _rr, esBody)
-         <- checkTerm a wh ctx' tsResult' mBody
-
-        return  ( MBind b mpss' tsResult' mBody'
-                , esBody)

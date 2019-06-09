@@ -3,7 +3,8 @@
 -- term print @[a: #Data] [x: a]: [] !#Console
 --  = box #console'println (#reify'pretty @a x)
 
-term derp [x: #Nat]: #Bool = #nat'eq [x, 0]
+term derp [x: #Nat]: #Bool
+ = #nat'eq x 0
 
 term fac [x: #Nat]: #Nat
  = launch #Nat of

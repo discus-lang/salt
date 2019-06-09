@@ -12,5 +12,5 @@ test eval launch #Nat of
 
 
 -- Local use of launch/return in a functional expression.
-test eval #nat'add [launch #Nat of return 2, 3]
+test eval #nat'add (launch #Nat of return 2) 3
 

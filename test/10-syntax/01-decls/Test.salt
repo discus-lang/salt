@@ -15,7 +15,7 @@ type some2 [a: #Data]: #Data = [x: a, y: a]
 term fac [x: #Nat]: #Nat
  = if #nat'eq [x, 0]
         then 1
-        else #nat'mul [x, fac [#nat'sub [x, 1]]]
+        else #nat'mul x (fac (#nat'sub x 1))
 
 
 -- Test decls -----------------------------------------------------------------

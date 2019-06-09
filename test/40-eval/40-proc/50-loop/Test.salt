@@ -5,9 +5,9 @@ test eval launch #Nat of
  do     cell n: #Nat ← 10
         cell x: #Nat ← 1
         loop do
-                when (#nat'eq [n, 0]) break
-                x ← #nat'mul [x, n]
-                n ← #nat'sub [n, 1]
+                when (#nat'eq n 0) break
+                x ← #nat'mul x n
+                n ← #nat'sub n 1
         return x
 
 
@@ -15,12 +15,12 @@ test eval launch #Nat of
 proc square []: []! #Console
  = do   cell x: #Nat ← 9
         loop do
-                when (#nat'eq [x, 0]) break
-                x ← #nat'sub [x, 1]
+                when (#nat'eq x 0) break
+                x ← #nat'sub x 1
                 cell y: #Nat ← 9
                 loop do
-                        when (#nat'eq [y, 0]) break
-                        y ← #nat'sub [y, 1]
+                        when (#nat'eq y 0) break
+                        y ← #nat'sub y 1
                         #console'print "o"
                 #console'print "\n"
         #console'print "\n"
@@ -31,11 +31,11 @@ test exec square []
 -- Draw a square, using while syntax.
 proc square2 []: []! #Console
  = do   cell x: #Nat ← 9
-        while (#nat'gt [x, 0]) do
-                x ← #nat'sub [x, 1]
+        while (#nat'gt x 0) do
+                x ← #nat'sub x 1
                 cell y: #Nat ← 9
-                while (#nat'gt [y, 0]) do
-                        y ← #nat'sub [y, 1]
+                while (#nat'gt y 0) do
+                        y ← #nat'sub y 1
                         #console'print "x"
                 #console'print "\n"
         #console'print "\n"
@@ -49,16 +49,16 @@ proc square3 []: []! #Console
         cell y: #Nat ← 9
         enter go [] with
          go []: []
-          = do  when (#nat'eq [y, 0]) leave
+          = do  when (#nat'eq y 0) leave
 
-                when (#nat'eq [x, 0]) do
-                        y ← #nat'sub [y, 1]
+                when (#nat'eq x 0) do
+                        y ← #nat'sub y 1
                         x ← 9
                         #console'print "\n"
                         go []
 
                 #console'print "o"
-                x ← #nat'sub [x, 1]
+                x ← #nat'sub x 1
                 go []
         #console'print "\n"
 
