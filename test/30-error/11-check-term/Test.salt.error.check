@@ -1,4 +1,4 @@
-test/30-error/11-check-term/Test.salt:5:23
+test/30-error/11-check-term/Test.salt:5:11
   Actual type '#Bool'
    does not match
    expected type '#Nat'
@@ -142,18 +142,18 @@ test/30-error/11-check-term/Test.salt:88:13
 test/30-error/11-check-term/Test.salt:91:21
   Not enough terms.
    Actual   type '#Bool'
-   Expected kinds [#Data, #Data]
+   Expected types [#Bool, #Bool]
 
   91:11  In test
 
 test/30-error/11-check-term/Test.salt:94:21
   Too many terms.
    Actual   types [#Bool, #Bool, #Bool]
-   Expected kinds [#Data, #Data]
+   Expected types [#Bool, #Bool]
 
   94:11  In test
 
-test/30-error/11-check-term/Test.salt:97:22
+test/30-error/11-check-term/Test.salt:97:21
   Actual type '#Nat'
    does not match
    expected type '#Bool'
@@ -173,14 +173,14 @@ test/30-error/11-check-term/Test.salt:104:21
 
   104:11 In test
 
-test/30-error/11-check-term/Test.salt:107:52
+test/30-error/11-check-term/Test.salt:107:21
   Too many terms.
    Actual   types [#Bool, #Bool, #Bool]
    Expected types [#Bool, #Bool]
 
   107:11 In test
 
-test/30-error/11-check-term/Test.salt:110:37
+test/30-error/11-check-term/Test.salt:110:21
   Actual type '#Nat'
    does not match
    expected type '#Bool'
@@ -246,7 +246,7 @@ test/30-error/11-check-term/Test.salt:147:30
 
   147:11 In test
 
-test/30-error/11-check-term/Test.salt:150:37
+test/30-error/11-check-term/Test.salt:150:11
   Actual type '#Bool'
    does not match
    expected type '#Nat'
@@ -263,15 +263,14 @@ test/30-error/11-check-term/Test.salt:156:11
 
   156:11 In test
 
-test/30-error/11-check-term/Test.salt:162:54
+test/30-error/11-check-term/Test.salt:162:11
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  162:38 In field "y" of type [#Nat]
   162:11 In test
 
-test/30-error/11-check-term/Test.salt:165:23
+test/30-error/11-check-term/Test.salt:165:11
   Actual type '∏[x: #Bool, y: #Bool]'
    does not match
    expected type '#Nat'
@@ -294,12 +293,11 @@ test/30-error/11-check-term/Test.salt:174:22
 
   174:11 In test
 
-test/30-error/11-check-term/Test.salt:179:35
+test/30-error/11-check-term/Test.salt:179:11
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  179:23 In field "y" of type [#Nat]
   179:11 In test
 
 test/30-error/11-check-term/Test.salt:184:11
@@ -333,14 +331,14 @@ test/30-error/11-check-term/Test.salt:198:15
 
   198:11 In test
 
-test/30-error/11-check-term/Test.salt:201:35
+test/30-error/11-check-term/Test.salt:201:11
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
   201:11 In test
 
-test/30-error/11-check-term/Test.salt:204:48
+test/30-error/11-check-term/Test.salt:204:11
   Actual type '#Nat'
    does not match
    expected type '#Bool'
@@ -420,116 +418,116 @@ test/30-error/11-check-term/Test.salt:250:16
 
   250:11 In test
 
-test/30-error/11-check-term/Test.salt:253:14
+test/30-error/11-check-term/Test.salt:253:11
   Actual type '#Nat'
    does not match
    expected type '#Bool'
 
   253:11 In test
 
-test/30-error/11-check-term/Test.salt:256:25
-  Actual type '#Bool'
+test/30-error/11-check-term/Test.salt:257:11
+  Actual type '#Nat'
    does not match
-   expected type '#Nat'
+   expected type '#Bool'
 
-  256:11 In test
+  257:11 In test
 
-test/30-error/11-check-term/Test.salt:261:18
+test/30-error/11-check-term/Test.salt:262:18
   Cannot apply type
    of kind '#Data'
 
-  261:11 In test
+  262:11 In test
 
-test/30-error/11-check-term/Test.salt:264:17
+test/30-error/11-check-term/Test.salt:265:17
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  264:11 In test
+  265:11 In test
 
-test/30-error/11-check-term/Test.salt:267:25
+test/30-error/11-check-term/Test.salt:268:25
   Cannot apply non-function
    of type '#Nat'
 
-  267:11 In test
+  268:11 In test
 
-test/30-error/11-check-term/Test.salt:270:23
+test/30-error/11-check-term/Test.salt:271:11
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  270:11 In test
+  271:11 In test
 
-test/30-error/11-check-term/Test.salt:275:17
+test/30-error/11-check-term/Test.salt:276:17
   Cannot apply type
    of kind '#Data'
 
-  275:11 In test
+  276:11 In test
 
-test/30-error/11-check-term/Test.salt:278:16
+test/30-error/11-check-term/Test.salt:279:16
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  278:11 In test
+  279:11 In test
 
-test/30-error/11-check-term/Test.salt:281:24
+test/30-error/11-check-term/Test.salt:282:24
   Cannot apply non-function
    of type '#Nat'
 
-  281:11 In test
+  282:11 In test
 
-test/30-error/11-check-term/Test.salt:284:22
+test/30-error/11-check-term/Test.salt:285:11
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  284:11 In test
+  285:11 In test
 
-test/30-error/11-check-term/Test.salt:289:17
+test/30-error/11-check-term/Test.salt:290:17
   Cannot apply type
    of kind '#Data'
 
-  289:11 In test
+  290:11 In test
 
-test/30-error/11-check-term/Test.salt:292:16
+test/30-error/11-check-term/Test.salt:293:16
   Actual kind '#Effect'
    does not match
    expected kind '#Data'
 
-  292:11 In test
+  293:11 In test
 
-test/30-error/11-check-term/Test.salt:295:29
+test/30-error/11-check-term/Test.salt:296:29
   Cannot apply non-function
    of type '#Nat'
 
-  295:11 In test
+  296:11 In test
 
-test/30-error/11-check-term/Test.salt:298:32
+test/30-error/11-check-term/Test.salt:299:11
   Actual type '#Bool'
    does not match
    expected type '#Nat'
 
-  298:11 In test
+  299:11 In test
 
-test/30-error/11-check-term/Test.salt:306:31
+test/30-error/11-check-term/Test.salt:307:31
   Actual type '#Word8'
    does not match
    expected type '#Bool'
 
-  303:11 In test "freePtr'mismatch'type"
+  304:11 In test "freePtr'mismatch'type"
 
-test/30-error/11-check-term/Test.salt:312:33
+test/30-error/11-check-term/Test.salt:313:33
   Actual type '#Word8'
    does not match
    expected type '#Word16'
 
-  309:11 In test "readPtr'mismatch'type"
+  310:11 In test "readPtr'mismatch'type"
 
-test/30-error/11-check-term/Test.salt:319:35
+test/30-error/11-check-term/Test.salt:320:35
   Actual type 'r1'
    does not match
    expected type 'r2'
 
-  315:11 In test "readPtr'mismatch'region"
+  316:11 In test "readPtr'mismatch'region"
 

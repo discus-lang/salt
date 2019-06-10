@@ -164,3 +164,4 @@ instance Pretty c TypeKey where
         TKSync          -> text "##sync"
         TKPure          -> text "##pure"
         TKSum           -> text "##sum"
+        TKReturn        -> text "##return"

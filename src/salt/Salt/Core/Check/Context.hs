@@ -10,14 +10,6 @@ import qualified Data.Map               as Map
 
 
 ---------------------------------------------------------------------------------------------------
-data Mode a
-        = Synth                 -- ^ Synthesize the type of a term.
-        | Check  [Type a]       -- ^ Check that a term has the give type.
-        | Return [Type a]       -- ^ Check that a procedure returns values of the given type.
-        deriving Show
-
-
----------------------------------------------------------------------------------------------------
 -- | Context to use during type checking.
 data Context a
         = Context
@@ -29,8 +21,11 @@ data Context a
           --   knot without needing mutually recursive modules.
           contextCheckType      :: CheckType a
 
+          -- | Function to synthesise a type for a term.
+        , contextSynthTerm      :: SynthTerm a (Maybe [Type a])
+
           -- | Function to check a term.
-        , contextCheckTerm      :: CheckTerm a
+        , contextCheckTerm      :: CheckTerm a [Type a] (Maybe [Type a])
 
           -- | Kinds and bodies of top-level type bindings in the current module.
         , contextModuleType     :: Map Name (Kind a, Type a)
@@ -50,6 +45,44 @@ data Context a
         }
 
 
+-- | Element of the local type checker context.
+data Elem a
+        = ElemTypes (Map Name (Kind a))
+        | ElemTerms (Map Name (Type a))
+        deriving Show
+
+
+type CheckType a
+        =  Annot a => a -> [Where a]
+        -> Context a -> Type a
+        -> IO (Type a, Kind a)
+
+
+type SynthTerm a result
+        =  Annot a => a -> [Where a]
+        -> Context a -> Term a
+        -> IO (Term a, result, [Effect a])
+
+
+type SynthTerms a result
+        =  Annot a => a -> [Where a]
+        -> Context a -> [Term a]
+        -> IO ([Term a], result, [Effect a])
+
+
+type CheckTerm a expect result
+        =  Annot a => a -> [Where a]
+        -> Context a -> expect -> Term a
+        -> IO (Term a, result, [Effect a])
+
+
+type CheckTerms a expect result
+        =  Annot a => a -> [Where a]
+        -> Context a -> expect -> [Term a]
+        -> IO ([Term a], result, [Effect a])
+
+
+---------------------------------------------------------------------------------------- Options --
 -- | Type checker options.
 data Options
         = Options
@@ -68,26 +101,7 @@ optionsDefault
         { optionsReassocApps    = True }
 
 
--- | Element of the local type checker context.
-data Elem a
-        = ElemTypes (Map Name (Kind a))
-        | ElemTerms (Map Name (Type a))
-        deriving Show
-
-
-type CheckType a
-        =  Annot a => a -> [Where a]
-        -> Context a -> Type a
-        -> IO (Type a, Kind a)
-
-
-type CheckTerm a
-        =  Annot a => a -> [Where a]
-        -> Context a -> Mode a -> Term a
-        -> IO (Term a, [Type a], [Effect a])
-
-
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------- Inside --
 -- | Describes the syntactic construct that we're inside.
 data Inside a
         = InsideLaunch  [Type a]
@@ -297,33 +311,4 @@ contextResolveTermBound ctx (BoundWith n d0)
 contextResolveDataCtor :: Name -> Context a -> IO (Maybe (Type ()))
 contextResolveDataCtor nCtor _ctx
  = return $ Map.lookup nCtor Prim.primDataCtors
-
-
----------------------------------------------------------------------------------------------------
--- -- | Check if the context has the given term mode.
--- guardOnlyFragment
---         :: Annot a => a -> [Where a] -> Context a
---         -> Text -> Fragment -> IO b -> IO b
---
--- guardOnlyFragment a wh ctx txBlame frag thing
---  = if contextFragment ctx == frag
---          then thing
---          else throw $ ErrorTermNotFragment a wh (contextFragment ctx) txBlame
-
-
--- | Check if the context has any of the given term modes.
--- guardAnyFragment
---         :: Annot a => a -> [Where a] -> Context a
---         -> Text -> [Fragment] -> IO b -> IO b
---
--- guardAnyFragment a wh ctx txBlame frags thing
---  = if elem (contextFragment ctx) frags
---          then thing
---          else throw $ ErrorTermNotFragment a wh (contextFragment ctx) txBlame
-
-
--- | Set the language fragment for the given context to the expression form
---   of what is is right now.
-
-
 

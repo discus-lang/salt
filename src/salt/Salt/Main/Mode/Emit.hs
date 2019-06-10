@@ -7,7 +7,6 @@ import Salt.Data.Location
 import qualified Salt.Core.Eval                 as Eval
 import qualified Salt.Core.Check                as Check
 import qualified Salt.Core.Codec.Text.Pretty    as P
-import qualified Salt.Data.Pretty               as P
 
 
 -- | Run all the emit declarations in the given source file.

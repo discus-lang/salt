@@ -40,17 +40,8 @@ pprTerm c (MThe ts m)
  = align $ text "the"   %% squared (map (ppr c) ts )
                         %% text "of" %% line % ppr c m
 -- app
-pprTerm c (MApp mFun mgsArg)
- | Just tsArg <- takeMGTypes mgsArg
- = case tsArg of
-        [t] -> pprMFun c mFun %% text "@" % pprTArg c t
-        _   -> pprMFun c mFun %% text "@" % squared (map (pprTArg c) tsArg)
-
- | Just msArg <- takeMGTerms mgsArg
- = pprMFun c mFun %% squared (map (pprMArg c) msArg)
-
- | Just mArg <- takeMGTerm mgsArg
- = pprMFun c mFun %% pprMArg c mArg
+pprTerm c (MAps mFun mgssArg)
+ = pprMFun c mFun %% hcat (punctuate (text " ") $ map (pprMArgs c) mgssArg)
 
 -- let
 pprTerm c (MLet mps mBind mBody)
@@ -195,6 +186,19 @@ pprMAlt c mm
                 %% ppr c mBody
 
         _ -> parens (ppr c mm)
+
+
+pprMArgs :: c -> TermArgs a -> Doc
+pprMArgs c mgs
+ = case mgs of
+        MGAnn _ mgs'    -> pprMArgs c mgs'
+        MGTerm m        -> pprMArg c m
+
+        MGTerms [m]     -> pprMArg c m
+        MGTerms ms      -> squared $ map (pprTerm c) ms
+
+        MGTypes [t]     -> text "@" % pprTArg c t
+        MGTypes ts      -> text "@" % (squared $ map (pprTArg c) ts)
 
 
 --------------------------------------------------------------------------------------- TermBind --

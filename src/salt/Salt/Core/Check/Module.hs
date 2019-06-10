@@ -33,6 +33,7 @@ checkModule a mm
          = Context
          { contextOptions       = optionsDefault
          , contextCheckType     = checkTypeWith
+         , contextSynthTerm     = synthTermWith
          , contextCheckTerm     = checkTermWith
          , contextModuleType    = Map.empty
          , contextModuleTerm    = Map.empty

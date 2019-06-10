@@ -14,7 +14,7 @@ checkDeclEmit _a ctx (DEmit (DeclEmit a' mn m))
         -- TODO: check type is valid
         -- TOOD: check names don't conflict.
         (m', _t, _effs)
-         <- checkTerm a' wh ctx Synth m
+         <- synthTerm a' wh ctx m
 
         return  $ DEmit $ DeclEmit a' mn m'
 

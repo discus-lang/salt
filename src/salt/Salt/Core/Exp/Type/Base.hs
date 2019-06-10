@@ -59,6 +59,7 @@ data TypeKey
         | TKSync                                -- ^ Top of the effect lattice.
         | TKPure                                -- ^ Bot of the effect lattice.
         | TKSum                                 -- ^ Effect sum.
+        | TKReturn                              -- ^ Return type former.
         deriving (Show, Eq, Ord)
 
 

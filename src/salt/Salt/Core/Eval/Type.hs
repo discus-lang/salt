@@ -78,7 +78,7 @@ evalType s a env (TApp tFun tgs)
                 let env'' = tenvExtendTypes (zip bs tsArg) env'
                 evalType s a env'' tBody
 
-         _ -> throw $ ErrorAppTypeBadClosure a tCloType
+         _ -> throw $ ErrorAppTypeBadClosure a [tCloType]
 
 
 -- (evt-fun) ----------------------------------------------

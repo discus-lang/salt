@@ -11,13 +11,6 @@ class MapAnnot c where
  mapAnnot :: (a -> b) -> c a -> c b
 
 
--- | Replace all annotations in a thing by the unit value.
---   TODO: use real stripAnnot
-stripAnnot :: MapAnnot c => c a -> c ()
-stripAnnot xx
- = mapAnnot (const ()) xx
-
-
 ---------------------------------------------------------------------------------------------------
 instance MapAnnot Module where
  mapAnnot f mm

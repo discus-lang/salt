@@ -58,7 +58,11 @@ data Error a
         --   because the type operator to be applied is not a closure.
         | ErrorAppTypeBadClosure
         { errorAnnot            :: a
-        , errorType             :: Type a }
+        , errorTypes            :: [Type a] }
+
+        | ErrorAppTermBadClosure
+        { errorAnnot            :: a
+        , errorValues           :: [Value a] }
 
         -- | Runtime type error in application,
         --   as the functional expression is not a closure.
@@ -66,18 +70,12 @@ data Error a
         { errorAnnot            :: a
         , errorAppNotClo        :: Value a }
 
-        -- | Runtime type error in application,
-        --   because the function produced too many results.
-        | ErrorAppTermBadClosure
-        { errorAnnot            :: a
-        , errorValues           :: [Value a] }
-
         -- | Runtime type error in application
         --   because the sort of parameters does not match the sort of arguments.
-        | ErrorAppTermWrongArgs
+        | ErrorAppTermMismatch
         { errorAnnot            :: a
         , errorParams           :: TermParams a
-        , errorArgs             :: TermArgs a }
+        , errorArgs             :: TermNormals a }
 
         -- | Unknown primitive operator.
         | ErrorPrimUnknown

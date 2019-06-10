@@ -6,6 +6,7 @@ import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Data.Map.Strict        as Map
 
+
 -------------------------------------------------------------------------------------------- App --
 -- | Check an application of a term to its arguments.
 checkTermApp
@@ -35,7 +36,7 @@ checkTermApp a wh ctx mFun0 mgss0
                     in  throw $ ErrorUnknownPrim UTerm aFun wh nPrm
 
                 Nothing
-                 -> checkTerm1 a wh ctx Synth mFun0
+                 -> synthTermProductive1 a wh ctx mFun0
 
         -- Check that we have at least some arguments to apply.
         when (null mgss0)
@@ -43,9 +44,10 @@ checkTermApp a wh ctx mFun0 mgss0
 
         -- Now that we know the type of the function we can look at the
         -- number of arguments we have and decide whether to desugar
-        -- applications by reassociating them. Doing this accepts applications
-        -- of functions that expect vectors to multiple term arguments,
-        -- which is nicer to write in the source program.
+        -- applications by reassociating them. Doing this lets us apply
+        -- functions that expect vectors of arguments to just a sufficient
+        -- number of individual arguments, which is nicer to write in
+        -- the source program.
         let elimsHave = length mgss0
         mgssReassoc
          <- if   not $ optionsReassocApps $ contextOptions ctx
@@ -128,20 +130,9 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
    | (mgs : mgssRest')  <- mgssArg
    , Just (aArg, msArg) <- takeAnnMGTerms aApp mgs
    = do
-        -- Check the types of the arguments.
-        (msArg', tsArg, esArg)
-         <- checkTerms aArg wh ctx (Check tsParam) msArg
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length tsParam == length tsArg)
-         $ throw $ ErrorAppTermTermWrongArity aApp wh tsParam tsArg
-
-        -- Check the parameter and argument types match.
-        checkTypeEquivs ctx aApp [] tsParam aApp [] tsArg
-         >>= \case
-                Nothing -> return ()
-                Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorMismatch UType aArg wh tErr1 tErr2
+        -- Check the arguments against the types of the parameters.
+        (msArg', _rsArg, esArg)
+         <- checkTermsAreEach aArg wh ctx tsParam msArg
 
         goHead  tsResult
                 (MGAnn aArg (MGTerms msArg') : mgssAcc)
@@ -151,20 +142,9 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
    | (mgs : mgssRest')  <- mgssArg
    , Just (aArg, mArg)  <- takeAnnMGTerm aApp mgs
    = do
-        -- Check the types of the arguments.
-        (mArg', tsArg, esArg)
-         <- checkTerm aArg wh ctx (Check tsParam) mArg
-
-        -- The number of arguments must match the number of parameters.
-        when (not $ length tsParam == length tsArg)
-         $ throw $ ErrorAppTermTermWrongArity aApp wh tsParam tsArg
-
-        -- Check the parameter and argument types match.
-        checkTypeEquivs ctx aApp [] tsParam aApp [] tsArg
-         >>= \case
-                Nothing -> return ()
-                Just ((_aErr1', tErr1), (_aErr2', tErr2))
-                 -> throw $ ErrorMismatch UType aArg wh tErr1 tErr2
+        -- Check the arguments against the types of the parameters.
+        (mArg', _rr, esArg)
+         <- checkTerm aArg wh ctx tsParam mArg
 
         goHead  tsResult
                 (MGAnn aArg (MGTerm mArg') : mgssAcc)
@@ -191,7 +171,11 @@ termElimsOfType a ctx tFun
           -> do n' <- termElimsOfType a ctx tResult
                 return $ 1 + n'
 
-         TFun _ _ -> return 1
+         TFun _ _   -> return 1
+
+         TForall _ tResult
+          -> do n' <- termElimsOfType a ctx tResult
+                return $ 1 + n'
 
          _ -> return 0
 
@@ -205,14 +189,32 @@ reassocApps
 
 reassocApps a ctx tFun mgss
  = do   tFun_red <- simplType a ctx tFun
-        case takeTFun tFun_red of
-         Nothing -> return mgss
-         Just (tsParam, _tsResult)
-          | length tsParam > 1
+        case tFun_red of
+         -- Application of a term function.
+         TFun tsParam tsResult
+          | length tsParam >= 0
           , Just (msArg, mgss') <- takeSomeMGTerm (length tsParam) mgss
-          -> return (MGTerms msArg : mgss')
+          -> case tsResult of
+                -- If the function result is another function
+                -- then continue trying to reassociate the application.
+                [tResult]
+                  -> do mgss'' <- reassocApps a ctx tResult mgss'
+                        return (MGTerms msArg : mgss'')
 
-          | otherwise -> return mgss
+                -- If there are no results at all then go with the
+                -- current reassociation.
+                _ -> do return (MGTerms msArg : mgss')
+
+         -- Application of a type function.
+         TForall (TPTypes bks) tResult
+          | length bks >= 0
+          , Just (tsArg, mgss') <- takeSomeMGType (length bks) mgss
+          -> do mgss'' <- reassocApps a ctx tResult mgss'
+                return (MGTypes tsArg : mgss'')
+
+         -- This looks ill-typed, so don't try to reassociate it.
+         -- The rest of the type checker will find the problem.
+         _ -> return mgss
 
 
 -- | Try to take the given number of MGTerm arguments from the front
@@ -233,4 +235,20 @@ takeSomeMGTerm n (MGTerm m : mgss)
 takeSomeMGTerm _ _ = Nothing
 
 
+-- | Try to take the given number of MGType arguments from the front
+--   of an arguments list.
+--   TODO: preserve annotations.
+takeSomeMGType :: Int -> [TermArgs a] -> Maybe ([Type a], [TermArgs a])
+takeSomeMGType 0 mgss
+ = (Just ([], mgss))
 
+takeSomeMGType n (MGAnn _a mgs : mgss)
+ = takeSomeMGType n (mgs : mgss)
+
+takeSomeMGType n (MGTypes [t] : mgss)
+ = case takeSomeMGType (n - 1) mgss of
+        Nothing          -> Nothing
+        Just (ts, mgss') -> Just (t : ts, mgss')
+
+takeSomeMGType _n mgss
+ = (Just ([], mgss))

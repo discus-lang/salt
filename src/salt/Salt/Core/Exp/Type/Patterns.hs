@@ -21,6 +21,7 @@ pattern TPure           = TKey TKPure         []
 pattern TSync           = TKey TKSync         []
 pattern TSum    ts      = TKey TKSum          [TGTypes ts]
 
+
 pattern (:=>) ks1 k2    = TArr    ks1 k2
 infixr 4 :=>
 

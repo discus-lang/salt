@@ -3,7 +3,6 @@ module Salt.Core.Check.WhereMsg where
 import Salt.Core.Codec.Text.Pretty
 import Salt.Core.Codec.Text         ()
 import Salt.Core.Check.Where
-import Salt.Data.Pretty
 
 
 instance Show a => Pretty c (Where a) where

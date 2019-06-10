@@ -79,20 +79,6 @@ simplTypes a ctx ts
  = mapM (simplType a ctx) ts
 
 
--- | Reduce the expected types in a Mode
-simplMode
-        :: Annot a => a -> Context a
-        -> Mode a -> IO (Mode a)
-
-simplMode a ctx mode
- = case mode of
-        Check ts
-         -> do  ts'     <- simplTypes a ctx ts
-                return  $ Check ts'
-
-        _ -> return mode
-
-
 ---------------------------------------------------------------------------------------------------
 -- | Flatten TSums at the head of a type.
 --

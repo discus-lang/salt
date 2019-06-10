@@ -253,6 +253,7 @@ test type if 1 2 then #true else #true
 test type if 5 then #true else #true
 
 -- Error: branches do not have the same types.
+-- TODO: fix branch comparison.
 test type if #true then #true else 5
 
 

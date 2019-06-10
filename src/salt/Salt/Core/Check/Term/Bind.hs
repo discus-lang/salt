@@ -25,8 +25,8 @@ checkTermBind a wh ctx (MBind b mpss tsResult mBody)
          <- checkTypesAreAll UKind a wh ctx' TData tsResult
 
         -- The body must have type as specified by the result annotation.
-        (mBody', _tsResult, esBody)
-         <- checkTerm a wh ctx' (Check tsResult) mBody
+        (mBody', _rr, esBody)
+         <- checkTerm a wh ctx' tsResult mBody
 
         -- The body must be pure.
         let aBody  = fromMaybe a $ takeAnnotOfTerm mBody

@@ -26,28 +26,28 @@ test eval fib'15 = fib 15
 -- Ackermann's function.
 term ack [m: #Nat, n: #Nat]: #Nat
  = ifs  #nat'eq m 0 → #nat'add n 1
-        #nat'eq n 0 → ack [#nat'sub m 1, 1]
-   else ack [#nat'sub [m, 1], ack [m, #nat'sub [n, 1]]]
+        #nat'eq n 0 → ack (#nat'sub m 1) 1
+   else ack (#nat'sub m 1) (ack m (#nat'sub n 1))
 
-test eval ack'3'4 = ack [3, 4]
+test eval ack'3'4 = ack 3 4
 
 
 -- Greatest common divisor.
 term gcd [x: #Nat, y: #Nat]: #Nat
  = ifs  #nat'eq x 0 → y
         #nat'eq y 0 → x
-        #nat'gt x y → gcd [y, #nat'rem x y]
-   else gcd [x, #nat'rem y x]
+        #nat'gt x y → gcd y (#nat'rem x y)
+   else gcd x (#nat'rem y x)
 
-test eval gcd'100'28 = gcd [100, 28]
+test eval gcd'100'28 = gcd 100 28
 
 
 -- Tak (after Ikuo Takeuchi)
 term tak [x: #Nat, y: #Nat, z: #Nat]: #Nat
- = if #nat'lt [y, x]
-   then tak [ tak [#nat'sub x 1, y, z]
-            , tak [#nat'sub y 1, z, x]
-            , tak [#nat'sub z 1, x, y] ]
+ = if #nat'lt y x
+   then tak (tak (#nat'sub x 1) y z)
+            (tak (#nat'sub y 1) z x)
+            (tak (#nat'sub z 1) x y)
    else z
 
-test eval tak'12'8'4 = tak [12, 8, 4]
+test eval tak'12'8'4 = tak 12 8 4
