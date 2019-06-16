@@ -427,6 +427,7 @@ synthTermWith a wh ctx (MPrivate bksR btsW mBody)
 
         -- Check that all witness bindings have type TProp
         let (bs, ts) = unzip btsW
+        -- TODO replace with usage of checkTypesAreAll
         ts' <- checkTypesAre UType a wh ctx' (replicate (length ts) TProp) ts
         let btsW' = zip bs ts'
 
@@ -682,6 +683,85 @@ synthTermWith _a _wh _ctx MLeave
         -- TODO: check we are in scope of an 'enter'
         return  ( MLeave
                 , Nothing, [])
+
+
+-- (t-pack) ------------------------------------------------
+synthTermWith a wh ctx (MPack actual term ascription)
+ = do
+      -- check ascription is well kinded
+      checkType a wh ctx ascription
+
+      -- type check term
+      (term', Just [termTs], esResult) <- synthTerm a wh ctx term
+
+      -- term must be pure
+      esResultSimpl <- simplType a ctx (TSum esResult)
+      when (not $ isTPure esResultSimpl)
+         $ throw $ ErrorAbsImpure UType a wh esResultSimpl
+
+      -- simplify ascription type, it must have a type of TExists
+      ascriptionSimpl <- simplType a ctx ascription
+      (bksParam, tResult) <- case ascriptionSimpl of
+        TExists tps t -> return (takeTPTypes tps, t)
+        _             -> throw $ ErrorPackTypeNotExistential a wh ascription
+
+      -- the top level TExists must only have one parameter
+      when (not $ length bksParam == 1)
+        $ throw $ ErrorExistentialMoreThanOneParam a wh ascription
+
+      -- substitute `actual` into ascription type
+      let nts = [ (n, actual) | (BindName n, _) <- bksParam ]
+      let snv = snvOfBinds nts
+      let tSubst = snvApplyType upsEmpty snv tResult
+
+      -- check that substituted ascription type is a valid type for `term`
+      checkTypeEquiv ctx a [] termTs a [] tSubst
+        >>= \case
+            Nothing -> return tSubst
+            Just ((_a1, tErr1), (_a2, tErr2))
+                    -> throw $ ErrorMismatch UType a wh tErr1 tErr2
+
+      -- the overall type is just ascription
+      --     (term,                          [type],   [effect]
+      return (MPack actual term' ascription, Just [ascription], esResult)
+
+-- (t-unpack) ------------------------------------------------
+synthTermWith a wh ctx (MUnpack mPacked rTypeBinding rTermBinding mBody)
+ = do
+      -- check mPacked
+      (mPacked', Just tsPacked, _) <- synthTerm a wh ctx mPacked
+
+      -- mPacked must have a single type and that must be TExists
+      ascription <- case tsPacked of
+        [ts] -> return ts
+        _    -> throw $ ErrorUnpackNotAppliedToPack a wh mPacked
+
+      -- simplify ascription type, it must have a type of TExists
+      ascriptionSimpl <- simplType a ctx ascription
+      (tps, tResult) <- case ascriptionSimpl of
+        TExists tps t -> return (tps, t)
+        _             -> throw $ ErrorUnpackNotAppliedToPack a wh mPacked
+
+      -- the top level TExists must only have one parameter
+      let bksParam = takeTPTypes tps
+      when (not $ length bksParam == 1)
+        $ throw $ ErrorExistentialMoreThanOneParam a wh ascription
+
+      -- bind existential qualified type param
+      let ctx' = contextBindTypeParams tps ctx
+
+      -- bind unpack rTypeBinding
+      let ctx'' = contextBindTermParams (MPTypes [rTypeBinding]) ctx'
+
+      -- bind unpack rTermBinding to tResult
+      let (BindName termBinding, _) = rTermBinding
+      let ctx''' = contextBindTerm termBinding tResult ctx''
+
+      -- check mBody in new ctx
+      (mBody', Just tsResult, esResult) <- synthTerm a wh ctx''' mBody
+
+      -- return type of mBody
+      return (MUnpack mPacked' rTypeBinding rTermBinding mBody', Just tsResult, esResult)
 
 
 -- fail --------------------------------------------

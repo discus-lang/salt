@@ -340,6 +340,23 @@ data Error a
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
         , errorType             :: Type a }
+
+        -- Existential problems -------------------
+        | ErrorUnpackNotAppliedToPack
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorTerm             :: Term a }
+
+        | ErrorExistentialMoreThanOneParam
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorType             :: Type a }
+
+        | ErrorPackTypeNotExistential
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorType             :: Type a }
+
         deriving Show
 
 instance (Show a, Typeable a) => Exception (Error a)

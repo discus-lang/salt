@@ -97,6 +97,32 @@ pTermBody ctx
         let rBinding2 = (BindName rName2, TRegion)
         return $ MExtend rBound1 [rBinding2] btsW mBody
 
+  , do -- 'pack' '{' Type ',' Term '}' 'as' Type
+       pTok KPack
+       pTok KCBra
+       actual <- pType     <?> "pack type"
+       pTok KComma
+       term <- pTerm ctx   <?> "pack term"
+       pTok KCKet
+       pTok KAs
+       ascription <- pType <?> "pack type ascription"
+       return $ MPack actual term ascription
+
+  , do -- 'unpack' Term 'as' '{' Var ',' Var '}' 'in' Term
+       pTok KUnpack
+       mPacked <- pTerm ctx  <?> "unpack term"
+       pTok KAs
+       pTok KCBra
+       typeName <- pVar      <?> "unpack type variable to bind"
+       pTok KComma
+       termName <- pVar      <?> "unpack term variable to bind"
+       pTok KCKet
+       pTok KIn
+       mBody <- pTerm ctx    <?> "unpack body"
+       let rTypeBinding = (BindName typeName, TType)
+       let rTermBinding = (BindName termName, TData)
+       return $ MUnpack mPacked rTypeBinding rTermBinding mBody
+
   , do  -- 'rec' '{' (Bind TermParams* ':' Types '=' Term);+ '}' 'in' Term
         pTok KRec
         bms     <- pBraced $ flip P.sepEndBy1 (pTok KSemi)

@@ -152,6 +152,10 @@ scanner
                 "box"           -> Just KBox
                 "run"           -> Just KRun
 
+                "as"            -> Just KAs
+                "pack"          -> Just KPack
+                "unpack"        -> Just KUnpack
+
                 "let"           -> Just KLet
                 "rec"           -> Just KRec
                 "in"            -> Just KIn

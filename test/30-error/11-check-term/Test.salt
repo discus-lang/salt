@@ -318,3 +318,23 @@ test type readPtr'mismatch'region
          private r2 with {Alloc; Read; Write} in do
            p = #allocPtr @[r1, #Word8]
            #readPtr @[r2, #Word8] p
+
+
+-- (t-pack) ------------------------------------------------------------------
+-- | Error: pack ascription type is not an existential
+test type pack'not'existential
+ = pack {#Nat, 0} as #Nat
+
+-- | Error: pack ascription type does not classify actual value
+test type pack'not'equiv
+ = pack {#Nat, [x=5, f=(λ[x:#Nat]->x)]} as ∃[a: #Data].∏[x:a, f:[a]->[#Bool]]
+
+-- | Error: more than one type parameter to existential qualifier
+test type existential'too'many'params
+ = pack {#Nat, 0} as ∃[a: #Data, b:#Data].a
+
+
+-- (t-unpack) ------------------------------------------------------------------
+-- | Error: value to unpack was not packed
+test type unpack'not'packed
+ = unpack 12 as {ty, val} in val

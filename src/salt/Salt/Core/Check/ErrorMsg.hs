@@ -283,6 +283,17 @@ ppre c (ErrorProcUpdateNotCell _a _wh t)
         , text " of type" %% ppr c t ]
 
 
+-- Existential problems -------------------------------------
+ppre c (ErrorUnpackNotAppliedToPack _a _wh t)
+ = vcat [ text "Value to unpack is not packed" %% squotes (ppr c t) ]
+
+ppre c (ErrorExistentialMoreThanOneParam _a _wh t)
+ = vcat [ text "Existential type was incorrectly formed"
+        , text " as it has more than one type param" %% squotes (ppr c t) ]
+
+ppre c (ErrorPackTypeNotExistential _a _wh t)
+ = vcat [ text "Pack type ascription was not an existential" %% squotes (ppr c t) ]
+
 ---------------------------------------------------------------------------------------------------
 -- | Print some universed things with proper pluralization.
 ppThings  :: c -> Universe -> [Type a] -> Doc

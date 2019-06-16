@@ -214,8 +214,7 @@ test type map'some      = [map #Nat #Symbol| 3 := 'three, 5 := 'five]
 test type map'size      = #map'size   @[#Nat, #Symbol] [map #Nat #Symbol|]
 test type map'insert    = #map'insert @[#Nat, #Symbol] [4, 'Derp, [map #Nat #Symbol|]]
 
--- Regions -------------------------------------------------------------------
-
+-- Regions --------------------------------------------------------------------
 test type region'private
  = private r with {Alloc; Write; Read} in
      let p = #allocPtr @[r, #Word8] in
@@ -226,4 +225,16 @@ test type region'extend
      extend r1 using r2 with {Read; Write; Alloc} in
        let p = #allocPtr @[r2, #Word8] in
          #freePtr @[r2, #Word8] p
+
+
+-- Existential ----------------------------------------------------------------
+test type existential'pack1
+ = pack {#Nat, 0} as ∃[a: #Data].a
+
+test type existential'pack2
+ = pack {#Nat, [x=5, f=(λ[x: #Nat] → x)]} as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]]
+
+test type existential'unpack
+ = let t = pack {#Nat, [x=5, f=λ[x: #Nat] → x]} as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]] in
+     unpack t as {ty, r} in (r.f r.x)
 

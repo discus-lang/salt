@@ -531,3 +531,26 @@ test/30-error/11-check-term/Test.salt:320:35
 
   316:11 In test "readPtr'mismatch'region"
 
+test/30-error/11-check-term/Test.salt:326:4
+  Pack type ascription was not an existential '#Nat'
+
+  325:11 In test "pack'not'existential"
+
+test/30-error/11-check-term/Test.salt:330:4
+  Actual type '#Nat'
+   does not match
+   expected type '#Bool'
+
+  329:11 In test "pack'not'equiv"
+
+test/30-error/11-check-term/Test.salt:334:4
+  Existential type was incorrectly formed
+   as it has more than one type param '∃[a: #Data, b: #Data]. a'
+
+  333:11 In test "existential'too'many'params"
+
+test/30-error/11-check-term/Test.salt:340:4
+  Value to unpack is not packed '12'
+
+  339:11 In test "unpack'not'packed"
+

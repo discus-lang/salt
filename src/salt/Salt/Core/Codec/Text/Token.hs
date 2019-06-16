@@ -64,6 +64,7 @@ data Token
         | KCase
         | KSymForall    | KAsciiForall
         | KSymExists    | KAsciiExists
+        | KPack         | KUnpack       | KAs
 
         | KSeq
         | KLaunch       | KReturn
@@ -169,6 +170,9 @@ showTokenAsSource kk
         KElse           -> "else"
         KSymForall      -> "∀";         KAsciiForall    -> "forall"
         KSymExists      -> "∃";         KAsciiExists    -> "exists"
+        KPack           -> "pack"
+        KUnpack         -> "unpack"
+        KAs             -> "as"
 
         KWith           -> "with"
         KUsing          -> "using"

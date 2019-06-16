@@ -87,6 +87,9 @@ data TermKey
         | MKBreak                               -- ^ Break to the end of the enclosing loop.
         | MKContinue                            -- ^ Continue to the next loop iteration.
         | MKWhile                               -- ^ Standard while loop.
+
+        | MKPack
+        | MKUnpack
         deriving (Show, Eq, Ord)
 
 
