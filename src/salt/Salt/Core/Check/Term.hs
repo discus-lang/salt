@@ -427,8 +427,7 @@ synthTermWith a wh ctx (MPrivate bksR btsW mBody)
 
         -- Check that all witness bindings have type TProp
         let (bs, ts) = unzip btsW
-        -- TODO replace with usage of checkTypesAreAll
-        ts' <- checkTypesAre UType a wh ctx' (replicate (length ts) TProp) ts
+        ts' <- checkTypesAreAll UType a wh ctx' TProp ts
         let btsW' = zip bs ts'
 
         -- introduce capability witnesses to context
