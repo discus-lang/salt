@@ -99,6 +99,6 @@
 * map'insert: #Map [#Nat, #Symbol]
 * region'private: []
 * region'extend: []
-* existential'pack1: ∃[a: #Data]. a
-* existential'pack2: ∃[a: #Data]. ∏[x: a, f: [a] → [#Nat]]
-* existential'unpack: #Nat
+* pack'useless: ∃[a: #Data]. a
+* pack'useful: ∃[a: #Data]. ∏[x: a, f: [a] → [#Nat]]
+* pack'unpack: #Nat
