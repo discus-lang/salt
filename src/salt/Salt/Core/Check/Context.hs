@@ -172,7 +172,7 @@ contextBindTermMaybe (Just n) t ctx
  = ctx  { contextLocal = ElemTerms (Map.singleton n t) : contextLocal ctx }
 
 
--- | Bin a list of term variables all at the same level.
+-- | Bind a list of term variables all at the same level.
 contextBindTerms :: [(Name, Type a)] -> Context a -> Context a
 contextBindTerms nts ctx
  = ctx  { contextLocal = ElemTerms (Map.fromList nts) : contextLocal ctx }
