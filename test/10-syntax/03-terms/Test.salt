@@ -234,7 +234,7 @@ test type pack'useless
 test type pack'useful
  = pack {#Nat, [x=5, f=(λ[x: #Nat] → x)]} as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]]
 
-test type pack'unpack
+test type unpack'pack
  = let t = pack {#Nat, [x=5, f=λ[x: #Nat] → x]} as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]] in
      unpack t as {ty, r} in (r.f r.x)
 

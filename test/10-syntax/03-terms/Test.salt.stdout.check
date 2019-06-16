@@ -101,4 +101,4 @@
 * region'extend: []
 * pack'useless: ∃[a: #Data]. a
 * pack'useful: ∃[a: #Data]. ∏[x: a, f: [a] → [#Nat]]
-* pack'unpack: #Nat
+* unpack'pack: #Nat
