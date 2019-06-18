@@ -175,6 +175,7 @@ instance StripAnnot Value where
         VLoc t i        -> VLoc       (stripAnnot t) i
         VAddr a         -> VAddr a
         VPtr r t a      -> VPtr       (stripAnnot r)  (stripAnnot t) a
+        VExtPair t v a  -> VExtPair   (stripAnnot t)  (stripAnnot v) (stripAnnot a)
 
 
 instance StripAnnot TermClosure where

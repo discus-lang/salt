@@ -22,3 +22,5 @@
 * evm'map: [[map #Nat #Symbol| 5 := 'Derp]]
 * region'private'nat: [1]
 * region'extend'nat: [1]
+* pack'useful: [[pack {#Nat, [x = [5], f = [[mclo_|λ[x: #Nat] → x]]]} as (∃[a: #Data]. ∏[x: #Data, f: [#Data] → [#Nat]])]]
+* unpack'pack: [5]

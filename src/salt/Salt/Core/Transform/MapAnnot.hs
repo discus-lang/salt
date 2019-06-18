@@ -186,6 +186,7 @@ instance MapAnnot Value where
         VLoc t i        -> VLoc       (mapAnnot f t) i
         VAddr a         -> VAddr a
         VPtr r t a      -> VPtr       (mapAnnot f r) (mapAnnot f t) a
+        VExtPair t v a  -> VExtPair   (mapAnnot f t) (mapAnnot f v) (mapAnnot f a)
 
 
 instance MapAnnot TermClosure where

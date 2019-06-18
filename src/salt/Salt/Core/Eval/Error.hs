@@ -134,6 +134,12 @@ data Error a
         -- | Tried to leave a launch construct.
         | ErrorLaunchLeave
         { errorAnnot            :: a }
+
+        -- | Tried to apply unpack to a value which was not packed.
+        | ErrorUnpackAppliedToNotPack
+        { errorAnnot            :: a
+        , errorTerm             :: Term a }
+
         deriving Show
 
 instance (Show a, Typeable a) => Exception (Error a)

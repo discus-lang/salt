@@ -395,6 +395,10 @@ instance Pretty c (Value a) where
          -> brackets
                 $ text "pointer" %% pprTArg c r %% pprTArg c t % string (show a)
 
+        VExtPair t v a
+         -> brackets
+                $ text "pack {" % pprTArg c t % text "," %% pprVArg c v % text "} as" %% pprTArg c a
+
 pprVArg c vv
  = case vv of
         VData{}         -> parens $ ppr c vv

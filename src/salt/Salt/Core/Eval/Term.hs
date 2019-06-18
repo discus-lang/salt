@@ -500,6 +500,32 @@ evalTerm s a env (MExtend _ bksR _ mBody)
 
       evalTerm s a env' mBody
 
+-- (evm-pack) --------------------------------------------
+evalTerm s a env (MPack actual term ascription)
+ = do let tenv = menvSliceTypeEnv env
+      termType <- evalType s a tenv actual
+      termVal  <- evalTerm1 s a env term
+      ascType  <- evalType s a tenv ascription
+      let val = VExtPair termType termVal ascType
+      return [val]
+
+-- (evm-unpack) ------------------------------------------
+evalTerm s a env (MUnpack mPacked (rTypeBinding, _) (rTermBinding, _) mBody)
+ = do
+      -- evaluate mPacked which should resolve to a value of VExtPair
+      mPacked' <- evalTerm1 s a env mPacked
+      (mPackedType, mPackedVal) <- case mPacked' of
+        (VExtPair ty val _)  -> return (ty, val)
+        _                    -> throw $ ErrorUnpackAppliedToNotPack a mPacked
+
+      -- bind rTypeBinding to actual type
+      let env'  = menvExtendType rTypeBinding mPackedType env
+
+      -- bind rTermBinding to packed value
+      let env'' = menvExtendValue rTermBinding mPackedVal env'
+
+      -- evaluate body in new env
+      evalTerm s a env'' mBody
 
 -----------------------------------------------------------
 -- No match.

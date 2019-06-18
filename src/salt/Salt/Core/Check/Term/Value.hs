@@ -72,6 +72,15 @@ synthValue a wh ctx v
                 checkValuesAreAll a wh ctx tv $ Map.elems vsMap
                 return $ TMap tk tv
 
+        VExtPair ty val asc
+         -> do  checkType a wh ctx ty
+                checkType a wh ctx asc
+                -- TODO FIXME maybe also check that the type for the term is
+                -- equivalent to the type given as the ascription.
+                -- see syncTermWith for MPack for details.
+                synthValue a wh ctx val
+                return asc
+
         VClosure (TermClosure env mps mBody)
          -> do  -- Build a context with just the closure environment.
                 ctx1    <- contextBindTermEnv a wh env
