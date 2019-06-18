@@ -6,12 +6,12 @@ import Control.Exception
 
 
 data Error a
-        -- | Generic error when we don't know how to handle a type construct.
+        -- | Generic error when we don't know how to handle a term construct.
         = ErrorInvalidTerm
         { errorAnnot            :: a
         , errorTerm             :: Term a }
 
-        -- | Generic error when we don't know how to handle a term construct.
+        -- | Generic error when we don't know how to handle a type construct.
         | ErrorInvalidType
         { errorAnnot            :: a
         , errorType             :: Type a }
