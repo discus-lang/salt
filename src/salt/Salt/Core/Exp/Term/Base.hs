@@ -133,7 +133,7 @@ data Value a
         | VAddr     FPtr.WordPtr                -- ^ Raw memory address.
         | VLoc      (Type a) Int
         | VPtr      (Type a) (Type a) FPtr.WordPtr -- ^ Ptr with Region and Value types.
-        | VExtPair  (Type a) (Value a) (Type a) -- ^ Existential pair
+        | VExtPair  (Value a) [Type a] (Type a) -- ^ Existential pair
         deriving (Show, Eq, Ord)
 
 

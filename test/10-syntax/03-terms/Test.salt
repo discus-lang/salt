@@ -229,12 +229,12 @@ test type region'extend
 
 -- Existential ----------------------------------------------------------------
 test type pack'useless
- = pack {#Nat, 0} as ∃[a: #Data].a
+ = pack 0 with [#Nat] as ∃[a: #Data].a
 
 test type pack'useful
- = pack {#Nat, [x=5, f=(λ[x: #Nat] → x)]} as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]]
+ = pack [x=5, f=(λ[x: #Nat] → x)] with [#Nat] as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]]
 
 test type unpack'pack
- = let t = pack {#Nat, [x=5, f=λ[x: #Nat] → x]} as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]] in
-     unpack t as {ty, r} in (r.f r.x)
+ = let t = pack [x=5, f=λ[x: #Nat] → x] with [#Nat] as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]] in
+     unpack t as r with [ty] in (r.f r.x)
 

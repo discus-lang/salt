@@ -544,13 +544,31 @@ test/30-error/11-check-term/Test.salt:330:4
   329:11 In test "pack'not'equiv"
 
 test/30-error/11-check-term/Test.salt:334:4
-  Existential type was incorrectly formed
-   as it has more than one type param '∃[a: #Data, b: #Data]. a'
+  Number of abstracted types [#Nat]
+   did not match number of existential type params '∃[a: #Data, b: #Data]. a'
 
-  333:11 In test "existential'too'many'params"
+  333:11 In test "pack'type'param'mismatch1"
 
-test/30-error/11-check-term/Test.salt:340:4
+test/30-error/11-check-term/Test.salt:338:4
+  Number of abstracted types [#Nat, #Nat]
+   did not match number of existential type params '∃[a: #Data]. a'
+
+  337:11 In test "pack'type'param'mismatch2"
+
+test/30-error/11-check-term/Test.salt:343:4
   Value to unpack is not packed '12'
 
-  339:11 In test "unpack'not'packed"
+  342:11 In test "unpack'not'packed"
+
+test/30-error/11-check-term/Test.salt:348:6
+  Number of type bindings [tya, tyb]
+   did not match number of existential type params '∃[a: #Data]. a'
+
+  346:11 In test "unpack'type'param'mismatch1"
+
+test/30-error/11-check-term/Test.salt:353:6
+  Number of type bindings []
+   did not match number of existential type params '∃[a: #Data]. a'
+
+  351:11 In test "unpack'type'param'mismatch2"
 

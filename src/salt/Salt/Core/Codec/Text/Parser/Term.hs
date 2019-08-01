@@ -97,31 +97,27 @@ pTermBody ctx
         let rBinding2 = (BindName rName2, TRegion)
         return $ MExtend rBound1 [rBinding2] btsW mBody
 
-  , do -- 'pack' '{' Type ',' Term '}' 'as' Type
+  , do -- 'pack' Term 'with' '[' Type,* ']' 'as' Type
        pTok KPack
-       pTok KCBra
-       actual <- pType     <?> "pack type"
-       pTok KComma
        term <- pTerm ctx   <?> "pack term"
-       pTok KCKet
+       pTok KWith
+       abstractedTypes <- pTypeVector <?> "vector of types to existentially erase"
        pTok KAs
        ascription <- pType <?> "pack type ascription"
-       return $ MPack actual term ascription
+       return $ MPack term abstractedTypes ascription
 
-  , do -- 'unpack' Term 'as' '{' Var ',' Var '}' 'in' Term
+  , do -- 'unpack' Term 'as' Var 'with' '[' Var,* ']' 'in' Term
        pTok KUnpack
        mPacked <- pTerm ctx  <?> "unpack term"
        pTok KAs
-       pTok KCBra
-       typeName <- pVar      <?> "unpack type variable to bind"
-       pTok KComma
        termName <- pVar      <?> "unpack term variable to bind"
-       pTok KCKet
+       pTok KWith
+       typeNames <- pSquared (flip P.sepEndBy (pTok KComma) pVar) <?> "vector of type variables to bind"
        pTok KIn
        mBody <- pTerm ctx    <?> "unpack body"
-       let rTypeBinding = (BindName typeName, TType)
+       let rTypeBindings = map (\n -> (BindName n, TType)) typeNames
        let rTermBinding = (BindName termName, TData)
-       return $ MUnpack mPacked rTypeBinding rTermBinding mBody
+       return $ MUnpack mPacked rTermBinding rTypeBindings mBody
 
   , do  -- 'rec' '{' (Bind TermParams* ':' Types '=' Term);+ '}' 'in' Term
         pTok KRec

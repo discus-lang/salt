@@ -501,28 +501,35 @@ evalTerm s a env (MExtend _ bksR _ mBody)
       evalTerm s a env' mBody
 
 -- (evm-pack) --------------------------------------------
-evalTerm s a env (MPack actual term ascription)
+evalTerm s a env (MPack term abstractedTypes ascription)
  = do let tenv = menvSliceTypeEnv env
-      termType <- evalType s a tenv actual
-      termVal  <- evalTerm1 s a env term
-      ascType  <- evalType s a tenv ascription
-      let val = VExtPair termType termVal ascType
+      termVal   <- evalTerm1 s a env term
+      termTypes <- mapM (evalType s a tenv) abstractedTypes
+      ascType   <- evalType s a tenv ascription
+      let val = VExtPair termVal termTypes ascType
       return [val]
 
 -- (evm-unpack) ------------------------------------------
-evalTerm s a env (MUnpack mPacked (rTypeBinding, _) (rTermBinding, _) mBody)
+evalTerm s a env (MUnpack mPacked rTermBinding rTypeBindings mBody)
  = do
       -- evaluate mPacked which should resolve to a value of VExtPair
       mPacked' <- evalTerm1 s a env mPacked
-      (mPackedType, mPackedVal) <- case mPacked' of
-        (VExtPair ty val _)  -> return (ty, val)
+      (mPackedVal, mPackedTypes) <- case mPacked' of
+        (VExtPair val ts _)  -> return (val, ts)
         _                    -> throw $ ErrorUnpackAppliedToNotPack a mPacked
+      -- unpack rTypeBindings
+      let rTypeBindings' = [ n | (n, _) <- rTypeBindings]
+      -- repack type bindings with actual packed types
+      let typeBindings = zip rTypeBindings' mPackedTypes
 
-      -- bind rTypeBinding to actual type
-      let env'  = menvExtendType rTypeBinding mPackedType env
+      -- bind rTypeBindings to actual type
+      let env'  = menvExtendTypes typeBindings env
+
+      -- unpack term binding
+      let (termBinding, _) = rTermBinding
 
       -- bind rTermBinding to packed value
-      let env'' = menvExtendValue rTermBinding mPackedVal env'
+      let env'' = menvExtendValue termBinding mPackedVal env'
 
       -- evaluate body in new env
       evalTerm s a env'' mBody

@@ -347,9 +347,16 @@ data Error a
         , errorWhere            :: [Where a]
         , errorTerm             :: Term a }
 
-        | ErrorExistentialMoreThanOneParam
+        | ErrorPackTypeParamMismatch
         { errorAnnot            :: a
         , errorWhere            :: [Where a]
+        , errorTypes            :: [Type a]
+        , errorType             :: Type a }
+
+        | ErrorUnpackTypeParamMismatch
+        { errorAnnot            :: a
+        , errorWhere            :: [Where a]
+        , errorBinds            :: [Bind]
         , errorType             :: Type a }
 
         | ErrorPackTypeNotExistential

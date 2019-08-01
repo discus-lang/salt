@@ -323,18 +323,31 @@ test type readPtr'mismatch'region
 -- (t-pack) ------------------------------------------------------------------
 -- | Error: pack ascription type is not an existential
 test type pack'not'existential
- = pack {#Nat, 0} as #Nat
+ = pack 0 with [#Nat] as #Nat
 
 -- | Error: pack ascription type does not classify actual value
 test type pack'not'equiv
- = pack {#Nat, [x=5, f=(λ[x:#Nat]->x)]} as ∃[a: #Data].∏[x:a, f:[a]->[#Bool]]
+ = pack [x=5, f=(λ[x:#Nat]->x)] with [#Nat] as ∃[a: #Data].∏[x:a, f:[a]->[#Bool]]
 
--- | Error: more than one type parameter to existential qualifier
-test type existential'too'many'params
- = pack {#Nat, 0} as ∃[a: #Data, b:#Data].a
+-- | Error: number of packed types do not match number of existential type params
+test type pack'type'param'mismatch1
+ = pack 0 with [#Nat] as ∃[a: #Data, b:#Data].a
 
+-- | Error: number of packed types do not match number of existential type params
+test type pack'type'param'mismatch2
+ = pack 0 with [#Nat, #Nat] as ∃[a: #Data].a
 
 -- (t-unpack) ------------------------------------------------------------------
 -- | Error: value to unpack was not packed
 test type unpack'not'packed
- = unpack 12 as {ty, val} in val
+ = unpack 12 as val with [ty] in val
+
+-- | Error: number of bound types does not match number of existential type param
+test type unpack'type'param'mismatch1
+ = let t = pack 0 with [#Nat] as ∃[a: #Data].a in
+     unpack t as val with [tya, tyb] in val
+
+-- | Error: number of bound types does not match number of existential type param
+test type unpack'type'param'mismatch2
+ = let t = pack 0 with [#Nat] as ∃[a: #Data].a in
+     unpack t as val with [] in val

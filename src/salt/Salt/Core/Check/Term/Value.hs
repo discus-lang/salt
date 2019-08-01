@@ -72,8 +72,8 @@ synthValue a wh ctx v
                 checkValuesAreAll a wh ctx tv $ Map.elems vsMap
                 return $ TMap tk tv
 
-        VExtPair ty val asc
-         -> do  checkType a wh ctx ty
+        VExtPair val types asc
+         -> do  mapM (checkType a wh ctx) types
                 checkType a wh ctx asc
                 -- TODO FIXME maybe also check that the type for the term is
                 -- equivalent to the type given as the ascription.

@@ -287,9 +287,13 @@ ppre c (ErrorProcUpdateNotCell _a _wh t)
 ppre c (ErrorUnpackNotAppliedToPack _a _wh t)
  = vcat [ text "Value to unpack is not packed" %% squotes (ppr c t) ]
 
-ppre c (ErrorExistentialMoreThanOneParam _a _wh t)
- = vcat [ text "Existential type was incorrectly formed"
-        , text " as it has more than one type param" %% squotes (ppr c t) ]
+ppre c (ErrorPackTypeParamMismatch _a _wh aTypes ascription)
+ = vcat [ text "Number of abstracted types" %% squared (map (ppr c) aTypes)
+        , text " did not match number of existential type params" %% squotes (ppr c ascription) ]
+
+ppre c (ErrorUnpackTypeParamMismatch _a _wh tBinds ascription)
+ = vcat [ text "Number of type bindings" %% squared (map (ppr c) tBinds)
+        , text " did not match number of existential type params" %% squotes (ppr c ascription) ]
 
 ppre c (ErrorPackTypeNotExistential _a _wh t)
  = vcat [ text "Pack type ascription was not an existential" %% squotes (ppr c t) ]

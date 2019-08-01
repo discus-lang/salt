@@ -48,11 +48,11 @@ pattern MExtend r1 bksR btsW mBody
 pattern MIf msCond msThen mElse
  = MKey   MKIf          [MGTerms msCond, MGTerms msThen, MGTerm mElse]
 
-pattern MPack actual term ascription
- = MKey MKPack [MGTypes [actual], MGTerms [term], MGTypes [ascription]]
+pattern MPack term abstractedTypes ascription
+ = MKey MKPack [MGTerms [term], MGTypes abstractedTypes, MGTypes [ascription]]
 
-pattern MUnpack mPacked rTypeBinding rTermBinding mBody
- = MKey MKUnpack [MGTerm mPacked, MGTerm (MAbs (MPTerms [rTermBinding]) (MAbs (MPTypes [rTypeBinding]) mBody))]
+pattern MUnpack mPacked rTermBinding rTypeBindings mBody
+ = MKey MKUnpack [MGTerm mPacked, MGTerm (MAbs (MPTerms [rTermBinding]) (MAbs (MPTypes rTypeBindings) mBody))]
 
 pattern MRecord  ns ms
  = MKey (MKRecord ns)   [MGTerms ms]

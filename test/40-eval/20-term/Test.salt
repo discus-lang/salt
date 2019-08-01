@@ -130,9 +130,20 @@ test eval region'extend'nat
 
 -- (evm-pack) -----------------------------------------------
 test eval pack'useful
- = pack {#Nat, [x=5, f=(λ[x: #Nat] → x)]} as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]]
+ = pack [x=5, f=(λ[n: #Nat] → n)] with [#Nat] as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]]
+
+test eval pack'multiple
+ = pack [x=6, f=(λ[n: #Nat] → n), y="hello world", g=(λ[n: #Text] -> n)]
+     with [#Nat, #Text]
+     as ∃[a: #Data, b: #Data].∏[x: a, f:[a]->[#Nat], y: b, g:[b]->[#Text]]
 
 -- (evm-unpack) ---------------------------------------------
 test eval unpack'pack
- = let t = pack {#Nat, [x=5, f=λ[x: #Nat] → x]} as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]] in
-     unpack t as {ty, r} in (r.f r.x)
+ = let t = pack [x=5, f=λ[x: #Nat] → x] with [#Nat] as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]] in
+     unpack t as r with [a] in (r.f r.x)
+
+test eval unpack'multiple
+ = let t = pack [x=6, f=(λ[n: #Nat] → n), y="hello world", g=(λ[n: #Text] -> n)]
+     with [#Nat, #Text]
+     as ∃[a: #Data, b: #Data].∏[x: a, f:[a]->[#Nat], y: b, g:[b]->[#Text]]
+     in unpack t as r with [a, b] in (r.f r.x)

@@ -186,7 +186,7 @@ upsApplyValue upsT upsM vv
         -- TODO FIXME what do we do with `r` ?
         VPtr r t a      -> VPtr r (upsApplyType upsT t) a
 
-        VExtPair t v a  -> VExtPair (upsApplyType upsT t) (upsApplyValue upsT upsM v) (upsApplyType upsT a)
+        VExtPair v ts a -> VExtPair (upsApplyValue upsT upsM v) (map (upsApplyType upsT) ts) (upsApplyType upsT a)
 
 upsApplyTermClosure :: Ups -> Ups -> TermClosure a -> TermClosure a
 upsApplyTermClosure upsT upsM tc

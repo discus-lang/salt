@@ -685,7 +685,7 @@ synthTermWith _a _wh _ctx MLeave
 
 
 -- (t-pack) ------------------------------------------------
-synthTermWith a wh ctx (MPack actual term ascription)
+synthTermWith a wh ctx (MPack term abstractedTypes ascription)
  = do
       -- check ascription is well kinded
       checkType a wh ctx ascription
@@ -704,13 +704,15 @@ synthTermWith a wh ctx (MPack actual term ascription)
         TExists tps t -> return (takeTPTypes tps, t)
         _             -> throw $ ErrorPackTypeNotExistential a wh ascription
 
-      -- the top level TExists must only have one parameter
-      when (not $ length bksParam == 1)
-        $ throw $ ErrorExistentialMoreThanOneParam a wh ascription
+      -- the number of parameters within TExists must match the number of
+      -- abstractedTypes
+      when (not $ length abstractedTypes == length bksParam)
+        $ throw $ ErrorPackTypeParamMismatch a wh abstractedTypes ascription
 
       -- substitute `actual` into ascription type
-      let nts = [ (n, actual) | (BindName n, _) <- bksParam ]
-      let snv = snvOfBinds nts
+      let bksParamNames = [ n | (BindName n, _) <- bksParam]
+      let binders = zip bksParamNames abstractedTypes
+      let snv = snvOfBinds binders
       let tSubst = snvApplyType upsEmpty snv tResult
 
       -- check that substituted ascription type is a valid type for `term`
@@ -721,16 +723,18 @@ synthTermWith a wh ctx (MPack actual term ascription)
                     -> throw $ ErrorMismatch UType a wh tErr1 tErr2
 
       -- the overall type is just ascription
-      --     (term,                          [type],   [effect]
-      return (MPack actual term' ascription, Just [ascription], esResult)
+      --     (term,                                           [type],   [effect]
+      return (MPack term' abstractedTypes ascription, Just [ascription], esResult)
 
 -- (t-unpack) ------------------------------------------------
-synthTermWith a wh ctx (MUnpack mPacked rTypeBinding rTermBinding mBody)
+synthTermWith a wh ctx (MUnpack mPacked rTermBinding rTypeBindings mBody)
  = do
       -- check mPacked
+      --                        v effect, if pack then must be pure.
       (mPacked', Just tsPacked, _) <- synthTerm a wh ctx mPacked
 
-      -- mPacked must have a single type and that must be TExists
+      -- mPacked must have a single type (and that must be TExists)
+      -- unpack or error
       ascription <- case tsPacked of
         [ts] -> return ts
         _    -> throw $ ErrorUnpackNotAppliedToPack a wh mPacked
@@ -741,16 +745,18 @@ synthTermWith a wh ctx (MUnpack mPacked rTypeBinding rTermBinding mBody)
         TExists tps t -> return (tps, t)
         _             -> throw $ ErrorUnpackNotAppliedToPack a wh mPacked
 
-      -- the top level TExists must only have one parameter
+      -- the number of parameters within TExists must match the number of
+      -- bound types
+      let typeBindings = [n | (n, _) <- rTypeBindings]
       let bksParam = takeTPTypes tps
-      when (not $ length bksParam == 1)
-        $ throw $ ErrorExistentialMoreThanOneParam a wh ascription
+      when (not $ length bksParam == length typeBindings)
+        $ throw $ ErrorUnpackTypeParamMismatch a wh typeBindings ascription
 
       -- bind existential qualified type param
       let ctx' = contextBindTypeParams tps ctx
 
-      -- bind unpack rTypeBinding
-      let ctx'' = contextBindTermParams (MPTypes [rTypeBinding]) ctx'
+      -- bind unpack rTypeBindings
+      let ctx'' = contextBindTermParams (MPTypes rTypeBindings) ctx'
 
       -- bind unpack rTermBinding to tResult
       let (BindName termBinding, _) = rTermBinding
@@ -760,7 +766,7 @@ synthTermWith a wh ctx (MUnpack mPacked rTypeBinding rTermBinding mBody)
       (mBody', Just tsResult, esResult) <- synthTerm a wh ctx''' mBody
 
       -- return type of mBody
-      return (MUnpack mPacked' rTypeBinding rTermBinding mBody', Just tsResult, esResult)
+      return (MUnpack mPacked' rTermBinding rTypeBindings mBody', Just tsResult, esResult)
 
 
 -- fail --------------------------------------------
