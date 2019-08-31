@@ -418,7 +418,7 @@ synthTermWith a wh ctx m@(MMap tk tv msk msv)
 -- (t-synth-private) --------------------------------------
 synthTermWith a wh ctx (MPrivate bksR btsW mBody)
  = do
-        -- TODO keep unpacking and repacking using MPTypes/MPTerms
+        -- TODO we keep unpacking and repacking using MPTypes/MPTerms
         --      instead we should just change MPrivate type
         (MPTypes bksR') <- checkTermParams a wh ctx (MPTypes bksR)
 
@@ -444,7 +444,7 @@ synthTermWith a wh ctx (MPrivate bksR btsW mBody)
 -- (t-synth-extend) ---------------------------------------
 synthTermWith a wh ctx (MExtend r1 bksR btsW mBody)
  = do
-        -- TODO keep unpacking and repacking using MPTypes/MPTerms
+        -- TODO we keep unpacking and repacking using MPTypes/MPTerms
         --      instead we should just change MExtend type
 
         -- check from region
