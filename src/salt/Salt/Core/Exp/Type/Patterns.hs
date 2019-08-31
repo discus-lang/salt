@@ -60,6 +60,7 @@ pattern TSet t          = TApt (TPrm "Set")    [t]
 pattern TMap tk tv      = TApt (TPrm "Map")    [tk, tv]
 pattern TCell t         = TApt (TPrm "Cell")    [t]
 pattern TConsole        = TPrm "Console"
+pattern TMemory         = TPrm "Memory"
 pattern TSleep          = TPrm "Sleep"
 pattern TAlloc r        = TApt (TPrm "Alloc") [r]
 pattern TRead r         = TApt (TPrm "Read")  [r]

@@ -136,49 +136,49 @@ primOpsMemory
 
    , PO { name  = "allocAddr"
         , tsig  = [TWord64] :-> [TAddr]
-        , teff  = [TPrm "Memory"]
+        , teff  = [TMemory]
         , exec  = \[NVs [VWord64 s]] -> primAllocAddr s
         , docs  = "Allocate a raw address." }
 
    , PO { name  = "freeAddr"
         , tsig  = [TAddr] :-> []
-        , teff  = [TPrm "Memory"]
+        , teff  = [TMemory]
         , exec  = \[NVs [VAddr a]] -> primFree a
         , docs  = "Free an address." }
 
    , PO { name  = "writeAddr"
         , tsig  = [("t", TData)] :*> [TAddr, "t"] :-> []
-        , teff  = [TPrm "Memory"]
+        , teff  = [TMemory]
         , exec  = \[NTs [t], NVs [VAddr a, v]] -> primWrite t a v
         , docs  = "Write through an address." }
 
    , PO { name  = "readAddr"
         , tsig  = [("t", TData)] :*> [TAddr] :-> ["t"]
-        , teff  = [TPrm "Memory"]
+        , teff  = [TMemory]
         , exec  = \[NTs [t], NVs [VAddr a]] -> primRead t a
         , docs  = "Read through an address." }
 
    , PO { name  = "allocPtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> TPtr "r" "t"
-        , teff  = [TPrm "Memory"]
+        , teff  = [TMemory]
         , exec  = \[NTs [r, t]] -> primAllocPtr r t
         , docs  = "Allocate a pointer." }
 
    , PO { name  = "freePtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t"] :-> []
-        , teff  = [TPrm "Memory"]
+        , teff  = [TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ _ a]] -> primFree a
         , docs  = "Free a pointer." }
 
    , PO { name  = "writePtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t", "t"] :-> []
-        , teff  = [TPrm "Memory"]
+        , teff  = [TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a, v]] -> primWrite t a v
         , docs  = "Write through a pointer." }
 
    , PO { name  = "readPtr"
         , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t"] :-> ["t"]
-        , teff  = [TPrm "Memory"]
+        , teff  = [TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a]] -> primRead t a
         , docs  = "Read through a pointer." }
 
