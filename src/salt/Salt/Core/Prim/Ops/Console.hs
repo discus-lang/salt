@@ -7,13 +7,13 @@ import qualified Data.Text.IO           as Text
 primOpsConsole
  = [ PO { name  = "console'print"
         , tsig  = [TText] :-> []
-        , teff  = [TPrm "Console"]
+        , teff  = [TConsole]
         , exec  = \[NVs [VText tx]] -> do Text.putStr tx; return []
         , docs  = "Print a text string to the console." }
 
    , PO { name  = "console'println"
         , tsig  = [TText] :-> []
-        , teff  = [TPrm "Console"]
+        , teff  = [TConsole]
         , exec  = \[NVs [VText tx]] -> do Text.putStrLn tx; return []
         , docs  = "Print a text string to the console, with a newline on the end." }
    ]
