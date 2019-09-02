@@ -147,60 +147,60 @@ primOpsMemory
         , docs  = "Free an address." }
 
    , PO { name  = "writeAddr"
-        , tsig  = [("t", TData)] :*> [TAddr, "t"] :-> []
+        , tsig  = [("a", TData)] :*> [TAddr, "a"] :-> []
         , teff  = [TMemory]
         , exec  = \[NTs [t], NVs [VAddr a, v]] -> primWrite t a v
         , docs  = "Write through an address." }
 
    , PO { name  = "readAddr"
-        , tsig  = [("t", TData)] :*> [TAddr] :-> ["t"]
+        , tsig  = [("a", TData)] :*> [TAddr] :-> ["a"]
         , teff  = [TMemory]
         , exec  = \[NTs [t], NVs [VAddr a]] -> primRead t a
         , docs  = "Read through an address." }
 
    , PO { name  = "allocPtr"
-        , tsig  = [("r", TRegion), ("t", TData)] :*> TPtr "r" "t"
+        , tsig  = [("r", TRegion), ("a", TData)] :*> TPtr "r" "a"
         , teff  = [TMemory]
         , exec  = \[NTs [r, t]] -> primAllocPtr r t
         , docs  = "Allocate a pointer." }
 
    , PO { name  = "freePtr"
-        , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t"] :-> []
+        , tsig  = [("r", TRegion), ("a", TData)] :*> [TPtr "r" "a"] :-> []
         , teff  = [TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ _ a]] -> primFree a
         , docs  = "Free a pointer." }
 
    , PO { name  = "writePtr"
-        , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t", "t"] :-> []
+        , tsig  = [("r", TRegion), ("a", TData)] :*> [TPtr "r" "a", "a"] :-> []
         , teff  = [TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a, v]] -> primWrite t a v
         , docs  = "Write through a pointer." }
 
    , PO { name  = "readPtr"
-        , tsig  = [("r", TRegion), ("t", TData)] :*> [TPtr "r" "t"] :-> ["t"]
+        , tsig  = [("r", TRegion), ("a", TData)] :*> [TPtr "r" "a"] :-> ["a"]
         , teff  = [TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a]] -> primRead t a
         , docs  = "Read through a pointer." }
 
    , PP { name  = "castPtr"
-        , tsig  = [("r", TRegion), ("t1", TData), ("t2", TData)] :*> [TPtr "r" "t1"] :-> [TPtr "r" "t2"]
+        , tsig  = [("r", TRegion), ("a", TData), ("b", TData)] :*> [TPtr "r" "a"] :-> [TPtr "r" "b"]
         , step  = \[NTs [_, _, t2], NVs [VPtr r _ a]] -> [VPtr r t2 a]
         , docs  = "Cast a pointer to that of a different type." }
 
    -- NB: we can always change region by going to and from addr, so the addition
    --     of this function doesn't weaken our guarantees.
    , PP { name  = "castPtrRegion"
-        , tsig  = [("r1", TRegion), ("r2", TRegion), ("t", TData)] :*> [TPtr "r1" "t"] :-> [TPtr "r2" "t"]
+        , tsig  = [("r1", TRegion), ("r2", TRegion), ("a", TData)] :*> [TPtr "r1" "a"] :-> [TPtr "r2" "a"]
         , step  = \[NTs [_, r2, _], NVs [VPtr _ t a]] -> [VPtr r2 t a]
         , docs  = "Cast a pointer to that of a different region." }
 
    , PP { name  = "takePtr"
-        , tsig  = [("r", TRegion), ("t1", TData)] :*> [TPtr "r" "t1"] :-> [TAddr]
+        , tsig  = [("r", TRegion), ("a", TData)] :*> [TPtr "r" "a"] :-> [TAddr]
         , step  = \[NTs [_, _], NVs [VPtr _ _ a]] -> [VAddr a]
         , docs  = "Downgrade a Ptr to an Addr." }
 
    , PP { name  = "makePtr"
-        , tsig  = [("r", TRegion), ("t1", TData)] :*> [TAddr] :-> [TPtr "r" "t1"]
+        , tsig  = [("r", TRegion), ("a", TData)] :*> [TAddr] :-> [TPtr "r" "a"]
         , step  = \[NTs [r, t], NVs [VAddr a]] -> [VPtr r t a]
         , docs  = "Upgrade an Addr to a Ptr." }
 
