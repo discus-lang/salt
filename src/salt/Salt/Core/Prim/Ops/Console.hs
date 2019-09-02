@@ -6,12 +6,14 @@ import qualified Data.Text.IO           as Text
 
 primOpsConsole
  = [ PO { name  = "console'print"
+        , tpms  = []
         , tsig  = [TText] :-> []
         , teff  = [TConsole]
         , exec  = \[NVs [VText tx]] -> do Text.putStr tx; return []
         , docs  = "Print a text string to the console." }
 
    , PO { name  = "console'println"
+        , tpms  = []
         , tsig  = [TText] :-> []
         , teff  = [TConsole]
         , exec  = \[NVs [VText tx]] -> do Text.putStrLn tx; return []

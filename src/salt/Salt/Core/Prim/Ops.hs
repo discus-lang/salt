@@ -1,7 +1,9 @@
 
 module Salt.Core.Prim.Ops
         ( Prim(..)
+        , typeParamsOfPrim
         , typeOfPrim
+        , qualifiedTypeOfPrim
         , effectOfPrim
         , primOps)
 where

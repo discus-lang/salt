@@ -5,56 +5,67 @@ import Salt.Core.Prim.Ops.Base
 
 primOpsWord16
  = [ PP { name  = "word16'add"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TWord16]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VWord16 $ n1 + n2]
         , docs  = "Word addition." }
 
    , PP { name  = "word16'sub"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TWord16]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VWord16 $ n1 - n2]
         , docs  = "Word subtraction." }
 
    , PP { name  = "word16'mul"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TWord16]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VWord16 $ n1 * n2]
         , docs  = "Word multiplication." }
 
    , PP { name  = "word16'div"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TWord16]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VWord16 $ n1 `div` n2]
         , docs  = "Word division." }
 
    , PP { name  = "word16'rem"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TWord16]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VWord16 $ n1 `rem` n2]
         , docs  = "Word remainder." }
 
    , PP { name  = "word16'eq"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TBool]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VBool $ n1 == n2]
         , docs  = "Word equality." }
 
    , PP { name  = "word16'neq"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TBool]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VBool $ n1 /= n2]
         , docs  = "Word negated equality." }
 
    , PP { name  = "word16'lt"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TBool]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VBool $ n1 < n2]
         , docs  = "Word less-than." }
 
    , PP { name  = "word16'le"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TBool]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VBool $ n1 <= n2]
         , docs  = "Word less-than or equal." }
 
    , PP { name  = "word16'gt"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TBool]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VBool $ n1 > n2]
         , docs  = "Word greater-than." }
 
    , PP { name  = "word16'ge"
+        , tpms  = []
         , tsig  = [TWord16, TWord16] :-> [TBool]
         , step  = \[NVs [VWord16 n1, VWord16 n2]] -> [VBool $ n1 >= n2]
         , docs  = "Word greater-than or equal." }

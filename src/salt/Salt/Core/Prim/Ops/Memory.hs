@@ -129,78 +129,91 @@ primRead _ _         = error "primRead unimplemented for requested type"
 
 primOpsMemory
  = [ PP { name  = "sizeOf"
-        , tsig  = [("a", TData)] :*> TWord64
+        , tpms  = [("a", TData)]
+        , tsig  = TWord64
         , step  = \[NTs [t]] -> do let s = primSizeOf t
                                    return $ VWord64 s
         , docs  = "Find the underlying storage size of a type." }
 
    , PO { name  = "allocAddr"
+        , tpms  = []
         , tsig  = [TWord64] :-> [TAddr]
         , teff  = [TMemory]
         , exec  = \[NVs [VWord64 s]] -> primAllocAddr s
         , docs  = "Allocate a raw address." }
 
    , PO { name  = "freeAddr"
+        , tpms  = []
         , tsig  = [TAddr] :-> []
         , teff  = [TMemory]
         , exec  = \[NVs [VAddr a]] -> primFree a
         , docs  = "Free an address." }
 
    , PO { name  = "writeAddr"
-        , tsig  = [("a", TData)] :*> [TAddr, "a"] :-> []
+        , tpms  = [("a", TData)]
+        , tsig  = [TAddr, "a"] :-> []
         , teff  = [TMemory]
         , exec  = \[NTs [t], NVs [VAddr a, v]] -> primWrite t a v
         , docs  = "Write through an address." }
 
    , PO { name  = "readAddr"
-        , tsig  = [("a", TData)] :*> [TAddr] :-> ["a"]
+        , tpms  = [("a", TData)]
+        , tsig  = [TAddr] :-> ["a"]
         , teff  = [TMemory]
         , exec  = \[NTs [t], NVs [VAddr a]] -> primRead t a
         , docs  = "Read through an address." }
 
    , PO { name  = "allocPtr"
-        , tsig  = [("r", TRegion), ("a", TData)] :*> TPtr "r" "a"
+        , tpms  = [("r", TRegion), ("a", TData)]
+        , tsig  = TPtr "r" "a"
         , teff  = [TMemory]
         , exec  = \[NTs [r, t]] -> primAllocPtr r t
         , docs  = "Allocate a pointer." }
 
    , PO { name  = "freePtr"
-        , tsig  = [("r", TRegion), ("a", TData)] :*> [TPtr "r" "a"] :-> []
+        , tpms  = [("r", TRegion), ("a", TData)]
+        , tsig  = [TPtr "r" "a"] :-> []
         , teff  = [TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ _ a]] -> primFree a
         , docs  = "Free a pointer." }
 
    , PO { name  = "writePtr"
-        , tsig  = [("r", TRegion), ("a", TData)] :*> [TPtr "r" "a", "a"] :-> []
+        , tpms  = [("r", TRegion), ("a", TData)]
+        , tsig  = [TPtr "r" "a", "a"] :-> []
         , teff  = [TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a, v]] -> primWrite t a v
         , docs  = "Write through a pointer." }
 
    , PO { name  = "readPtr"
-        , tsig  = [("r", TRegion), ("a", TData)] :*> [TPtr "r" "a"] :-> ["a"]
+        , tpms  = [("r", TRegion), ("a", TData)]
+        , tsig  = [TPtr "r" "a"] :-> ["a"]
         , teff  = [TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a]] -> primRead t a
         , docs  = "Read through a pointer." }
 
    , PP { name  = "castPtr"
-        , tsig  = [("r", TRegion), ("a", TData), ("b", TData)] :*> [TPtr "r" "a"] :-> [TPtr "r" "b"]
+        , tpms  = [("r", TRegion), ("a", TData), ("b", TData)]
+        , tsig  = [TPtr "r" "a"] :-> [TPtr "r" "b"]
         , step  = \[NTs [_, _, t2], NVs [VPtr r _ a]] -> [VPtr r t2 a]
         , docs  = "Cast a pointer to that of a different type." }
 
    -- NB: we can always change region by going to and from addr, so the addition
    --     of this function doesn't weaken our guarantees.
    , PP { name  = "castPtrRegion"
-        , tsig  = [("r1", TRegion), ("r2", TRegion), ("a", TData)] :*> [TPtr "r1" "a"] :-> [TPtr "r2" "a"]
+        , tpms  = [("r1", TRegion), ("r2", TRegion), ("a", TData)]
+        , tsig  = [TPtr "r1" "a"] :-> [TPtr "r2" "a"]
         , step  = \[NTs [_, r2, _], NVs [VPtr _ t a]] -> [VPtr r2 t a]
         , docs  = "Cast a pointer to that of a different region." }
 
    , PP { name  = "takePtr"
-        , tsig  = [("r", TRegion), ("a", TData)] :*> [TPtr "r" "a"] :-> [TAddr]
+        , tpms  = [("r", TRegion), ("a", TData)]
+        , tsig  = [TPtr "r" "a"] :-> [TAddr]
         , step  = \[NTs [_, _], NVs [VPtr _ _ a]] -> [VAddr a]
         , docs  = "Downgrade a Ptr to an Addr." }
 
    , PP { name  = "makePtr"
-        , tsig  = [("r", TRegion), ("a", TData)] :*> [TAddr] :-> [TPtr "r" "a"]
+        , tpms  = [("r", TRegion), ("a", TData)]
+        , tsig  = [TAddr] :-> [TPtr "r" "a"]
         , step  = \[NTs [r, t], NVs [VAddr a]] -> [VPtr r t a]
         , docs  = "Upgrade an Addr to a Ptr." }
 
