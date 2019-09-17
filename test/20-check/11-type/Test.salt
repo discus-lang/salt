@@ -1,11 +1,7 @@
--- Check operation of each of the kinding rules.
-
--- Check type synonym lookup in kind checker.
-type nat: #Data = #Nat
-test kind nat
-
+-- Check operation of each of the typing rules.
 
 -- (t-the) look through synonyms when checking ascribed types.
+type nat: #Data = #Nat
 test type the nat of 5
 
 

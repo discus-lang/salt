@@ -1,4 +1,3 @@
-* #Data
 * nat
 * [foo] → [[#Nat]!(#Console + #Sleep)]
 * [thing2thing] → [#Nat]

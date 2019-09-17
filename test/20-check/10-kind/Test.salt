@@ -1,0 +1,47 @@
+
+-- Check type synonym lookup in kind checker.
+type nat: #Data = #Nat
+test kind nat
+
+-- (t-prm) lookup kind of primitive type.
+test kind #Nat
+
+-- (t-var) lookup kind of type var.
+test kind forall [a: #Data]. a
+
+-- (t-abs) check kind of type abstraction.
+test kind λ[a: #Data] ⇒ a
+
+-- (t-arr) check kind of function arrow
+test kind #Data ⇒ #Data
+
+-- (t-app) check kind of type application.
+test kind #Option #Nat
+
+-- (t-all) check kind of forall quantified type.
+test kind forall [a: #Data]. a → a
+
+-- (t-ext) check kind of exists quantified type.
+test kind exists [a: #Data]. a
+
+-- (t-fun) check kind of function type.
+test kind #Nat → #Nat
+
+-- (t-rec) check kind of record type.
+test kind ∏[x: #Nat, y: #Nat]
+
+-- (t-vnt) check kind of variant type.
+test kind ∑[x: #Nat, y: #Nat]
+
+-- (t-susp) check kind of suspension type.
+test kind #Nat ! #Console
+
+-- (t-sync) check kind of primitive 'sync' type.
+test kind sync
+
+-- (t-sync) check kind of primitive 'pure' type.
+test kind pure
+
+-- (t-sum) check kind of type sum.
+test kind #Console + #Memory
+
