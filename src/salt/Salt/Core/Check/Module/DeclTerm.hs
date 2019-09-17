@@ -14,7 +14,7 @@ checkDeclTermSig :: CheckDecl a
 checkDeclTermSig _a ctx (DTerm (DeclTerm a mode n mpss tsResult mBody))
  = do   let wh  = [WhereTermDecl a n]
         (ctx', mpss') <- checkTermParamss a wh ctx mpss
-        tsResult'     <- checkTypesAreAll UType a wh ctx' TData tsResult
+        tsResult'     <- checkTypesAreAll UType a wh ctx' TRepr tsResult
         return  $ DTerm $ DeclTerm a mode n mpss' tsResult' mBody
 
 checkDeclTermSig _ _ decl
@@ -34,7 +34,7 @@ checkDeclTerm _a ctx
         (ctx', mpss') <- checkTermParamss a wh ctx mpss
 
         -- Check the result type annotation.
-        tsResult' <- checkTypesAreAll UType a wh ctx' TData tsResult
+        tsResult' <- checkTypesAreAll UType a wh ctx' TRepr tsResult
 
         -- Check the body.
         (mBody', _rr, esResult)
@@ -68,8 +68,7 @@ checkDeclTerm _a ctx
                   -> return (tsResult, [tEffect])
                 t -> return (t, [])
 
-        tsResult'
-         <- checkTypesAreAll UType a wh ctx' TData tsResult
+        tsResult' <- checkTypesAreAll UType a wh ctx' TRepr tsResult
 
         -- Check the body.
         (mBody', _rr, esResult')
@@ -102,7 +101,6 @@ checkDeclTermRebound decls
         check _ = Nothing
 
    in   mapMaybe check decls
-
 
 
 ---------------------------------------------------------------------------------------------------

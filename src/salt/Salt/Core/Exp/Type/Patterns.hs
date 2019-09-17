@@ -34,7 +34,9 @@ infixr 3 :*>
 
 -- Primitive types.
 pattern TType           = TPrm "Type"
+pattern TRepr           = TPrm "Repr"
 pattern TData           = TPrm "Data"
+pattern TComp           = TPrm "Comp"
 pattern TState          = TPrm "State"
 pattern TRegion         = TPrm "Region"
 pattern TEffect         = TPrm "Effect"

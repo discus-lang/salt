@@ -231,7 +231,7 @@ synthTermWith a wh ctx (MRec bms mBody)
  = do
         -- Check the type annotations on each of the binders.
         let tsBind  = map makeTypeOfTermBind bms
-        tsBind' <- checkTypesAreAll UKind a wh ctx TData tsBind
+        tsBind' <- checkTypesAreAll UType a wh ctx TData tsBind
 
         -- Check for duplicate recursive binders.
         let nsBind  = mapMaybe takeNameOfTermBind bms
@@ -649,7 +649,7 @@ synthTermWith a wh ctx (MEnter mEnter bms mRest)
  = do
         -- Check the type annotations on each of the binders.
         let tsBind  = map makeTypeOfTermBind bms
-        tsBind' <- checkTypesAreAll UKind a wh ctx TData tsBind
+        tsBind' <- checkTypesAreAll UType a wh ctx TData tsBind
 
         -- Check for duplicate recursive binders.
         let nsBind  = mapMaybe takeNameOfTermBind bms
@@ -802,7 +802,7 @@ checkTermProcBind a wh ctx (MBind b mpss tResult mBody)
 
         -- Check the result type annotation.
         tsResult'
-         <- checkTypesAreAll UKind a wh ctx' TData tResult
+         <- checkTypesAreAll UType a wh ctx' TData tResult
 
         -- The body must have type as specified by the result annotation.
         (mBody', _rr, esBody)

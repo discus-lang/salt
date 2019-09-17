@@ -9,7 +9,10 @@ import qualified Data.Map.Strict        as Map
 primKindCtors :: Map Name ()
 primKindCtors
  = Map.fromList
-        [ ("Data",      ())
+        [ ("Repr",      ())
+        , ("Data",      ())
+        , ("Comp",      ())
+        , ("Prop",      ())
         , ("Region",    ())
         , ("Effect",    ()) ]
 
@@ -53,5 +56,4 @@ primDataCtors
  = Map.fromList
         [ ("None",      [("a", TData)] :*> ([] :-> [TOption "a"]))
         , ("Some",      [("a", TData)] :*> (["a"] :-> [TOption "a"]))]
-
 

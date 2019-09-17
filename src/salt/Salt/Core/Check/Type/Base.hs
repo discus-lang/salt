@@ -67,7 +67,7 @@ checkTypesAre
         :: Annot a => Universe -> a -> [Where a]
         -> Context a -> [Kind a] -> [Type a] -> IO [Type a]
 
-checkTypesAre uni a wh ctx ksExpected ts
+checkTypesAre uni@UKind a wh ctx ksExpected ts
  = do   (ts', ksActual)
          <- checkTypes a wh ctx ts
 
@@ -79,12 +79,61 @@ checkTypesAre uni a wh ctx ksExpected ts
         -- top most annotatino on the type that was checked, not the
         -- resulting kind expression.
         forM (zip3 ts' ksActual ksExpected) $ \(t', kActual, kExpected)
-         -> let a' = fromMaybe a $ takeAnnotOfType t'
-            in checkTypeEquiv ctx a' [] kActual a' [] kExpected
-                >>= \case
+         -> do  let a' = fromMaybe a $ takeAnnotOfType t'
+                checkTypeEquiv ctx a' [] kActual a' [] kExpected
+                 >>= \case
                         Nothing -> return t'
                         Just ((_aErr1', kErr1), (_aErr2, kErr2))
                          -> throw $ ErrorMismatch uni a' wh kErr1 kErr2
+
+
+checkTypesAre UType a wh ctx ksExpected ts
+ = do   (ts', ksActual)
+         <- checkTypes a wh ctx ts
+
+        when (not $ length ksExpected == length ksActual)
+         $ throw $ ErrorAppTypeTypeWrongArity a wh ksExpected ksActual
+
+        -- Check each of the types in turn against their expected kinds.
+        -- If one of them doesn't match then attribute the error to the
+        -- top most annotatino on the type that was checked, not the
+        -- resulting kind expression.
+        forM (zip3 ts' ksActual ksExpected) $ \(t', kActual, kExpected)
+         -> do  let a' = fromMaybe a $ takeAnnotOfType t'
+                checkKindEquiv a' wh kActual kExpected
+                return t'
+
+-- This function should only be called at the UKind and UType universes.
+-- If not then the caller is very broken.
+checkTypesAre _uni _ _ _ _ _
+ = error "universe malfunction"
+
+
+-- | Check kinds first (actual) kind is a subkind of the second (expected) one.
+checkKindEquiv
+        :: Annot a => a -> [Where a]
+        -> Kind a -> Kind a
+        -> IO ()
+
+checkKindEquiv _ wh (TAnn a' t') kExpected
+ = checkKindEquiv a' wh t' kExpected
+
+checkKindEquiv _ wh kActual (TAnn a' t')
+ = checkKindEquiv a' wh kActual t'
+
+checkKindEquiv a wh kActual kExpected
+ = case (kActual, kExpected) of
+        (TRepr,   TRepr)        -> return ()
+        (TData,   TData)        -> return ()
+        (TComp,   TComp)        -> return ()
+        (TProp,   TProp)        -> return ()
+        (TRegion, TRegion)      -> return ()
+        (TEffect, TEffect)      -> return ()
+
+        (TComp,   TRepr)        -> return ()
+        (TData,   TRepr)        -> return ()
+
+        _ -> throw $ ErrorMismatch UKind a wh kActual kExpected
 
 
 -- | Check that some types all have the given kind.

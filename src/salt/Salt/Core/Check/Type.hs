@@ -69,7 +69,7 @@ checkTypeWith a wh ctx (TApp tFun tgsArg)
 checkTypeWith a wh ctx (TForall tps tBody)
  = do   tps'    <- checkTypeParams a wh ctx tps
         let ctx' = contextBindTypeParams tps' ctx
-        tBody'  <- checkTypeHas UKind a wh ctx' TData tBody
+        tBody'  <- checkTypeHas UType a wh ctx' TData tBody
         return  (TForall tps' tBody', TData)
 
 
@@ -77,14 +77,14 @@ checkTypeWith a wh ctx (TForall tps tBody)
 checkTypeWith a wh ctx (TExists tps tBody)
  = do   tps'    <- checkTypeParams a wh ctx tps
         let ctx' = contextBindTypeParams tps' ctx
-        tBody'  <- checkTypeHas UKind a wh ctx' TData tBody
+        tBody'  <- checkTypeHas UType a wh ctx' TData tBody
         return  (TExists tps' tBody', TData)
 
 
 -- (k-fun) ------------------------------------------------
 checkTypeWith a wh ctx (TFun tsParam tsResult)
- = do   tsParam'  <- checkTypesAreAll UKind a wh ctx TData tsParam
-        tsResult' <- checkTypesAreAll UKind a wh ctx TData tsResult
+ = do   tsParam'  <- checkTypesAreAll UType a wh ctx TData tsParam
+        tsResult' <- checkTypesAreAll UType a wh ctx TRepr tsResult
         return  (TFun tsParam' tsResult', TData)
 
 
@@ -110,9 +110,9 @@ checkTypeWith a wh ctx (TVariant ns tgsField)
 
 -- (k-susp) -----------------------------------------------
 checkTypeWith a wh ctx (TSusp tsResult tEffect)
- = do   tsResult' <- checkTypesAreAll UKind a wh ctx TData tsResult
-        tEffect'  <- checkTypeHas UKind a wh ctx TEffect tEffect
-        return  (TSusp tsResult' tEffect', TData)
+ = do   tsResult' <- checkTypesAreAll UType a wh ctx TData tsResult
+        tEffect'  <- checkTypeHas UType a wh ctx TEffect tEffect
+        return  (TSusp tsResult' tEffect', TComp)
 
 
 -- (k-sync) -----------------------------------------------
@@ -127,7 +127,7 @@ checkTypeWith _a _wh _ctx TPure
 
 -- (k-sum) ------------------------------------------------
 checkTypeWith a wh ctx (TSum ts)
- = do   ts' <- checkTypesAreAll UKind a wh ctx TEffect ts
+ = do   ts' <- checkTypesAreAll UType a wh ctx TEffect ts
         return  (TSum ts', TEffect)
 
 

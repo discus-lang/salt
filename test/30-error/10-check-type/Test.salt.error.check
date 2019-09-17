@@ -120,7 +120,7 @@ test/30-error/10-check-type/Test.salt:77:18
 test/30-error/10-check-type/Test.salt:80:18
   Actual kind '#Effect'
    does not match
-   expected kind '#Data'
+   expected kind '#Repr'
 
   80:11  In test
 

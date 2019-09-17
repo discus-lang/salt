@@ -6,8 +6,8 @@ test type the nat of 5
 
 
 -- (t-run) look through synonyms when running suspensions.
-type foo: #Data = [#Nat] ! #Console + #Sleep
-test type λ[x: foo] → box run x
+type foo: #Comp = [#Nat] ! #Console + #Sleep
+test type λ[x: [] → foo] → box run (x [])
 
 
 -- (t-apt) look through synonyms in term/type  application.

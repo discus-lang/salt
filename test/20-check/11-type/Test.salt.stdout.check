@@ -1,5 +1,5 @@
 * nat
-* [foo] → [[#Nat]!(#Console + #Sleep)]
+* [[] → [foo]] → [[#Nat]!(#Console + #Sleep)]
 * [thing2thing] → [#Nat]
 * [nat2nats] → [#Nat]
 * [nat2nat] → [#Nat]

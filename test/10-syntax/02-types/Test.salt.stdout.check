@@ -56,12 +56,12 @@
 * effect5: #Effect
 * effect6: #Effect
 * effect7: #Effect
-* susp1: #Data
-* susp2: #Data
+* susp1: #Comp
+* susp2: #Comp
 * susp3: #Data
-* susp4: #Data
-* susp5: #Data
-* susp6: #Data
+* susp4: #Comp
+* susp5: #Comp
+* susp6: #Comp
 * quoted1: [#Data] ⇒ #Data
 * quoted2: [#Data] ⇒ #Data
 * quoted3: [[#Data] ⇒ #Data] ⇒ [#Data] ⇒ #Data
