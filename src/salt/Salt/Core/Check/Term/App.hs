@@ -21,7 +21,7 @@ checkTermApp a wh ctx mFun0 mgss0
          <- case takeMPrm mFun0 of
                 Just nPrm
                  | Just pp  <- Map.lookup nPrm Prim.primOps
-                 -> do  let tPrim = mapAnnot (const a) $ Prim.qualifiedTypeOfPrim pp
+                 -> do  let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
                         return (mFun0, tPrim, [])
 
                  | Just tCon <- Map.lookup nPrm Prim.primDataCtors

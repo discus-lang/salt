@@ -1,9 +1,7 @@
 
 module Salt.Core.Prim.Ops
         ( Prim(..)
-        , typeParamsOfPrim
         , typeOfPrim
-        , qualifiedTypeOfPrim
         , primOps)
 where
 import Data.Map                         (Map)
@@ -36,9 +34,9 @@ import Salt.Core.Prim.Ops.Bundle
 primOps :: Map Name Prim
 primOps
  = Map.fromList $ map (\p -> (name p, p)) $ concat
-        [ primOpsBool,   primOpsNat
-        , primOpsInt, primOpsInt8, primOpsInt16, primOpsInt32, primOpsInt64
-        , primOpsWord, primOpsWord8, primOpsWord16, primOpsWord32, primOpsWord64
+        [ primOpsBool,  primOpsNat
+        , primOpsInt,   primOpsInt8,  primOpsInt16,  primOpsInt32,  primOpsInt64
+        , primOpsWord,  primOpsWord8, primOpsWord16, primOpsWord32, primOpsWord64
         , primOpsSymbol
         , primOpsList,   primOpsSet,  primOpsMap
         , primOpsMemory

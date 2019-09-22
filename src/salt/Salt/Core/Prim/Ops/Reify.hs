@@ -8,8 +8,7 @@ import qualified Data.Text              as T
 
 primOpsReify
  = [ PP { name  = "reify'pretty"
-        , tpms  = [("a", TData)]
-        , tsig  = ["a"] :-> [TText]
+        , tsig  = [("a", TData)] :*> ["a"] :-> [TText]
         , step  = \[NTs [_t], NVs [v]]
                 -> [VText $ T.pack $ P.render $ P.ppr () $ stripAnnot v]
         , docs  = "Reify a term into a pretty printed string." }

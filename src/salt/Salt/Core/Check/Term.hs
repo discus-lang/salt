@@ -81,7 +81,7 @@ synthTermWith a wh ctx m@(MRef (MRVal v))
 synthTermWith a wh ctx m@(MRef (MRPrm nPrim))
  | Just pp <- Map.lookup nPrim Prim.primOps
  = do
-        let tPrim = mapAnnot (const a) $ Prim.qualifiedTypeOfPrim pp
+        let tPrim = mapAnnot (const a) $ Prim.typeOfPrim pp
         pss <- stripTermParamsOfType ctx tPrim
         when (not $ null pss)
          $ throw $ ErrorUnsaturatedPrim a wh nPrim tPrim
