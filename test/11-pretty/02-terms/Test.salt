@@ -23,7 +23,7 @@ test eval
          foo [y: #Nat, z: #Symbol] → z
          bar [z: #Symbol] → z
 
-test eval box λ[x: [] → [#Nat]!pure] → run (x [])
+test eval box λ[x: [] → [#Nat]!pure] → x []
 test eval box box #nat'add [2, 3]
 
 test eval box [list #Nat| #nat'add [2, 3], #nat'add [3, 4]]

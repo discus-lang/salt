@@ -54,17 +54,8 @@ checkDeclTest _a ctx (DTest (DeclTestExec a bWatch nDecl mBody))
  = do   let wh  = [WhereTestDecl a nDecl]
 
         -- Check the body term.
-        (mBody', tResult, esResult)
-         <- synthTermProductive1 a wh ctx mBody
-
-        tResult_simp <- simplType a ctx tResult
-        when (not $ isTSusp tResult_simp)
-         $ throw $ ErrorTestDeclNotSusp a wh nDecl [tResult]
-
-        -- The body must be pure.
-        eBody_simp <- simplType a ctx (TSum esResult)
-        when (not $ isTPure eBody_simp)
-         $ throw $ ErrorTestDeclImpure a wh nDecl eBody_simp
+        (mBody', _tsResult, _esResult)
+         <- synthTermProductive a wh ctx mBody
 
         return  $ DTest $ DeclTestExec a bWatch nDecl mBody'
 

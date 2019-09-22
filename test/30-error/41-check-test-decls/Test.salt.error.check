@@ -4,21 +4,9 @@ test/30-error/41-check-test-decls/Test.salt:5:11
 
   5:11   In test "test1"
 
-test/30-error/41-check-test-decls/Test.salt:8:11
-  Impure test declaration 'test2'
-   has effect '#Console'
-
-  8:11   In test "test2"
-
-test/30-error/41-check-test-decls/Test.salt:13:11
-  Test 'test3' does not produce a suspension to execute.
-   Actual types [#Bool]
-
-  13:11  In test "test3"
-
-test/30-error/41-check-test-decls/Test.salt:16:13
+test/30-error/41-check-test-decls/Test.salt:8:13
   Impure test declaration 'test4'
    has effect '#Console'
 
-  16:13  In test "test4"
+  8:13   In test "test4"
 

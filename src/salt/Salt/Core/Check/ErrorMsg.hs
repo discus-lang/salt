@@ -49,11 +49,6 @@ ppre c  (ErrorTestDeclImpure  _a _wh mnDecl tEffect)
  = vcat [ text "Impure test declaration" %% maybe empty (squotes . pprVar) mnDecl
         , text " has effect"    %% squotes (ppr c tEffect) ]
 
-ppre c  (ErrorTestDeclNotSusp  _a _wh mnDecl tsBody)
- = vcat [ text "Test" %% maybe empty (squotes . pprVar) mnDecl
-                      %% text "does not produce a suspension to execute."
-        , text " Actual types"  %% squared (map (ppr c) tsBody) ]
-
 
 -- Unknown vars and refs ----------------------------------
 ppre c (ErrorUnknownPrim uni _a _wh n)

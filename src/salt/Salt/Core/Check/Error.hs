@@ -70,12 +70,6 @@ data Error a
         , errorName             :: Name
         , errorLoop             :: [(Name, a)] }
 
-        | ErrorTestDeclNotSusp
-        { errorAnnot            :: a
-        , errorWhere            :: [Where a]
-        , errorNameMaybe        :: Maybe Name
-        , errorTypes            :: [Type a] }
-
         -- Structural arity ---------------------
         | ErrorWrongArity
         { errorUniverse         :: Universe

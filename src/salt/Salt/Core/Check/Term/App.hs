@@ -58,13 +58,26 @@ checkTermApp a wh ctx mFun0 mgss0
                 then reassocApps a ctx tFun1 mgss0
                 else return mgss0
 
-        -- Check the functional expresion against the reassociate arguments.
-        (mApp', tsApp', esApp')
+        -- Check the functional expresion against the reassociated arguments.
+        (mApp', tsApp_result, esApp')
          <- checkTermAppArgs
                 a wh ctx
                 a mFun1 tFun1 mgssReassoc
 
-        return (mApp', tsApp', esFun1 ++ esApp')
+        -- If the result is a suspension then automatically run it.
+        --   Suspension types have kind Comp rather than Data,
+        --     so if we do not run them here then the result would be ill-kinded.
+        (tsApp_run, esRun)
+         <- case tsApp_result of
+                [t] ->  simplType a ctx t
+                    >>= \case
+                         TSusp tsv te   -> return (tsv, [te])
+                         _              -> return ([t], [])
+                _   -> return (tsApp_result, [])
+
+        return  ( mApp'
+                , tsApp_run
+                , esFun1 ++ esApp' ++ esRun)
 
 
 --------------------------------------------------------------------------------------- App/Args --
@@ -91,6 +104,7 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
   goHead tsHead _ _ _
    = throw $ ErrorAppVector aApp wh tsHead
 
+  -- Function expects some type arguments.
   goDispatch (TForall tpsParam tResult) mgssAcc mgssArg esAcc
    | (mgs : mgssRest)   <- mgssArg
    , Just (aArg, tsArg) <- takeAnnMGTypes aApp mgs
@@ -125,7 +139,7 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
 
    | otherwise = throw $ ErrorAppTermTypeCannot aApp wh tFun
 
-  -- Application of a term vector.
+  -- Function expects a term vector.
   goDispatch (TFun tsParam tsResult) mgssAcc mgssArg esAcc
    | (mgs : mgssRest')  <- mgssArg
    , Just (aArg, msArg) <- takeAnnMGTerms aApp mgs
@@ -138,6 +152,7 @@ checkTermAppArgs aApp wh ctx aFun mFun tFun mgssArg0
                 (MGAnn aArg (MGTerms msArg') : mgssAcc)
                 mgssRest' (esArg ++ esAcc)
 
+  -- Function expects a single term.
   goDispatch (TFun tsParam tsResult) mgssAcc mgssArg esAcc
    | (mgs : mgssRest')  <- mgssArg
    , Just (aArg, mArg)  <- takeAnnMGTerm aApp mgs

@@ -7,7 +7,7 @@ test type the nat of 5
 
 -- (t-run) look through synonyms when running suspensions.
 type foo: #Comp = [#Nat] ! #Console + #Sleep
-test type λ[x: [] → foo] → box run (x [])
+test type λ[x: [] → foo] → box x []
 
 
 -- (t-apt) look through synonyms in term/type  application.
@@ -18,6 +18,14 @@ test type λ[f: thing2thing] → f @#Nat 3
 -- (t-apm) look through synonyms in term/terms application.
 type nat2nats: #Data = [#Nat, #Nat] → #Nat
 test type λ[f: nat2nats] → f [2, 3]
+
+-- (t-apm) check that suspensions in the result of applications
+-- are being automatically run. If they were not then the type
+-- of the result would be a double suspension.
+term print [x: #Text]: [] ! #Console
+ = box  #console'print x
+
+test type box print "hello"
 
 
 -- (t-apv) look through synonyms in term/term  application.
