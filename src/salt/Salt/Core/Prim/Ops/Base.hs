@@ -5,8 +5,7 @@ module Salt.Core.Prim.Ops.Base
         , Prim(..)
         , typeParamsOfPrim
         , typeOfPrim
-        , qualifiedTypeOfPrim
-        , effectOfPrim)
+        , qualifiedTypeOfPrim )
 where
 import Salt.Core.Transform.StripAnnot
 import Salt.Core.Exp
@@ -31,7 +30,6 @@ data Prim
         { name  :: Name
         , tpms  :: [(Bind, Type ())]
         , tsig  :: Type ()
-        , teff  :: [Type ()]
         , exec  :: forall a. Show a => [TermNormals a] -> IO [Value a]
         , docs  :: Text }
 
@@ -63,9 +61,3 @@ qualifiedTypeOfPrim pp
         PO {tpms, tsig} | (length tpms) > 0 -> tpms :*> tsig
         PO {tsig} -> tsig
 
--- | Get the effect type of a primitive.
-effectOfPrim :: Prim -> Type ()
-effectOfPrim pp
- = case pp of
-        PP {}     -> TPure
-        PO {teff} -> TSum teff

@@ -4,7 +4,6 @@ module Salt.Core.Prim.Ops
         , typeParamsOfPrim
         , typeOfPrim
         , qualifiedTypeOfPrim
-        , effectOfPrim
         , primOps)
 where
 import Data.Map                         (Map)

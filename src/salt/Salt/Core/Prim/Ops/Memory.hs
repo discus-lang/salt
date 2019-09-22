@@ -137,57 +137,49 @@ primOpsMemory
 
    , PO { name  = "allocAddr"
         , tpms  = []
-        , tsig  = [TWord64] :-> [TAddr]
-        , teff  = [TMemory]
+        , tsig  = [TWord64] :-> [TSusp [TAddr] TMemory]
         , exec  = \[NVs [VWord64 s]] -> primAllocAddr s
         , docs  = "Allocate a raw address." }
 
    , PO { name  = "freeAddr"
         , tpms  = []
-        , tsig  = [TAddr] :-> []
-        , teff  = [TMemory]
+        , tsig  = [TAddr] :-> [TSusp [] TMemory]
         , exec  = \[NVs [VAddr a]] -> primFree a
         , docs  = "Free an address." }
 
    , PO { name  = "writeAddr"
         , tpms  = [("a", TData)]
-        , tsig  = [TAddr, "a"] :-> []
-        , teff  = [TMemory]
+        , tsig  = [TAddr, "a"] :-> [TSusp [] TMemory]
         , exec  = \[NTs [t], NVs [VAddr a, v]] -> primWrite t a v
         , docs  = "Write through an address." }
 
    , PO { name  = "readAddr"
         , tpms  = [("a", TData)]
-        , tsig  = [TAddr] :-> ["a"]
-        , teff  = [TMemory]
+        , tsig  = [TAddr] :-> [TSusp ["a"] TMemory]
         , exec  = \[NTs [t], NVs [VAddr a]] -> primRead t a
         , docs  = "Read through an address." }
 
    , PO { name  = "allocPtr"
         , tpms  = [("r", TRegion), ("a", TData)]
-        , tsig  = TPtr "r" "a"
-        , teff  = [TMemory]
+        , tsig  = TSusp [TPtr "r" "a"] TMemory
         , exec  = \[NTs [r, t]] -> primAllocPtr r t
         , docs  = "Allocate a pointer." }
 
    , PO { name  = "freePtr"
         , tpms  = [("r", TRegion), ("a", TData)]
-        , tsig  = [TPtr "r" "a"] :-> []
-        , teff  = [TMemory]
+        , tsig  = [TPtr "r" "a"] :-> [TSusp [] TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ _ a]] -> primFree a
         , docs  = "Free a pointer." }
 
    , PO { name  = "writePtr"
         , tpms  = [("r", TRegion), ("a", TData)]
-        , tsig  = [TPtr "r" "a", "a"] :-> []
-        , teff  = [TMemory]
+        , tsig  = [TPtr "r" "a", "a"] :-> [TSusp [] TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a, v]] -> primWrite t a v
         , docs  = "Write through a pointer." }
 
    , PO { name  = "readPtr"
         , tpms  = [("r", TRegion), ("a", TData)]
-        , tsig  = [TPtr "r" "a"] :-> ["a"]
-        , teff  = [TMemory]
+        , tsig  = [TPtr "r" "a"] :-> [TSusp ["a"] TMemory]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a]] -> primRead t a
         , docs  = "Read through a pointer." }
 

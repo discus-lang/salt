@@ -96,7 +96,7 @@ evalTerm s a env (MAps mFun mgssArg)
          -> do  nssArg <- mapM (evalTermArgs s a env) mgssArg
                 return $ step nssArg
 
-        Just (Ops.PO _name _tpms _type _effs exec _docs)
+        Just (Ops.PO _name _tpms _type exec _docs)
          -> do  nssArg <- mapM (evalTermArgs s a env) mgssArg
                 exec nssArg
 

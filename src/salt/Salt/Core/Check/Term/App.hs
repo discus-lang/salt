@@ -17,15 +17,12 @@ checkTermApp
 checkTermApp a wh ctx mFun0 mgss0
  = do
         -- Determine the type of the functional expression.
-        --  If this is a primitive then also determine if any effects
-        --  will be caused from applying it.
         (mFun1, tFun1, esFun1)
          <- case takeMPrm mFun0 of
                 Just nPrm
                  | Just pp  <- Map.lookup nPrm Prim.primOps
                  -> do  let tPrim = mapAnnot (const a) $ Prim.qualifiedTypeOfPrim pp
-                        let ePrim = mapAnnot (const a) $ Prim.effectOfPrim pp
-                        return (mFun0, tPrim, [ePrim])
+                        return (mFun0, tPrim, [])
 
                  | Just tCon <- Map.lookup nPrm Prim.primDataCtors
                  -> do  let tCon' = mapAnnot (const a) tCon
