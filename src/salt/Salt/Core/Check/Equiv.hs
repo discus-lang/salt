@@ -7,8 +7,8 @@ import Salt.Core.Exp
 
 ---------------------------------------------------------------------------------------------------
 -- Type of our equivalence checker functions.
---   We take a top-level context which holds type synonynms.
---   During comparison we walk down both type trees, mainintaining the last
+--   We take a top-level context which holds type synonyms.
+--   During comparison we walk down both type trees, maintaining the last
 --   annotation seen so far, as well as the list of type parameters we've
 --   descended under.
 type CheckTypeEquiv a x
