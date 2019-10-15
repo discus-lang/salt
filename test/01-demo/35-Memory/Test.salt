@@ -12,7 +12,7 @@ term addr'endtoend : []! #Console + #Memory
 
 test exec addr'endtoend
 
-term ptr'endtoend : []! #Console + #Memory
+term ptr'endtoend : []! #Console
  = box private r with {Alloc; Read; Write} in do
      p = #allocPtr @r @#Word64
      #writePtr @r @#Word64 p #word64'0
@@ -69,7 +69,7 @@ term addr'indirection : []! #Console + #Memory
 
 test exec addr'indirection
 
-term ptr'indirection : []! #Console + #Memory
+term ptr'indirection : []! #Console
  = box private r1 with {Read; Write; Alloc} in do
      -- p1 is the ptr of our underlying data, an int8
      p1 = #allocPtr @r1 @#Int8

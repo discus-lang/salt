@@ -159,25 +159,25 @@ primOpsMemory
 
    , PO { name  = "allocPtr"
         , tsig  = [("r", TRegion), ("a", TData)]
-                :*> TSusp [TPtr "r" "a"] TMemory
+                :*> TSusp [TPtr "r" "a"] (TAlloc "r")
         , exec  = \[NTs [r, t]] -> primAllocPtr r t
         , docs  = "Allocate a pointer." }
 
    , PO { name  = "freePtr"
         , tsig  = [("r", TRegion), ("a", TData)]
-                :*> [TPtr "r" "a"] :-> [TSusp [] TMemory]
+                :*> [TPtr "r" "a"] :-> [TSusp [] (TAlloc "r")]
         , exec  = \[NTs [_, _], NVs [VPtr _ _ a]] -> primFree a
         , docs  = "Free a pointer." }
 
    , PO { name  = "writePtr"
         , tsig  = [("r", TRegion), ("a", TData)]
-                :*> [TPtr "r" "a", "a"] :-> [TSusp [] TMemory]
+                :*> [TPtr "r" "a", "a"] :-> [TSusp [] (TWrite "r")]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a, v]] -> primWrite t a v
         , docs  = "Write through a pointer." }
 
    , PO { name  = "readPtr"
         , tsig  = [("r", TRegion), ("a", TData)]
-                :*> [TPtr "r" "a"] :-> [TSusp ["a"] TMemory]
+                :*> [TPtr "r" "a"] :-> [TSusp ["a"] (TRead "r")]
         , exec  = \[NTs [_, _], NVs [VPtr _ t a]] -> primRead t a
         , docs  = "Read through a pointer." }
 

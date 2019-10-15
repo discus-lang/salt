@@ -12,7 +12,44 @@ import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Data.Map.Strict        as Map
+import Salt.Core.Transform.StripAnnot (stripAnnot)
 
+-- Filter out all effects which are local to the specified region bindings.
+maskRegionLocalEffects :: [(Bind, Type a)] -> [Type a] -> [Type a]
+maskRegionLocalEffects bindings effects = foldl (flip maskRegionLocalEffects') effects names
+    where
+          -- Get region names out of bindings.
+          names = getBindingNames bindings
+          getBindingNames :: [(Bind, Type a)] -> [Text]
+          getBindingNames bindings' = getBindingNames' (map fst bindings')
+
+          getBindingNames' :: [Bind] -> [Text]
+          getBindingNames' [] = []
+          getBindingNames' (BindNone:xs) = getBindingNames' xs
+          getBindingNames' (BindName (Name n):xs) = n:(getBindingNames' xs)
+
+          -- Filter out all simple effects which would not escape from a given
+          -- region.
+          maskRegionLocalEffects' :: Text -> [Type a] -> [Type a]
+          maskRegionLocalEffects' regionName es = filter (effectEscapesRegion regionName) es
+
+          -- Test if a specified effect would escape a given region.
+          effectEscapesRegion :: Text -> Type a -> Bool
+          effectEscapesRegion regionName (TKey TKApp [TGTypes [TRef (TRPrm (Name primName))], TGTypes [arg]])
+            | primName `elem` ["Alloc", "Read", "Write"]
+            = let expected = TVar (BoundWith (Name regionName) 0) in
+              not (equivIgnoringAnnot expected arg)
+          effectEscapesRegion _ _ = True
+
+          -- Naive type equality after stripping out annotations.
+          equivIgnoringAnnot :: Type a -> Type a -> Bool
+          equivIgnoringAnnot a b =
+              -- TODO FIXME check if using stripAnnot here is okay.
+              -- TODO FIXME this is currently using string equality on region
+              --            name, check this is sane.
+              let a' = stripAnnot a in
+              let b' = stripAnnot b in
+              a' == b'
 
 ------------------------------------------------------------------------------------------ Synth --
 -- | Check and elaborate a term producing, a new term and its type.
@@ -437,8 +474,14 @@ synthTermWith a wh ctx (MPrivate bksR btsW mBody)
         (mBody', tsResult, esResult)
          <- synthTerm a wh ctx'' mBody
 
+        -- remove any effects from our effect result which are local to this
+        -- region.
+        let esResult' = maskRegionLocalEffects bksR esResult
+
+        -- TODO FIXME need to check that used capabilities match permissions
+
         return  ( MPrivate bksR' btsW' mBody'
-                , tsResult, esResult)
+                , tsResult, esResult')
 
 
 -- (t-synth-extend) ---------------------------------------
@@ -468,7 +511,13 @@ synthTermWith a wh ctx (MExtend r1 bksR btsW mBody)
         (mBody', tsResult, esResult)
          <- synthTerm a wh ctx'' mBody
 
-        return (MExtend r1 bksR' btsW' mBody', tsResult, esResult)
+        -- remove any effects from our effect result which are local to this
+        -- region.
+        let esResult' = maskRegionLocalEffects bksR esResult
+
+        -- TODO FIXME need to check used capabilities match permissions
+
+        return (MExtend r1 bksR' btsW' mBody', tsResult, esResult')
 
 
 -- (t-synth-launch) ---------------------------------------
