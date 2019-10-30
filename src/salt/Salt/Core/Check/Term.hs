@@ -12,7 +12,66 @@ import qualified Salt.Core.Prim.Ops     as Prim
 import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Data.Map.Strict        as Map
-import Salt.Core.Transform.StripAnnot (stripAnnot)
+
+-- Given a region name, construct a TypeFilter to scrub all simple effects over it.
+regionEffectTypeFilter :: Text -> TypeFilter a
+regionEffectTypeFilter regionName = topLevelTypeFilter
+    where
+    topLevelTypeFilter :: TypeFilter a
+    topLevelTypeFilter = emptyTypeFilter {typeFilter = Just typeFilterEffectRegion}
+
+    -- Type top filter: TKey TKapp [left, right] where
+    --     left  masked by `typeargs effect filter`
+    --     right masked by `typeargs region filter`
+    typeFilterEffectRegion :: TypeFilter a -> Type a -> Maybe (Type a)
+    typeFilterEffectRegion _ t@(TKey TKApp [left, right]) =
+      let tfl = emptyTypeFilter { typeArgsFilter = Just typeArgsFilterEffect } in
+      let tfr = emptyTypeFilter { typeArgsFilter = Just typeArgsFilterRegion } in
+      let left'  = filterWhole tfl left  in
+      let right' = filterWhole tfr right in
+      -- If both sides are a match (Nothing), then we are also a match (Nothing)
+      -- otherwise leave them unchanged
+      -- NOTE: this is a reversal of the usual usage of Maybe in do notation
+      -- usually any one Nothing -> whole Nothing
+      -- whereas here we want everything is Nothing -> whole Nothing
+      case (left', right') of
+           -- We only mask if both sides agree, otherwise too bad
+           (Nothing, Nothing) -> Nothing
+           -- Reset.
+           _                  -> filterParts topLevelTypeFilter t
+    typeFilterEffectRegion _ t = filterParts topLevelTypeFilter t
+    -- TODO FIXME do we need to do manual work if we encounter a TVar binding the same regionName?
+    --            where is the wiring for the foo^count system?
+
+    -- Typeargs effect filter: TGTypes [ts] where ts masked by `type effect filter`
+    typeArgsFilterEffect :: TypeFilter a -> TypeArgs a -> Maybe (TypeArgs a)
+    typeArgsFilterEffect _ (TGTypes [ts]) =
+        let tf = emptyTypeFilter { typeFilter = Just typeFilterEffect} in
+        case filterWhole tf ts of
+            Nothing  -> Nothing
+            Just ts' -> Just $ TGTypes [ts']
+    typeArgsFilterEffect _ t = filterWhole topLevelTypeFilter t
+
+    -- Typeargs region filter: TGTypes [ts] where ts masked by `type region filter`
+    typeArgsFilterRegion :: TypeFilter a -> TypeArgs a -> Maybe (TypeArgs a)
+    typeArgsFilterRegion _ (TGTypes [ts]) =
+        let tf = emptyTypeFilter {typeFilter = Just typeFilterRegion} in
+        case filterWhole tf ts of
+            Nothing  -> Nothing
+            Just ts' -> Just $ TGTypes [ts']
+    typeArgsFilterRegion _ t = filterParts topLevelTypeFilter t
+
+    -- Type effect filter: TRef (TRPrm (Name name)) where name is a known effect.
+    typeFilterEffect :: TypeFilter a -> Type a -> Maybe (Type a)
+    typeFilterEffect _ (TRef (TRPrm name)) | name `elem` [fromString "Alloc", fromString "Write", fromString "Read"] = Nothing
+    typeFilterEffect _ t = filterParts topLevelTypeFilter t
+
+    -- Type region filter: TVar (BoundWith (Name name) num) where name is regionName
+    -- TODO FIXME what about num?
+    -- TODO FIXME likely need num to be equal to how many bounds of the same name we have stepped through...
+    typeFilterRegion :: TypeFilter a -> Type a -> Maybe (Type a)
+    typeFilterRegion _ (TVar (BoundWith (Name name) _num)) | name == regionName = Nothing
+    typeFilterRegion _ t = filterParts topLevelTypeFilter t
 
 -- Filter out all effects which are local to the specified region bindings.
 maskRegionLocalEffects :: [(Bind, Type a)] -> [Type a] -> [Type a]
@@ -28,28 +87,11 @@ maskRegionLocalEffects bindings effects = foldl (flip maskRegionLocalEffects') e
           getBindingNames' (BindNone:xs) = getBindingNames' xs
           getBindingNames' (BindName (Name n):xs) = n:(getBindingNames' xs)
 
-          -- Filter out all simple effects which would not escape from a given
-          -- region.
+          -- Filter out all simple effects which are local to this region.
           maskRegionLocalEffects' :: Text -> [Type a] -> [Type a]
-          maskRegionLocalEffects' regionName es = filter (effectEscapesRegion regionName) es
-
-          -- Test if a specified effect would escape a given region.
-          effectEscapesRegion :: Text -> Type a -> Bool
-          effectEscapesRegion regionName (TKey TKApp [TGTypes [TRef (TRPrm (Name primName))], TGTypes [arg]])
-            | primName `elem` ["Alloc", "Read", "Write"]
-            = let expected = TVar (BoundWith (Name regionName) 0) in
-              not (equivIgnoringAnnot expected arg)
-          effectEscapesRegion _ _ = True
-
-          -- Naive type equality after stripping out annotations.
-          equivIgnoringAnnot :: Type a -> Type a -> Bool
-          equivIgnoringAnnot a b =
-              -- TODO FIXME check if using stripAnnot here is okay.
-              -- TODO FIXME this is currently using string equality on region
-              --            name, check this is sane.
-              let a' = stripAnnot a in
-              let b' = stripAnnot b in
-              a' == b'
+          maskRegionLocalEffects' regionName ts =
+            let tf = regionEffectTypeFilter regionName in
+            applyTypeFilterKeepSome tf ts
 
 ------------------------------------------------------------------------------------------ Synth --
 -- | Check and elaborate a term producing, a new term and its type.
@@ -474,8 +516,7 @@ synthTermWith a wh ctx (MPrivate bksR btsW mBody)
         (mBody', tsResult, esResult)
          <- synthTerm a wh ctx'' mBody
 
-        -- remove any effects from our effect result which are local to this
-        -- region.
+        -- remove any effects from our result which are local to this region.
         let esResult' = maskRegionLocalEffects bksR esResult
 
         -- TODO FIXME need to check that used capabilities match permissions
@@ -511,8 +552,7 @@ synthTermWith a wh ctx (MExtend r1 bksR btsW mBody)
         (mBody', tsResult, esResult)
          <- synthTerm a wh ctx'' mBody
 
-        -- remove any effects from our effect result which are local to this
-        -- region.
+        -- remove any effects from our result which are local to this region.
         let esResult' = maskRegionLocalEffects bksR esResult
 
         -- TODO FIXME need to check used capabilities match permissions
