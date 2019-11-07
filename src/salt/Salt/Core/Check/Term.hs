@@ -13,85 +13,26 @@ import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Data.Map.Strict        as Map
 
--- Given a region name, construct a TypeFilter to scrub all simple effects over it.
-regionEffectTypeFilter :: Text -> TypeFilter a
-regionEffectTypeFilter regionName = topLevelTypeFilter
-    where
-    topLevelTypeFilter :: TypeFilter a
-    topLevelTypeFilter = emptyTypeFilter {typeFilter = Just typeFilterEffectRegion}
-
-    -- Type top filter: TKey TKapp [left, right] where
-    --     left  masked by `typeargs effect filter`
-    --     right masked by `typeargs region filter`
-    typeFilterEffectRegion :: TypeFilter a -> Type a -> Maybe (Type a)
-    typeFilterEffectRegion _ t@(TKey TKApp [left, right]) =
-      let tfl = emptyTypeFilter { typeArgsFilter = Just typeArgsFilterEffect } in
-      let tfr = emptyTypeFilter { typeArgsFilter = Just typeArgsFilterRegion } in
-      let left'  = filterWhole tfl left  in
-      let right' = filterWhole tfr right in
-      -- If both sides are a match (Nothing), then we are also a match (Nothing)
-      -- otherwise leave them unchanged
-      -- NOTE: this is a reversal of the usual usage of Maybe in do notation
-      -- usually any one Nothing -> whole Nothing
-      -- whereas here we want everything is Nothing -> whole Nothing
-      case (left', right') of
-           -- We only mask if both sides agree, otherwise too bad
-           (Nothing, Nothing) -> Nothing
-           -- Reset.
-           _                  -> filterParts topLevelTypeFilter t
-    typeFilterEffectRegion _ t = filterParts topLevelTypeFilter t
-    -- TODO FIXME do we need to do manual work if we encounter a TVar binding the same regionName?
-    --            where is the wiring for the foo^count system?
-
-    -- Typeargs effect filter: TGTypes [ts] where ts masked by `type effect filter`
-    typeArgsFilterEffect :: TypeFilter a -> TypeArgs a -> Maybe (TypeArgs a)
-    typeArgsFilterEffect _ (TGTypes [ts]) =
-        let tf = emptyTypeFilter { typeFilter = Just typeFilterEffect} in
-        case filterWhole tf ts of
-            Nothing  -> Nothing
-            Just ts' -> Just $ TGTypes [ts']
-    typeArgsFilterEffect _ t = filterWhole topLevelTypeFilter t
-
-    -- Typeargs region filter: TGTypes [ts] where ts masked by `type region filter`
-    typeArgsFilterRegion :: TypeFilter a -> TypeArgs a -> Maybe (TypeArgs a)
-    typeArgsFilterRegion _ (TGTypes [ts]) =
-        let tf = emptyTypeFilter {typeFilter = Just typeFilterRegion} in
-        case filterWhole tf ts of
-            Nothing  -> Nothing
-            Just ts' -> Just $ TGTypes [ts']
-    typeArgsFilterRegion _ t = filterParts topLevelTypeFilter t
-
-    -- Type effect filter: TRef (TRPrm (Name name)) where name is a known effect.
-    typeFilterEffect :: TypeFilter a -> Type a -> Maybe (Type a)
-    typeFilterEffect _ (TRef (TRPrm name)) | name `elem` [fromString "Alloc", fromString "Write", fromString "Read"] = Nothing
-    typeFilterEffect _ t = filterParts topLevelTypeFilter t
-
-    -- Type region filter: TVar (BoundWith (Name name) num) where name is regionName
-    -- TODO FIXME what about num?
-    -- TODO FIXME likely need num to be equal to how many bounds of the same name we have stepped through...
-    typeFilterRegion :: TypeFilter a -> Type a -> Maybe (Type a)
-    typeFilterRegion _ (TVar (BoundWith (Name name) _num)) | name == regionName = Nothing
-    typeFilterRegion _ t = filterParts topLevelTypeFilter t
-
--- Filter out all effects which are local to the specified region bindings.
+-- | Filter out all effects which are local to the specified region bindings.
 maskRegionLocalEffects :: [(Bind, Type a)] -> [Type a] -> [Type a]
 maskRegionLocalEffects bindings effects = foldl (flip maskRegionLocalEffects') effects names
     where
           -- Get region names out of bindings.
-          names = getBindingNames bindings
-          getBindingNames :: [(Bind, Type a)] -> [Text]
-          getBindingNames bindings' = getBindingNames' (map fst bindings')
+          names = getBindingNames (map fst bindings)
 
-          getBindingNames' :: [Bind] -> [Text]
-          getBindingNames' [] = []
-          getBindingNames' (BindNone:xs) = getBindingNames' xs
-          getBindingNames' (BindName (Name n):xs) = n:(getBindingNames' xs)
+          isRegionLocalEffect :: Name -> Type a -> Bool
+          isRegionLocalEffect regionName t =
+              let bound = (BoundWith regionName 0) in
+              case takeSimpleEffect bound t of
+                  Nothing -> False
+                  Just _  -> True
+
+          shouldEscape :: Name -> Type a -> Bool
+          shouldEscape n t = not (isRegionLocalEffect n t)
 
           -- Filter out all simple effects which are local to this region.
-          maskRegionLocalEffects' :: Text -> [Type a] -> [Type a]
-          maskRegionLocalEffects' regionName ts =
-            let tf = regionEffectTypeFilter regionName in
-            applyTypeFilterKeepSome tf ts
+          maskRegionLocalEffects' :: Name -> [Type a] -> [Type a]
+          maskRegionLocalEffects' regionName ts = filter (shouldEscape regionName) ts
 
 ------------------------------------------------------------------------------------------ Synth --
 -- | Check and elaborate a term producing, a new term and its type.

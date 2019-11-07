@@ -3,6 +3,7 @@ module Salt.Core.Exp.Type.Compounds where
 import Salt.Core.Exp.Type.Patterns
 import Salt.Core.Exp.Type.Base
 import Salt.Core.Exp.Name
+import Control.Monad (unless)
 
 
 -- | Take the top-level annotation from a type, if there is one.
@@ -62,4 +63,60 @@ takeTForalls tt
         = case tBody of
                 TForall tps' tBody' -> go (tps' : tpss) tBody'
                 _ -> (map takeTPTypes $ reverse tpss, tBody)
+
+-- | Take the name of a TypeRef if this is one, or `Nothing`.
+takeTypeRefName :: TypeRef a -> Maybe Name
+takeTypeRefName (TRPrm name) = Just name
+takeTypeRefName (TRCon name) = Just name
+takeTypeRefName _            = Nothing
+
+-- | Take the name of a TRef if this is one, or `Nothing`.
+takeTRefName :: Type a -> Maybe Name
+takeTRefName (TAnn _ t) = takeTRefName t
+takeTRefName (TRef tr)  = takeTypeRefName tr
+takeTRefName _          = Nothing
+
+-- | Take the Bound of a TVar if this is one, or `Nothing`.
+takeTVarBound :: Type a -> Maybe Bound
+takeTVarBound (TAnn _ t) = takeTVarBound t
+takeTVarBound (TVar b)   = Just b
+takeTVarBound _          = Nothing
+
+-- | Flatten a type application into the type name and its arguments, or
+-- `Nothing` if this is not a type application.
+takeTypeApp :: Type a -> Maybe (Name, [Type a])
+takeTypeApp (TAnn _ t) = takeTypeApp t
+takeTypeApp (TKey TKApp [left, right]) = do
+    leftType <- case takeTGTypes left of
+        [l] -> Just l
+        _      -> Nothing
+    typeName <- takeTRefName leftType
+
+    -- right :: [Type a]
+    typeArgs <- return (takeTGTypes right)
+
+    return (typeName, typeArgs)
+takeTypeApp _ = Nothing
+
+-- | Take the Type if it is a simple effect on the provided Bound, or `Nothing`.
+takeSimpleEffect :: Bound -> Type a -> Maybe (Type a)
+takeSimpleEffect bound t = do
+    (left, right) <- takeTypeApp t
+
+    right' <- mapM takeTVarBound right
+
+    let simpleEffects = map fromString ["Alloc", "Read", "Write"]
+
+    unless (left `elem` simpleEffects)
+        Nothing
+
+    if right' == [bound]
+        then Just t
+        else Nothing
+
+-- | Get Name(s) out of Bind(s), ignoring any BindNone.
+getBindingNames :: [Bind] -> [Name]
+getBindingNames []              = []
+getBindingNames (BindNone  :xs) = getBindingNames xs
+getBindingNames (BindName n:xs) = n:getBindingNames xs
 
