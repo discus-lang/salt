@@ -1,5 +1,6 @@
 
 module Salt.Core.Check.Term where
+import Data.List                        (partition)
 import Salt.Core.Check.Term.App
 import Salt.Core.Check.Term.Case
 import Salt.Core.Check.Term.Bind
@@ -13,9 +14,9 @@ import qualified Salt.Core.Prim.Ctor    as Prim
 import qualified Salt.Data.List         as List
 import qualified Data.Map.Strict        as Map
 
--- | Filter out all effects which are local to the specified region bindings.
-maskRegionLocalEffects :: [(Bind, Type a)] -> [Type a] -> [Type a]
-maskRegionLocalEffects bindings effects = filter shouldEscape effects
+-- | Partition effects into region-local and region-escaping.
+partitionRegionLocalEffects :: [(Bind, Type a)] -> [Type a] -> ([Type a], [Type a])
+partitionRegionLocalEffects bindings effects = partition isRegionLocalEffect effects
     where
           -- Get region names out of bindings.
           names = getBindingNames (map fst bindings)
@@ -28,9 +29,6 @@ maskRegionLocalEffects bindings effects = filter shouldEscape effects
               case takeSimpleEffectBound eff of
                   Nothing      -> False
                   Just boundTo -> boundTo `elem` boundNames
-
-          shouldEscape :: Type a -> Bool
-          shouldEscape eff = not (isRegionLocalEffect eff)
 
 ------------------------------------------------------------------------------------------ Synth --
 -- | Check and elaborate a term producing, a new term and its type.
@@ -455,8 +453,8 @@ synthTermWith a wh ctx (MPrivate bksR btsW mBody)
         (mBody', tsResult, esResult)
          <- synthTerm a wh ctx'' mBody
 
-        -- remove any effects from our result which are local to this region.
-        let esResult' = maskRegionLocalEffects bksR esResult
+        -- split our effects into region local and escaping.
+        let (_, esResult') = partitionRegionLocalEffects bksR esResult
 
         -- TODO FIXME need to check that used capabilities match permissions
 
@@ -491,8 +489,8 @@ synthTermWith a wh ctx (MExtend r1 bksR btsW mBody)
         (mBody', tsResult, esResult)
          <- synthTerm a wh ctx'' mBody
 
-        -- remove any effects from our result which are local to this region.
-        let esResult' = maskRegionLocalEffects bksR esResult
+        -- split our effects into region local and escaping.
+        let (_, esResult') = partitionRegionLocalEffects bksR esResult
 
         -- TODO FIXME need to check used capabilities match permissions
 
