@@ -98,21 +98,32 @@ takeTypeApp (TKey TKApp [left, right]) = do
     return (typeName, typeArgs)
 takeTypeApp _ = Nothing
 
--- | Take the Type if it is a simple effect on the provided Bound, or `Nothing`.
-takeSimpleEffect :: Bound -> Type a -> Maybe (Type a)
-takeSimpleEffect bound t = do
-    (left, right) <- takeTypeApp t
+-- | Take the Type if it is a simple effect, or `Nothing`.
+takeSimpleEffect :: Type a -> Maybe (Type a)
+takeSimpleEffect eff = do
+    (left, _) <- takeTypeApp eff
 
-    right' <- mapM takeTVarBound right
+    let simpleEffects = map fromString ["Alloc", "Read", "Write"]
+
+    if (left `elem` simpleEffects)
+        then Just eff
+        else Nothing
+
+-- | Take the Bound of a Type if it is a simple effect, or `Nothing`.
+takeSimpleEffectBound :: Type a -> Maybe Bound
+takeSimpleEffectBound eff = do
+    (left, right) <- takeTypeApp eff
 
     let simpleEffects = map fromString ["Alloc", "Read", "Write"]
 
     unless (left `elem` simpleEffects)
         Nothing
 
-    if right' == [bound]
-        then Just t
-        else Nothing
+    right' <- mapM takeTVarBound right
+
+    case right' of
+        [bound] -> Just bound
+        _       -> Nothing
 
 -- | Get Name(s) out of Bind(s), ignoring any BindNone.
 getBindingNames :: [Bind] -> [Name]

@@ -21,11 +21,11 @@ maskRegionLocalEffects bindings effects = foldl (flip maskRegionLocalEffects') e
           names = getBindingNames (map fst bindings)
 
           isRegionLocalEffect :: Name -> Type a -> Bool
-          isRegionLocalEffect regionName t =
-              let bound = (BoundWith regionName 0) in
-              case takeSimpleEffect bound t of
-                  Nothing -> False
-                  Just _  -> True
+          isRegionLocalEffect regionName eff =
+              let regionName' = (BoundWith regionName 0) in
+              case takeSimpleEffectBound eff of
+                  Nothing      -> False
+                  Just boundTo -> boundTo == regionName'
 
           shouldEscape :: Name -> Type a -> Bool
           shouldEscape n t = not (isRegionLocalEffect n t)
