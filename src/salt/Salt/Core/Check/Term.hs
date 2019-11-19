@@ -494,6 +494,9 @@ synthTermWith a wh ctx (MExtend r1 bksR btsW mBody)
 
         -- TODO FIXME need to check used capabilities match permissions
 
+        -- TODO FIXME need to rewrite values over inner region to outer region
+        -- see
+
         return (MExtend r1 bksR' btsW' mBody', tsResult, esResult')
 
 

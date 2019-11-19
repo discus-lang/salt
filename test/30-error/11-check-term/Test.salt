@@ -319,6 +319,21 @@ test type readPtr'mismatch'region
            p = #allocPtr @[r1, #Word8]
            #readPtr @[r2, #Word8] p
 
+-- | Bug: we are not yet rewriting the type of the returned pointer from r2 to
+-- r1.
+test eval region'extend'rewriting
+ = private r1 with {Read; Write; Alloc} in do
+    p = #allocPtr @r1 @#Int8
+    #writePtr @r1 @#Int8 p #int8'20
+    -- when we return a pointer within an extended region we need to ensure we
+    -- rewrite it to now belong to the outer region.
+    p2 = extend r1 using r2 with {Read; Write; Alloc} in do
+        p = #allocPtr @r2 @#Int8
+        #writePtr @r2 @#Int8 p #int8'3
+        p
+    a = #readPtr @r1 @#Int8 p
+    b = #readPtr @r1 @#Int8 p2
+    #int8'add a b
 
 -- (t-pack) ------------------------------------------------------------------
 -- | Error: pack ascription type is not an existential
