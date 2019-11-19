@@ -23,6 +23,7 @@
 * region'private'nat: [1]
 * region'private'effect: [18]
 * region'extend'nat: [1]
+* region'extend'effect: [17]
 * pack'useful: [[pack [x = [5], f = [[mclo_|λ[n: #Nat] → n]]] with [#Nat] as ∃[a: #Data]. ∏[x: #Data, f: [#Data] → [#Nat]]]]
 * pack'multiple: [[pack [x = [6], f = [[mclo_|λ[n: #Nat] → n]], y = ["hello world"], g = [[mclo_|λ[n: #Text] → n]]] with [#Nat, #Text] as ∃[a: #Data, b: #Data]. ∏[x: #Data, f: [#Data] → [#Nat], y: #Data, g: [#Data] → [#Text]]]]
 * unpack'pack: [5]

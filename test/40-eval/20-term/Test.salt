@@ -137,6 +137,13 @@ test eval region'extend'nat
      extend r1 using r2 with {Alloc; Read} in
        1
 
+test eval region'extend'effect
+ = private r1 with {} in
+    extend r1 using r2 with {Alloc; Read; Write} in do
+        p = #allocPtr @r2 @#Int8
+        #writePtr @r2 @#Int8 p #int8'17
+        #readPtr @r2 @#Int8 p
+
 -- (evm-pack) -----------------------------------------------
 test eval pack'useful
  = pack [x=5, f=(λ[n: #Nat] → n)] with [#Nat] as ∃[a: #Data].∏[x: a, f:[a]->[#Nat]]
