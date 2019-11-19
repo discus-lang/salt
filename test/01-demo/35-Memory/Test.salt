@@ -13,7 +13,7 @@ term addr'endtoend : []! #Console + #Memory
 test exec addr'endtoend
 
 term ptr'endtoend : []! #Console
- = box private r with {Alloc; Read; Write} in do
+ = box private r with {Read; Write; Alloc} in do
      p = #allocPtr @r @#Word64
      #writePtr @r @#Word64 p #word64'0
      v1 = #readPtr @r @#Word64 p
@@ -41,7 +41,7 @@ term sizeOf'metley : []! #Console
 test exec sizeOf'metley
 
 term sizeOf'ptr : []! #Console
- = box private r with {Alloc; Read; Write} in do
+ = box private r with {Read; Write; Alloc} in do
      s = #sizeOf @(#Ptr [r, #Word8])
      #console'println (#word64'show s)
 

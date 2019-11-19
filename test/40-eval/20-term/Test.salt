@@ -119,11 +119,11 @@ test eval evm'map
 
 -- (evm-private) ----------------------------------------------
 test eval region'private'nat
- = private r1 with {Alloc; Write; Read} in
+ = private r1 with {Read; Write; Alloc} in
        1
 
 test eval region'private'effect
- = private r1 with {Alloc; Write; Read} in do
+ = private r1 with {Read; Write; Alloc} in do
     p = #allocPtr @r1 @#Int8
     #writePtr @r1 @#Int8 p #int8'6
     t = #readPtr @r1 @#Int8 p
@@ -133,13 +133,13 @@ test eval region'private'effect
 
 -- (evm-extend) ----------------------------------------------
 test eval region'extend'nat
- = private r1 with {Alloc; Write; Read} in
-     extend r1 using r2 with {Alloc; Read} in
+ = private r1 with {} in
+     extend r1 using r2 with {} in
        1
 
 test eval region'extend'effect
  = private r1 with {} in
-    extend r1 using r2 with {Alloc; Read; Write} in do
+    extend r1 using r2 with {Read; Write; Alloc} in do
         p = #allocPtr @r2 @#Int8
         #writePtr @r2 @#Int8 p #int8'17
         #readPtr @r2 @#Int8 p
