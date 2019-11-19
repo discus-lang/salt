@@ -15,24 +15,22 @@ import qualified Data.Map.Strict        as Map
 
 -- | Filter out all effects which are local to the specified region bindings.
 maskRegionLocalEffects :: [(Bind, Type a)] -> [Type a] -> [Type a]
-maskRegionLocalEffects bindings effects = foldl (flip maskRegionLocalEffects') effects names
+maskRegionLocalEffects bindings effects = filter shouldEscape effects
     where
           -- Get region names out of bindings.
           names = getBindingNames (map fst bindings)
 
-          isRegionLocalEffect :: Name -> Type a -> Bool
-          isRegionLocalEffect regionName eff =
-              let regionName' = (BoundWith regionName 0) in
+          -- Wrap into level 0 Bound(s).
+          boundNames = map Bound names
+
+          isRegionLocalEffect :: Type a -> Bool
+          isRegionLocalEffect eff =
               case takeSimpleEffectBound eff of
                   Nothing      -> False
-                  Just boundTo -> boundTo == regionName'
+                  Just boundTo -> boundTo `elem` boundNames
 
-          shouldEscape :: Name -> Type a -> Bool
-          shouldEscape n t = not (isRegionLocalEffect n t)
-
-          -- Filter out all simple effects which are local to this region.
-          maskRegionLocalEffects' :: Name -> [Type a] -> [Type a]
-          maskRegionLocalEffects' regionName ts = filter (shouldEscape regionName) ts
+          shouldEscape :: Type a -> Bool
+          shouldEscape eff = not (isRegionLocalEffect eff)
 
 ------------------------------------------------------------------------------------------ Synth --
 -- | Check and elaborate a term producing, a new term and its type.
