@@ -531,58 +531,58 @@ test/30-error/11-check-term/Test.salt:320:35
 
   316:11 In test "readPtr'mismatch'region"
 
-test/30-error/11-check-term/Test.salt:335:18
+test/30-error/11-check-term/Test.salt:336:18
   Actual type 'r2'
    does not match
    expected type 'r1'
 
-  324:11 In test "region'extend'rewriting"
+  325:11 In test "region'extend'rewriting"
 
-test/30-error/11-check-term/Test.salt:345:17
+test/30-error/11-check-term/Test.salt:347:17
   Actual type 'r2'
    does not match
    expected type 'r1'
 
-  341:11 In test "region'extend'compat"
+  343:11 In test "region'extend'compat"
 
-test/30-error/11-check-term/Test.salt:351:4
+test/30-error/11-check-term/Test.salt:353:4
   Pack type ascription was not an existential '#Nat'
 
-  350:11 In test "pack'not'existential"
+  352:11 In test "pack'not'existential"
 
-test/30-error/11-check-term/Test.salt:355:4
+test/30-error/11-check-term/Test.salt:357:4
   Actual type '#Nat'
    does not match
    expected type '#Bool'
 
-  354:11 In test "pack'not'equiv"
+  356:11 In test "pack'not'equiv"
 
-test/30-error/11-check-term/Test.salt:359:4
+test/30-error/11-check-term/Test.salt:361:4
   Number of abstracted types [#Nat]
    did not match number of existential type params '∃[a: #Data, b: #Data]. a'
 
-  358:11 In test "pack'type'param'mismatch1"
+  360:11 In test "pack'type'param'mismatch1"
 
-test/30-error/11-check-term/Test.salt:363:4
+test/30-error/11-check-term/Test.salt:365:4
   Number of abstracted types [#Nat, #Nat]
    did not match number of existential type params '∃[a: #Data]. a'
 
-  362:11 In test "pack'type'param'mismatch2"
+  364:11 In test "pack'type'param'mismatch2"
 
-test/30-error/11-check-term/Test.salt:368:4
+test/30-error/11-check-term/Test.salt:370:4
   Value to unpack is not packed '12'
 
-  367:11 In test "unpack'not'packed"
+  369:11 In test "unpack'not'packed"
 
-test/30-error/11-check-term/Test.salt:373:6
+test/30-error/11-check-term/Test.salt:375:6
   Number of type bindings [tya, tyb]
    did not match number of existential type params '∃[a: #Data]. a'
 
-  371:11 In test "unpack'type'param'mismatch1"
+  373:11 In test "unpack'type'param'mismatch1"
 
-test/30-error/11-check-term/Test.salt:378:6
+test/30-error/11-check-term/Test.salt:380:6
   Number of type bindings []
    did not match number of existential type params '∃[a: #Data]. a'
 
-  376:11 In test "unpack'type'param'mismatch2"
+  378:11 In test "unpack'type'param'mismatch2"
 

@@ -321,6 +321,7 @@ test type readPtr'mismatch'region
 
 -- | Bug: we are not yet rewriting the type of the returned pointer from r2 to
 -- r1.
+-- TODO FIXME
 test eval region'extend'rewriting
  = private r1 with {Read; Write; Alloc} in do
     p = #allocPtr @r1 @#Int8
@@ -338,6 +339,7 @@ test eval region'extend'rewriting
 -- | Possible Bug: inner regions are not type compatible with outer regions.
 -- May not be a bug if the expectation is that complete rewriting happens at end
 -- of extended region scope.
+-- TODO FIXME
 test eval region'extend'compat
  = private r1 with {Read; Write; Alloc} in
      extend r1 using r2 with {Read; Write; Alloc} in do
