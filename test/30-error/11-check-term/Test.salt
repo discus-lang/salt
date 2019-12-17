@@ -335,6 +335,16 @@ test eval region'extend'rewriting
     b = #readPtr @r1 @#Int8 p2
     #int8'add a b
 
+-- | Possible Bug: inner regions are not type compatible with outer regions.
+-- May not be a bug if the expectation is that complete rewriting happens at end
+-- of extended region scope.
+test eval region'extend'compat
+ = private r1 with {Read; Write; Alloc} in
+     extend r1 using r2 with {Read; Write; Alloc} in do
+      p = #allocPtr @r2 @#Int8
+      #writePtr @r1 @#Int8 p #int8'12
+      #readPtr @r2 @#Int8 p
+
 -- (t-pack) ------------------------------------------------------------------
 -- | Error: pack ascription type is not an existential
 test type pack'not'existential

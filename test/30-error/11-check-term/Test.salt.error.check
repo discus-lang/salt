@@ -538,44 +538,51 @@ test/30-error/11-check-term/Test.salt:335:18
 
   324:11 In test "region'extend'rewriting"
 
-test/30-error/11-check-term/Test.salt:341:4
+test/30-error/11-check-term/Test.salt:345:17
+  Actual type 'r2'
+   does not match
+   expected type 'r1'
+
+  341:11 In test "region'extend'compat"
+
+test/30-error/11-check-term/Test.salt:351:4
   Pack type ascription was not an existential '#Nat'
 
-  340:11 In test "pack'not'existential"
+  350:11 In test "pack'not'existential"
 
-test/30-error/11-check-term/Test.salt:345:4
+test/30-error/11-check-term/Test.salt:355:4
   Actual type '#Nat'
    does not match
    expected type '#Bool'
 
-  344:11 In test "pack'not'equiv"
+  354:11 In test "pack'not'equiv"
 
-test/30-error/11-check-term/Test.salt:349:4
+test/30-error/11-check-term/Test.salt:359:4
   Number of abstracted types [#Nat]
    did not match number of existential type params '∃[a: #Data, b: #Data]. a'
 
-  348:11 In test "pack'type'param'mismatch1"
+  358:11 In test "pack'type'param'mismatch1"
 
-test/30-error/11-check-term/Test.salt:353:4
+test/30-error/11-check-term/Test.salt:363:4
   Number of abstracted types [#Nat, #Nat]
    did not match number of existential type params '∃[a: #Data]. a'
 
-  352:11 In test "pack'type'param'mismatch2"
+  362:11 In test "pack'type'param'mismatch2"
 
-test/30-error/11-check-term/Test.salt:358:4
+test/30-error/11-check-term/Test.salt:368:4
   Value to unpack is not packed '12'
 
-  357:11 In test "unpack'not'packed"
+  367:11 In test "unpack'not'packed"
 
-test/30-error/11-check-term/Test.salt:363:6
+test/30-error/11-check-term/Test.salt:373:6
   Number of type bindings [tya, tyb]
    did not match number of existential type params '∃[a: #Data]. a'
 
-  361:11 In test "unpack'type'param'mismatch1"
+  371:11 In test "unpack'type'param'mismatch1"
 
-test/30-error/11-check-term/Test.salt:368:6
+test/30-error/11-check-term/Test.salt:378:6
   Number of type bindings []
    did not match number of existential type params '∃[a: #Data]. a'
 
-  366:11 In test "unpack'type'param'mismatch2"
+  376:11 In test "unpack'type'param'mismatch2"
 
