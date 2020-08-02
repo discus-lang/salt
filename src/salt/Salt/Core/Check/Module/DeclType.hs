@@ -70,21 +70,20 @@ checkDeclTypeRecursive decls
         --   We track the synonym bindings we have entered into,
         --   as well as the ones we still need to check.
         checkDeps aDecl nDecl nsEntered nsCheck
-         = let (nsCheck1, nsRest) = Set.splitAt 1 nsCheck
-           in  case Set.toList nsCheck1 of
-                []      -> []
-                nCheck : _
-                 |  Just nsFree <- Map.lookup nCheck deps
-                 ,  nsRec <- Set.intersection nsFree nsEntered
-                 -> if not $ Set.null nsRec
-                        then [ErrorTypeDeclsRecursive aDecl
-                                [WhereTypeDecl aDecl nDecl]
-                                nDecl (concatMap nameAnnotsOfTypeDecl $ Set.toList nsRec)]
-                        else checkDeps aDecl nDecl
-                                (Set.union nsFree nsEntered)
-                                (Set.union nsRest nsFree)
+         = case Set.minView nsCheck of
+            Nothing -> []
+            Just (nCheck, nsRest)
+             |  Just nsFree <- Map.lookup nCheck deps
+             ,  nsRec <- Set.intersection nsFree nsEntered
+             -> if not $ Set.null nsRec
+                    then [ErrorTypeDeclsRecursive aDecl
+                            [WhereTypeDecl aDecl nDecl]
+                            nDecl (concatMap nameAnnotsOfTypeDecl $ Set.toList nsRec)]
+                    else checkDeps aDecl nDecl
+                            (Set.union nsFree nsEntered)
+                            (Set.union nsRest nsFree)
 
-                 | otherwise    -> checkDeps aDecl nDecl nsEntered nsRest
+             | otherwise    -> checkDeps aDecl nDecl nsEntered nsRest
 
         -- Map of names of type decls to others they depend on.
         deps
